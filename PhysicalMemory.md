@@ -19,7 +19,9 @@ Now let's starty with a simple example, imagine that we have a very tiny amount 
 
 This means that a single *unsigned char* variable can hold the status of 32kb of ram, to keep track of 256kb of ram we then need 8bytes (They can stay in a single uint64_t variable, but for this example let's stick with the char type), this means that with an array of 8 elements of *unsigned char* we can represent the whole amount of memory, so we are going to have something like this: 
 
+
 |           | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |  
+|-----------|---|---|---|---|---|---|---|---|
 | bitmap[0] | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 | 
 | bitmap[1] | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
 | bitmap[2] | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
