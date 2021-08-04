@@ -37,3 +37,8 @@ Some symbols often used in our makefile:
 
 * $@ is the name of the target being generated
 * $< the first prerequisite
+* @D is the target directory
+
+## Useful Links
+
+* MakeFile cheatsheet: https://devhints.io/makefile
