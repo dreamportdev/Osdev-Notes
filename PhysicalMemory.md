@@ -47,7 +47,8 @@ So to get the address we just need to do:
 
 Let's pause for a second, and have a look at bit_number, what it represent? Maybe it is not straightforward what it is, but consider that the memory is just a linear space of consecutive addresses (just like a long tape of bits grouped in bytes), so when we declare an array we just reserve *NxSizeof(chosendatatype)* contiguous address of this space, so the reality is that our array is just something like: 
 
- | bit_number | 0 | 1 | 2 | ... | *8* | ... | 31 | *32* | ... | 63 |  
+ | bit_number | 0 | 1 | 2 | ... | *8* | ... | 31 | *32* | ... | 63 |
+ |------------|---|---|---|-----|-----|-----|----|------|-----|----|
  | \*bitmap   | 1 | 1 | 1 | ... | *0* | ... |  0 |  *0* | ... |  0 |
   
 So it just represent the offset in bit from &bitmap (the starting address of the bitmap). 
