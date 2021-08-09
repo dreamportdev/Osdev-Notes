@@ -33,7 +33,7 @@ This means that a single *unsigned char* variable can hold the status of 32kb of
 
 So marking a memory location as free or used is just matter of setting clearing a bit in this bitmap. 
 
-### Returnin an address
+### Returning an address
 
 But how do we mark a page as taken or free? We need to translate row/column in an address, or the address in row/column. Let's assume that we asked fro a free page and we found the first available bit at row 0 and column 3, how we translate it to address, well for that we need few extra info: 
 
@@ -53,7 +53,7 @@ Let's pause for a second, and have a look at bit_number, what it represent? Mayb
   
 So it just represent the offset in bit from &bitmap (the starting address of the bitmap). 
 
-So in our example with *row=0 column=3* we get:
+So in our example with *row=0 column=3* (and page size of 4k) we get:
 
 * bit_number = (0 * 8) + 3 = 3
 * address = bit_number * 4k = 3 * 4096 = 3 * 0x1000 = 0x3000
@@ -61,7 +61,16 @@ So in our example with *row=0 column=3* we get:
 Another example: *row = 1 column = 4* we will get: 
 
 * bit_number = (1 * 8) + 4 = 12
-* address = = 0xC000
+* address = bit_number * 4k = 0xC000
+
+But what about the opposite way? Given an address compute the bitmap location? Still pretty easy: 
+
+* bitmap_location = address / 4096
+
+In this way we know the "page" index into an hypoteteical array of Pages. But we need row and columns, how do we compute them? That depends on the variable size used for the bitmap, let's stick to 8 bits, in this case:
+
+* The row is given by *bitmap_location / 8* 
+* The column is given by: *bitmap_location % 8*
 
 ### Marking/Freeing a page
 
@@ -71,4 +80,4 @@ So now knowing how the bitmap works, let's see how to update/test it. We need ba
 * A function to mark a location as set
 * A function to mark a location as clear 
 
-For all the above functions we are going to use bitwise operators, and all of them will take one argument that is the bit_number location (as seen in the previous paragraph). In order to 
+For all the above functions we are going to use bitwise operators, and all of them will take one argument that is the bit_number location (as seen in the previous paragraph). 
