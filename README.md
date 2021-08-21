@@ -19,5 +19,6 @@ Topics covered so far:
 * [Nasm tips](Nasm.md)
 * [Paging](Paging.md)
 * [Physical Memory](PhysicalMemory.md)
+* [Debugging](Debug.md)
 
 Again they not mean to be complete, and are more a place where i try to keep things that i don't want to forget.
