@@ -26,8 +26,10 @@ If we are using 4kb pages then we will have: PML4, PDPR, PD, PT, while if we go 
 
 If we are using 2MB pages this is how the address will be handled by the paging mechanism:
 
+|            |           |                     |            |              |
+|------------|-----------|---------------------|------------|--------------|
 | 63 .... 48 | 47 ... 39 | 38   ... 32  31  30 | 29  ..  21 | 20 19 ...  0 |
-| 1   ...  1 | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0  0  ...  0 |
+|  1 ...  1  | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0  0  ...  0 |
 |  Sgn. ext  |    PML4   |      PDPR           |   Page dir |    Offset    |
 
 * Bits 63 to 48, not used in address composition
@@ -40,8 +42,10 @@ Every table has 512 elements, so we have an address space of 2^512 * 2^512 * 2^5
 
 ### Address translation using 4kb pages
    
-If we are using 4MB pages this is how the address will be handled by the paging mechanism:
+If we are using 4kB pages this is how the address will be handled by the paging mechanism:
 
+|            |           |                     |            |             |              |
+|------------|-----------|---------------------|------------|-------------|--------------|
 | 63 .... 48 | 47 ... 39 | 38   ... 32  31  30 | 29  ..  21 | 20  ...  12 | 11 10 ...  0 |
 | 1   ...  1 | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0   ...  0  | 0 ...  ... 0 |
 |  Sgn. ext  |    PML4   |      PDPR           |   Page dir |  Page Table |   Offset     |
@@ -68,6 +72,8 @@ The idea of the page fault handler is that when #PF is raised, it look at the ad
 
 The error code has the following structure: 
 
+|           |       |        |      |       |     |
+|-----------|-------|--------|------|-------|-----|
 | 31 .... 4 |   4   |    3   |   2  |   1   |  0  |
 |  Reserved |  I/D  |  RSVD  |  U/S |  W/R  |  P  |
 

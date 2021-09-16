@@ -79,6 +79,8 @@ There are few things to keep in mind:
 
 So when passing the control to the handler the following registers are always pushed on the stack: 
 
+|        |
+|--------|
 | RS     |
 | RSP    |
 | EFLAGS |
