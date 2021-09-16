@@ -84,4 +84,9 @@ Where:
 There are few things to take in account when trying to access paging structures using recursion technique for x86_64 architecture:
 
 * When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l)
-* Always remember to add the sign extension part (otherwise you will obtain a #GP
+* Always remember to add the sign extension part (otherwise you will obtain a #G)
+
+Few examples of recursive addresses: 
+
+* PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: ffffffff80000000
+* Let's assume we mapped PML4 into itself at entry 510, if we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: PML4: 510, PDPR: 510, PD: 510, PT: 510, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processo loads that entry, it loads PDPR itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then... and so on... 

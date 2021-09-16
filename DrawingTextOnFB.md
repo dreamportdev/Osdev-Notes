@@ -139,3 +139,4 @@ For the number of bytes in each line, assuming that you are using grub and you c
 * https://wiki.osdev.org/PC_Screen_Font
 * gbdfed - Tool to inspect PSF files
 * https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html
+* https://forum.osdev.org/viewtopic.php?f=1&t=41549
