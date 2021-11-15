@@ -20,5 +20,7 @@ Topics covered so far:
 * [Paging](Paging.md)
 * [Physical Memory](PhysicalMemory.md)
 * [Debugging](Debug.md)
+* [RSDP_and_RSDT](RSDP_and_RSDT.md)
+* [C Language tips and tricks](C_Language_Info.md)
 
 Again they not mean to be complete, and are more a place where i try to keep things that i don't want to forget.
