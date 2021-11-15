@@ -1,4 +1,4 @@
-#Framebuffer
+# Framebuffer
 
 One way to enable framebuffer is asking grub to do it. 
 
