@@ -1,11 +1,11 @@
 # Debugging
 
-## Qemu Logging 
+## Serial Logging 
 
 I think that in early stages of development, this can be a useful option especially when switching from VGA to framebuffer 
 to print useful debug information. 
 
-Qemu has an option to redirect serial output to a file, you need to start it passing the parameter *-s filename*:
+Many emulaors has an option to redirect serial output to a file, you need to start it passing the parameter *-s filename*:
 
 ```bash
 qemu -S filename.log -cdrom yourosiso
@@ -34,8 +34,33 @@ extern inline void outportb (int portnum, unsigned char data)
 
 ```
 
-The second again is pretty simple, not going into implementation details that are not part of this chapter.
-The implementation of this function can be found here: https://wiki.osdev.org/Serial_Ports#Initialization 
+The second again is pretty simple, the code below is copied from https://wiki.osdev.org/Serial_Ports#Initialization:
+
+```C
+#define PORT 0x3f8          // COM1
+ 
+static int init_serial() {
+   outb(PORT + 1, 0x00);    // Disable all interrupts
+   outb(PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
+   outb(PORT + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
+   outb(PORT + 1, 0x00);    //                  (hi byte)
+   outb(PORT + 3, 0x03);    // 8 bits, no parity, one stop bit
+   outb(PORT + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
+   outb(PORT + 4, 0x0B);    // IRQs enabled, RTS/DSR set
+   outb(PORT + 4, 0x1E);    // Set in loopback mode, test the serial chip
+   outb(PORT + 0, 0xAE);    // Test serial chip (send byte 0xAE and check if serial returns same byte)
+ 
+   // Check if serial is faulty (i.e: not same byte as sent)
+   if(inb(PORT + 0) != 0xAE) {
+      return 1;
+   }
+ 
+   // If serial is not faulty set it in normal operation mode
+   // (not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled)
+   outb(PORT + 4, 0x0F);
+   return 0;
+}
+```
 
 The com1 port is mapped to address: *0x3f8*
 
@@ -44,6 +69,14 @@ This is pretty similar to what has been done for I/O video functions, but in thi
 using outb instead of writing it on a memory location. 
 
 But probably a good idea is to reuse some of the code of the video functions to convert numbers into strings. 
+
+### Troubleshooting
+
+If the output to serial is not working, there is no output in the log, try to remove the line that set the serial as loopback: 
+
+```C
+outb(PORT + 4, 0x1E);    // Set in loopback mode, test the serial chip 
+```
 
 ## Dumping register on exception
 
