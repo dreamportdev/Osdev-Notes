@@ -115,6 +115,38 @@ symbol-file path/to/kernel.bin
 * Show memory address content: *x/nfu addr* wher: n is the number of iterations f the format (x = hex) and the addr we want to show
 * you can show also the content of pointer stored into a register: *x/h ($rax)* shows the content of memory address pointed by rax
 
+## Virtual Box
+
+### Virtualbox command line useful commands
+
+* To list the available machine using command line use the following command:
+
+```bash
+vboxmanage list vms
+```
+
+It will show for every virtual machine, its label and its UUID
+
+* To launch a VM from command line: 
+
+```bash
+virtualboxvm --startvm vmname
+ ```
+
+You can use either the Virtual Machine name, or its uuid. 
+### Run a vm with debug enabled
+
+To run a VM with debug you need two things: 
+
+* The first one is either the VBOX_GUI_DBG_ENABLED or VBOX_GUI_DBG_AUTO_SHOW set to true 
+* Launch the virtual machine with the --debug option: 
+
+```bash
+virtualboxvm --startvm vmname --debug
+```
+
+this will open the Virtual Machine with the Debugger command line and ui. 
+
 ## Useful resources
 
 * https://wiki.osdev.org/Kernel_Debugging
