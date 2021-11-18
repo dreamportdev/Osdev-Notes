@@ -27,7 +27,11 @@ The parameters are:
 * -B is the binary architecture 
 * -I the inpurt target
 
-Once converted into binary elf, we can link it to the kernel like any other compiled file. 
+Once converted into binary elf, we can link it to the kernel like any other compiled file, to do that just add the output file to the linker command: 
+
+```bash
+ld -n -o build/kernel.bin -T src/linker.ld <other_kernel_files> font.o -Map build/kernel.map
+```
 
 With the font linked, we will have access to 3 new variables, like in the following example: 
 
