@@ -60,7 +60,7 @@ Where:
 
 Depending on the framebuffer_type value you have different values for color_info field.
 
-* If frambuffer_type is 0 this mens indexed colors, this means that the color-info field has the following values:
+* If frambuffer_type is 0 this means indexed colors, this means that the color-info field has the following values:
 
 | Size    | Description                    |
 |---------|--------------------------------|
