@@ -18,6 +18,7 @@ Topics covered so far:
 * [Multiboot](Multiboot.md)
 * [Nasm tips](Nasm.md)
 * [Paging](Paging.md)
+* [APIC](APIC.md)
 * [Physical Memory](PhysicalMemory.md)
 * [Debugging](Debug.md)
 * [RSDP_and_RSDT](RSDP_and_RSDT.md)

@@ -147,6 +147,36 @@ virtualboxvm --startvm vmname --debug
 
 this will open the Virtual Machine with the Debugger command line and ui. 
 
+## QEmu 
+
+### Qemu monitor
+
+Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger. 
+
+One way to start Qemu monitor on a unix system is using the following parameter when starting qemu: 
+
+```bash
+qemu-system-i386 [..other params..] -monitor unix:qemu-monitor-socket,server,nowait
+```
+
+then on another shell, on the same folder where you started the emulator launch the following command: 
+
+```bash
+socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
+``` 
+
+This will prompt with a shell similar to the following: 
+
+```bash
+username@host:~/yourpojectpath/$ socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
+QEMU 6.1.0 monitor - type 'help' for more information
+(qemu) 
+
+``` 
+
+From here you can send commands directly to the emulator, below a list of useful commands:
+
+* **help** Well this is the first command to get some help on how to use the monitor
 ## Useful resources
 
 * https://wiki.osdev.org/Kernel_Debugging
