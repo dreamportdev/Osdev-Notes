@@ -88,8 +88,13 @@ So when passing the control to the handler the following registers are always pu
 | RIP    |
 
 
+## Misc Notes
+If you want to halt the cpu, and interrupts are enabled, be sure to use `hlt` inside of a loop.
+Otherwise when the cpu receives an interrupt, the halt flag will be cleared in order to execute the handler, 
+and isn't restored. Therefore when you exit the interrupt, if not inside a loop, you'll start executing junk data after the halt!
 
-
-
-
-
+What you're after:
+```c
+while(true)
+    asm("hlt");
+```
