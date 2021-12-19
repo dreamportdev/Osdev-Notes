@@ -235,7 +235,7 @@ It's an extremely simple protocol, similar to serial - but with no config, where
 Same is true with input (although this is quite buggy, best to use serial for this).
 To enable it in qemu add this to your qemu flags `-debugcon where`. Where can be anything really, a log file for example. You can even use `-debugcon /dev/stdout` to have the output appear on the current terminal.
 
-It's worth nothing that because this is just a binary stream, and not a serial device emulation, its much faster than usual port io. And there's no state management or device setup to worry about.
+It's worth noting that because this is just a binary stream, and not a serial device emulation, its much faster than usual port io. And there's no state management or device setup to worry about.
 
 ## Useful resources
 
