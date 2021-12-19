@@ -92,6 +92,13 @@ Sometime could be needed to avoid the emulator restart on triple fault, in this 
 qemu -d int -no-reboot
 ```
 
+### Start Qemu for remote Debugging
+
+To start Qemu to accepts connections from gdb, you need to add *-s* and *-S*  flags to the command, where: 
+
+* **-s** is a shortand for **-gdb tcp::1234** 
+* **-S** instead tells the emulator to halt before starting the CPU, in this way you have time to connect the debugger before the OS start.
+
 ## GDB 
 
 ### Remote debugging
