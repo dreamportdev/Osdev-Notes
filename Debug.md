@@ -235,6 +235,7 @@ QEMU 6.1.0 monitor - type 'help' for more information
 From here you can send commands directly to the emulator, below a list of useful commands:
 
 * **help** Well this is the first command to get some help on how to use the monitor
+* **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic
 
 ### Debugcon
 Qemu (and several other emulators - bochs for example) support something called debugcon.
