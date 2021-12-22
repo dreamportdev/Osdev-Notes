@@ -173,6 +173,8 @@ Tui layouts can be switched at any time, or you can return to your regular shell
 
 The layouts offer little interaction besides the usual terminal in/out, but can useful for quickly referencing things, or examining exactly what instructions are running.
 
+If you are using debian, you most-likely need to install the *gdb* package, because by default *gdb-minimal* is being installed, which doesn't contain the TUI.
+
 ## Virtual Box
 
 ### Virtualbox command line useful commands
