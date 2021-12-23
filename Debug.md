@@ -165,7 +165,7 @@ This syntax supports all sorts of things, like casts and working with pointers.
 Breakpoints can also be issued contextually too! If you're at a breakpoint `main.c:123`, you can simply use `b 234` to break at line 234 in the same file.
 
 ### TUI - Text User Interface
-This area of gdb is hilarious undocumented, but still really useful. It can be entered in a number of ways:
+This area of gdb is hilariously undocumented, but still really useful. It can be entered in a number of ways:
 * `layout xyz`, will drop into a 1 window tui with the specified data in the main window. This can be 'src' for the source code, 'regs' for registers, or 'asm' for assembly.
 * Control-X + 1 will enter a 1 window tui, Control-X 2 will enter a 2 window tui. Pressing these will cycle window layouts. Trying is easier than explaining here!
 * `tui enable` will do the same the first option, but defaults to asm layout. 
