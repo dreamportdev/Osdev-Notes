@@ -23,5 +23,6 @@ Topics covered so far:
 * [Debugging](Debug.md)
 * [RSDP_and_RSDT](RSDP_and_RSDT.md)
 * [C Language tips and tricks](C_Language_Info.md)
+* [TroubleShooting](Troubleshooting.md)
 
 Again they not mean to be complete, and are more a place where i try to keep things that i don't want to forget.
