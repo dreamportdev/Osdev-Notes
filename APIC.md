@@ -25,4 +25,4 @@ The Apic Registers are all mapped in one Page of memory.
 
 ## Useful Resources
 
-* Intel Software developer's manual Vol 3A Chapter 8
+* Intel Software developer's manual Vol 3A APIC Chapter
