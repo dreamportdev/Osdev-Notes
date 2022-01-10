@@ -26,3 +26,8 @@ Topics covered so far:
 * [TroubleShooting](Troubleshooting.md)
 
 Again they not mean to be complete, and are more a place where i try to keep things that i don't want to forget.
+
+# Acknowledgments
+
+Thanks to: 
+* [**Dean T**](https://github.com/DeanoBurrito/) For his contributions in many sections of these notes! 
