@@ -40,7 +40,12 @@ The format of the IOREGSEL is:
 |---------|----------------------------------------------------------------------------------------------------------------------|
 | 31:8    | Reserved                                                                                                             |
 | 7:0     | APIC Register Address, they specifies the IOAPIC Registers to be read or written via the IOWIN Register               |
-|
+
+So basically if we want to read/write a register of the IOAPIC we need to: 
+
+1. write the register index in the IOREGSEL register
+2. read/write the content of the register selected in IOWIN register
+
 ## Useful Resources
 
 * Intel Software developer's manual Vol 3A APIC Chapter
