@@ -27,6 +27,26 @@ The Apic Registers are all mapped in one Page of memory. Please be aware that if
 
 ### Getting IO-APIC address
 
+TODO
+
+### IO-APIC Registers
+The IO-APIC has 2 memory mapped registers for accessing the other IO-APIC registers: 
+
+| Memory Address | Mnemonic Name | Register Name      | Description                                  |
+|----------------|---------------|--------------------|----------------------------------------------|
+|   FEC0 0000h   | IOREGSEL      | I/O Register Select| Is used to select the I/O Register to access |
+|   FEC0 0010h   | IOWIN         | I/O Window (data)  | USed to access data selected by IOREGSEL     |
+
+And then there are 4 I/O Registers that can be accessed using the two above: 
+
+| Name      | Offset   | Description                                                        | Attribute | 
+|-----------|----------|--------------------------------------------------------------------|-----------|
+| IOAPICID  | 00h      | Identification register for the IOAPIC                             |  R/W      |
+| IOAPICVER | 01h      | It identify the IO APIC Version                                    |  RO       |
+| IOAPICARB | 02h      | It contains the BUS arbitration priority for the IOAPIC            |  RO       |
+| IOREDTBL  | 03h-3fh  | These are the redirection tables (refer to the IOREDTBL paragraph) |  RW       |
+
+
 ### Reading data from IO-APIC
 
 There are basically two addresses that we need to use in order to write/read data from apic registers and they are: 
@@ -46,6 +66,11 @@ So basically if we want to read/write a register of the IOAPIC we need to:
 1. write the register index in the IOREGSEL register
 2. read/write the content of the register selected in IOWIN register
 
+### IOREDTBL
+
+TODO
+
 ## Useful Resources
 
 * Intel Software developer's manual Vol 3A APIC Chapter
+* IOAPIC Datasheet https://pdos.csail.mit.edu/6.828/2016/readings/ia32/ioapic.pdf
