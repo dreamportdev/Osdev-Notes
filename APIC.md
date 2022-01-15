@@ -29,6 +29,18 @@ The Apic Registers are all mapped in one Page of memory. Please be aware that if
 
 TODO
 
+1. Read IO-APIC information from MADT table (the MADT table is available within the RSDT data (please refer here: https://github.com/dreamos82/Osdev-Notes/blob/master/RSDP_and_RSDT.md), you need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
+
+| Offset | Length | Description                  |
+|--------|--------|------------------------------|
+| 2      | 1      | I/O Apic ID's                |
+| 3      | 1      | Reserved (should be 0)       |
+| 4      | 4      | I/O Apic Address             |
+| 8      | 4      | Global System Interrupt Base |
+
+The Global System Interrupt Base is the first interrupt number that the I/O Apic handles, to check how many interrupt the IO/APIC handle you can read this information from the IOAPICVER Register
+
+
 ### IO-APIC Registers
 The IO-APIC has 2 memory mapped registers for accessing the other IO-APIC registers: 
 
@@ -59,7 +71,7 @@ The format of the IOREGSEL is:
 | Bit     | Description                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------|
 | 31:8    | Reserved                                                                                                             |
-| 7:0     | APIC Register Address, they specifies the IOAPIC Registers to be read or written via the IOWIN Register               |
+| 7:0     | APIC Register Address, they specifies the IOAPIC Registers to be read or written via the IOWIN Register              |
 
 So basically if we want to read/write a register of the IOAPIC we need to: 
 
