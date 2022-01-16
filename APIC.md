@@ -25,6 +25,18 @@ The Apic Registers are all mapped in one Page of memory. Please be aware that if
 
 ## IOAPIC
 
+### Configure the IO-APIC
+
+TODO
+
+To configure the IO-APIC we need to: 
+
+(To check if the steps are accurate...)
+
+1. Get the IO-APIC base address from the MADT
+2. Read the IO-APIC Interrupt Source Override table
+3. Initialize the IO Redirection table entries for the interrupt we want to enable
+
 ### Getting IO-APIC address
 
 TODO
