@@ -90,6 +90,36 @@ So basically if we want to read/write a register of the IOAPIC we need to:
 1. write the register index in the IOREGSEL register
 2. read/write the content of the register selected in IOWIN register
 
+### Interrupt source overrides
+They contains differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first IO-APIC sources, but most of the time there will be at least one exception. This table contains those exceptions. 
+An example is the PIT Timer is connected to ISA IRQ 0, but when apic is enabled it is connected to the IO-APIC interrupt input pin 2, so in this case we need an interrupt source override where the Source entry (bus source) is 0 and the global system interrupt is 2
+The values stored in the IO Apic Interrupt source overrides in the MADT are:
+
+| Offset | Length | Description                  |
+|--------|--------|------------------------------|
+| 2      | 1      | bus source (it should be 0)  |
+| 3      | 1      | irq source                   |
+| 4      | 4      | Global System Interrupt      |
+| 8      | 2      | Flags                        |
+
+* Bus source usually is constant and is 0 (is the ISA irq source)
+* Irq source is ...
+
+Flags are defined as follows: 
+
+* Polarity (*Lenght*: **2 bits**, *Offset*: *0*  of the APIC/IO input signals, possible values are:
+    * 00 Conform to the bus specifications (for the EISA is active-low for level-triggered interrupts)
+    * 01 Active High
+    * 10 Reserved
+    * 11 Active Low
+* Trigger Mode (*Length*: **2 bits**, *Offset*: *2*) Trigger mode of the APIC I/O Input signals:
+    * 00 Conform to the specification (in the ISA is edge-triggered)
+    * 01 Edge-triggered
+    * 10 Reserved
+    * 11 Level-Triggered
+* Reserved (*Length*: **12 bits**, *Offset*: **4**) this must be 0
+
+
 ### IOREDTBL
 
 TODO
