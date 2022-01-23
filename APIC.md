@@ -27,11 +27,7 @@ The Apic Registers are all mapped in one Page of memory. Please be aware that if
 
 ### Configure the IO-APIC
 
-TODO
-
 To configure the IO-APIC we need to: 
-
-(To check if the steps are accurate...)
 
 1. Get the IO-APIC base address from the MADT
 2. Read the IO-APIC Interrupt Source Override table
@@ -39,9 +35,7 @@ To configure the IO-APIC we need to:
 
 ### Getting IO-APIC address
 
-TODO
-
-1. Read IO-APIC information from MADT table (the MADT table is available within the RSDT data (please refer here: https://github.com/dreamos82/Osdev-Notes/blob/master/RSDP_and_RSDT.md), you need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
+Read IO-APIC information from MADT table (the MADT table is available within the RSDT data (please refer here: https://github.com/dreamos82/Osdev-Notes/blob/master/RSDP_and_RSDT.md), you need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
 
 | Offset | Length | Description                  |
 |--------|--------|------------------------------|
@@ -50,8 +44,16 @@ TODO
 | 4      | 4      | I/O Apic Address             |
 | 8      | 4      | Global System Interrupt Base |
 
-The Global System Interrupt Base is the first interrupt number that the I/O Apic handles, to check how many interrupt the IO/APIC handle you can read this information from the IOAPICVER Register
+The IO APIC ID field is mostly fluff, as you'll be accessing the io apic by it's mmio address, not it's ID.
 
+The Global System Interrupt Base is the first interrupt number that the I/O Apic handles. In the case of most systems, with only a single IO APIC, this will be 0. 
+
+To check the number of inputs an IO APIC supports:
+```c
+uint32_t ioapicver = read_io_apic_register(IOAPICVER);
+size_t number_of_inputs = ((ioapicver >> 16) & 0xFF) + 1;
+```
+The number of inputs is encoded as bits 23:16 of the IOAPICVER register, minus one. 
 
 ### IO-APIC Registers
 The IO-APIC has 2 memory mapped registers for accessing the other IO-APIC registers: 
@@ -89,6 +91,9 @@ So basically if we want to read/write a register of the IOAPIC we need to:
 
 1. write the register index in the IOREGSEL register
 2. read/write the content of the register selected in IOWIN register
+
+The actual read or write operation is performed when IOWIN is accessed.
+Accessing IOREGSEL has no side effects.
 
 ### IOREDTBL
 
