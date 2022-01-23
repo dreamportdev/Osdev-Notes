@@ -122,7 +122,20 @@ Flags are defined as follows:
 
 ### IOREDTBL
 
-TODO
+TODO **DRAFT**
+
+Is an array of 24 items. They can be accessed vie memory mapped registers. Each entry is composed of 2 registers (starting from offset 10h). So for example the first entry will be composed by registers 10h and 11h. The last one is at 3E-3Fh registers.
+
+The content of each entry is: 
+| Bit      |  Description                                                                              |
+|----------|-------------------------------------------------------------------------------------------|
+| 0:7      |  Interrupt Vector. This is the IDT entry containing the information for this interrupt    |
+| 8:10     |  Delivery mode (for more information about the modes available check the paragraph below) |
+| 11       |  Desitnation Mode...                                                                      |
+
+####Delivery modes
+
+ TBD
 
 ## Useful Resources
 
