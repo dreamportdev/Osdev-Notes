@@ -117,7 +117,8 @@ The actual read or write operation is performed when IOWIN is accessed.
 Accessing IOREGSEL has no side effects.
 
 ### Interrupt source overrides
-They contains differences between the IA-PC standard and the dual 8259 interrupt definitions. The isa interrupts should be identity mapped into the first IO-APIC sources, but most of the time there will be at least one exception. This table contains those exceptions. 
+They contain differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first IO-APIC sources, but most of the time there will be at least one exception. This table contains those exceptions. 
+
 An example is the PIT Timer is connected to ISA IRQ 0, but when apic is enabled it is connected to the IO-APIC interrupt input pin 2, so in this case we need an interrupt source override where the Source entry (bus source) is 0 and the global system interrupt is 2
 The values stored in the IO Apic Interrupt source overrides in the MADT are:
 
@@ -128,7 +129,7 @@ The values stored in the IO Apic Interrupt source overrides in the MADT are:
 | 4      | 4      | Global System Interrupt      |
 | 8      | 2      | Flags                        |
 
-* Bus source usually is constant and is 0 (is the ISA irq source)
+* Bus source usually is constant and is 0 (is the ISA irq source), starting from ACPI v2 it is also a reserved field. 
 * Irq source is the source IRQ pin
 * Global system interrupt is the target IRQ on the APIC
 
@@ -158,7 +159,7 @@ The content of each entry is:
 * The lower double word is basically an LVT entry, so for their definition check the LVT entry definition
 * The upper double word contains:
     - Bits 17 to 55 are Reserved
-    - Bits 56 to 63 are the Destitnation Field, if the Destination mode is Physical (bit 11 = 0), bits 56 to 59 contains an apic ID, if Logical mode is set (bit 11 = 1) than bits 56 to 63 specify the Logical destination Address (Local mode can define a set of processor)
+    - Bits 56 to 63 are the Destitnation Field, In physical addressing mode (se the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the IO-APIC datasheet.
 
 The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
 
