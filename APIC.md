@@ -124,7 +124,8 @@ The values stored in the IO Apic Interrupt source overrides in the MADT are:
 | 8      | 2      | Flags                        |
 
 * Bus source usually is constant and is 0 (is the ISA irq source)
-* Irq source is ...
+* Irq source is the source IRQ pin
+* Global system interrupt is the target IRQ on the APIC
 
 Flags are defined as follows: 
 
@@ -150,7 +151,9 @@ They can be accessed vie memory mapped registers. Each entry is composed of 2 re
 The content of each entry is:
 
 * The lower double word is basically an LVT entry, so for their definition check the LVT entry definition
-  
+* The upper double word contains:
+    - Bits 17 to 55 are Reserved
+    - Bits 56 to 63 are the Destitnation Field, if the Destination mode is Physical (bit 11 = 0), bits 56 to 59 contains an apic ID, if Logical mode is set (bit 11 = 1) than bits 56 to 63 specify the Logical destination Address (Local mode can define a set of processor)
 
 The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
 
