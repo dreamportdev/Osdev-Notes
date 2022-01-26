@@ -26,7 +26,22 @@ Where the fields are:
 * *Revision*: Is the revision number
 * *RSDTAddress*: The address of the RSDT Table
 
-(TODO: Add XSDT info)
+For v2 the structure is similar to above:
+```c
+struct RSDP2Descriptor
+{
+  ... v1 fields ...
+  uint32_t Length;
+  uint64_t XSDTAddress;
+  uint8_t ExtendedChecksum;
+  uint8_t Reserved[3];
+};
+```
+
+* *Length*: is the length of this data and its data, meaning the xsdt + all the other SDTs.
+* *XSDTAddress*: Address of the XSDT table. If this is non-zero, the RSDT address **must** be ignored and the XSDT is to be used instead.
+* *ExtendedChecksum*: Same as the previous checksum, just includes the new fields.
+
 ## RSDT Data structure and filelds
 
 RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers many different table descriptors.
@@ -49,15 +64,41 @@ struct ACPISDTHeader {
 ```
 * The secon part is the table itself, every SDT has it's own table
 
+## RSDT vs XSDT
+
+These 2 tables have the same purpose and are mutually exclusive. If the latter exists, the former is to be ignored, otherwise use the former.
+
+The RSDT is an SDT header followed by an array of `uint32_t`s, representing the address of another SDT header.
+
+The XSDT is the same, except the array is of `uint64_t`s.
+
+```C
+struct RSDP
+{
+  ACPISDTHeader sdtHeader; //signature "RSDP"
+  uint32_t sdtAddresses[];
+};
+
+struct XSDT
+{
+  ACPISDTHeader sdtHeader; //signature "XSDT"
+  uint64_t sdtAddresses[];
+};
+
+//to get the sdt header at *n* index
+ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddress[*n*] : (uint64_t)rsdt->sdtAddress[*n*]);
+```
 
 ## Some useful infos
 
 *  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if you try to print it, you will most likely end up in printing garbage in the best case scenario.
 *  The RSDT Data is an array of uint32_t addresses. The number of items in the RSDT can be computed in the following way:
 ```C
-uint32_t number_of_items = (rsdt->header.Length - sizeof(header)) / 4
+//for the RSDT
+size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
+//for the XSDT
+size_t number_of_items = (xsdt->sdtHeader.Length - sizeof(ACPISDTHeader)) / 8;
 ```
-(Formula to be checked)
 
 ### Useful links
 

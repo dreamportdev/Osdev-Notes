@@ -42,8 +42,9 @@ asm("assenmbly_template"
 )
 ```
 
-* Every line of assembly code should terminate with: **;&&
-* Clobbered registers can be left empty, if done so the compiler optimizator will decide what to use.
+* Every line of assembly code should terminate with: **;**
+* Clobbered registers can usually be left empty. However if you use an instruction like `rdmsr` which places data in registers without the compiler knowing, you'll want to mark those are clobbered. If you specify eax/edx as output operands, the compiler is smart enough to work this out.
+* One special clobber exists: "memory". This is a read/write barrier. It tells the compiler you're accessed memory other than what was specified as input/ouput operands. The cause of many optimization issues!
 
 An example of an inline assembly instruction of this type is: 
 
@@ -54,6 +55,8 @@ asm("movl %2, %%ecx;"
         : "g" (address)
     );
 ```
+
+*Not here how eax and ecx are clobbered here, but since they're specified as outputs the compiler implicitly knows this.*
 
 Let's dig into the syntax: 
 
