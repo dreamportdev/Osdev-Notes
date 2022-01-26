@@ -164,6 +164,10 @@ This syntax supports all sorts of things, like casts and working with pointers.
 
 Breakpoints can also be issued contextually too! If you're at a breakpoint `main.c:123`, you can simply use `b 234` to break at line 234 in the same file.
 
+It's worth noting if you're debugging a kernel running with kvm, you wont be able to use software breakpoints (above) like normal. 
+GDB does support hardware breakpoints using `hb` instead of `b` for above, although their functionality can be limited, depending on what the hardware supports.
+Best to do serious debugging without kvm, and only use hardware debugging when absolutely necessary.
+
 ### TUI - Text User Interface
 This area of gdb is hilariously undocumented, but still really useful. It can be entered in a number of ways:
 * `layout xyz`, will drop into a 1 window tui with the specified data in the main window. This can be 'src' for the source code, 'regs' for registers, or 'asm' for assembly.

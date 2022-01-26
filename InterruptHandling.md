@@ -81,9 +81,9 @@ So when passing the control to the handler the following registers are always pu
 
 |        |
 |--------|
-| RS     |
+| SS     |
 | RSP    |
-| EFLAGS |
+| RFLAGS |
 | CS     |
 | RIP    |
 
