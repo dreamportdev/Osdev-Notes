@@ -8,7 +8,9 @@ There are mainly two types of APIC:
 * IO/APIC
 
 
-## Getting local apic information
+## Local APIC
+ 
+### Getting local apic information
 
 You need to read the IA32_APIC_BASE MSR register, using the __rdmsr__ command. The value for this register is 1Bh. 
 
@@ -22,6 +24,25 @@ This register contains the following information:
 * Bits 32:63 Are reserved.
 
 The Apic Registers are all mapped in one Page of memory. Please be aware that if you have paging enabled, you will probably need to map the IOAPIC Base address on the page dirs table. 
+
+### Local vector table
+
+Every entry of the local APIC has the following information:
+
+| Bit      |  Description                                                                                 |
+|----------|----------------------------------------------------------------------------------------------|
+| 0:7      |  Interrupt Vector. This is the IDT entry containing the information for this interrupt       |
+| 8:10     |  Delivery mode (for more information about the modes available check the paragraph below)    |
+| 11       |  Desitnation Mode It can be either Physical or Logic                                         |
+| 12       |  Delivery Status **(Read Only)** It is the current status of the delivery for this Interrupt |       
+| 13       |  Interrupt input polarity pin: 0 is high active, 1 is low active                             |
+| 14       |  Remote IRR **(Read Only)** used for level triggered interrupts.                             |
+| 15       |  Trigger mode, it can be 1=level sensitive or or Edge Sensitive interrupt                    |
+| 16       |  Interrupt mask, if it is 1 the interrupt is disabled, if 0 is enabled                       |
+
+With few exceptions:
+
+* TBD...
 
 ## IOAPIC
 
@@ -95,9 +116,56 @@ So basically if we want to read/write a register of the IOAPIC we need to:
 The actual read or write operation is performed when IOWIN is accessed.
 Accessing IOREGSEL has no side effects.
 
-### IOREDTBL
+### Interrupt source overrides
+They contain differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first IO-APIC sources, but most of the time there will be at least one exception. This table contains those exceptions. 
 
-TODO
+An example is the PIT Timer is connected to ISA IRQ 0, but when apic is enabled it is connected to the IO-APIC interrupt input pin 2, so in this case we need an interrupt source override where the Source entry (bus source) is 0 and the global system interrupt is 2
+The values stored in the IO Apic Interrupt source overrides in the MADT are:
+
+| Offset | Length | Description                  |
+|--------|--------|------------------------------|
+| 2      | 1      | bus source (it should be 0)  |
+| 3      | 1      | irq source                   |
+| 4      | 4      | Global System Interrupt      |
+| 8      | 2      | Flags                        |
+
+* Bus source usually is constant and is 0 (is the ISA irq source), starting from ACPI v2 it is also a reserved field. 
+* Irq source is the source IRQ pin
+* Global system interrupt is the target IRQ on the APIC
+
+Flags are defined as follows: 
+
+* Polarity (*Lenght*: **2 bits**, *Offset*: *0*  of the APIC/IO input signals, possible values are:
+    * 00 Use the default settings is active-low for level-triggered interrupts)
+    * 01 Active High
+    * 10 Reserved
+    * 11 Active Low
+* Trigger Mode (*Length*: **2 bits**, *Offset*: *2*) Trigger mode of the APIC I/O Input signals:
+    * 00 Use the default settiungs (in the ISA is edge-triggered)
+    * 01 Edge-triggered
+    * 10 Reserved
+    * 11 Level-Triggered
+* Reserved (*Length*: **12 bits**, *Offset*: **4**) this must be 0
+
+
+### IO Redirection Table (IOREDTBL)
+
+TODO **DRAFT**
+
+They can be accessed vie memory mapped registers. Each entry is composed of 2 registers (starting from offset 10h). So for example the first entry will be composed by registers 10h and 11h.
+
+The content of each entry is:
+
+* The lower double word is basically an LVT entry, so for their definition check the LVT entry definition
+* The upper double word contains:
+    - Bits 17 to 55 are Reserved
+    - Bits 56 to 63 are the Destitnation Field, In physical addressing mode (se the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the IO-APIC datasheet.
+
+The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
+
+####Delivery modes
+
+ TBD
 
 ## Useful Resources
 
