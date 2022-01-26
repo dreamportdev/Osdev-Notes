@@ -8,7 +8,9 @@ There are mainly two types of APIC:
 * IO/APIC
 
 
-## Getting local apic information
+## Local APIC
+ 
+### Getting local apic information
 
 You need to read the IA32_APIC_BASE MSR register, using the __rdmsr__ command. The value for this register is 1Bh. 
 
@@ -22,6 +24,25 @@ This register contains the following information:
 * Bits 32:63 Are reserved.
 
 The Apic Registers are all mapped in one Page of memory. Please be aware that if you have paging enabled, you will probably need to map the IOAPIC Base address on the page dirs table. 
+
+### Local vector table
+
+Every entry of the local APIC has the following information:
+
+| Bit      |  Description                                                                                 |
+|----------|----------------------------------------------------------------------------------------------|
+| 0:7      |  Interrupt Vector. This is the IDT entry containing the information for this interrupt       |
+| 8:10     |  Delivery mode (for more information about the modes available check the paragraph below)    |
+| 11       |  Desitnation Mode It can be either Physical or Logic                                         |
+| 12       |  Delivery Status **(Read Only)** It is the current status of the delivery for this Interrupt |       
+| 13       |  Interrupt input polarity pin: 0 is high active, 1 is low active                             |
+| 14       |  Remote IRR **(Read Only)** used for level triggered interrupts.                             |
+| 15       |  Trigger mode, it can be 1=level sensitive or or Edge Sensitive interrupt                    |
+| 16       |  Interrupt mask, if it is 1 the interrupt is disabled, if 0 is enabled                       |
+
+With few exceptions:
+
+* TBD...
 
 ## IOAPIC
 
@@ -108,30 +129,30 @@ The values stored in the IO Apic Interrupt source overrides in the MADT are:
 Flags are defined as follows: 
 
 * Polarity (*Lenght*: **2 bits**, *Offset*: *0*  of the APIC/IO input signals, possible values are:
-    * 00 Conform to the bus specifications (for the EISA is active-low for level-triggered interrupts)
+    * 00 Use the default settings is active-low for level-triggered interrupts)
     * 01 Active High
     * 10 Reserved
     * 11 Active Low
 * Trigger Mode (*Length*: **2 bits**, *Offset*: *2*) Trigger mode of the APIC I/O Input signals:
-    * 00 Conform to the specification (in the ISA is edge-triggered)
+    * 00 Use the default settiungs (in the ISA is edge-triggered)
     * 01 Edge-triggered
     * 10 Reserved
     * 11 Level-Triggered
 * Reserved (*Length*: **12 bits**, *Offset*: **4**) this must be 0
 
 
-### IOREDTBL
+### IO Redirection Table
 
 TODO **DRAFT**
 
-Is an array of 24 items. They can be accessed vie memory mapped registers. Each entry is composed of 2 registers (starting from offset 10h). So for example the first entry will be composed by registers 10h and 11h. The last one is at 3E-3Fh registers.
+They can be accessed vie memory mapped registers. Each entry is composed of 2 registers (starting from offset 10h). So for example the first entry will be composed by registers 10h and 11h.
 
-The content of each entry is: 
-| Bit      |  Description                                                                              |
-|----------|-------------------------------------------------------------------------------------------|
-| 0:7      |  Interrupt Vector. This is the IDT entry containing the information for this interrupt    |
-| 8:10     |  Delivery mode (for more information about the modes available check the paragraph below) |
-| 11       |  Desitnation Mode...                                                                      |
+The content of each entry is:
+
+* The lower double word is basically an LVT entry, so for their definition check the LVT entry definition
+  
+
+The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
 
 ####Delivery modes
 
