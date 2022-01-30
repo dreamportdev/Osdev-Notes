@@ -163,7 +163,8 @@ The content of each entry is:
 
 The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
 
-####Delivery modes
+
+#### Delivery modes
 
  TBD
 
@@ -171,3 +172,4 @@ The number of items is stored in the IO-APIC MADT entry, but usually on modern a
 
 * Intel Software developer's manual Vol 3A APIC Chapter
 * IOAPIC Datasheet https://pdos.csail.mit.edu/6.828/2016/readings/ia32/ioapic.pdf
+* http://www.brokenthorn.com/Resources/OSDevPic.html 

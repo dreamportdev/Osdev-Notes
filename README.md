@@ -19,6 +19,7 @@ Topics covered so far:
 * [Nasm tips](Nasm.md)
 * [Paging](Paging.md)
 * [APIC](APIC.md)
+* [Keyboard](Keyboard.md)
 * [Physical Memory](PhysicalMemory.md)
 * [Debugging](Debug.md)
 * [RSDP_and_RSDT](RSDP_and_RSDT.md)
