@@ -44,6 +44,14 @@ With few exceptions:
 
 * TBD...
 
+### Serving interrupts
+
+Once an Interrupt from the APIC is served (from both LAPIC and IOAPIC), an EOI must be sent, to do that just write the value 0x0 to the EOI Register. The address for this register is 0xFEE00B0 (unless the lapic has been relocated somewhere else)
+
+There are few exceptions where the EOI is not needed: NMI, SMI, INIT, ExtInt, Init-Deassert delivery mode.
+
+The EOI must sent before returning from interrupt with IRET. 
+
 ## IOAPIC
 
 ### Configure the IO-APIC
@@ -75,6 +83,7 @@ uint32_t ioapicver = read_io_apic_register(IOAPICVER);
 size_t number_of_inputs = ((ioapicver >> 16) & 0xFF) + 1;
 ```
 The number of inputs is encoded as bits 23:16 of the IOAPICVER register, minus one. 
+
 
 ### IO-APIC Registers
 The IO-APIC has 2 memory mapped registers for accessing the other IO-APIC registers: 
@@ -163,7 +172,8 @@ The content of each entry is:
 
 The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
 
-####Delivery modes
+
+#### Delivery modes
 
  TBD
 
@@ -171,3 +181,4 @@ The number of items is stored in the IO-APIC MADT entry, but usually on modern a
 
 * Intel Software developer's manual Vol 3A APIC Chapter
 * IOAPIC Datasheet https://pdos.csail.mit.edu/6.828/2016/readings/ia32/ioapic.pdf
+* http://www.brokenthorn.com/Resources/OSDevPic.html 
