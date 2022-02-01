@@ -81,6 +81,6 @@ These are at a high level the steps that we need to do to calibrate the APIC tim
  
 ## Useful links
 
-* [https://ethv.net/workshops/osdev/notes/notes-4.html](Ehtereality osdev Notes - Apic/Timing/Context Switching)
-* [https://wiki.osdev.org/Programmable_Interval_Timer](OSdev Wiki - Pit page)
-* [http://www.brokenthorn.com/Resources/OSDev16.html](Brokern Thron Osdev Series)
+* [Ehtereality osdev Notes - Apic/Timing/Context Switching](https://ethv.net/workshops/osdev/notes/notes-4.html)
+* [OSdev Wiki - Pit page](https://wiki.osdev.org/Programmable_Interval_Timer)
+* [Brokern Thron Osdev Series](http://www.brokenthorn.com/Resources/OSDev16.html)
