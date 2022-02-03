@@ -61,9 +61,10 @@ And remember: we need to set an IRQ handler for the PIT Irqs, for how to do this
 
 ## IRQ 
 
-The PIT timer is connect to the old PIC8259 IRQ0 pin, now if we are using the APIC, this line is connected to the Redirection Table entry number #2 (offset: 14h and 15h).
+The PIT timer is connected to the old PIC8259 IRQ0 pin, now if we are using the APIC, this line is connected to the Redirection Table entry number #2 (offset: 14h and 15h).
 
 While the APIC timer irq is always using  the lapic LVT entry 0. 
+
 
 ## Steps for calibration
 
@@ -77,8 +78,56 @@ These are at a high level the steps that we need to do to calibrate the APIC tim
 6. Adjust it to a Second
 7. Divide it by the divider chosen, use this value to raise an interrupt every x ticks
 8. Mask the PIT Timer IRQ
+
 ### Configure the PIT Timer (1)
- 
+
+Refer to the paragraph above, what we want to achieve on this step is configure the Pit timer to generate an interrupt with a specific interval (in our example 1ms), and configure an IRQ handler for it. 
+
+#### Configure the PIT Timer: IRQ Handling
+
+The irq handling will be pretty easy, we just need to incremente a global counter variable, that will count how many ms passed (the "how many" will depende on how you configured the pit), just keep in mind that this variable must be declared as volatile. The irq handling function will be as simple as it seems: 
+
+```C
+void irq_handler() {
+    pit_ticks++;
+}
+```
+
+### Configure the APIC Timer (2)
+
+This step is just an initialization step for the apic, before proceeding make sure that it the timer is stopped, to do that just write 0 to the Initial Count Register. 
+
+The APIC Timer has 3 main register: 
+
+* The Initial Count Register at Address 0xFEEO 0380 (this has to be loaded with the initial value of the timer counter, every time time the counter it reaches 0 it will generate an Interrupt
+* The current Count Register at Address 0xFEE0 0390 (current value of the counter)
+* The Divide Configuration register at 0xFEE0 03E0 The Timer divider.
+
+
+In this step we need first to configure the timer registers: 
+
+* The Initial Count register should start from the highest value possible. Since all the apic registers are 32 bit, the maximum value possible is: (0xFFFFFFFF)
+* The Current Count register doesn't need to be set, it is set automatically when we initialize the initial count. This register basically is a countdown register.
+* The divide configuration register it's up to us (i used 2)
+
+### Wait some time (4)
+
+In this step we just need to make an active waiting, basically something like: 
+
+```C
+while(pitTicks < AMOUNT_OF_TIME_WE_WANT_TO_WAIT) {
+    // Do nothing...
+}
+```
+
+pitTicks is a global variable set to be increased every time an IRQ from the PIT has been fired, and that depends on how the PIT is configured. So if we configured it to generate an IRQ every 1ms, and we want for example 15ms, will need the vlaue for AMOUNT_OF_TIME_WE_WANT_TO_WAIT will be 15. 
+
+### Compute the number of ticks from the APIC Counter (5)
+
+That step is pretty easy, we need to read the APIC current count register (offset: 390). 
+
+This register will tell us how many ticks are left before the register reaches 0. 
+
 ## Useful links
 
 * [Ehtereality osdev Notes - Apic/Timing/Context Switching](https://ethv.net/workshops/osdev/notes/notes-4.html)
