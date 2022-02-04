@@ -59,6 +59,12 @@ With that byte now we must:
 
 And remember: we need to set an IRQ handler for the PIT Irqs, for how to do this please refer to the [APIC](APIC.md) chapter 
 
+## Why we need the calibration?
+
+Because according to the intel ia32 documentation the APIC frequency is the same of the bus frequency or the core crystal frequency (divided by the chosen frequecny divider) so this basically depend on the hardware we are running. 
+
+There are different ways to calibrate the apic timer, the one explained here is the most used and easier to understand. 
+
 ## IRQ 
 
 The PIT timer is connected to the old PIC8259 IRQ0 pin, now if we are using the APIC, this line is connected to the Redirection Table entry number #2 (offset: 14h and 15h).
@@ -75,7 +81,7 @@ These are at a high level the steps that we need to do to calibrate the APIC tim
 3. Reset the APIC counter
 4. Wait some time that is measured using another timing source (in our case the PIT)
 5. Compute the number of ticks from the APIC counter
-6. Adjust it to a Second
+6. Adjust it to the desired measure
 7. Divide it by the divider chosen, use this value to raise an interrupt every x ticks
 8. Mask the PIT Timer IRQ
 
@@ -108,7 +114,7 @@ In this step we need first to configure the timer registers:
 
 * The Initial Count register should start from the highest value possible. Since all the apic registers are 32 bit, the maximum value possible is: (0xFFFFFFFF)
 * The Current Count register doesn't need to be set, it is set automatically when we initialize the initial count. This register basically is a countdown register.
-* The divide configuration register it's up to us (i used 2)
+* The divider configuration register it's up to us (i used 2)
 
 ### Wait some time (4)
 
@@ -122,11 +128,26 @@ while(pitTicks < AMOUNT_OF_TIME_WE_WANT_TO_WAIT) {
 
 pitTicks is a global variable set to be increased every time an IRQ from the PIT has been fired, and that depends on how the PIT is configured. So if we configured it to generate an IRQ every 1ms, and we want for example 15ms, will need the vlaue for AMOUNT_OF_TIME_WE_WANT_TO_WAIT will be 15. 
 
-### Compute the number of ticks from the APIC Counter (5)
+### Compute the number of ticks from the APIC Counter and obtain the calibrated value  (5,6,7)
 
 That step is pretty easy, we need to read the APIC current count register (offset: 390). 
 
-This register will tell us how many ticks are left before the register reaches 0. 
+This register will tell us how many ticks are left before the register reaches 0. So to geth the number of ticks done so far we need to:
+
+```
+apic_ticks_done = initial_count_register_value - current_count_register_value
+````
+
+this number tells us how many apic ticks were done in the AMOUNT_OF_TIME_WE_WANT_TO_WAIT. Now if we do the following division:
+
+```
+apic_ticks_done / AMOUNT_OF_TIME_WE_WANT_TO_WAIT
+```
+
+we will get the ticks done in unit of time. This value can be used for the initial count register as it is (or in multiple depending on what frequency we want the timer interrupt to be fired)
+
+This is the last step of the calibration, we can start the apic timer immediately with the new calibrated value for the initial count, or do something else before. But at this point the PIT can be disabled, and no longer used. 
+
 
 ## Useful links
 
