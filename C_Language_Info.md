@@ -100,3 +100,27 @@ These are passed as integer args (registers, than the first if not enough space)
 To call an assembly function from C is pretty straight forward. If your assembly function takes arguments in the way described above, you can define a c prototype marked as `extern`, 
 and call it like any other function. In this case it's worth respecting the calling convention, and creating a new stack frame (`enter/leave` instructions).
 Any value placed in `eax/rax` will be returned from the c-function if it has a return type. It is otherwise ignored.
+
+## Use of `volatile`
+*__Note from the author of this section__: volatile is always a hot topic from c/c++ developers. The first page of any search involving it will usually have at least a few results like 'use of volatile considered harmful' thoroughly complaining about its existence.
+The next page is usually filled with an equal number of results of blog posts by people complaining about the previous people's complaing, and so on.
+I'm not interested in that, and instead will explain how I've found it a useful tool.*
+
+### The Why
+A bit of background on why it can be necessary first:
+
+Compilers treat your program's source code as a description of what you want the executable to do. As long as the final executable affects external resources in the way that your code describes, the compiler's job is done. It makes certain promises about data layouts in memory (fields are always laid out in the order declared in source), but not about others (what data is cached, stored in a register or stored in cold memory). The exact code that actually runs on the cpu can be as different the compiler deems necessary, as long as the end result is as expected.
+
+Suddenly there's a lot of uncertainties about where data is actually stored at runtime. For example a local variable is likely loaded from ram into a register, and than only accessed in the register for the duration of that chunk of code, before finally being written back to memory when no longer needed. This is done because registers have access times orders of magnitude faster than memory.
+
+Some variables never even exist in memory, and are only stored in registers.
+
+Caching then adds more layers of complexity to this. Of course you can invalidate cache lines manually, however you'll pretty quickly find yourself fighting your compiler going this route. Best to stick to language constructs if you can.
+
+## The How
+`volatile` tells the compiler 'this variable is now observable behaviour', meaning it can still do clever tricks around this variable, but *at any point* the variable must exist in the exact state as described by the source code, in the expected location (ram, not a cpu register). Meaning that updates to the variable are written to memory immediately.
+
+This removes a lot of options for both the compiler and cpu in terms of what they can do with this data, so it's best used with care, and only when needed.
+
+## A Final Note
+`volatile` is not always the best tool for a job. For platform-specific things, like mmio, you'd likely want to make use of platform specific tools. For example, on x86 you can map memory as cache type UC (uncachable) for these regions, meaning reads and writes happen when you expect them to. This is entirely dependent on your use case though.

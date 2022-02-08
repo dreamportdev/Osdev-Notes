@@ -25,6 +25,7 @@ Topics covered so far:
 * [Debugging](Debug.md)
 * [RSDP_and_RSDT](RSDP_and_RSDT.md)
 * [C Language tips and tricks](C_Language_Info.md)
+* [Global Descriptor Table](GDT.md)
 * [TroubleShooting](Troubleshooting.md)
 * [Misc tips and tricks](TipsAndTricks.md)
 
