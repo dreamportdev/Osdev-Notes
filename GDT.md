@@ -6,7 +6,7 @@ The GDT is an x86(_64) structure that contains a series of descriptors. In a gen
 
 It's important to separate the idea of the bit-width of the cpu (16-bit, 32-bit, 64-bit) from the current mode (real mode, protected mode, long mode). Real mode is generally 16 bit, protected mode is generally 32 bit, and long mode is usually 64-bit, but this is not always the case. The GDT decides the bit-width (affecting how instructions are decoded, and how stack operations work for example), while CR0 and EFER affect the mode the cpu is in.
 
-Most descriptors are 8 bytes wide, usuallyt resulting in the selectors looking like the following:
+Most descriptors are 8 bytes wide, usually resulting in the selectors looking like the following:
 - null descriptor: selector 0x0
 - first descriptor: selector 0x8
 - second descriptor: selector 0x10
@@ -55,10 +55,10 @@ If paging is disabled, linear and physical addresses are the same.
 
 ## Segmentation
 
-Segmentation is a mechanism for separating regions of memory into code and data, to help secure operating systems and hardware against potential security issues, and simpifies running multiple processes.
+Segmentation is a mechanism for separating regions of memory into code and data, to help secure operating systems and hardware against potential security issues, and simplifies running multiple processes.
 
 How it works is pretty simple, each GDT descriptor defines a 'segment' in memory, using a base address and limit. 
-When a descriptor is loaded into the appropriate segment register, it creates a window into memory with the specified permissions. All memory outside of this segment has no persmissions (read, write, execute) unless specified by another segment.
+When a descriptor is loaded into the appropriate segment register, it creates a window into memory with the specified permissions. All memory outside of this segment has no permissions (read, write, execute) unless specified by another segment.
 
 The idea is to place code in one region of memory, and then create a descriptor with a base and limit that only expose that region of memory to the cpu. Any attempts to fetch instructions from outside that region will result in a #GP fault being triggered, and the kernel will intervene.
 
@@ -70,7 +70,7 @@ Segments can also be explicitly referenced. To load something at offset 0x100 in
 
 ### Segment Registers
 
-The various segment registers and their uses are outline below. There are some tricks to load a descriptor from the GDT into a segment register. They can't be mov'd into directly, so you'll need to use a scratch register to change their value. The cpu will also automatically reload segment registers on certain events (see the manual for these). 
+The various segment registers and their uses are outlined below. There are some tricks to load a descriptor from the GDT into a segment register. They can't be mov'd into directly, so you'll need to use a scratch register to change their value. The cpu will also automatically reload segment registers on certain events (see the manual for these). 
 
 To load any of the data registers, use the following:
 ```
@@ -85,7 +85,7 @@ mov $0x10, %ax
 mov %ax, %ss
 ```
 
-Changing CS (code segment) is a little trickier, as it cant be written to directly, instead it requires a far jump:
+Changing CS (code segment) is a little trickier, as it can't be written to directly, instead it requires a far jump:
 ```
 #at&t syntax
 
@@ -103,6 +103,40 @@ The process of translation an address is as follows:
 - Calculate linear address: `logical_address + segment_base`.
 - Traverse paging structure for physical address, using linear address.
 - Access memory at physical address.
+
+## Segment Descriptors
+
+There are various kinds of segment descriptors, they can be classified a sort of binary tree:
+
+Is it a system descriptor? If yes, it's a TSS, IDT (not valid in GDT), or gate-type descriptor (unused in long mode, should be ignored).
+If no, it's a code or data descriptor.
+
+These are further distinguished with the `type` field, as outlined below.
+
+| Start (in bits) | Length (in bits) | Description |
+|----------------|------------------|-------------|
+| 0 | 16 | Limit bits 15:0 |
+| 15 | 16 | Base address bits 15:0 |
+| 32 | 8 | Base address bits 23:16 |
+| 40 | 4 | Selector type |
+| 44 | 1 | Is system-type selector |
+| 45 | 2 | DPL: code ring that is allowed to use this descriptor |
+| 47 | 1 | Present bit. If not set, descriptor is ignored |
+| 48 | 4 | Limit bits 19:16 |
+| 52 | 1 | Available: for use with hardware task-switching. Can be left as zero |
+| 53 | 1 | Long mode: set if descriptor is for long mode (64-bit) |
+| 54 | 1 | Misc bit, depends on exact descriptor type. Can be left cleared in long mode |
+| 55 | 1 | Granularity: if set, limit is interpreted as 0x1000 sized chunks, otherwise as bytes |
+| 56 | 8 | Base address bits 31: 4 |
+
+For system-type descriptors, it's best to consult the manual, the Intel SDM volume 3A chapter 3.5 has the relevent details.
+
+For non-system descriptor types, the MSB (bit 3) is set for code descriptors, and cleared for data descriptors.
+The LSB (bit 0) is a flag for the cpu to communicate to the OS that the descriptor has been accessed in someway, but this feature is mostly abandoned, and should not be used.
+
+For a data selector, the remaining two bits are: expand-down (bit 2) - causes the limit to grow downwards, instead of up. Useful for stack selectors. Write-allow (bit 1), allows writing to this region of memory. Region is read-only if cleared.
+
+For a code selector, the remaining bits are: Conforming (bit 2) - a tricky subject to explain. Allow user code to run with kernel selectors under certain circumstances, best left cleared. Read-allow (bit 1), allows for read-only access to code for accessing constants stored near instructions. Otherwise code cannot be read as data, only for instruction fetches.
 
 ## Using the GDT
 
