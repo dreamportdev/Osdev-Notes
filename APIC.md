@@ -42,7 +42,15 @@ Every entry of the local APIC has the following information:
 
 With few exceptions:
 
-* TBD...
+* **TBD...**
+
+### X2Apic
+
+The x2Apic is an extension of the APIC, that has some key differences:
+
+* The registers are no longer accessed via Memory Mapped I/O, but using the MSR registers.
+
+**Continue**
 
 ### Serving interrupts
 
