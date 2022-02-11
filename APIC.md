@@ -27,7 +27,16 @@ The Apic Registers are all mapped in one Page of memory. Please be aware that if
 
 ### Local vector table
 
-Every entry of the local APIC has the following information:
+there are 6 items in the Local Vector Table (LVT):
+
+* *Timer* this entry is specifically used for the APIC Timer interrupt. Offset: 320h
+* *Thermal Monitor* Used by the thermal sensor to generate an interrupt. Offset: 330h
+* *Performance Counter Register* When a performan counter generates an interrupt on overflow will use this entry. Offset: 340h
+* *LINT0* Specifies the interrupt delivery when an interrupt is signaled on LINT0 Pin. Offset: 350h
+* *LINT1* Specifies the interrupt delivery when an interrupt is signaled on LINT1 Pin. Offset: 360h
+* *Error*  This used to signal an interrupt when the APIC detects an internal error. Offset 370h
+
+Every entry of the LVT has the following information:
 
 | Bit      |  Description                                                                                 |
 |----------|----------------------------------------------------------------------------------------------|
@@ -40,9 +49,11 @@ Every entry of the local APIC has the following information:
 | 15       |  Trigger mode, it can be 1=level sensitive or or Edge Sensitive interrupt                    |
 | 16       |  Interrupt mask, if it is 1 the interrupt is disabled, if 0 is enabled                       |
 
-With few exceptions:
+With some exceptions, listed below: 
 
-* **TBD...**
+* Bits from 13 to 15 on an LVT entry are only available for LINT0 and LINT1, and are reserved for all other entries.
+* The bits 8 to 10 (Delivery mode) are Reserved for the Timer, and the Error entries.
+* The Timer entry use an extra bit, number 17, to specify the timer mode: if is 0 it means is one shot, than when the timer has signaled an interrupt stops there until resetted, if instead is set to 1 it means Periodic, so everytime the interrupt is signaled the internal counter reset and it starts a new countdown, this means that it will keep generating interrupts until manually stopped.
 
 ### X2Apic
 
@@ -50,7 +61,7 @@ The x2Apic is an extension of the APIC, that has some key differences:
 
 * The registers are no longer accessed via Memory Mapped I/O, but using the MSR registers.
 
-**Continue**
+**..It will continue...**
 
 ### Serving interrupts
 
