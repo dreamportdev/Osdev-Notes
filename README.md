@@ -18,6 +18,7 @@ Topics covered so far:
 * [Multiboot](Multiboot.md)
 * [Nasm tips](Nasm.md)
 * [Paging](Paging.md)
+* [Memory Allocation](Memory_Allocation.md)
 * [APIC](APIC.md)
 * [Keyboard](Keyboard.md)
 * [Timer](Timer.md)
