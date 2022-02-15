@@ -33,6 +33,12 @@ Topics covered so far:
 
 Again they not mean to be complete, and are more a place where i try to keep things that i don't want to forget.
 
+# Useful links
+
+* [DreamOs64](https://github.com/dreamos82/Dreamos64) 64 Bits Os written from scratch by [Dreamos82](https://github.com/dreamos82)
+* [Northport](https://github.com/DeanoBurrito/northport) Another 64 bit Os written from scracth with SMP! by [DeanoBurrito](https://github.com/DeanoBurrito/)
+* [DreamOs](https://github.com/dreamos82/Dreamos) 32 Bits Os written from scratch, the project is discontinued but i think it was worth mentioning. By [Dreamos82]([Dreamos82](https://github.com/dreamos82))
+
 # Acknowledgments
 
 Thanks to: 
