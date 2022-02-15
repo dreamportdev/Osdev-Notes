@@ -1,5 +1,7 @@
 # Osdev Notes
 
+[![Discord Chat](https://img.shields.io/discord/578193015433330698.svg?style=flat)](https://discordapp.com/channels/578193015433330698/578193713340219392)
+
 This repository is a collection of small documents with notes about several topics related to Osdev.
 
 They are not meant to be complete (maybe one day they will be), they are just personal notes, i will keep updating them while developing the OS
