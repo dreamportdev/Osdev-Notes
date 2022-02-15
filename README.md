@@ -1,5 +1,7 @@
 # Osdev Notes
 
+[![Discord Chat](https://img.shields.io/discord/578193015433330698.svg?style=flat)](https://discordapp.com/channels/578193015433330698/578193713340219392)
+
 This repository is a collection of small documents with notes about several topics related to Osdev.
 
 They are not meant to be complete (maybe one day they will be), they are just personal notes, i will keep updating them while developing the OS
@@ -31,6 +33,12 @@ Topics covered so far:
 * [Misc tips and tricks](TipsAndTricks.md)
 
 Again they not mean to be complete, and are more a place where i try to keep things that i don't want to forget.
+
+# Useful links
+
+* [DreamOs64](https://github.com/dreamos82/Dreamos64) 64 Bits Os written from scratch by [Dreamos82](https://github.com/dreamos82)
+* [Northport](https://github.com/DeanoBurrito/northport) Another 64 bit Os written from scracth with SMP! by [DeanoBurrito](https://github.com/DeanoBurrito/)
+* [DreamOs](https://github.com/dreamos82/Dreamos) 32 Bits Os written from scratch, the project is discontinued but i think it was worth mentioning. By [Dreamos82]([Dreamos82](https://github.com/dreamos82))
 
 # Acknowledgments
 
