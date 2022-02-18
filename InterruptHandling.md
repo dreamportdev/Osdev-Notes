@@ -72,8 +72,8 @@ To correctly enable interrupts handling on our OS we need to do basically two st
 
 There are few things to keep in mind: 
 
-* The first some exception contains also an error code and some not (the error code will be on the stack)
-* Unfortunately the compiler is not helping us in this scenario, and it triest to optimize the code, so part of the exception handling has to be done using assembly
+* The first is that some exception contains also an error code and some not (the error code will be on the stack)
+* Unfortunately the compiler is not helping us in this scenario, and it tries to optimize the code, so part of the exception handling has to be done using assembly
 * In 64bit mode... the *PUSHA* instruction is gone :(
 * Another difference (maybe in this case an improvement), registers pushed on the stack when passing the control to the handler now are always the same, no matter we are doing a privilege level change or not. 
 
@@ -87,6 +87,9 @@ So when passing the control to the handler the following registers are always pu
 | CS     |
 | RIP    |
 
+but we will probably want to save more stuff on the stuck while serving interrupts, or we could lose some important data on other registers that was being used by our kernel. 
+
+What we want to save are the other register not saved automatically by the cpu. As mentioned above when we are in 32 bits mode we can easily use the PUSHA instruction, that pushes the content of the general purpose registers on the stack, but when we enter 64 bit mode this instruction is gone so we need to save them manually. The registers to push are: rax,rbx,rcx,rdx,rbp,rsi,rdi that are the 64bits equivalent of the 32 bit general purpose registers, but in addition the x86_64 architecture add a set new registers that we need to push: r8,r9,r10,r11,r12,r13,r14,r15. These registers must be popped on the stack just after we serve the the interrupt but in a reverse order, starting from last to the first. Again in 32 bits mode we can use the POPA instruction that is basically the opposite of pusha. But in 64 bits we need again to pop them one by one. 
 
 ## Misc Notes
 If you want to halt the cpu, and interrupts are enabled, be sure to use `hlt` inside of a loop.
