@@ -47,7 +47,7 @@ mov edi, eax
 mov esi, ebx
 ```
 
-else you just need them on the stack:
+otherwise you just need them on the stack:
 ```asm
 push ebx,
 push eax
