@@ -57,9 +57,9 @@ Before proceeding is important probably to clarify a concept: when mapping a phy
 Aassume that we have a set of alloc calls like the follwoing:
 
 ```C
-alloc(5);
-alloc(10);
-alloc(100);
+char *a = alloc(5);
+char *b = alloc(10);
+char *c = alloc(100);
 ```
 
 Assume that our allocator hasn't mapped any virtual address into physical yet and also that we are using 4k pages. So this is what will happen when we allocate memory on-demand: 
@@ -70,7 +70,12 @@ Assume that our allocator hasn't mapped any virtual address into physical yet an
 
 Now and edge case is if the next alloc will go over the boundaries of the current page, but well this is what we will discuss in this chapter later.
 
-Now what happens if we are using on first-use mapping? Well things here are more tricky and they depends on who rise the PF first. but the reasoning is similary, if for example the address are accessed in the same order of the previous example, we apply the same reasoning otherwise, there could be chances (**TO CHECK**) that the addresses could end in different phyiscal pages if for example the third is being accessed first, followed by the second, than by the first, we could end up in having 3 different mappings.
+Now what happens if we are using on first-use mapping? Well things here are more tricky and they depends on who rise the PF first. but the reasoning is similar, if for example the address are accessed in the same order of the previous example, we apply the same reasoning. But what happens if we access them in a different order? Well it will most likely be the same, in fact, if we access for example *b* first, it will cause a #PF, now the pf handler will map a page for the address, but remember Pages have a fixed size, so this means that we map and address space that is a multiple of PAGE_SIZE (that is the page size used by your kernel), so this means that when we will map the page for the address obtained by *b*, what we are really mapping is the tha Page containing B. For example: 
+
+* The alloc for *b* return the address 0x10010
+* We try to access *b* but it isn't mapped yet, we cause a #PF tha fire our #PF handler
+* THe andler get the address and decompose in it's PDirs/PTables (what suits your kernel/architecture chosen) and ask for a physical page. But here is the trick when computing entries for the paging structure the last X bits (again: it depends if you are using 32/64 bits architecture, 4k/2m/1g pages, but let's say is a number between 11 and 21) are considered the offset, so they don't take part in the mapping process, they are "skipped", the meaningful part of the addres 
+if for example the third is being accessed first, followed by the second, than by the first, we could end up in having 3 different mappings.
 
 As you can see so far things are already pretty confusing. But i'll promise you: they will becoe more confusing...
 __Continue__
