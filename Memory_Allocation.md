@@ -41,16 +41,16 @@ __Continue...__
 
 Well it's up to you.. there are two possible way (maybe more, but i don't want to overcomplicate stuff):
 
-* On demand
-* On first use..
+* The *Immediate* method:  involve that we allocate the physical space as soon as we found the virtual memory address (if needed). Depending on the size we will map directly the virtual addresses onto their physical parts (usually they are blocks/pages of a fixed size), there is no need for the phyisical blocks to be contiguos, as long as the virtual ones are.
 
-What is the difference? The first method involve that we allocate the physical space as soon as we fouund the virtual memory address (if needed). Depending on the size we will map directly the virtual addresses onto their physical parts (usually they are blocks/pages of a fixed size), there is no need for the phyisical blocks to be contiguos, as long as the virtual ones are.
+* The *demand* way:  the allocator just return the virtual address on allocation and map it only when it will be accessed, the first time, so what happen basically is that we search a suitable virtual memory block for the required space, mark it as used and return the address. And forget about it. Then at some point in the future the program that requested the block will try to access the address returned, and since it is not mapped yet an exception (called Page Fault) will be fired, and the handler will take find out that the address allocated is not mapped, and will take care of mapping it for us. All of that will be transparent to the user.
 
-Otherwise the other way is to map the virtual address only when it will be accessed, so what happen basically is that we search a suitable virtual memory block for the required space, mark it as used and return the address. And forget about it. 
+The table below shows the pros and cons of both appraoches: 
 
-Then at some point in the future the program that requested the block will try to access the address returned, at this point since it is not mapped yet an exception (called Page Fault) and here our handler will do the job, finding a suitable physical address to map to the current virtual address that caused  the exception, and resuming the normal execution. All of that will be transparent to the user.
-
-What are the pros of the second approach? Well for sure we don't waste memory, and we allocate it only when is really needed, so if a program allocate lot of memory for it's worst case scenario, but uses usually only 10% of it, in this way we will just use that 10% instead of preallocate everything. On the other hand in this way we can have fragmentation for the data that is related to the same process (be careful we are talking about physical memory not virtual), and also to allocate the n-physical pages of physical memory we will have to pass through n-page faults.
+| Paging allocation type | Pros | Cons|
+|------------------------|------|-----|
+| Immediate | No need for a page fault handler | Allocates physical memory that may not be needed (potentially wasting physical memory) |
+| Demand    | Only allocates physical memory that is used | Complex page fault handler required |
 
 Before proceeding is important probably to clarify a concept: when mapping a physical address into a virtual one, we are usually mapping pages of fixed sizes (4k, 2M, 1gb, mixed) while the allocator is allocating bytes/megabytes/whatever. So let's show that with an example in both cases, on-demand and on-first-use. 
 
