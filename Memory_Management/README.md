@@ -20,9 +20,10 @@ Don't worry we will try to keep it as simple as possible, using basic algorithms
 For every of the steps above there will be a dedicated section, while in this one we will try to explain the global picture. Before proceeding let's define briefly the concepts above (for in detail explanation please refer to their own sections): 
 
 | | Description |
+|-|-------------|
 | Physical Memory Manager | The physical memory manager is repsonsible of allocating and freeing  the hardware memory available (usually ram) it usually allocate fixed size blocks of it|
 | Paging | it introduce the concept of *Virtual memory* and *virtual addresses*, provides the OS with a bigger address space, it provide protection to the pages, and isolation | 
-| Virtual memory manager | |
-| Memory allocator | it handles alloc/free request, in our scenario will handle virtual addresses | 
+| Virtual memory manager | TBD |
+| Memory allocator | it handles alloc/free request, in our scenario will handle virtual addresses usually we have a kernel allocator and a user allocator | 
 
 Again the explanation above is just a short introduction to the concepts that will be implemented in their relevant sections. 
