@@ -39,15 +39,16 @@ When the kernel is loaded:
 * EAX contains the magic number 0x36d76289 
 * EBX contains the addres of multiboot header structure (to check) 
 
-In order to pass this information to the kernel C function if the kernel will jump in 64bit mode, they have to be saved first where the C function can read them
-If you want to jump to 64 bits, then they must be saved  into edi and esi register:
+In order to pass this information to the kernel C main function if we are running in 64bit mode, they have to be saved first where they can be read by the C function. 
+To do that they must be saved  into edi and esi register:
 
 ```asm
 mov edi, eax
 mov esi, ebx
 ```
 
-otherwise you just need them on the stack:
+otherwiseif you are in 32 bit mode, then you just need to place them on the stack:
+
 ```asm
 push ebx,
 push eax
@@ -56,11 +57,11 @@ push eax
 And then your C function will be something like that: 
 
 ```C
-void _kernel_start(unsigned long, unsigned long*);
+void _kernel_start(unsigned long magic, unsigned long address);
 ```
 
 
-The first parameter is the magic namber, the second one the address of the multiboot header. 
+The first parameter is the magic number, the second one the address of the multiboot header. 
 
 You should save *eax*  and *ebx* before starting to load any data structure like paging, gdt, to avoid the risk of having them overwritten 
 
