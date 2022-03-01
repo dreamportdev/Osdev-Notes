@@ -1,16 +1,20 @@
 # FACP
 
 The FADT, of which the signiture is FACP, refers to the Fixed ACPI Description Table, and is pointed by the RSDT.
+FACP can be used for ACPI shutdown etc.
+ACPI shutdown via FACP can be done both in Virtual Machines and Real PCs.
+
+So how can I find the FACP?
 The RSDT has entries that point to ACPI, FADT and more.
 The entries are 4 in number, and each of them are pointing to the tables.
-FACP is one of them, and could be found by strncmp.
+FACP is one of them, and could be found by strncmp like functions.
 Here is the example code:
 ```c
 if(strncmp(header->Signature, "FACP", 4)==0){
 	printf("FACP found\n");
 }
 ```
-Once can find the address of it via comparing strings.
+One can find the address of it via comparing strings.
 
 ### Structure of the FACP
 The structure of it is basically: 
