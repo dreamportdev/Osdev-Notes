@@ -55,6 +55,65 @@ my_first_macro_label_42:
 	sub esp 42
 ```
 
+## Declaring variables
+
+In Nasm if we want to declare a "variable" initialized we can use the following directives: 
+
+| Directive | Description                       | 
+|-----------|-----------------------------------|
+|    DB     | Allocate a byte                   |
+|    DW     | Allocate 2 bytes (a word)         |
+|    DD     | Allocate 4 bytes (a double word)  |
+|    DQ     | Allocate 8 bytes (a quad word)    |
+
+These directive are intended to be used for initialized variables. The syntax is: 
+
+```nasm
+single_byte_var:
+	db	'y'
+word_var:
+	dw	54321
+double_var:
+	dd	-54321
+quad_var:
+	dq	133.463 ; Example with a real number
+```
+
+But what if we want to declare a string? Well in  this case we can use a different syntax for db: 
+
+```nasm
+string_var:
+	db	"Hello", 10
+```
+What does it mean? We are simply declaring a variable (string_variable) that starts at 'H', and fill the consecutive bytes with the next letters. But what about the last number? It is just an extra byte, that represents the newline character. So what we are really storing is the string "Hello\n"
+
+Now what we have seen so far is valid for a variable that can be initialized with a value, but what if we don't know the value yet, but we want just to "label" it with a variable name? Well is pretty simple, we have equivalent directives for reserving memory: 
+
+| Directive   | Description                     | 
+|-------------|---------------------------------|
+|    RESB     | Rserve a byte                   |
+|    RESW     | Rserve 2 bytes (a word)         |
+|    RESD     | Rserve 4 bytes (a double word)  |
+|    RESQ     | Rserve 8 bytes (a quad word)    |
+
+The syntax is similar as the previous examples: 
+
+```nasm
+single_byte_var:
+	resb	1
+word_var:
+	resw	2
+double_var:
+	resd	3
+quad_var:
+	resq	4
+```
+
+One moment! What are those number after the directives? Well it's pretty simple, they indicate how many bytes/word/dword/qword we want to allocate. In the example above: 
+* *resb 1* Is reserving one byte
+*  *resw 2* Is reserving 2 words, and each word is 2 bytes each, in total 4 bytes
+*  *resd 3* Is reserving 3 dwords, again a dword is 4 bytes, in total we have 12 bytes reserved
+*  *resq 4* Is reserving... well you should know it now... 
 
 ## Nasm macros from C 
 
