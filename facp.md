@@ -157,8 +157,11 @@ All these things will happen given that the DSDT length is greater than 0, which
 
 First you need to check if AML is valid.
 ![image](https://user-images.githubusercontent.com/39773400/156290876-ddae62f7-2f28-4f84-8a42-d28e5ebe370a.png)
+
 <Figure 1>
+
 ![image](https://user-images.githubusercontent.com/39773400/156291769-5b5cf088-f902-431e-8c23-fa732fa12067.png)
+
 <Figure 2>
 
 FIgure 1 and 2 explains the encoding value of the encoding name and how all these look like repectively as a photo.
@@ -199,9 +202,14 @@ Now we have the ACPI shutdown here.
 
 ### Useful Resouces
 ACPI spec https://uefi.org/specs/ACPI/6.4/index.html#
+
 OSDev wiki FACP https://wiki.osdev.org/FADT
+
 OSDev wiki Shutdown https://wiki.osdev.org/Shutdown
+
 OSDev forum Shutdown via FACP https://forum.osdev.org/viewtopic.php?t=16990
+
 Example code (AhnTriOS) https://github.com/AhnJihwan/AhnTri/blob/main/drivers/acpi.c#L194
+
 OSDev wiki AML https://wiki.osdev.org/AML
 
