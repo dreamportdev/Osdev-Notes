@@ -15,7 +15,7 @@ In this section we will try to cover a more common use case that is probably wha
 * Virtual Memory Manager
 * Heap Allocation
 
-Don't worry we will try to keep it as simple as possible, using basic algorithms and try to explain all the grey areas... But stil it will be sometime hard to follow, you will prob
+Don't worry we will try to keep it as simple as possible, using basic algorithms and try to explain all the grey areas... But stil it will be sometime hard to follow, you will probably, and most likely have to go through several parts of this section multiple times...
 
 For every of the steps above there will be a dedicated section, while in this one we will try to explain the global picture. Before proceeding let's define briefly the concepts above (for in detail explanation please refer to their own sections): 
 
@@ -52,3 +52,21 @@ For every of the steps above there will be a dedicated section, while in this on
   - Using a doubly linked list of nodes, with each tracking their size and whether they are free or in use. Relatively simple to implement, great for getting started. Prone to sublte bugs, and can start to slow down after some time.
   - Buddy allocator. These are more complex to understand initially, but are generally much faster to allocate/free. They can lead to more fragmentation that a linked list style. 
   - Slab allocator. These work in fixed sized chunks, memory can simply be viewed as a single array of these chunks, and the allocator simply needs a bitmap to keep track of which chunks are free or not.
+
+## An example workflow
+
+To get a better picture of how things work let's try to describe from a very high level how all the components works together with an example. Suppose we want to allocate 5 bytes: 
+
+```C
+char *a = alloc(5);
+```
+
+What happens under the hood? 
+
+1. The alloc request to the heap a pointer to an area of 5 bytes.
+2. The heap allocator search for that address if available in the current heap, if yes so no need to dig down further, it just return what it has found. But on the opposite if the current heap doesn't contain an area of 5 bytes that can be returned, it need to expland itself, so it ask to more space to the VMM. Remember: the *addresses returned by the heap are all Virtual*
+3. The VMM will first ask the physical memory manager for a new physical page (if we are using paging, but yes we are...) 
+4. And then the new physical page from the PMM will be mapped to the VMM using Paging (for example), and now the VMM will provide the heap with the extra space it needed, and the heap can return an address.
+
+The picture below identify the various components of a basic Memory Management Unit and show how they interact in this example scenario.
+
