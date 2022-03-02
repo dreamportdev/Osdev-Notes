@@ -156,15 +156,17 @@ then you will go intitialize everything.
 All these things will happen given that the DSDT length is greater than 0, which mean it has any data so you might want to get a while for this thing.
 
 First you need to check if AML is valid.
+
+
 ![image](https://user-images.githubusercontent.com/39773400/156290876-ddae62f7-2f28-4f84-8a42-d28e5ebe370a.png)
 
-<Figure 1>
+Figure 1
 
 ![image](https://user-images.githubusercontent.com/39773400/156291769-5b5cf088-f902-431e-8c23-fa732fa12067.png)
 
-<Figure 2>
+Figure 2
 
-FIgure 1 and 2 explains the encoding value of the encoding name and how all these look like repectively as a photo.
+Figure 1 and 2 explains the encoding value of the encoding name and how all these look like repectively as a photo.
 
 Your code must look like this:
 ```c
