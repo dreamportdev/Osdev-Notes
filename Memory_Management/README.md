@@ -70,3 +70,5 @@ What happens under the hood?
 
 The picture below identify the various components of a basic Memory Management Unit and show how they interact in this example scenario.
 
+![Memory management](https://user-images.githubusercontent.com/59960116/156272596-3e707437-f82f-41d0-805a-b81433287c5e.jpg)
+
