@@ -1,13 +1,13 @@
 # FACP
 
-The FADT, of which the signiture is FACP, refers to the Fixed ACPI Description Table, and is pointed by the RSDT.
+The FADT, of which the signature is FACP, refers to the Fixed ACPI Description Table and is pointed by the RSDT.
 FACP can be used for ACPI shutdown etc.
 ACPI shutdown via FACP can be done both in Virtual Machines and Real PCs.
 
 So how can I find the FACP?
 The RSDT has entries that point to ACPI, FADT and more.
 The entries are 4 in number, and each of them are pointing to the tables.
-FACP is one of them, and could be found by strncmp like functions.
+FACP is one of them and could be found by strncmp like functions.
 Here is the example code:
 ```c
 if(strncmp(header->Signature, "FACP", 4)==0){
@@ -83,4 +83,125 @@ struct facp {
 It contains the header, the DSDT pointer, and blocks.
 The blocks will be used for shutdown.
 
-More... Comming soon...
+### Shutdown via FACP
+The ACPI shutdown is known as easy as several couple lines, however, enablement and initialization is neccessary for the shutdown code.
+
+I. Enabling the ACPI
+
+Enabling the ACPI is done with the following steps:
+
+1. Check if ACPI is enabled
+2. Check if ACPI is enabled
+3. If not-->enable ACPI, If yes-->stop because it is already
+4. Check if ACPI is enabled
+5. If yes-->Enable ACPI, If no-->send error
+
+The first check, step 1, could be done by comparing inw PM1a CNT Block &(AND operator) SCI_EN and 0
+
+Code: `inw((uint16_t) PM1a_CNT_BLK) & (uint16_t) SCI_EN) == 0`
+
+The next check can be done by checking if smi cmd and acpi enable is 0
+
+If yes, the ACPI is already enabled for you, if not, it isn't.
+
+Code again: `smi_cmd != 0 && acpi_enable != 0`
+
+Now it's time to enable the ACPI with a single line of code:
+
+`outb((uint16_t) smi_cmd, acpi_enable);`
+
+It outbytes data acpi enable to smi cmd port
+
+and finally we need to check if it enabled the ACPI. It can be done by 3 steps:
+
+1.
+```c
+int i;
+for(i = 0; i < 300; i++){
+	if(inw((uint16_t) PM1a_CNT_BLK & (uint16_t) SCI_EN) == 1){
+		break;
+	}
+		suspend(10);
+	}
+}
+```
+2. Do the same thing for the pm2b cnt block.
+3. Give error if not, give success message if is.
+
+II. ACPI initialization
+
+You must have found the FACP and have the header.
+
+S5 Address
+can be found by several lines of code basically doing a while
+
+But you need to first add 36 from the DSDT as the address, get the dsdt length as the following code, and finally do a while until DSDT Length -- is greater than 0
+While it does it, you should compare the first 4 characters via memcmp like functions and when you find it, you'll break and continue to the next step. Don't forget to add 1 every time to the address or you will not get the loop properly.
+```c
+	uint8_t* s5_addr = (uint8_t*) facp->dsdt + 36;
+	int dsdt_len = *(facp->dsdt + 1) - 36;
+	while(0 < dsdt_len--){
+		if(memcmp(s5_addr, "_S5_", 4)==0){
+			break;
+		}
+		s5_addr++;
+	}
+```
+Now that you have found
+
+the S5 addr
+
+then you will go intitialize everything.
+
+All these things will happen given that the DSDT length is greater than 0, which mean it has any data so you might want to get a while for this thing.
+
+First you need to check if AML is valid.
+![image](https://user-images.githubusercontent.com/39773400/156290876-ddae62f7-2f28-4f84-8a42-d28e5ebe370a.png)
+<Figure 1>
+![image](https://user-images.githubusercontent.com/39773400/156291769-5b5cf088-f902-431e-8c23-fa732fa12067.png)
+<Figure 2>
+
+FIgure 1 and 2 explains the encoding value of the encoding name and how all these look like repectively as a photo.
+
+Your code must look like this:
+```c
+if((*(s5_addr - 1) == 0x08 || ( *(s5_addr - 2) == 0x08 && *(s5_addr - 1) == '\\') ) && *(s5_addr + 4) == 0x12){
+	s5_addr += 5;
+	s5_addr += ((*s5_addr & 0xC0) >> 6) + 2;
+	
+	if (*s5_addr == 0x0A){
+		s5_addr++;
+	}
+	SLP_TYPa = *(s5_addr) << 10;
+	s5_addr++;
+			
+	if (*s5_addr == 0x0A){
+		s5_addr++;
+	}
+	SLP_TYPb = *(s5_addr) << 10;
+```
+
+Next, make all the defined data the same as the one of the FACP.
+
+III. The shutdown via ACPI
+
+Now we've got everything done.
+
+You first need to enable the ACPI, and then do the following code:
+```c
+outw((uint16_t)PM1a_CNT_BLK, SLP_TYPa | SLP_EN );
+if (PM1b_CNT_BLK != 0){
+	outw((uint16_t)PM1b_CNT_BLK, SLP_TYPb | SLP_EN );
+}
+```
+
+Now we have the ACPI shutdown here.
+
+### Useful Resouces
+ACPI spec https://uefi.org/specs/ACPI/6.4/index.html#
+OSDev wiki FACP https://wiki.osdev.org/FADT
+OSDev wiki Shutdown https://wiki.osdev.org/Shutdown
+OSDev forum Shutdown via FACP https://forum.osdev.org/viewtopic.php?t=16990
+Example code (AhnTriOS) https://github.com/AhnJihwan/AhnTri/blob/main/drivers/acpi.c#L194
+OSDev wiki AML https://wiki.osdev.org/AML
+
