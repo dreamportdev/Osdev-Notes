@@ -1,5 +1,7 @@
 # Memory Management
 
+**_This file is in draft state and not completed yet, some information may not be accurate and/or complete. I'm working on it_**
+
 Welcome to one of the first big challenges of your osdev adventure. It is the first "complex" component that you have to implement. 
 
 The shortest way to define a memory manager is that is a system that manage computer memory, and provide ways to dinamically allocate and free portions of it. 
