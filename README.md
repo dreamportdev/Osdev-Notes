@@ -13,14 +13,14 @@ I hope that someone will find them useful.
 Topics covered so far: 
 
 * [Drawing text on framebuffer](DrawingTextOnFB.md)
-* [Environment setup (for a 64bit os)](EnvironmentSetup.md)
+* [Environment setup (for a 64bit os)](Environment_Setup.md)
 * [Multiboot](Multiboot.md)
 * [Framebuffer](Framebuffer.md)
 * [Moving the kernel in the higher half](HigherHalf.md)
 * [Interrupt handling (64 bit)](IntterruptHandling.md)
 * [Nasm tips](Nasm.md)
 * [Memory Management](Memory_Management/)
-    * [Paging](Paging.md)
+    * [Paging](Memory_Management/Paging.md)
     * [Memory Allocation](Memory_Management/Heap_Allocation.md)
     * [Physical Memory](Memory_Management/PhysicalMemory.md)
 * [Global Descriptor Table](GDT.md)
