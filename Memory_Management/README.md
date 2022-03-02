@@ -1,8 +1,6 @@
 # Memory Management
 
-Welcome to one of the first big challenges of your osdev adventure. It is the first "complex" component that you have to implement, and in my opinion one of the most boring too!! 
-
-So let's get started...
+Welcome to one of the first big challenges of your osdev adventure. It is the first "complex" component that you have to implement. 
 
 The shortest way to define a memory manager is that is a system that manage computer memory, and provide ways to dinamically allocate and free portions of it. 
 
@@ -10,10 +8,10 @@ The design and complexity of a memory manger can vary greatly, a lot depends on 
 
 In this section we will try to cover a more common use case that is probably what nearly all modern operating system does, that is a 32/64 operating system with paging enabled, and a memory allocator for the kernel and one for the user space, in this way we will be able to cover more or less all the following topics: 
 
-* Physical Memory Manager
-* Paging 
+* [Physical Memory Manager]((PhysicalMemory.md)
+* [Paging](Paging.md)
 * Virtual Memory Manager
-* Heap Allocation
+* [Heap Allocation](Heap Allocation)
 
 Don't worry we will try to keep it as simple as possible, using basic algorithms and try to explain all the grey areas... But stil it will be sometime hard to follow, you will probably, and most likely have to go through several parts of this section multiple times...
 
