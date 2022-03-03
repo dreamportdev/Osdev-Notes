@@ -62,7 +62,7 @@ struct ACPISDTHeader {
   uint32_t CreatorRevision;
 };
 ```
-* The secon part is the table itself, every SDT has it's own table
+* The second part is the table itself, every SDT has it's own table
 
 ## RSDT vs XSDT
 
@@ -92,7 +92,7 @@ ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddress[*n*] : (uin
 ## Some useful infos
 
 *  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if you try to print it, you will most likely end up in printing garbage in the best case scenario.
-*  The RSDT Data is an array of uint32_t addresses. The number of items in the RSDT can be computed in the following way:
+*  The RSDT Data is an array of uint32_t addresses while the XSDT data is an array of uint64_t addresses. The number of items in the RSDT and XSDT can be computed in the following way:
 ```C
 //for the RSDT
 size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
