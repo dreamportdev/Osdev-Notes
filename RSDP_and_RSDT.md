@@ -86,7 +86,7 @@ struct XSDT
 };
 
 //to get the sdt header at *n* index
-ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddress[*n*] : (uint64_t)rsdt->sdtAddress[*n*]);
+ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[*n*] : (uint64_t)rsdt->sdtAddresses[*n*]);
 ```
 
 ## Some useful infos
