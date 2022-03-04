@@ -29,23 +29,109 @@ The main difference is that GCC requires a completely separate set of bianries (
 
 However, each GCC toolchain will use the platform-specific headers by default, where as clang seems to have insane defaults in this area. You'll generally always want to have the platform-specific headers GCC supplies regardless of which toolchain you build with.
 
-Compiling GCC from source dosnt take too long on a modern CPU (~10 minutes for a complete build on a 7th gen intel mobile cpu, 4 cores), however there are also prebuilt binaries online from places like [bootlin](https://toolchains.bootlin.com/).
+Compiling GCC from source dosn't take too long on a modern CPU (~10 minutes for a complete build on a 7th gen intel mobile cpu, 4 cores), however there are also prebuilt binaries online from places like [bootlin](https://toolchains.bootlin.com/).
 
-## Building C Source Files
-- disabling cpu extensions (x87, sse/sse2)
-- useful flags to enable (always emit frame pointers)
+## Setting up a build environment
+Setting up a proper build environment can be broken down into a few steps:
+- Setup a cross compilation toolchain.
+- Install an emulator.
+- Install any additional tools.
+- Setup your bootloader of choice.
+- Run a hello world to check everything works.
+
+### Getting a Cross Compiler
+The easiest approach here is to simply use clang. Clang is designed to be a cross compiler, and so any install of clang can compile to any supported platform.
+To compile for another platform simply invoke clang as you normally would, additonally passing `--target=xyz`, where xyz is the target triplet for your target platform.
+
+For x86_64 you would pass `--target=x86_64-elf`. Target triplets describe the hardware instruction set + operating system + file format of what you want to compile for. In this case we are the operating system so that part can be omitted.
+
+Setting up a GCC cross compiler is a little more hands on, but still very simple. The first approach is to simply download a pre-compiled toolchain (see the link above). This is super simple, with the only major disavantage being that you may not be getting the latest version.
+
+The other approach is to compile GCC yourself. This takes more time, but it's worth understanding the process.
+
+### Building GCC From Source
+The fist step is to download the source code for [binutils](https://ftp.gnu.org/gnu/binutils/) and [GCC](https://ftp.gnu.org/gnu/gcc/). 
+After extracting the downloaded files, you'll need to install a few build dependencies:
+- a host compiler (GCC).
+- GNU make
+- Texinfo
+- Bison
+- Flex
+- GMP
+- MPC
+- MPFR
+
+These should all be available in your distribution of choice's repositories. For the exact package names check [this table](https://wiki.osdev.org/GCC_Cross-Compiler#Installing_Dependencies) on the osdev wiki.
+
+//TODO: explain how to build gcc from source
+
+The following sections will use the common shorthands to kepe things simple:
+| Shorthand | Meaning                   |
+|-----------|---------------------------|
+| $(CC) | C Compiler (cross compiler version we just setup) |
+| $(CXX) | C++ compiler (cross-compiler version) |
+| $(LD) | Linker (again, cross compiler version) |
+
+If you're using clang be sure to remember to pass `--target=xyz` with each command. This is not necessary with GCC.
+
+### Building C Source Files
+Now that we have a toolchain setup we can test it all works by compiling a C file.
+Create a C source file, it's contents dont matter here as we wont be running it, just telling it compiles.
+
+Run the following to compile the file into an object file, and then to link that into the final executable.
+```sh
+$(CC) hello_world.c -c -o hello_world.o -ffreestanding
+$(LD) hello_world.o -o hello_world.elf -nostdlib
+```
+
+If all goes well, there should be no errors. At this point you can try running your executable, which will likely result in a segfault if its for your native platform, or it wont run if you've compiled it for another platform.
+You can optionally use `readelf` or `objdump` to inspect the compiled elf.
+
+Regarding the flags used above, `-ffreestanding` tells the compiler that this code is freestanding and should not reference outside code. `-nostdlib` tells the linker a similar thing, and tells it not to link against any of the standard libraries. The only code in the final executable now is yours.
+
+Now there are still several things to be aware of: for example the compiler will make the assumption that all of the cpu's features are available. On x86_64 it'll assume that the FPU and sse(2) are available. This is true in userspace, but not so for the kernel, as we have to set them up before they work!
+
+Telling the compiler to not use these features can be done by passing some extra flags:
+- `-mno-red-zone`: disables the red-zone, a 128 byte region reserved on the stack for optimizations. Hardware interrupts are not aware of the red-zone, and will clobber it. So we ned to disable it in the kernel or we'll loose data.
+- `-mno-80387`: Not strictly necessary, but tells the compiler that the FPU is not available, and to process floating point calculations in software instead of hardware, and to not use the FPU registers.
+- `-mno-mmx`: Disables using the FPU registers for 64-bit integer calculations.
+- `-mno-3dnow`: Disables 3dnow! extensions, similar to MMX.
+- `-mno-sse -mno-sse2`: Disables SSE and SSE2, which use the 128-bit xmm registers, and require setup before use.
+
+There are also a few other compiler flags that are useful, but not necessary:
+- `-fno-stack-protector`: Disables stack protector checks, which use the compiler library to check for stack smashing attacks. Since we're not including the standard libaries, we cant use this unless we implement the functions ourselves. Not really worth it.
+- `-fno-omit-frame-pointer`: Sometimes the compiler will skip creating a new stack frame for optimization reasons. This will mess with stack traces, and only increases the memory usage by a few bytes here and there. Well worth having.
+- `-Wall` and `-Wextra`: These flags need no introduction, they just enable all default warnings, and then extra warnings on top of that. Some people like to use `-Wpedantic` as well, but it can cause some false positives.
 
 ### Building C++ Source Files
-- rtti, exceptions and no removing unwind tables
+This section should be seen as an extension to the section above on compiling C files, compiler flags included.
+
+When compiling C++ for a freestanding environment, there are a few extra flags that are required:
+- `-fno-rtti`: Tells the compiler not to generate **R**un**t**ime **t**ype **i**nformation. This requires runtime support from the compiler libaries, and the os. Neither of which we have in a freestanding environment.
+- `-fno-exceptions`: Requires the compiler libraries to work, again which we dont have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) will still required you to declare them `noexcept` so the correct symbols are generated.
+
+And a few flags that are not required, but can be nice to have:
+- `-fno-unwind-tables` and `-fno-asynchronous-unwind-tables`: tells the compiler not to generate unwind tables. These are mainly used by exceptions and runtime type info (rtti - dynamic_cast and friends). Disabling them just cleans up the resulting binary, and reduces its file size.
 
 ## Linking Object Files Together
-- Ref to linker scripts explanation. @Ivan.
+The GCC Linker (ld) and the compatable clang linker (lld.ld) can accept linker scripts.
+These tell the linker how to layout the final executable: what things go where, with what alignment and permissions.
 
-[LinkerScripts](Build_Process/LinkerScripts.md)
+These are their own topic, and have a file dedicated to them [here](Build_Process/LinkerScripts.md). You likely havent used these when building userspace programs, as your compiler installation provides a default one. However since we're building a freestanding program (the kernel) we need to be explicit about these things.
+
+To use a linker script you add `-T script_name_here.ld` to the linker command.
+
+### Building with Makefiles
+- why are we using makefiles instead of cmake, msbuild etc..
+- GNU make vs other makes, mention extensions
+- include a complete makefile example
+- maybe this should be its own file? then we can really go into more detail.
 
 ## Quick Addendum: Easily Generating a Bootable ISO
 - Depends on bootloader, assume grub for now (grub-mkrescue). Also make reference to limine-install.
 - Talk about xorisso.
+- Maybe a separate file on the different boot protocols? how they differ, whats required to support them, and how to generate an iso using their tools.
 
 ## Building and Using Debugging Symbols
 - -g flag, quick mention of different symbol formats (defaults to host, fine if debugging on host).
+- how to get these symbols: mb2 has a tag for sections, stivale2 provides the entire elf file.
