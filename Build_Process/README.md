@@ -29,7 +29,7 @@ The main difference is that GCC requires a completely separate set of bianries (
 
 However, each GCC toolchain will use the platform-specific headers by default, where as clang seems to have insane defaults in this area. You'll generally always want to have the platform-specific headers GCC supplies regardless of which toolchain you build with.
 
-Compiling GCC from source dosn't take too long on a modern CPU (~10 minutes for a complete build on a 7th gen intel mobile cpu, 4 cores), however there are also prebuilt binaries online from places like [bootlin](https://toolchains.bootlin.com/).
+Compiling GCC from source doesn't take too long on a modern CPU (~10 minutes for a complete build on a 7th gen intel mobile cpu, 4 cores), however there are also prebuilt binaries online from places like [bootlin](https://toolchains.bootlin.com/).
 
 ## Setting up a build environment
 Setting up a proper build environment can be broken down into a few steps:
@@ -47,23 +47,7 @@ For x86_64 you would pass `--target=x86_64-elf`. Target triplets describe the ha
 
 Setting up a GCC cross compiler is a little more hands on, but still very simple. The first approach is to simply download a pre-compiled toolchain (see the link above). This is super simple, with the only major disavantage being that you may not be getting the latest version.
 
-The other approach is to compile GCC yourself. This takes more time, but it's worth understanding the process.
-
-### Building GCC From Source
-The fist step is to download the source code for [binutils](https://ftp.gnu.org/gnu/binutils/) and [GCC](https://ftp.gnu.org/gnu/gcc/). 
-After extracting the downloaded files, you'll need to install a few build dependencies:
-- a host compiler (GCC).
-- GNU make
-- Texinfo
-- Bison
-- Flex
-- GMP
-- MPC
-- MPFR
-
-These should all be available in your distribution of choice's repositories. For the exact package names check [this table](https://wiki.osdev.org/GCC_Cross-Compiler#Installing_Dependencies) on the osdev wiki.
-
-//TODO: explain how to build gcc from source
+The other approach is to compile GCC yourself. This takes more time, but it's worth understanding the process, [described here](CompilingGCC.md).
 
 The following sections will use the common shorthands to kepe things simple:
 | Shorthand | Meaning                   |
@@ -71,6 +55,8 @@ The following sections will use the common shorthands to kepe things simple:
 | $(CC) | C Compiler (cross compiler version we just setup) |
 | $(CXX) | C++ compiler (cross-compiler version) |
 | $(LD) | Linker (again, cross compiler version) |
+| $(C_SRCS) | All the C source files to compile |
+| $(OBJS) | All the object files to link |
 
 If you're using clang be sure to remember to pass `--target=xyz` with each command. This is not necessary with GCC.
 
@@ -115,22 +101,39 @@ And a few flags that are not required, but can be nice to have:
 
 ## Linking Object Files Together
 The GCC Linker (ld) and the compatable clang linker (lld.ld) can accept linker scripts.
-These tell the linker how to layout the final executable: what things go where, with what alignment and permissions.
+These describe the layout of the final executable to the linker: what things go where, with what alignment and permissions.
+Ultimately this file is what's loaded by the bootloader, so these details can be important.
 
-These are their own topic, and have a file dedicated to them [here](Build_Process/LinkerScripts.md). You likely havent used these when building userspace programs, as your compiler installation provides a default one. However since we're building a freestanding program (the kernel) we need to be explicit about these things.
+These are their own topic, and have a file dedicated to them [here](Build_Process/LinkerScripts.md). You likely havent used these when building userspace programs, as your compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) we need to be explicit about these things. 
 
 To use a linker script you add `-T script_name_here.ld` to the linker command.
 
+Outside of linker scripts, the linking process goes as you'd expect:
+```sh
+$(LD) $(OBJS) -o output_filename_here.elf -nostdlib -static -pie --no-dynamic-linker
+```
+
+For an explanation of the above linker flags used:
+- `-nostdlib`: this is crucial for building a freestanding program, as it stops the linker automatically including the default libraries for the host platform. Otherwise your program will contain a bunch of code that wants to make syscalls to your host OS.
+- `-static`: A safeguard for linking against other libarires. The linker will error if you try to dynamically link with anything (i.e static linking only). Because again there is not runtime, there is no dynmaic linker.
+- `-pie` and `--no-dynamic-linker`: Not strictly necessary, but forces the linker to output a relocatable program with a very narrow set of relocations. This is useful as it allows some bootloaders to perform relocations on the kernel.
+
 ### Building with Makefiles
-- why are we using makefiles instead of cmake, msbuild etc..
-- GNU make vs other makes, mention extensions
-- include a complete makefile example
-- maybe this should be its own file? then we can really go into more detail.
+Now compiling and building one file isn't so bad, but the same process for muliple files can quickly get out of hand. This is especially true when you only want to build files that have been modified, and use previously compiled versions of other files.
+
+For an example using makefiles, [check here](GNUMakefiles.md). Makefiles are a common tool used for building many pieces of software due to how how easy and commmon `make` is as a tool. Specifically GNU make.
+
+This section may expand to include other build systems (meson, cmake) soon.
+
+There are other make-like tools out there (xmake, nmake, gmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make.
+
+Of course there are also other build systems available for use, but those are not covered here.
 
 ## Quick Addendum: Easily Generating a Bootable ISO
 - Depends on bootloader, assume grub for now (grub-mkrescue). Also make reference to limine-install.
 - Talk about xorisso.
 - Maybe a separate file on the different boot protocols? how they differ, whats required to support them, and how to generate an iso using their tools.
+[here](GeneratingISO.md)
 
 ## Building and Using Debugging Symbols
 - -g flag, quick mention of different symbol formats (defaults to host, fine if debugging on host).
