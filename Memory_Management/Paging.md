@@ -1,5 +1,57 @@
 # Paging
 
+## What is Paging?
+
+Paging is a memory manageent scheme that introduce the concept of logical address (virtual address) to the operating system. On x86_* architectures it is achieved via hardware. Using this tecnique we create a new layer of addressing above the memory space, that introduce a mapping between a physical address and a logical one, and few more features (like access prtection, level protection, etc.)
+
+Paging introduce few new concepts that are explained below
+
+### Page
+A _page_ is a contiguous block of  memory of fixed size, and it represent the smallest unit of data for a virtal memory management unit, and usually is describe by a single entry in a Page Table
+
+### Page Directories and Tables
+
+Those are the basics blocks of paging. Depending on the architectures, and page size there can be a different number of them (for example if we are running in 32 bits mode with 4k pages we have Page Directory and Page Table,  if we are running in 64 bits with 4k pages we have four level of those tables, 3 directories and 3 tables.
+
+What are those directories and tables? Let's start from the tables: 
+
+* **Page Table** contains the information about a single pages of memory, an entry in a page table represents the starting physical memory addresss for this page.
+* **Page Directory** an entry in a page directory can point to: another page directory (depending on what type of paging we have enabled) or a page table. 
+
+A special register contains the address of the Root Page Directory. 
+
+### Logical Address
+
+Or Virtual Address, is and address where the application/data appears to reside from an application/user level perspective. That address could or could not be the same of th physical address, dependding of operating system design. 
+
+A virtual address is usually a composition of entry number for each level of tables.
+
+Using logic address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
+
+
+So for example: 
+
+```
+phys#0x123456 = virt#0xffff2345235
+```
+
+This mapping, in x86 architectures, is achieved trhough the usage of several tables each item in one leve level pointing to the next level table. 
+A virtual address is a composition of entry number for each level of the table. So for example assume that we have 3 levels of tables, and an address of 32 bits:
+
+```
+virtaddress = 0xff880120
+```
+
+Now we know that the bits 
+
+The address of the root table is stored in a special register called PDBR, when translating an address from virtual to physical the table pointed by PDBR a
+
+every entry of a table has its own ormat
+
+
+an example is given on this section for 64bit paging. 
+## Paging in Long Mode 
+
 In 64 bit mode we have up to 4 Levels of page table. The number depends on the size we want to assign to each page. 
 
 There are 3 possible scenarios: 
