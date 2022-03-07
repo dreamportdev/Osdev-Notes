@@ -14,9 +14,10 @@ if(strncmp(header->Signature, "FACP", 4)==0){
 	printf("FACP found\n");
 }
 ```
-One can find the address of it via comparing strings.
+The address of the FADT can be found by comparing the 4 bytes of the signature field with the text "FADT". This is the same as how other SDT headers are found.
+They aren't null terminated, so it would be better using memorystring compare than string comapare.
 
-### Structure of the FACP
+## Structure of the FACP
 The structure of it is basically: 
 
 ```C
@@ -80,13 +81,14 @@ struct facp {
 }
 ```
 .
+
 It contains the header, the DSDT pointer, and blocks.
 The blocks will be used for shutdown.
 
-### Shutdown via FACP
+## Shutdown via FACP
 The ACPI shutdown is known as easy as several couple lines, however, enablement and initialization is neccessary for the shutdown code.
 
-I. Enabling the ACPI
+### I. Enabling the ACPI
 
 Enabling the ACPI is done with the following steps:
 
@@ -114,29 +116,27 @@ It outbytes data acpi enable to smi cmd port
 
 and finally we need to check if it enabled the ACPI. It can be done by 3 steps:
 
-1.
+1. For the PM1a CNT Block: Could it work?
 ```c
 int i;
 for(i = 0; i < 300; i++){
 	if(inw((uint16_t) PM1a_CNT_BLK & (uint16_t) SCI_EN) == 1){
 		break;
 	}
-		suspend(10);
-	}
+		// If else, you can sleep a bit and continue again!!
 }
 ```
 2. Do the same thing for the pm2b cnt block.
 3. Give error if not, give success message if is.
 
-II. ACPI initialization
+### II. ACPI initialization
 
 You must have found the FACP and have the header.
 
-S5 Address
-can be found by several lines of code basically doing a while
+S5 Address can be found by several lines of code basically doing a while
 
 But you need to first add 36 from the DSDT as the address, get the dsdt length as the following code, and finally do a while until DSDT Length -- is greater than 0
-While it does it, you should compare the first 4 characters via memcmp like functions and when you find it, you'll break and continue to the next step. Don't forget to add 1 every time to the address or you will not get the loop properly.
+The code below performs a check at every byte, looking for a sequence of 4 characters, you should compare the first 4 characters via memcmp like functions and when you find it, you'll break and continue to the next step. Don't forget to add 1 every time to the address or you will not get the loop properly.
 ```c
 	uint8_t* s5_addr = (uint8_t*) facp->dsdt + 36;
 	int dsdt_len = *(facp->dsdt + 1) - 36;
@@ -147,28 +147,34 @@ While it does it, you should compare the first 4 characters via memcmp like func
 		s5_addr++;
 	}
 ```
-Now that you have found
+Now that you have found the S5 addr then you will go make the init acpi function.
 
-the S5 addr
-
-then you will go intitialize everything.
-
-All these things will happen given that the DSDT length is greater than 0, which mean it has any data so you might want to get a while for this thing.
+All the stuff explained below will happen given that the DSDT length is greater than 0, which mean it has any data so you might want to get a while for this thing.
 
 First you need to check if AML is valid.
 
+You need to check if everything is in the right place.
 
-![image](https://user-images.githubusercontent.com/39773400/156290876-ddae62f7-2f28-4f84-8a42-d28e5ebe370a.png)
+Your check to make it valid needs information below:
+
+| Encoding name | Encoding value | 
+| --------------|----------------|
+|   NameOp    |  0x08        |
+|   Byteprefix    |  0x0A        |
+|   Byteprefix    |  0x12        |
 
 Figure 1
 
-![image](https://user-images.githubusercontent.com/39773400/156291769-5b5cf088-f902-431e-8c23-fa732fa12067.png)
+|               | PackageOP	 | Package Length | NumElements	   | Byteprefix#    | Byteprefix#    | Byteprefix#    | Byteprefix#    |
+| --------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|
+|   Data        |                |                |                | SLP_TYPa       | SLP_TYPb       | Res.           | Res.           |
+|   Enc. Val.   |                |                |  0x04          |                |                |                |                |
 
 Figure 2
 
 Figure 1 and 2 explains the encoding value of the encoding name and how all these look like repectively as a photo.
 
-Your code must look like this:
+An example of the explaination:
 ```c
 if((*(s5_addr - 1) == 0x08 || ( *(s5_addr - 2) == 0x08 && *(s5_addr - 1) == '\\') ) && *(s5_addr + 4) == 0x12){
 	s5_addr += 5;
@@ -188,7 +194,7 @@ if((*(s5_addr - 1) == 0x08 || ( *(s5_addr - 2) == 0x08 && *(s5_addr - 1) == '\\'
 
 Next, make all the defined data the same as the one of the FACP.
 
-III. The shutdown via ACPI
+### III. The shutdown via ACPI
 
 Now we've got everything done.
 
@@ -202,16 +208,17 @@ if (PM1b_CNT_BLK != 0){
 
 Now we have the ACPI shutdown here.
 
-### Useful Resouces
-ACPI spec https://uefi.org/specs/ACPI/6.4/index.html#
+## Useful Resouces
 
-OSDev wiki FACP https://wiki.osdev.org/FADT
+- ACPI spec https://uefi.org/specs/ACPI/6.4/index.html#
 
-OSDev wiki Shutdown https://wiki.osdev.org/Shutdown
+- OSDev wiki FACP https://wiki.osdev.org/FADT
 
-OSDev forum Shutdown via FACP https://forum.osdev.org/viewtopic.php?t=16990
+- OSDev wiki Shutdown https://wiki.osdev.org/Shutdown
 
-Example code (AhnTriOS) https://github.com/AhnJihwan/AhnTri/blob/main/drivers/acpi.c#L194
+- OSDev forum Shutdown via FACP https://forum.osdev.org/viewtopic.php?t=16990
 
-OSDev wiki AML https://wiki.osdev.org/AML
+- Example code (AhnTriOS) https://github.com/AhnJihwan/AhnTri/blob/main/drivers/acpi.c#L194
+
+- OSDev wiki AML https://wiki.osdev.org/AML
 
