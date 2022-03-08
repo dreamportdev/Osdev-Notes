@@ -2,7 +2,7 @@
 
 ## What is Paging?
 
-Paging is a memory manageent scheme that introduce the concept of logical address (virtual address) to the operating system. On x86_* architectures it is achieved via hardware. Using this tecnique we create a new layer of addressing above the memory space, that introduce a mapping between a physical address and a logical one, and few more features (like access prtection, level protection, etc.)
+Paging is a memory management scheme that introduce the concept of **_logical address_** (virtual address) to the operating system. On x86_* architectures it is achieved via hardware. Using this tecnique we create a new layer of addressing above the memory space (the physical address space), that introduce a mapping between a physical address and a logical one, and few more features (like access protection, level protection, etc.)
 
 Paging introduce few new concepts that are explained below
 
@@ -22,11 +22,14 @@ A special register contains the address of the Root Page Directory.
 
 ### Logical Address
 
-Or Virtual Address, is and address where the application/data appears to reside from an application/user level perspective. That address could or could not be the same of th physical address, dependding of operating system design. 
+A Virtual Address, is and address where the application/data appears to reside from an application/user level perspective. That address could or could not be the same of th physical address, depending of operating system design. 
 
-A virtual address is usually a composition of entry number for each level of tables.
+A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
 
-Using logic address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
+![address_translation drawio](https://user-images.githubusercontent.com/59960116/157250312-1175dbd1-87ca-47d7-b7cf-6b07394af4ce.png)
+
+
+Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
 
 
 So for example: 
