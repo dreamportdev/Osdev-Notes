@@ -2,12 +2,12 @@
 
 ## What is Paging?
 
-Paging is a memory management scheme that introduce the concept of **_logical address_** (virtual address) to the operating system. On x86_* architectures it is achieved via hardware. Using this tecnique we create a new layer of addressing above the memory space (the physical address space), that introduce a mapping between a physical address and a logical one, and few more features (like access protection, level protection, etc.)
+Paging is a memory management scheme that introduce the concept of **_logical address_** (virtual address) and **_Virtual Memory_** to the operating system. On x86_* architectures it is achieved via hardware. Using this tecnique we create a new layer of addressing above the memory space (the physical address space), that introduce a mapping between a physical address and a logical one, and few more features (like access protection, level protection, etc.)
 
 Paging introduce few new concepts that are explained below
 
 ### Page
-A _page_ is a contiguous block of  memory of fixed size, and it represent the smallest unit of data for a virtal memory management unit, and usually is describe by a single entry in a Page Table
+A _page_ is a contiguous block of physical  memory of fixed size, and it represent the smallest unit of data for a virtal memory management unit, and usually is described by a single entry in a Page Table
 
 ### Page Directories and Tables
 
