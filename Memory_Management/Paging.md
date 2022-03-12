@@ -38,14 +38,24 @@ So for example:
 phys#0x123456 = virt#0xffff2345235
 ```
 
-This mapping, in x86 architectures, is achieved trhough the usage of several tables each item in one leve level pointing to the next level table. 
-A virtual address is a composition of entry number for each level of the table. So for example assume that we have 3 levels of tables, and an address of 32 bits:
+This mapping, in x86 architectures, is achieved trhough the usage of several hierarchical tables each item in one level is pointing to the next level table. 
+A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address:
 
 ```
 virtaddress = 0xff880120
 ```
 
-Now we know that the bits 
+Now we know that the bits: 
+
+* 0 to 10 are the offset
+* 11 to 21 are the page table entry
+* 20 to 32 are the page directory entry
+
+We can translate the abbove address to: 
+* Offset:  0x120 bytes into page
+* Page Table entry: number 0x80 (it points to the memory page)
+* Page Dir entry: 0x3FE (it points to a page table)
+
 
 The address of the root table is stored in a special register called PDBR, when translating an address from virtual to physical the table pointed by PDBR a
 
