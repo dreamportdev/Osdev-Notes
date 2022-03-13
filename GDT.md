@@ -2,7 +2,7 @@
 
 ## Overview
 
-The GDT is an x86(_64) structure that contains a series of descriptors. In a general sense, each of these descriptors tell the cpu about different things it should do. To refer to a GDT descriptor a selector is used, which is simply the byte offset from the beginning of the GDT where that descriptor starts.
+The GDT is an x86(_64) structure that contains a series of descriptors. In a general sense, each of these descriptors tell the cpu about different things it should do. To refer to a GDT descriptor a selector is used, which is simply the byte offset from the beginning of the GDT where that descriptor starts ORed with the ring that selector refers to. The OR operation is necessary for legacy reasons, but these mechanisms still exist.
 
 It's important to separate the idea of the bit-width of the cpu (16-bit, 32-bit, 64-bit) from the current mode (real mode, protected mode, long mode). Real mode is generally 16 bit, protected mode is generally 32 bit, and long mode is usually 64-bit, but this is not always the case. The GDT decides the bit-width (affecting how instructions are decoded, and how stack operations work for example), while CR0 and EFER affect the mode the cpu is in.
 
@@ -33,9 +33,9 @@ The cpu treats all segments as having a base of 0, and an infinite limit. Meanin
 
 ## Terminology
 - Descriptor: an entry in the GDT (can also refer to the LDT/local descriptor table, or IDT).
-- Selector: byte offset into the GDT, refers to a descriptor.
+- Selector: byte offset into the GDT, refers to a descriptor. The lower 3 bits contain some extra fields, see below.
 - Segment: the region of memory described by the base address and limit of a descriptor.
-- Segment Register: where the currently in use segments are stored.
+- Segment Register: where the currently in use segments are stored. These have a visible portion (the selector loaded), and an invisible portion which contains the cached base and limit fields.
 
 The various segment registers:
 - CS: Code selector, defines where instructions can be fetched from.
@@ -44,6 +44,19 @@ The various segment registers:
 - ES: Extra selector, intended for use with string operations, no specific purpose.
 - FS: F selector, no specific purpose. Sys V ABI uses it for thread local storage.
 - GS: G selector, no specific purpose. Sys V ABI uses it for process local storage, commonly used for cpu-local storage in kernels due to `swapgs` instruction.
+
+When using a selector to refer to a GDT descriptor, you'll also need to specify the ring you're trying to access. This exists for legacy reasons to solve a few edge cases that have been solved in other ways. If you need ot use these mechanisms, you'll know.
+Constructing a segment selector is done like so:
+
+```c
+bool is_ldt_selector; //whether this selector uses the GDT (0), or the LDT (1)
+uint8_t target_cpu_ring; //ring 0 = full access (kernel space), rings 1/2 = less access, ring 3 = least access (user space).
+uint16_t selector = byte_offset_of_descriptor | (target_cpu_pro & 0b11) | ((target_cpu_ring & 0b1) << 2)
+```
+
+It's worth noting that in the early stages of your kernel you only be using the GDT and kernel selectors, meaning these fields are zero. Therefore this calculation is not necessary, you can simply use the byte offset into the GDT as the selector.
+
+This is also the first mention of the LDT (local descriptor table). The LDT uses the same structure as the GDT, but is loaded into a separate register. The idea being that the GDT would hold system descriptors, and the LDT would hold process-specific descriptors. This tied in with the hardware task switching that existed in protected mode. The LDT still exists in long mode, but should be considered deprecated by paging.
 
 Address types:
 - Logical address: addresses the programmer deals with.
