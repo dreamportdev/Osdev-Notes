@@ -4,7 +4,7 @@ Basic knowledge of compiling these languages is assumed, but kernel specific not
 
 ## Freestanding Environment
 If you build a C file with no extra flags, you'll end up with an executable that starts running code at the function `void main(int argc, char** argv, char** envp)`.
-However, this is actually not where your program starts executing! A bunch of libraries from your host os, compiler and sometimes specific to your language will be added to your program automatically. This eases development for regular applications, but complicates life a little for developing a kernel.
+However, this is actually not where your program starts executing! A number of libraries from your host os, compiler and sometimes specific to your language will be added to your program automatically. This eases development for regular applications, but complicates life a little for developing a kernel.
 
 A userspace program normally begins at `void _start()`, which is part of the c standard library, and will setup things like some global state, and parts of the environment. It will also call `_init()` which calls global constructors for languages like C++. Things like environment variables dont automatically exist in a program's memory space, they have to be fetched from somewhere, same with the command line. This all happens in `_start()`.
 
@@ -19,9 +19,9 @@ Both C and C++ have several freestanding headers. The common ones are `stdint.h`
 ## Cross Compilation
 Often this is not necessary for hobby os projects, as we are running our code on the same cpu architecture that we're compiling on. However it's still recommended to use one as you have can configure the cross compiler to the specs you want, rather than relying on the one provided by your host os. 
 
-A cross compiler is always required when building your os for a different isa to your host. Building code for an risc-v cpu, while running on an x86 cpu would require a cross compiler for example.
+A cross compiler is always required when building your os for a different cpu architecture to your host. Building code for an risc-v cpu, while running on an x86 cpu would require a cross compiler for example.
 
-The two main compiler toolchains used are gcc and clang. They differ a lot in philosophy, but are comparable in a lot of the ways we care about. GCC is much older and so it established a lot of the conventions used, such as the majority ofs compiler flags, inline assembly and some language extensions. Clang honours most (if not all) of these, and the two seem to be feature equivilent, with the exception of some experimental features.
+The two main compiler toolchains used are gcc and clang. They differ a lot in philosophy, but are comparable for a lot of the things we care about. GCC is much older and so it established a lot of the conventions used, such as the majority ofs compiler flags, inline assembly and some language extensions. Clang honours most (if not all) of these, and the two seem to be feature equivilent, with the exception of some experimental features.
 
 ## Differences Between GCC and Clang
 
@@ -121,13 +121,11 @@ For an explanation of the above linker flags used:
 ### Building with Makefiles
 Now compiling and building one file isn't so bad, but the same process for muliple files can quickly get out of hand. This is especially true when you only want to build files that have been modified, and use previously compiled versions of other files.
 
-For an example using makefiles, [check here](GNUMakefiles.md). Makefiles are a common tool used for building many pieces of software due to how how easy and commmon `make` is as a tool. Specifically GNU make.
+For an example using makefiles, [check here](GNUMakefiles.md). Makefiles are a common tool used for building many pieces of software due to how how easy and commmon `make` is. Specifically GNU make. GNU make is also chosen as it comes installed by default in many linux distros, and is almost always available if it's not already installed.
+
+There are other make-like tools out there (xmake, nmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make.
 
 This section may expand to include other build systems (meson, cmake) soon.
-
-There are other make-like tools out there (xmake, nmake, gmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make.
-
-Of course there are also other build systems available for use, but those are not covered here.
 
 ## Quick Addendum: Easily Generating a Bootable ISO
 - Depends on bootloader, assume grub for now (grub-mkrescue). Also make reference to limine-install.
