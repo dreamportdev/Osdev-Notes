@@ -8,7 +8,7 @@ The newer version is backward compatible with the older
 ### RSDP Structure
 Basic data structure for RSDP v1 is: 
 
-```C
+```c
 struct RSDPDescriptor {
  char Signature[8];
  uint8_t Checksum;
@@ -46,7 +46,7 @@ struct RSDP2Descriptor
 
 Before proceeding let's explain little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just mutter of cycling a byte array. Here the example code: 
 
-```C
+```c
 bool validate_RSDP(char *byte_array, size_t size) {
  uint32_t sum = 0;
  for(int i = 0; i < size; i++) {
@@ -71,7 +71,7 @@ RSDT (Root System Description Table) is a data structure used in the ACPI progra
 The Rsdt is the root of other many different Descriptor tables (SDT), all of them may be splitted in two parts: 
 
 * the first part is the header, common between all the SDTs with the following structure:
-```C
+```c
 struct ACPISDTHeader {
   char Signature[4];
   uint32_t Length;
@@ -94,7 +94,7 @@ The RSDT is an SDT header followed by an array of `uint32_t`s, representing the 
 
 The XSDT is the same, except the array is of `uint64_t`s.
 
-```C
+```c
 struct RSDP
 {
   ACPISDTHeader sdtHeader; //signature "RSDP"
@@ -115,7 +115,7 @@ ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[*n*] : (u
 
 *  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if you try to print it, you will most likely end up in printing garbage in the best case scenario.
 *  The RSDT Data is an array of uint32_t addresses while the XSDT data is an array of uint64_t addresses. The number of items in the RSDT and XSDT can be computed in the following way:
-```C
+```c
 //for the RSDT
 size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
 //for the XSDT
