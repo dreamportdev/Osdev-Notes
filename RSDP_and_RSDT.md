@@ -64,7 +64,7 @@ Having last byte means that `result mod 0x100` is 0. Now there are two ways to t
 The function above works perfectly with both versions of descriptors. 
 In the XSDT since it has more fields, the previous checksum field wont offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
 
-## RSDT Data structure and filelds
+## RSDT Data structure and fields
 
 RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers many different table descriptors.
 
