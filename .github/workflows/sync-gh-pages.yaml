@@ -20,6 +20,7 @@ jobs:
 
     - name: merge and push
       run: >
-        git checkout -b gh-pages origin/gh-pages;
+        git fetch;
+        git checkout gh-pages;
         git merge master;
         git push;
