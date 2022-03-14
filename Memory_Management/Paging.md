@@ -57,12 +57,8 @@ We can translate the abbove address to:
 * Page Dir entry: 0x3FE (it points to a page table)
 
 
-The address of the root table is stored in a special register called PDBR, when translating an address from virtual to physical the table pointed by PDBR a
+In this section we will se the X86_64 paging.
 
-every entry of a table has its own ormat
-
-
-an example is given on this section for 64bit paging. 
 ## Paging in Long Mode 
 
 In 64 bit mode we have up to 4 Levels of page table. The number depends on the size we want to assign to each page. 
