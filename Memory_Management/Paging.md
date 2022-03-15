@@ -217,6 +217,7 @@ The error code has the following structure:
 |  Reserved |  I/D  |  RSVD  |  U/S |  W/R  |  P  |
 
 Where: 
+
 * Bits 31...4 Are reserved
 * Bit 4 if 1 means tha t the fault is caused by an instruction fetch
 * Bit 3 if 1 means that the violation was caused by a reserved bit set to 1 in a page directory
