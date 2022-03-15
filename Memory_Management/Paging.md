@@ -57,11 +57,11 @@ We can translate the abbove address to:
 * Page Dir entry: 0x3FE (it points to a page table)
 
 
-In this section we will se the X86_64 paging.
+In this section we will see the X86_64 paging.
 
 ## Paging in Long Mode 
 
-In 64 bit mode we have up to 4 Levels of page table. The number depends on the size we want to assign to each page. 
+In 64 bit mode we have up to 4 Levels of page tables. The number depends on the size we want to assign to each page. 
 
 There are 3 possible scenarios: 
 
@@ -74,12 +74,79 @@ To implement paging, is strongly reccomended to have implemented exceptions too.
 The 4 levels of page directories/tables are: 
 
 * the Page-Map Level-4 Table (PML4),
-* the Page-Directory Pointer Table (PDP),
+* the Page-Directory Pointer Table (PDPR),
 * the Page-Directory Table (PD),
 * and the Page Table (PT).
 
 The number of levels depend on the size of the pages chosen. 
 If we are using 4kb pages then we will have: PML4, PDPR, PD, PT, while if we go for 2mb Pages we have only PML4, PDPR, PD. 
+
+## Page Directories and Table structure
+
+As we have seen earlier in this section, when paging is enabled, a virtual address is translated into a set of entry number in different tables. In this paragraph we will see the different types available for them
+
+But before proceeding with the details let's see some of the characteristics common between all table/directory types: 
+
+* The size of all table type is fixed and is 4k
+* Every table has exactly 512 entries
+* Every entry has the size of 64 bits
+* The tables have a hierarchy, and every item in a table higher in the hierachy point to a lower hierachy one (with some exceptions explained later). The page table points to a memory area. 
+
+The hierarchy of the tables is: 
+
+* PML4 is the Root table, is the one that is contained in the PDBR register, and that is loaded for the actual address translation (see the next paragraph). Every entry in the page table points to a PDPR table
+* PDPR every entry of this table points to a Page Directory
+* Page Directory (PD): depending of the value of the PS bit (Page Size) an entry in this table can point to:
+   * a Page Table if the PS bit is clear (this means we are using 4k pages)
+   * 2 MB memory area if the PS bit is set 
+* Page Table (PT) Every entry in the page Table points to a 4k memory page.
+
+Is important to note that the x86_64 architecture support mixing page size.
+
+Let's see first the structure of all entries type, and then explain the bits
+
+### PML4 & PDPR & PD
+
+PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's start seeing the structure of the first two types: 
+
+|63     | 62        | 51         | 39                     | 11       9 |8     6 | 5     |  4      |  3      |  2      |  1      | 0     |
+|-------|-----------|------------|------------------------|------------|--------|-------|---------|---------|---------|---------|-------|
+|**EXB**| Available | _Rsvd (0)_ | **Table Base Address** | Available  | _Rsvd_ | **A** | **PCD** | **PWT** | **U/S** | **R/W** | **P** |
+
+Where **Table Base Address** is PDPR Table base address if the table is PML4 or the PD base address if the table is the PDPR.
+
+Now the Page directory has few differences: 
+* Bits 39 to 12 are the Page Table base address when using 4k pages, or 2 MB Memory area if the PS bit is set.
+* Bits 6 and 8 must be 0
+* Bit 7 (the PS) must be 1
+* If we are using 2MB Pages bit 12 to 20 are reserved and must be 0. If not it will cause a #PF
+
+### Page Table 
+A page table entry structure is still similar to the one above, but it contains few more bits that can be set: 
+
+|63     | 62    | 51         | 39                    | 11  9 | 8     | 7       | 6      | 5     |  4      |  3      |  2      |  1      | 0     |
+|-------|-------|------------|-----------------------|-------|-------|---------|--------|-------|---------|---------|---------|---------|-------|
+|**EXB**| Avail | _Rsvd (0)_ | **Page Base Address** | Avail | **G** | **PAT** | **D**  | **A** | **PCD** | **PWT** | **U/S** | **R/W** | **P** |
+
+In this table there are 3 new bits (D, PAT, G) and the Page Base Address as already explained is not pointing to a table but to a memory area. 
+
+In the next section we will se all the fields of an entry.
+
+### Page Table entries fields
+
+Below is a list of all the fields present in the table entries, with an explanation of the most commonly used.
+
+* **P** (Present): If set this tells the CPU that the current page or page table pointed by this entry is currently loaded in physical memory, so when accessed the address translation can be carried out. If is 0 this means that the page is not loaded into memory so a virtual address that contains this entry will cause a Page Fault.
+* **R/W** (Read/Write): If set the page can be both read and written, if clear is in read only mode. When this bit is set in a page Directory it tells the cpu that all its entries will share that setting
+* **User/Supervisor** It describe the privilege level, if clear the page has the Supervisor level, while if it is set the level is Supervisor.
+* **PWT** (Page Level Write Through): controls the caching policy (writhe through or write back), i usually leave it to 0, for more information refer to the Intel Developer Manuals
+* **PCD** (Page Level Cache Disable): controls the caching of individual pages or tables, i usually leave it to 0, for more information refer to the Intel Developer Manuals
+* **A** (Accessed): This value is set by the CPU, if is 0 it means the page hasn't  been accessed yet. Is set when the page (or page teable) have been accessed at least once
+* **D** (Dirty): Indicates if a page has been writtent to when set. This flag applies only to Page Tables. This flag and the accessed flag are provided for being use by the memory management software, the CPU only set it when it's value is 0. Otherwise is up to the Memory Maanger to decide if it has to be cleared or not.
+* **PS** (Page Size): Used only on Page Directory Level, if set it indicates that the current entry point to a 2MB Page, if it is clear it means that the current entry is a 4kb page
+* **PAT** (Page Attribute Table Index): It selects the PAT entry, refer to the Intel Manual for a more detailed explanation
+* **G** (Global) it requires the PGE bit set in in CR4, if set it indicates that when CR3 is loaded or a task switch occurs that page-table or page directory is not invalidated.
+* **EXB** is the Execute Disable bit, available only if supported by the CPU, otherwise is reserved. Refer to the intel manual for this bit.
 
 ## Address translation 
 
