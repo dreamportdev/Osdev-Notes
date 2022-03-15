@@ -109,9 +109,14 @@ Let's see first the structure of all entries type, and then explain the bits
 
 PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's start seeing the structure of the first two types: 
 
-|63     | 62        | 51         | 39                     | 11       9 |8     6 | 5     |  4      |  3      |  2      |  1      | 0     |
-|-------|-----------|------------|------------------------|------------|--------|-------|---------|---------|---------|---------|-------|
-|**EXB**| Available | _Rsvd (0)_ | **Table Base Address** | Available  | _Rsvd_ | **A** | **PCD** | **PWT** | **U/S** | **R/W** | **P** |
+|63     | 62        | 51                   | 39                     | 11  ...  9 |
+|-------|-----------|----------------------|------------------------|------------|
+|**EXB**| Available | _Reserved must be 0_ | **Table Base Address** | Available  |
+
+
+|8   ...   6 | 5     |  4      |  3      |  2      |  1      | 0     |
+|------------|-------|---------|---------|---------|---------|-------|
+| _Reserved_ | **A** | **PCD** | **PWT** | **U/S** | **R/W** | **P** |
 
 Where **Table Base Address** is PDPR Table base address if the table is PML4 or the PD base address if the table is the PDPR.
 
@@ -124,9 +129,15 @@ Now the Page directory has few differences:
 ### Page Table 
 A page table entry structure is still similar to the one above, but it contains few more bits that can be set: 
 
-|63     | 62    | 51         | 39                    | 11  9 | 8     | 7       | 6      | 5     |  4      |  3      |  2      |  1      | 0     |
-|-------|-------|------------|-----------------------|-------|-------|---------|--------|-------|---------|---------|---------|---------|-------|
-|**EXB**| Avail | _Rsvd (0)_ | **Page Base Address** | Avail | **G** | **PAT** | **D**  | **A** | **PCD** | **PWT** | **U/S** | **R/W** | **P** |
+|63     | 62    | 51         | 39                    | 11  ... 9 |
+|-------|-------|------------|-----------------------|-----------|
+|**EXB**| Avail | _Reserved must be 0_ | **Page Base Address** | Available |
+
+
+| 8     | 7       | 6      | 5     |  4      |  3      |  2      |  1      | 0     |
+|-------|---------|--------|-------|---------|---------|---------|---------|-------|
+| **G** | **PAT** | **D**  | **A** | **PCD** | **PWT** | **U/S** | **R/W** | **P** |
+
 
 In this table there are 3 new bits (D, PAT, G) and the Page Base Address as already explained is not pointing to a table but to a memory area. 
 
