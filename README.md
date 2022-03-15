@@ -17,7 +17,7 @@ Topics covered so far:
 * [Multiboot](Multiboot.md)
 * [Framebuffer](Framebuffer.md)
 * [Moving the kernel in the higher half](HigherHalf.md)
-* [Interrupt handling (64 bit)](IntterruptHandling.md)
+* [Interrupt handling (64 bit)](InterruptHandling.md)
 * [Nasm tips](Nasm.md)
 * [Memory Management](Memory_Management/)
     * [Paging](Memory_Management/Paging.md)
