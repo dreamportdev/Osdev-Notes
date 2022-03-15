@@ -22,5 +22,5 @@ jobs:
       run: >
         git fetch;
         git checkout gh-pages;
-        git merge origin/master;
+        git merge origin/master --allow-unrelated-histories;
         git push origin gh-pages;
