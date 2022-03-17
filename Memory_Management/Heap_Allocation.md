@@ -44,10 +44,10 @@ When does virtual memory become physical? Well it's up to you. There are two mai
 
 The table below shows the pros and cons of both appraoches: 
 
-| Paging allocation type | Pros | Cons|
-|------------------------|------|-----|
-| Immediate | No need for a page fault handler | Allocates physical memory that may not be needed (potentially wasting physical memory) |
-| Demand    | Only allocates physical memory that is used | Complex page fault handler required |
+| Paging allocation type | Pros                             | Cons                                                    |
+|------------------------|----------------------------------|---------------------------------------------------------|
+| Immediate              | No need for a page fault handler | Allocates physical memory that may not be needed (potentially wasting physical memory) |
+| Demand                 | Only allocates physical memory that is used | Complex page fault handler required |
 
 Before proceeding is probably important to clarify a concept: when mapping a physical address into a virtual one, we are usually mapping pages of fixed sizes (4k, 2M, 1gb, mixed) while the allocator is allocating bytes/megabytes/whatever. So let's show that with an example in both cases, on-demand and on-first-use. 
 

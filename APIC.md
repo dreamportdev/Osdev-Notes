@@ -120,12 +120,12 @@ The IO-APIC has 2 memory mapped registers for accessing the other IO-APIC regist
 
 And then there are 4 I/O Registers that can be accessed using the two above: 
 
-| Name      | Offset   | Description                                                        | Attribute | 
-|-----------|----------|--------------------------------------------------------------------|-----------|
-| IOAPICID  | 00h      | Identification register for the IOAPIC                             |  R/W      |
-| IOAPICVER | 01h      | It identify the IO APIC Version                                    |  RO       |
-| IOAPICARB | 02h      | It contains the BUS arbitration priority for the IOAPIC            |  RO       |
-| IOREDTBL  | 03h-3fh  | These are the redirection tables (refer to the IOREDTBL paragraph) |  RW       |
+| Name      | Offset   | Description                                              | Attribute | 
+|-----------|----------|----------------------------------------------------------|-----------|
+| IOAPICID  | 00h      | Identification register for the IOAPIC                   |  R/W      |
+| IOAPICVER | 01h      | IO APIC Version                                          |  RO       |
+| IOAPICARB | 02h      | It contains the BUS arbitration priority for the IOAPIC  |  RO       |
+| IOREDTBL  | 03h-3fh  | The redirection tables (see the IOREDTBL paragraph)      |  RW       |
 
 
 ### Reading data from IO-APIC
