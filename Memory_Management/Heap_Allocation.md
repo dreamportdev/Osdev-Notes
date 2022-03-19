@@ -1,38 +1,4 @@
-# Memory Allocation 
-
-*Authors note: Memory allocation is one of the first hard challenges you will face when developing an os, and I find it personally boring.*
-
-When we are talking about memory allocation we are talking about a broad and complex topic that covers at least two or three different types of allocators: 
-
-* Phsical Memory Allocation (see the [Physical Memory](PhysicalMemory.md) chapter)
-* Virtual Memory Allocation usually split in a user side (the heap) and kernel side (paging, virtual memory manager).
-
-Not all OS needs a distinction between user space and kernel space (this depends on how the operating system is designed). 
-
-In this page we will cover some basics about a memory allocator, detail an algorithm that can be used to allocate memory, and try to cover some gray areas that are between the phyisical memory manager and the memory allocator. 
-
-## From Physical to Virtual... (The Link Between...) 
-
-Before going to see some real allocation algorithms, let's first explain how it's all connected together. 
-
-So when talking about memory management, we are actually talking about several topic. Here is a short but not exhaustive list of the topics (the ones we cover in these notes): 
-
-* [Physical memory](PhysicalMemory.md) Management
-* [Paging](Paging.md)
-* Virtual Memory Management
-* Memory Allocation
- 
-Now one of the biggest problems while writing a memory manager for our os is to understand how all these topics are connected to each other. This guide will probably not be enough to understand this topic completely, but it should help!
-
-Before proceeding a quick recap of some of the basic concepts: 
-
-1. The Physical memory manager manages physical memory: the RAM itself (or whatever it is called on your device). When requested it will mark the used area of the physical memory as free/used depending on their status, it usually allocate memory in block/pages of a fixed size.
-2. Paging is introducing the concept of virtual memory and virtual addresses. It basically provides the OS with a much broader address space (how big it depends on the architecture). It basically map a physical address to a virtual one wherever the os wants. So for example *Phys:0x123456 = Virt:0xF0B12345*. And that's not all: since paging is just based on tables that we can swap out at any time, in a multi-tasking environment we can have every task using it's own address space, so the same virtual address for *task1* is different from the virtual address of *task2*
-3. Memory Allocation (explained in this section) it returns addresses, virtual! It basically looks for an area of contiguous addresses big enough to contain the requested size. It doesn't care about physical addresses, it will only search for the area we need in the virtual world. It doesn't care if the physical memory it will be all contigous or not. To the requester it will look contiguous (another cool feature of the paging). More details will be given in the paragraphs below.
-4. Virtual Memory Manager: for smaller projects this will be paging, but the vmm is the over-arching manager of a tasks memory. Letting you map virtual addresses to physical ones, sharing memory between multiple tasks, ensuring memory is available when needed (stealing from other vmms).
-
-__Probably an image could be used here?__
-__Continue...__
+# Heap Allocation 
 
 ## Backing Virtual Memory with Physical Memory
 
