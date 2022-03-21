@@ -14,6 +14,17 @@ Heap is a term that has several meanings, so probably if coming from some comput
 
 Of course this section will refer to the Osdev Heap...
 
+## A quick recap of what allocating memory means
+
+Again how a memory manager allocate memory deeply depends on its design and what it supports, for this section what we assume is that the operating system has a Physical Memory Manager, with Paging Enabled, and a heap to allocate memory, this design choice is good because it prepare the ground for when processes will be implemented to let them have their own address space. 
+
+Under the assumptions above, what happens under the hood when we want to allocate some memory from the heap?
+
+* The heap search for a suitable address if found returns it (in this case it stops there), and if it can't find any it will ask the VMM for more space
+* The VMM will receive eventually the heap request and ask the PMM a suitable physical page to be allocated to the heap
+* The PMM search for a suitable physical page to fullfill the VMM request, and if found return it to the VMM
+* Once the VMM get the physical page it map it into the program virtual address space
+* The heap will now return the required address to the program
 
 
 
