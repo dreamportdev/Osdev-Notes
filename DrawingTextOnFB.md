@@ -91,11 +91,11 @@ The magic number are stored from the least significative (0) to the more signifi
 
 For version 1 of the psf, the data structure is pretty simple and contains only three fields: 
 
-* *magic* number: the value as already seen above is 0x0436
+* *magic* number: the value as already seen above is 0x0436 
 * *mode*: they are flags. If the value is 0x01 it means that the font will have 512 characters (there are few other values that can be checked here https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html)
 * *charsize* The character size in bytes
 
-For version 1 fonts there are few values that are always the same:
+All the fields above are declared as `unsigned char` variables, except for the magic number that is an array of 2 unsigned char. For version 1 fonts there are few values that are always the same:
 
 * *width* is always 8 (1 byte)
 * *height* since width is  exactly 1 byte, this means that *height* == *charsize*
