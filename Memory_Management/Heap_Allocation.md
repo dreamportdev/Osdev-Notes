@@ -26,5 +26,64 @@ Under the assumptions above, what happens under the hood when we want to allocat
 * Once the VMM get the physical page it map it into the program virtual address space
 * The heap will now return the required address to the program
 
+## Allocating and freeing memory
 
+As many other OS component there are many different algorithm that are designed and implement to manage memory, everyone of them has it pros and cons, here we try to explain a simple and efficient algorithm based on linked lists. 
 
+### Overview
+
+A heap allocator usually exposes two main functions: 
+
+* `void *alloc(size_t size);` To request memory of size bytes
+* `void free(void *ptr);` To free previously allocated memory
+
+In user space alloc and free are the well known `malloc()/free()` function. But an OS usueally doesn't have only a user space heap, but it has also a kernel space one many os call those functions `kmalloc()/kfree()`. 
+
+So let's get started with describing the allocation algorithm. 
+
+### Allocating memory
+
+To start describing our allocation algorithm  let's start answering this question: "What does the heap allocator do?". 
+
+Well the answer is, as we already know: it allocates memory, in bytes. If the program ask _X_ byte, the allocator will return an address point to an area of memory exactly of _X_ byts (well that is not exactly true, it can be little bit more, since there could be some minimum allocatable size). 
+
+If we are writing an OS, we already know that the ram can be viewed as a very long array, where the index is the Memory Location Address. The allocator is returning this indexes. So the first thing we can see so far, is that we need to be able to keep track of the next available address. 
+
+Let's start with a very simple example, assume that we have an address space of 100 bytes, nothing is allocated yet, and the program makes thhree consecutive alloc calls: 
+
+```c
+alloc(10);
+alloc(3);
+alloc(5);
+```
+Let's assume also that there is no minimum allocatable space. The initial situation of our ram is the following:
+
+| 0000 | 0001| 0002 | ... | 0099 | 00100 |
+|------|-----|------|-----|------|-------|
+| cur  |     |      |     |      |       |
+
+cur is the variable keeping track of the next address that can be returned and is initialized to 0, for this example.
+Now when the `alloc(10)` is called, it is asking for a memory location of 10 bytes, since `cur = 0`, the address to return is 0, and the next available address will become: `cur + 10`. So now we have the following situation: 
+
+| 0000 | 0001 | 0002 | ... |  0010  |  ... | 00100 |
+|------|------|------|-----|--------|------|-------|
+|  X   |  X   |  X   |     |  cur   |      |       |
+
+Where `X` is just a marker to say that the addresses above are used now. Calling `alloc(3)`, the allocator will return the address currently pointed by ` cur = 10` and then move cur 3 bytes forward...
+
+| 0000 | 0001 | 0002 | ... |  0010  | ... | 0013  | ... | 00100 |
+|------|------|------|-----|--------|-----|-------|-----|-------|
+|  X   |  X   |  X   |     |   X    |     | cur   |     |       |
+
+Now the third alloc call is easy to imagine what is going to do, it can be done as an exercise.
+
+Well what we have seen so far is already an Allocation algorithm, that we can easily implement: 
+
+```c 
+uint64_t cur_heap_position = 0;
+void *first_alloc(size_t size) {
+  uint64_t *addr_to_return = cur_heap_position;
+  cur_heap_position+=size;
+  return (void*) addr_to_return;
+}
+```
