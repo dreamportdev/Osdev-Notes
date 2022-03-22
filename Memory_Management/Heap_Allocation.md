@@ -87,3 +87,29 @@ void *first_alloc(size_t size) {
   return (void*) addr_to_return;
 }
 ```
+
+Congratulations! We have written our first allocator! It is called the **bump allocator**, but what about the free? That one is even easier, let's have a look at it: 
+
+```c
+void first_free(void *ptr) {
+    return;
+}
+```
+
+Yeah... that's right it's not an error. it is just doing nothing. Why? Because we are not keeping track of the allocated memory, so we can't just update the `cur_heap_position` variable with the address of ptr, because we don't know who is using the memory after ptr. So we are forced just to do nothing. 
+
+Even if probably useless let's see what are the pros and cons of this approach: 
+
+Pros:
+
+* Is very time-efficient allocating memory is O(1), as well as "freeing" it. 
+* It is also memory efficient, in fact there is no overhead at all, we just need a variable to keep track of the next free address. 
+* It is very easy to implement, and probably it could be a good placeholder when we haven't developed a full memory manager yet, but we need some *malloc* like functions.
+* Actually there is no fragmentation since there is no freeing! 
+
+Of course the cons are probably pretty clear and make this algorithm pretty useless in most cases: 
+
+* We don't free memory
+* It will "eventually" finish the RAM sooner or later
+
+
