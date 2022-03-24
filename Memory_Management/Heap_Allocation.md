@@ -112,4 +112,11 @@ Of course the cons are probably pretty clear and make this algorithm pretty usel
 * We don't free memory
 * It will "eventually" finish the RAM sooner or later
 
+But again it was a first good step into writing a memory allocator. 
 
+The main problem of this algorithm is that we don't keep track of what we have allocated in the past so we are not able to free that memory when no longer used. 
+
+Now let's try to build the new allocator starting from the one just implemented. The first thing to do is try to figure out what are the information we need to keep track of the previous allocations:
+
+* Whenever we make an allocation we require x bytes of memory, so when we return the address, we know that the next free one will be at least at: `returned_address + x`  so we need to keep track of the allocation size
+* Then we need a way to traversate the previously allocated addresses, for this we need just a pointer to the start of the heap, if we decide to keep track of the sizes. 
