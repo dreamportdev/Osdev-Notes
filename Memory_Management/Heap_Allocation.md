@@ -80,10 +80,10 @@ Now the third alloc call is easy to imagine what is going to do, it can be done 
 Well what we have seen so far is already an Allocation algorithm, that we can easily implement: 
 
 ```c 
-uint64_t cur_heap_position = 0; //This is just pseudocode in real word this will be a memory location 
+uint8_t cur_heap_position = 0; //This is just pseudocode in real word this will be a memory location 
 void *first_alloc(size_t size) {
-  uint64_t *addr_to_return = cur_heap_position;
-  cur_heap_position+=size;
+  uint8_t *addr_to_return = cur_heap_position;
+  cur_heap_position= cur_heap_position + size;
   return (void*) addr_to_return;
 }
 ```
@@ -125,11 +125,12 @@ Now let's try to build the new allocator starting from the one just implemented.
 The problem is now: how to keep track of this information, for this example let's keep things extermely simple, and place the size just before the pointer, so whenever we make an allocation  we write the size to the address pointed by `cur_heap_position` and return the next address, so the code should look like this now:  
 
 ```c
-uint8_t heap_start = 0;
-uint8_t cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
+uint8_t *heap_start = 0;
+uint8_t *cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
 
 void *first_alloc(size_t size) {
-  *cur_heap_position++=size;
+  *cur_heap_position=size;
+  cur_heap_position = cur_heap_position + 1;
   uint8_t *addr_to_return = cur_heap_position;
   cur_heap_position+=size;
   return (void*) addr_to_return;
