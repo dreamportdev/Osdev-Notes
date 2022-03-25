@@ -109,7 +109,7 @@ Let's see first the structure of all entries type, and then explain the bits
 
 PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's start seeing the structure of the first two types: 
 
-|63     | 62        | 51                   | 39                     | 11  ...  9 |
+|63     | 62        | 51 ... 40            | 39 ... 12              | 11  ...  9 |
 |-------|-----------|----------------------|------------------------|------------|
 |**EXB**| Available | _Reserved must be 0_ | **Table Base Address** | Available  |
 
@@ -129,7 +129,7 @@ Now the Page directory has few differences:
 ### Page Table 
 A page table entry structure is still similar to the one above, but it contains few more bits that can be set: 
 
-|63     | 62    | 51         | 39                    | 11  ... 9 |
+|63     | 62    | 51 ... 40  | 39 ... 12             | 11  ... 9 |
 |-------|-------|------------|-----------------------|-----------|
 |**EXB**| Avail | _Reserved must be 0_ | **Page Base Address** | Available |
 
