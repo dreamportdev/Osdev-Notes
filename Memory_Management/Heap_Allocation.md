@@ -125,12 +125,12 @@ Now let's try to build the new allocator starting from the one just implemented.
 The problem is now: how to keep track of this information, for this example let's keep things extermely simple, and place the size just before the pointer, so whenever we make an allocation  we write the size to the address pointed by `cur_heap_position` and return the next address, so the code should look like this now:  
 
 ```c
-uint64_t heap_start = 0;
-uint64_t cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
+uint8_t heap_start = 0;
+uint8_t cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
 
 void *first_alloc(size_t size) {
   *cur_heap_position++=size;
-  uint64_t *addr_to_return = cur_heap_position;
+  uint8_t *addr_to_return = cur_heap_position;
   cur_heap_position+=size;
   return (void*) addr_to_return;
 }
@@ -145,8 +145,8 @@ This new function potentially fix one of the item we listed above, it can now le
 Where the number indicates the size of the allocated block. So  now if we want to iterate from the first to the last item allocated the code will looks like: 
 
 ```c
-uint64_t *cur_pointer = *start_pointer;
-while(cur_pointer < start_pointer) {
+uint8_t *cur_pointer = start_pointer;
+while(cur_pointer < cur_heap_pointer) {
   printf("Allocated address: size: %%d - 0x%x\n", *cur_pointer, cur_pointer+1);
   cur_pointer = cur_pointer + (*cur_pointer) + 1;
 }
