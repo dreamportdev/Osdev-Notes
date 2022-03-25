@@ -80,7 +80,7 @@ Now the third alloc call is easy to imagine what is going to do, it can be done 
 Well what we have seen so far is already an Allocation algorithm, that we can easily implement: 
 
 ```c 
-uint64_t cur_heap_position = 0;
+uint64_t cur_heap_position = 0; //This is just pseudocode in real word this will be a memory location 
 void *first_alloc(size_t size) {
   uint64_t *addr_to_return = cur_heap_position;
   cur_heap_position+=size;
@@ -110,6 +110,7 @@ Pros:
 Of course the cons are probably pretty clear and make this algorithm pretty useless in most cases: 
 
 * We don't free memory
+* There is no way to traverse the heap, because we don't keep track of the allocations
 * It will "eventually" finish the RAM sooner or later
 
 But again it was a first good step into writing a memory allocator. 
@@ -120,3 +121,33 @@ Now let's try to build the new allocator starting from the one just implemented.
 
 * Whenever we make an allocation we require x bytes of memory, so when we return the address, we know that the next free one will be at least at: `returned_address + x`  so we need to keep track of the allocation size
 * Then we need a way to traversate the previously allocated addresses, for this we need just a pointer to the start of the heap, if we decide to keep track of the sizes. 
+
+The problem is now: how to keep track of this information, for this example let's keep things extermely simple, and place the size just before the pointer, so whenever we make an allocation  we write the size to the address pointed by `cur_heap_position` and return the next address, so the code should look like this now:  
+
+```c
+uint64_t heap_start = 0;
+uint64_t cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
+
+void *first_alloc(size_t size) {
+  *cur_heap_position++=size;
+  uint64_t *addr_to_return = cur_heap_position;
+  cur_heap_position+=size;
+  return (void*) addr_to_return;
+}
+```
+
+This new function potentially fix one of the item we listed above, it can now let us to traversate the heap because we know that the heap has the following structure: 
+
+| 0000 | 0001 | 0002 | 0003  | ... |  0010  | 0011 | 0013 | ... | 00100 |
+|------|------|------|-------|-----|--------|------|------|-----|-------|
+|  2   |  X   |  X   |   7   | ... |   X    | cur  |      | ... |       |
+
+Where the number indicates the size of the allocated block. So  now if we want to iterate from the first to the last item allocated the code will looks like: 
+
+```c
+uint64_t *cur_pointer = *start_pointer;
+while(cur_pointer < start_pointer) {
+  printf("Allocated address: size: %%d - 0x%x\n", *cur_pointer, cur_pointer+1);
+  cur_pointer = cur_pointer + (*cur_pointer) + 1;
+}
+```
