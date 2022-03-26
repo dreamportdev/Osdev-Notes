@@ -160,3 +160,43 @@ So to solve this issue we need to keep track of a new information: the status of
 * the allocated size 
 * the status (free or used)
 
+At this poin our new heap allocation will looks like: 
+| 0000 | 0001 | 0002 | 0003  |  0004 | ... |  0011 | 0011 | 0013 | ... | 00100 |
+|------|------|------|-------|-------|-----|-------|------|------|-----|-------|
+|  2   |  U   |  X   |   7   |   U   | ... |   X   | cur  |      | ... |       |
+
+Where U is just a label for a boolean-like variable (U = used = false, F = true = free). 
+
+At this point we the first change we can do to our allocation function is add the new status variable just after the size: 
+
+```c
+#define USED 0
+#define FREE 1
+
+uint8_t *heap_start = 0;
+uint8_t *cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
+
+void *first_alloc(size_t size) {
+  *cur_heap_position=size;  
+  cur_heap_position = cur_heap_position + 1;
+  *cur_heap_position = USED;
+  cur_heap_position = cur_heap_position + 1;
+  uint8_t *addr_to_return = cur_heap_position;
+  cur_heap_position+=size;
+  return (void*) addr_to_return;
+}
+```
+
+One thing that we should have noticed so far, is that for keep track of all those new information we are adding an overhead to our allocator, how big the overhead is depends on the variable type, but even if wee keep things small, using only `uint8_t` we have already added 2 bytes of overhead for every single allocation. The implementation above
+
+Before finishing the changes to the allocation function let's talk about the free. Now we know that given a pointer `ptr` (previously allocated of course...) we know that `ptr - 1` is the status (and should be USED) and `ptr - 2` is the size, so the free is pretty easy so far: 
+
+```c
+void first_free(void *ptr) {
+  if( *(ptr - 1) == USED ) {
+    *(ptr - 1) = FREE;
+  }
+}
+```
+
+Yeah, that's it... we just need to change the status, and the allocator will be able to know whether the memory location is used or not.
