@@ -137,13 +137,13 @@ void *first_alloc(size_t size) {
 }
 ```
 
-This new function potentially fix one of the item we listed above, it can now let us to traversate the heap because we know that the heap has the following structure: 
+This new function potentially fix one of the problems we listed above, it can now let us to traversate the heap because we know that the heap has the following structure: 
 
 | 0000 | 0001 | 0002 | 0003  | ... |  0010  | 0011 | 0013 | ... | 00100 |
 |------|------|------|-------|-----|--------|------|------|-----|-------|
 |  2   |  X   |  X   |   7   | ... |   X    | cur  |      | ... |       |
 
-Where the number indicates the size of the allocated block. So  now if we want to iterate from the first to the last item allocated the code will looks like: 
+Where the number indicates the size of the allocated block, so in the example above there have been 2 memory allocations the first of 2 bytes and the second of 7 bytes. Now if we want to iterate from the first to the last item allocated the code will looks like: 
 
 ```c
 uint8_t *cur_pointer = start_pointer;
@@ -152,3 +152,11 @@ while(cur_pointer < cur_heap_pointer) {
   cur_pointer = cur_pointer + (*cur_pointer) + 1;
 }
 ```
+
+But are we able to reclaim unused memory with this approach? The answer is no, because even if traversing we know the size of the area to reclaim, and we can reach it everytime from the start of the heap, there is no mechanism to mark this area as available, and if we set the size field to 0, we break the heap (all areas after the one we are trying to free will become unreachable).
+
+So to solve this issue we need to keep track of a new information: the status of the block is it used or free? So now everytime we will make an allocation we will keep track of: 
+
+* the allocated size 
+* the status (free or used)
+
