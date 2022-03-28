@@ -56,7 +56,7 @@ alloc(10);
 alloc(3);
 alloc(5);
 ```
-Let's assume also that there is no minimum allocatable space. The initial situation of our ram is the following:
+We assume also that there is no minimum allocatable space. The initial situation of our ram is the following:
 
 | 0000 | 0001| 0002 | ... | 0099 | 00100 |
 |------|-----|------|-----|------|-------|
@@ -87,7 +87,7 @@ void *first_alloc(size_t size) {
   return (void*) addr_to_return;
 }
 ```
-
+ 
 Congratulations! We have written our first allocator! It is called the **bump allocator**, but what about the free? That one is even easier, let's have a look at it: 
 
 ```c
@@ -128,7 +128,7 @@ The problem is now: how to keep track of this information, for this example let'
 uint8_t *heap_start = 0;
 uint8_t *cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
 
-void *first_alloc(size_t size) {
+void *second_alloc(size_t size) {
   *cur_heap_position=size;
   cur_heap_position = cur_heap_position + 1;
   uint8_t *addr_to_return = cur_heap_position;
@@ -178,7 +178,7 @@ At this point we the first change we can do to our allocation function is add th
 uint8_t *heap_start = 0;
 uint8_t *cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
 
-void *first_alloc(size_t size) {
+void *third_alloc(size_t size) {
   *cur_heap_position=size;  
   cur_heap_position = cur_heap_position + 1;
   *cur_heap_position = USED;
@@ -189,12 +189,14 @@ void *first_alloc(size_t size) {
 }
 ```
 
-One thing that we should have noticed so far, is that for keep track of all those new information we are adding an overhead to our allocator, how big the overhead is depends on the variable type, but even if wee keep things small, using only `uint8_t` we have already added 2 bytes of overhead for every single allocation. The implementation above
+One thing that we should have noticed so far, is that for keep track of all those new information we are adding an overhead to our allocator, how big the overhead is depends on the variable type, but even if wee keep things small, using only `uint8_t` we have already added 2 bytes of overhead for every single allocation. 
 
-Before finishing the changes to the allocation function let's talk about the free. Now we know that given a pointer `ptr` (previously allocated of course...) we know that `ptr - 1` is the status (and should be USED) and `ptr - 2` is the size, so the free is pretty easy so far: 
+The implementation above is not completed yet, since we don't have implemented a mechanism to reused the freed location but before adding this last piece let's talk about the free. 
+
+Now we know that given a pointer `ptr` (previously allocated of course...) we know that `ptr - 1` is the status (and should be USED) and `ptr - 2` is the size, so the free is pretty easy so far: 
 
 ```c
-void first_free(void *ptr) {
+void third_free(void *ptr) {
   if( *(ptr - 1) == USED ) {
     *(ptr - 1) = FREE;
   }
@@ -202,3 +204,35 @@ void first_free(void *ptr) {
 ```
 
 Yeah, that's it... we just need to change the status, and the allocator will be able to know whether the memory location is used or not.
+
+To finish the new allocator, we need now to implement the mechanism to reuse the freed memory location, so how the new algorihtm works is when an allocation request is made: 
+
+* First the alloc function will start from the start of the heap and traverse the heap from the start until the latest address allocated (the current end of the heap) looking for a chunk where it's size is greather than the requested size
+* if found let's mark the size field as USED, the size doesn't need to be updated since it's not changing, so assuming that cur_pointer is pointing to the first medatata byte of the location to be returned (the size in our example) the code to update and return the current block will be pretty simple: 
+```c
+cur_pointer = cur_pointer + 1; //remember cur_pointer is pointing to the size byte, and is different from current_heap end
+*cur_pointer = USED;
+cur_pointer = cur_pointer + 1;
+return cur_pointer;
+```
+there is no need to update the cur_heap_end, since it has not been touched. 
+
+* In case nothing has been found this means that the current end of the heap has been reached so in this case it will first add the two metadata bytes with the requested size, and the status (set to USED) then return the next address. Assuming that in this case `cur_pointer == cur_heap_position`:
+
+```c
+*cur_pointer = size;
+cur_pointer = cur_pointer + 1;
+*cur_pointer = USED;
+cur_pointer = cur_pointer + 1;
+cur_heap_position = cur_pointer + size;
+return cur_pointer;
+```
+
+We already seen how to traverse the heap when explaining the second version of the alloc function, so we just need to adjust that example to this newer scenario where we have now two extra bytes with information about the allocation instead of one,
+
+```c
+
+```
+> **_NOTE:_**  ...
+
+
