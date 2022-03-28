@@ -77,10 +77,10 @@ Where `X` is just a marker to say that the addresses above are used now. Calling
 
 Now the third alloc call is easy to imagine what is going to do, it can be done as an exercise.
 
-Well what we have seen so far is already an Allocation algorithm, that we can easily implement: 
+Well what we have seen so far is already an Allocation algorithm, that we can easily implement (in all the following examples we use uint8_t for all the pointer, in a real executin scenario probably will be better to use a bigger size for that variable): 
 
 ```c 
-uint8_t cur_heap_position = 0; //This is just pseudocode in real word this will be a memory location 
+uint8_t *cur_heap_position = 0; //This is just pseudocode in real word this will be a memory location 
 void *first_alloc(size_t size) {
   uint8_t *addr_to_return = cur_heap_position;
   cur_heap_position= cur_heap_position + size;
@@ -142,6 +142,8 @@ This new function potentially fix one of the problems we listed above, it can no
 | 0000 | 0001 | 0002 | 0003  | ... |  0010  | 0011 | 0013 | ... | 00100 |
 |------|------|------|-------|-----|--------|------|------|-----|-------|
 |  2   |  X   |  X   |   7   | ... |   X    | cur  |      | ... |       |
+
+> **_NOTE:_**  just to remind that the pointer is a uint8_t pointer, so when we are storing the size, the memeory cell pointed by cur_heap_position will be of type *uint8_t*, that means that in this example and the followings, the size stored can be maximum 255.
 
 Where the number indicates the size of the allocated block, so in the example above there have been 2 memory allocations the first of 2 bytes and the second of 7 bytes. Now if we want to iterate from the first to the last item allocated the code will looks like: 
 
