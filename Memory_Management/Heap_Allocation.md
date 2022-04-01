@@ -243,8 +243,9 @@ void *third_alloc(size_t size) {
     cur_size = *cur_pointer;
     status = *cur_pointer + 1;
     if(cur_size > size && status == FREE) {
-        
+       return cur_pointer + 2;
     }
+    cur_pointer = cur_pointer + (size + 2);
   }
   *cur_heap_position=size;  
   cur_heap_position = cur_heap_position + 1;
@@ -255,6 +256,27 @@ void *third_alloc(size_t size) {
   return (void*) addr_to_return;
 }
 ```
+
+There are few things that re worth to note here: 
+
+* If we are returning a previously allocated address, we don't need move the `cur_heap_position`, since we are reusing an area of memory that is before the end of the heap.
+
+Ok now we start to have a decent working function that can free previously allocated memory, and is able to reuse it, it is still not perfect and we can still find several problems: 
+
+* There is a lot of potential waste of space, for example if we are allocating 10 bytes, and the heap has two holes big enough the first is 40 bytes, the second 14, the algorithm will pick the first one free so the bigger one with a waste of 26 bytes. There can be different solution to this issue, but is out of the purpose of this tutorial (and eventually left as an exercise)
+* It can suffer of fragmentation, basically there can be a lot of small freed areas that the allocator will not be able to use because of their size. A partial solution to this problem is described in the next paragraph. 
+
+Another thing that is worth doing to improve readability of the code is replace the direct pointer access, with a more elegant data structure, that we are also going to expand in the next paragraph. So far our allocator needs to keep track of just two information the size of the block returned and it's status, so the data struct is pretty easy to implement: 
+
+```c
+struct { 
+    size_t size;
+    uint8_t status;
+} Heap_Node;
+```
+
+That's it, that's what we need to clean up the code.
+
 > **_NOTE:_**  ...
 
 
