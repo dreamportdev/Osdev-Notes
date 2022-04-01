@@ -72,3 +72,4 @@ An irq is raised when a key is pressed or released:
 * https://wiki.osdev.org/PS/2_Keyboard 
 * https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective
 * https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation
+* https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets
