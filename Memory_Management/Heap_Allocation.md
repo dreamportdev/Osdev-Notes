@@ -228,10 +228,32 @@ cur_heap_position = cur_pointer + size;
 return cur_pointer;
 ```
 
-We already seen how to traverse the heap when explaining the second version of the alloc function, so we just need to adjust that example to this newer scenario where we have now two extra bytes with information about the allocation instead of one,
+We have already seen how to traverse the heap when explaining the second version of the alloc function, so we just need to adjust that example to this newer scenario where we have now two extra bytes with information about the allocation instead of one, so the final code for the third alloc will look like:
 
 ```c
+#define USED 0
+#define FREE 1
 
+uint8_t *heap_start = 0;
+uint8_t *cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
+
+void *third_alloc(size_t size) {
+  cur_pointer = heap_start;
+  while(cur_pointer < cur_heap_position) {
+    cur_size = *cur_pointer;
+    status = *cur_pointer + 1;
+    if(cur_size > size && status == FREE) {
+        
+    }
+  }
+  *cur_heap_position=size;  
+  cur_heap_position = cur_heap_position + 1;
+  *cur_heap_position = USED;
+  cur_heap_position = cur_heap_position + 1;
+  uint8_t *addr_to_return = cur_heap_position;
+  cur_heap_position+=size;
+  return (void*) addr_to_return;
+}
 ```
 > **_NOTE:_**  ...
 
