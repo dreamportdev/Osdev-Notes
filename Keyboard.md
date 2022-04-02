@@ -41,6 +41,17 @@ Now the keyboard reply with 2 bytes, if we are setting a new scancdoe set the re
 |   41  | Scancode set 2    |
 |   3f  | Scancode set 3    |
 
+### About scancodes 
+
+The scancode set is made by two types of codes: 
+
+* MAKE code that is the scancode generated when a key is pressed 
+* BREAK code is generated when a key is released.
+
+The value of those code depends on the set in use.
+
+... TODO: add how to distinguish between MAKE and break on each set. 
+
 ## IRQ and IO-Apic
 
 * The Keyboard IRQ is the number 1. This corresponds to pin 1 on the IO Apic, that is controlled by entry 1 in Redirection Table, 
