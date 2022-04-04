@@ -162,7 +162,8 @@ So to solve this issue we need to keep track of a new information: the status of
 * the allocated size 
 * the status (free or used)
 
-At this poin our new heap allocation will looks like: 
+At this point our new heap allocation will looks like: 
+
 | 0000 | 0001 | 0002 | 0003  |  0004 | ... |  0011 | 0011 | 0013 | ... | 00100 |
 |------|------|------|-------|-------|-----|-------|------|------|-----|-------|
 |  2   |  U   |  X   |   7   |   U   | ... |   X   | cur  |      | ... |       |
@@ -191,9 +192,9 @@ void *third_alloc(size_t size) {
 
 One thing that we should have noticed so far, is that for keep track of all those new information we are adding an overhead to our allocator, how big the overhead is depends on the variable type, but even if wee keep things small, using only `uint8_t` we have already added 2 bytes of overhead for every single allocation. 
 
-The implementation above is not completed yet, since we don't have implemented a mechanism to reused the freed location but before adding this last piece let's talk about the free. 
+The implementation above is not completed yet, since we don't have implemented a mechanism to reuse the freed location but before adding this last piece let's talk about the free. 
 
-Now we know that given a pointer `ptr` (previously allocated of course...) we know that `ptr - 1` is the status (and should be USED) and `ptr - 2` is the size, so the free is pretty easy so far: 
+Now we know that given a pointer `ptr` (previously allocated of course...) `ptr - 1` is the status (and should be USED) and `ptr - 2` is the size, so the free is pretty easy so far: 
 
 ```c
 void third_free(void *ptr) {
@@ -257,9 +258,7 @@ void *third_alloc(size_t size) {
 }
 ```
 
-There are few things that re worth to note here: 
-
-* If we are returning a previously allocated address, we don't need move the `cur_heap_position`, since we are reusing an area of memory that is before the end of the heap.
+If we are returning a previously allocated address, we don't need move the `cur_heap_position`, since we are reusing an area of memory that is before the end of the heap.
 
 Ok now we start to have a decent working function that can free previously allocated memory, and is able to reuse it, it is still not perfect and we can still find several problems: 
 
@@ -275,7 +274,60 @@ struct {
 } Heap_Node;
 ```
 
-That's it, that's what we need to clean up the code.
+That's it, that's what we need to clean up the code and replace the pointers in the third_alloc with the new struct reference, since it is just matter of replacing few variables, i leave this part as an exercise.
+
+### Merging and splitting
+
+#### Merging
+
+Ok se we finally outlined a basic memory allocation function, that is also capable to free and reuse memory (wohoo...) and we are nearly at the end of our memory journey. 
+
+In this paragraph we see how to mitigate the *fragmentation* problem. Is not a definitive solution, but this let us to reuse memory in a more efficient way. Before proceeding btw let's see what we have done so far. We started from a simple pointer to the latest allocated location, and added information in order to keep track of what was previously allocated and how big it was, needed to reuse the freed memory. 
+
+What we are basically doing so far is moving within a list in order to find a suitable location. And we have also a struct to hold the information about a memory location. 
+
+To explain better the fragmentation issue let's make an example assume that we have a heap of 25 bytes and we execute the following code: 
+
+```c
+a = third_alloc(6);
+b = third_alloc(6);
+c = third_alloc(6)
+free(c);
+free(b);
+free(a);
+```
+
+What the heap will look like after the code above? 
+
+| 00 | 01 | 02 |  ..  |  07 | 08 | 09 | 10 | .. | 15 | 16 | 17 | .. | 23 | 24 | 25 |
+|----|----|----|------|-----|----|----|----|----|----|----|----|----|----|----|----| 
+|  6 | F  | X  |  ..  |  X  | 6  | F  |  X | .. | X  | 6  | F  | .. | X  |    |    |
+
+
+So now we see our heap is basically empty (except for the overhead to mark free chunks), and everything looks perfectly fine. But now the code keeps executing and it will arrive at the following instruction: 
+
+```c
+alloc(7);
+```
+
+Pretty small allocation and we have plenty of space... no wait... the heap mostly empty but we can't allocate just 7 bytes, because all the free blocks are too small. That is _fragmentation_ in a nutshell. 
+
+So how to solve this issue? The idea is pretty straightforward every time a memory location is being freed during a `free(ptr)`: 
+
+* First check if it is adjacent to to other free locations (both directions: previous and next)
+    * If `prev_node_address + prev_node_size + sizeof(Heap_Node) == ptr_to_be_freed` then merge the two nodes and create a single node of `prev_node_size + ptr_to_be_freed_size`
+    * If `ptr_to_be_freed + ptr_to_be_freed_size == next_node` then merge the two nodes and create a single node of `ptr_to_be_freed_size + next_node_size` (notice we don't ned to add the size of Heap_node because ptr should be the address immediately after the struct). 
+* If no just mark this location as free
+
+There are different ways to implement it: 
+
+* Adding a next and prev pointer to the node structure, in this way to check mergeability is just going to require to check for `(cur_node->prev).status = FREE` and (next_node->next).status = FREE
+* Otherwise without adding the next and prev pointer to the node, we can scan the heap from the start until the node before `ptr_to_be_freed`, and if is free we can merge, for the next node instead things are more easy, we just need to check if the node starting at `ptr_to_be_freed + ptr_size` if it is free is possible to merge
+
+Every solution has it's own pros and cons, the first one is probably easier to implement, and it doesn't require to scan the heap from the start every time since there are always the pointer to the prev and next node, that means also less pointer math to be writtend (there is no need to compute the address of prev and next location since we have the pointers to them)  but on the other hand it is adding an extra overhead of two pointers to the node structure, if the kernel is 64 bits then we are adding a total of 16 bytes of overhead for each node.
+
+
+
 
 > **_NOTE:_**  ...
 
