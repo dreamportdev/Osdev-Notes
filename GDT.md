@@ -155,6 +155,7 @@ For a code selector, the remaining bits are: Conforming (bit 2) - a tricky subje
 
 All the theory is great, but how to apply it? 
 A simple example is outline just below, for a simple 64-bit long mode setup you'd need
+
 - Selector 0x00: null
 - Selector 0x08: kernel code (64-bit, ring 0)
 - Selector 0x10: kernel data (64-bit)
@@ -204,6 +205,7 @@ gdt_entries[4] = kernelDataFlags << 32;
 ```
 
 A more complex example of a GDT is the one used by the stivale2 boot protocol:
+
 - Selector 0x00: null
 - Selector 0x08: kernel code (16-bit, ring 0)
 - Selector 0x10: kernel data (16-bit)
