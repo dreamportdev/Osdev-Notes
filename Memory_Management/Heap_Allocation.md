@@ -369,10 +369,20 @@ if (prev_node != NULL && prev_node->status == FREE) {
     }
 }
 ```
+So basically what happened is that the left node "swallowed" the right one, and grew in size. To make it easier to understand consider the portion of an hypothetic heap in the picture below: 
+
+![heap_example_start](https://user-images.githubusercontent.com/59960116/161861475-67df25a7-17ea-491b-8dc5-45cac8ffb614.png)
 
 
+Basically the heap starts from address 00, and the first node is marked as free and the next two nodes are both used. Now imagine that a free to the second pointer is called (for this exammple we consider size of the Heap Node structure to be just of 2 bytes): 
 
+```c
+free(0x27); //Remember the overhead
+```
 
+This means that allocator before marking this location as free and return will check if it is possible to merge first to the left (YES) and then to the right (NO since the next node is still in use) and then will proceed with a merge only on the left side. The final result will be: 
+
+![heap_example_after_merge](https://user-images.githubusercontent.com/59960116/161862191-1a1dd91c-6677-4f48-8025-74c529fbf08b.png)
+
+The fields in bold are the fields that are changed.
 > **_NOTE:_**  ---
-
-
