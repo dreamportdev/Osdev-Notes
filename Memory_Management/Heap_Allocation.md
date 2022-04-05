@@ -324,11 +324,55 @@ There are different ways to implement it:
 * Adding a next and prev pointer to the node structure, in this way to check mergeability is just going to require to check for `(cur_node->prev).status = FREE` and (next_node->next).status = FREE
 * Otherwise without adding the next and prev pointer to the node, we can scan the heap from the start until the node before `ptr_to_be_freed`, and if is free we can merge, for the next node instead things are more easy, we just need to check if the node starting at `ptr_to_be_freed + ptr_size` if it is free is possible to merge
 
-Every solution has it's own pros and cons, the first one is probably easier to implement, and it doesn't require to scan the heap from the start every time since there are always the pointer to the prev and next node, that means also less pointer math to be writtend (there is no need to compute the address of prev and next location since we have the pointers to them)  but on the other hand it is adding an extra overhead of two pointers to the node structure, if the kernel is 64 bits then we are adding a total of 16 bytes of overhead for each node.
+Every solution has it's own pros and cons, the first one is probably easier to implement, and it doesn't require to scan the heap from the start every time since there are always the pointer to the prev and next node, that means also less pointer math to be written (there is no need to compute the address of prev and next location since we have the pointers to them)  but on the other hand it is adding an extra overhead of two pointers to the node structure, if the kernel is 64 bits then we are adding a total of 16 bytes of overhead for each node, the other solution involves more pointer math. 
+
+In this example we will opt for the first solution. So the first thing to be done is to add the prev and next pointer information, since at the end of the previous chapter we have implemented a struct that represente a Heap node, we can reuse and expand it: 
+
+```c
+typedef struct { 
+    size_t size;
+    uint8_t status;
+    Heap_Node *prev;
+    Heap_Node *next;
+} Heap_Node;
+
+```
+
+So now our allocated/freed memory block will looks like:
+
+| 00 | 01   | 02    | 10   |  18 |
+|----|------|-------|------|-----|
+|  6 | F/U  | PREV  | NEXT |  X  |
+
+So as mentioned earlier using the double linked list the check for "mergeability" is little bit more straightforward, for example to check if we can merge with the left node we just need to check the status of the node pointed by the prev field, if it is free than they can be merged, to do it we need to update basically both the previous and the next node. Referring to the previous node: 
+
+* Update the `size` its, adding to it the size of cur_node
+* Update the `next` pointer to point to cur_node->next
+
+Referring to the next node: 
+
+* Update it's `prev` pointer to point to the previous node above (cur_node->prev)
+
+Of course merging with the right node is the opposite (update the size and the prev pointer of cur_node->next and update the next pointer of cur_node->next)
+
+Below a pseudo-code example of how to merge left: 
+
+```c
+Heap_Node *prev_node = cur_node->prev //cur_pointer is the node we want to check if can be merged
+if (prev_node != NULL && prev_node->status == FREE) {
+    // The prev node is free, and cur node is going to be freed so we can merge them
+    Heap_Node next_node = cur_pointer->next;
+    previ_node->size = prev_node->size + cur_node->size + sizeof(Heap_Node);
+    prev_node->next = cur_pointer->next;
+    if (next_node != NULL) {
+        next_node->prev = prev_node;
+    }
+}
+```
 
 
 
 
-> **_NOTE:_**  ...
+> **_NOTE:_**  ---
 
 
