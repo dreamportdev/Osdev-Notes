@@ -77,7 +77,7 @@ Where `X` is just a marker to say that the addresses above are used now. Calling
 
 Now the third alloc call is easy to imagine what is going to do, it can be done as an exercise.
 
-Well what we have seen so far is already an Allocation algorithm, that we can easily implement (in all the following examples we use uint8_t for all the pointer, in a real executin scenario probably will be better to use a bigger size for that variable): 
+Well what we have seen so far is already an Allocation algorithm, that we can easily implement (in all the following examples we will use `uint8_t` for all the pointers, in a real execution scenario probably will be better to use a bigger size for that variable) its implementation is very simple: 
 
 ```c 
 uint8_t *cur_heap_position = 0; //This is just pseudocode in real word this will be a memory location 
@@ -384,5 +384,87 @@ This means that allocator before marking this location as free and return will c
 
 ![heap_example_after_merge](https://user-images.githubusercontent.com/59960116/161862191-1a1dd91c-6677-4f48-8025-74c529fbf08b.png)
 
-The fields in bold are the fields that are changed.
-> **_NOTE:_**  ---
+The fields in bold are the fields that are changed. And that's it. The implemntation is left as an exercise.
+
+### Nodes Splitting
+
+We have just seen how to solve the problem of fragmentation, but as we said above there is another potential issue waiting behind the corner, the potential waste of space. In this paragraph we will see how to mitigate it.
+
+So imagine that our Memory Manager was allocating and freeing memory for a while and we arrive at a moment in time where we have just three nodes: 
+
+* The first node Free, size of 150 bytes (the heap start)
+* The second node Used size of 50 bytes
+* The third node Free size of 1024 bytes (the heap end)
+
+Now another call to the alloc function is encountered: 
+
+```c
+alloc(10);
+```
+
+The allocator starts from the first node of the heap, find that it is free then it mark it to used and returns its address, done! Everything looks fine, except for one thing it just marked as used 150 bytes of memory for just 10 bytes requested, yeah if we add also the Heap_Node size probably the bytes needed are little bit more (around 34) but we are still wasting 5 times more than the needed space. So we need to define a mechanism to mitigate this problem. 
+
+The first solution that maybe can come to mind is to scan everytime the heap searching for the smallest suitable Node that can contain the requested size, unfortunately this still not work, just look at the scenario above, where we have three nodes and the smallest one is still 5 times bigger than what we need, so this solution will just slow down our algorithm (imagine a multitasking environment where thare are many heaps active in memory, one for every task, and many allocation/free happening) without mitigating the space wase issue (or mitigating very little). 
+
+So what are we supposed to do? The answer is simple, we just "cut" the space that we need from the node, splitting it in two parts, one that will be used for fullfill the allocation request and the other one that will be kept free with the rest of the space. The workflow will be the following: 
+
+* Search for the first node (`cur_node`) that is big enough to contain the requested size.
+* Once found create a `new_node` immediately after `cur_node` with size set to: `cur_node - requested_size`, and mark it as free
+* The new node is between the `cur_node` and `cur_node->next`, so we need to make sure that we update the pointers correctly:
+  * Save `cur_node->next` in a variable (let's call it `next_node`, we will use it later)
+  * Make `new_node->next` to point to `cur_node->next`
+  * Make `cur_node->next` point to `new_node`
+  * And `new_node->prev` point to `cur_node`
+  * And finally we need also to update `next_node`, that was originally after `cur_node`, so it had `next_node->prev = cur_node`, but now thiss is no longer true, because we have added a new node sitting between `cur_node` and `next_node`, so now we need to update `next_node`to point to the newly created node: `next_node->prev = new_node`
+  * Set the status of `cur_node` to used, and the status of `new_node` to free. 
+  * Update the size of both nodes (`cur_node` size will be updated with the requested size, and new node will contain the old `cur_node` size minus the requested size ()
+
+After that the allocator can compute the address to return using `cur_node`. 
+
+Before wrapping up there are few thing that worht pointing out while implementing the splitting: 
+
+* Remember that there is some overhead for every node, so when splitting we shouldn't have nodes smaller than `sizeof(Heap_Node)` because otherwise they will never be allocated.
+* So a good idea is to have a minimum allocable size. any allocation below that size will look for a node at least of the minimum size. So for example if the minimum_allocable_size is 0x20 bytes, and we want to allcoate 5 bytes, we will still receive a memory block of 0x20 bytes.
+* Remember always that there is the Heap_Node overhead while computing sizes, if you decide to include the overhead_size in the node_size, remember also to subtract it when checking for suitable nodes.
+
+And that's it
+
+### Heap Initialization
+
+The heap initialization depends on how the operating system is implemented, if for example we are creating a kernel without multitasking we will need just to create a single heap, and initialize it probably just once,  but if we are implementing a multitasking os, with paging enabled, and every process with it's own addressing space, we will need to create a new heap and initialize it for every single process that the os is going to create (and we should remember to deallocate it once the process is dread). 
+
+The good news is that in both scenarios the initialization is more or less the same, and the only difference is that we have a single heap in one case and multiple heaps in the other (if you are arrived here you know that we are talking about virtual memory allocation, and that the address space is much bigger than the available memory). 
+
+What is really needed to initialize the Heap is to decide an initial size (for example 8k), and create a single node: 
+
+```c
+
+uint64_t *heap_start;
+uint64_t *heap_end;
+void initialize_heap() {
+  heap_start = INITIAL_HEAP_ADDRESS //Remember is a virtual address;
+  heap_start->next = NULL;
+  heap_start->next = NULL; // Just make sure that prev and next are not going anywhere
+  heap_start->status = free;
+  heap_start->size = INITIAL_HEAP_SIZE // 8096 = 8k;
+  heap_end = heap_start
+} 
+```
+
+Initially the head and the tail of the list are the same since we have just a single node.
+
+And that's it, that is how the heap is initialized, with a single node. So the first allocation will trigger a split from that node... and so on...
+
+### Heap Expansion
+
+One final part that we will explain briefly, is what happens when we reach the end of the heap, so imagine the following scenario we have done a lot of allocations, most of the heap nodes are used and the few nodes are pretty small, and the next allocation request will not find a suitable node because the requested size is bigger than any free node available. So the allocator searched through the heap, and reached the end without success. What happens next?
+
+Here is where the Virtual Memory Manager will join the game. Basically what happens is:
+
+* The Heap Allocator first check if we have reached the end of the address space available (most unlikely) 
+* If not it will ask to the virtual Memory Manager to map one or more (depdending on implementation choiice) phyisical page(s) at the address(es) starting from `heap_end + heap_end->size + sizeof(heap_node)`
+* If the mapping fail, the allocation will fail as well (i.e. memory finished) 
+* If the mapping is succesfull, then we have just created a new node to be appended to the current heap, so once done we can proceed with the split if needed. 
+
+With that we finish our overview of the Heap Memory allocation
+
