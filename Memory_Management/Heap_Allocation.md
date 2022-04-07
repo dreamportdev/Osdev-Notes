@@ -2,11 +2,11 @@
 
 ## Introduction
 
-Welcome to the last layer of memory allocation, the heap, this is where usually the vaorious alloc functions are implemented. This layer usually is built on top of the other memory levels/services (the physical memory, virtual memory, paging). 
+Welcome to the last layer of memory allocation, the heap, this is where usually the various alloc functions are implemented. This layer usually is built on top of the other memory levels/services (the physical memory, virtual memory, paging). 
 
 Depending how the operating system is designed, this layer can return either physical or virtual addresses, for our purposes we will assume that the operating system has paging enabled and a basic virtual memory support, this means that our heap allocator will work with virtual addresses. 
 
-What we are going to see in  this section is how to create an alloc and a free function, how to keep track of allocated address, and reetrieve them when it's time to release it.
+What we are going to see in  this section is how to create an alloc and a free function, how to keep track of allocated address, and retrieve them when it's time to release it.
 
 ### To avoid confusion
 
@@ -16,7 +16,7 @@ Of course this section will refer to the Osdev Heap...
 
 ## A quick recap of what allocating memory means
 
-Again how a memory manager allocate memory deeply depends on its design and what it supports, for this section what we assume is that the operating system has a Physical Memory Manager, with Paging Enabled, and a heap to allocate memory, this design choice is good because it prepare the ground for when processes will be implemented to let them have their own address space. 
+Again how a memory manager allocate memory deeply depends on its design and what it supports, for this section what we assume is that the operating system has a Physical Memory Manager, with Paging Enabled, a PMM and a VMM, this design choice is good because it prepare the ground for when processes will be implemented to let them have their own address space. 
 
 Under the assumptions above, what happens under the hood when we want to allocate some memory from the heap?
 
@@ -37,7 +37,7 @@ A heap allocator usually exposes two main functions:
 * `void *alloc(size_t size);` To request memory of size bytes
 * `void free(void *ptr);` To free previously allocated memory
 
-In user space alloc and free are the well known `malloc()/free()` function. But an OS usueally doesn't have only a user space heap, but it has also a kernel space one many os call those functions `kmalloc()/kfree()`. 
+In user space alloc and free are the well known `malloc()/free()` function. But an OS usually doesn't have only a user space heap, but it has also a kernel space one many os call those functions `kmalloc()/kfree()`. 
 
 So let's get started with describing the allocation algorithm. 
 
@@ -45,9 +45,9 @@ So let's get started with describing the allocation algorithm.
 
 To start describing our allocation algorithm  let's start answering this question: "What does the heap allocator do?". 
 
-Well the answer is, as we already know: it allocates memory, in bytes. If the program ask _X_ byte, the allocator will return an address point to an area of memory exactly of _X_ byts (well that is not exactly true, it can be little bit more, since there could be some minimum allocatable size). 
+Well the answer is, as we already know: it allocates memory, in bytes. If the program ask _X_ byte, the allocator will return an address point to an area of memory exactly of _X_ byts (well that is not exactly true, it can be little bit more, since there could be some minimum allocatable size). Technically also the VMM is allocating memory, but the biggest difference is that the Heap is allocating bytes, while the VMM is allocating Pages.
 
-If we are writing an OS, we already know that the ram can be viewed as a very long array, where the index is the Memory Location Address. The allocator is returning this indexes. So the first thing we can see so far, is that we need to be able to keep track of the next available address. 
+If we are writing an OS, we already know that the ram can be viewed as a very long array, where the index is the memory location address. The allocator is returning this indexes. So the first thing we can see so far, is that we need to be able to keep track of the next available address. 
 
 Let's start with a very simple example, assume that we have an address space of 100 bytes, nothing is allocated yet, and the program makes thhree consecutive alloc calls: 
 
@@ -120,7 +120,7 @@ The main problem of this algorithm is that we don't keep track of what we have a
 Now let's try to build the new allocator starting from the one just implemented. The first thing to do is try to figure out what are the information we need to keep track of the previous allocations:
 
 * Whenever we make an allocation we require x bytes of memory, so when we return the address, we know that the next free one will be at least at: `returned_address + x`  so we need to keep track of the allocation size
-* Then we need a way to traversate the previously allocated addresses, for this we need just a pointer to the start of the heap, if we decide to keep track of the sizes. 
+* Then we need a way to traverse to the previously allocated addresses, for this we need just a pointer to the start of the heap, if we decide to keep track of the sizes. 
 
 The problem is now: how to keep track of this information, for this example let's keep things extermely simple, and place the size just before the pointer, so whenever we make an allocation  we write the size to the address pointed by `cur_heap_position` and return the next address, so the code should look like this now:  
 
@@ -173,8 +173,8 @@ Where U is just a label for a boolean-like variable (U = used = false, F = true 
 At this point we the first change we can do to our allocation function is add the new status variable just after the size: 
 
 ```c
-#define USED 0
-#define FREE 1
+#define USED 1
+#define FREE 0
 
 uint8_t *heap_start = 0;
 uint8_t *cur_heap_position = heap_start; //This is just pseudocode in real word this will be a memory location 
@@ -209,7 +209,7 @@ Yeah, that's it... we just need to change the status, and the allocator will be 
 To finish the new allocator, we need now to implement the mechanism to reuse the freed memory location, so how the new algorihtm works is when an allocation request is made: 
 
 * First the alloc function will start from the start of the heap and traverse the heap from the start until the latest address allocated (the current end of the heap) looking for a chunk where it's size is greather than the requested size
-* if found let's mark the size field as USED, the size doesn't need to be updated since it's not changing, so assuming that cur_pointer is pointing to the first medatata byte of the location to be returned (the size in our example) the code to update and return the current block will be pretty simple: 
+* if found let's mark the size field as USED, the size doesn't need to be updated since it's not changing, so assuming that cur_pointer is pointing to the first metatata byte of the location to be returned (the size in our example) the code to update and return the current block will be pretty simple: 
 ```c
 cur_pointer = cur_pointer + 1; //remember cur_pointer is pointing to the size byte, and is different from current_heap end
 *cur_pointer = USED;
@@ -242,8 +242,9 @@ void *third_alloc(size_t size) {
   cur_pointer = heap_start;
   while(cur_pointer < cur_heap_position) {
     cur_size = *cur_pointer;
-    status = *cur_pointer + 1;
-    if(cur_size > size && status == FREE) {
+    status = *(cur_pointer + 1);
+    if(cur_size >= size && status == FREE) {
+       status = USED;
        return cur_pointer + 2;
     }
     cur_pointer = cur_pointer + (size + 2);
@@ -280,7 +281,7 @@ That's it, that's what we need to clean up the code and replace the pointers in 
 
 #### Merging
 
-Ok se we finally outlined a basic memory allocation function, that is also capable to free and reuse memory (wohoo...) and we are nearly at the end of our memory journey. 
+Ok so we finally outlined a basic memory allocation function, that is also capable to free and reuse memory (wohoo...) and we are nearly at the end of our memory journey. 
 
 In this paragraph we see how to mitigate the *fragmentation* problem. Is not a definitive solution, but this let us to reuse memory in a more efficient way. Before proceeding btw let's see what we have done so far. We started from a simple pointer to the latest allocated location, and added information in order to keep track of what was previously allocated and how big it was, needed to reuse the freed memory. 
 
