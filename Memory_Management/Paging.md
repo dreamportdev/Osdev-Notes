@@ -2,9 +2,9 @@
 
 ## What is Paging?
 
-Paging is a memory management scheme that introduce the concept of **_logical address_** (virtual address) and **_Virtual Memory_** to the operating system. On x86_* architectures it is achieved via hardware. Using this tecnique we create a new layer of addressing above the memory space (the physical address space), that introduce a mapping between a physical address and a logical one, and few more features (like access protection, level protection, etc.)
+Paging is a memory management scheme that introduce the concept of **_logical address_** (virtual address) and **_Virtual Memory_** to the operating system. On x86_\* architectures it is achieved via hardware. Using this tehcnique we create a new layer of addressing above the memory space (the physical address space), that introduce a mapping between a physical address and a logical one, and few more features (like access protection, level protection, etc.)
 
-Paging introduce few new concepts that are explained below
+Paging introduces a few new concepts that are explained below
 
 ### Page
 A _page_ is a contiguous block of physical  memory of fixed size, and it represent the smallest unit of data for a virtal memory management unit, and usually is described by a single entry in a Page Table
@@ -18,11 +18,16 @@ What are those directories and tables? Let's start from the tables:
 * **Page Table** contains the information about a single pages of memory, an entry in a page table represents the starting physical memory addresss for this page.
 * **Page Directory** an entry in a page directory can point to: another page directory (depending on what type of paging we have enabled) or a page table. 
 
-A special register contains the address of the Root Page Directory. 
+A special register, `CR3` contains the address of the Root Page Directory, this register has the following format:
+
+* bits from 12 to 63 (31 if we are in running a 32 bit kernel) are the address of the Root page directory
+* bits 0 to 12 change their meaning depending on the value of bit 14 in CR4, but in this section and for our purpose are not relevant anyway, so they can be left as 0.
+
+Usually either the whole CR3 register or just the upper parts containing the root page directory address are referred with the name of PDBR that is an acronym for Page Directory Base Address).
 
 ### Logical Address
 
-A Virtual Address, is and address where the application/data appears to reside from an application/user level perspective. That address could or could not be the same of th physical address, depending of operating system design. 
+A Virtual Address, is an address where the application/data appears to reside from an application/user level perspective. That address could or could not be the same of th physical address, depending of operating system design. 
 
 A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
 
@@ -38,25 +43,27 @@ So for example:
 phys#0x123456 = virt#0xffff2345235
 ```
 
-This mapping, in x86 architectures, is achieved trhough the usage of several hierarchical tables each item in one level is pointing to the next level table. 
-A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address:
+This mapping, in x86 architectures, is achieved through the usage of several hierarchical tables each item in one level is pointing to the next level table. 
+A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address assuming address translation used in the picture above:
 
 ```
-virtaddress = 0xff880120
+virtaddress = 0x2f880120
 ```
 
 Now we know that the bits: 
 
-* 0 to 10 are the offset
-* 11 to 21 are the page table entry
-* 20 to 32 are the page directory entry
+* 0 to 5 are the offset
+* 6 to 13 are the page table entry
+* 14 to 21 are the page directory level 1 entry
+* 21 to 31 are the page directory level 2 entry
 
 We can translate the abbove address to: 
-* Offset:  0x120 bytes into page
-* Page Table entry: number 0x80 (it points to the memory page)
-* Page Dir entry: 0x3FE (it points to a page table)
+* Offset:  0x20 bytes into page
+* Page Table entry: number 0x4 (it points to the memory page)
+* Page Dir 1 entry: 0x20 (it points to a page table)
+* Page Dir 2 entry: 0xBE (it points to a page dir 1) 
 
-
+Be aware that the exampe above is referred just to an imaginary address translation mechanism. 
 In this section we will see the X86_64 paging.
 
 ## Paging in Long Mode 
@@ -149,15 +156,17 @@ Below is a list of all the fields present in the table entries, with an explanat
 
 * **P** (Present): If set this tells the CPU that the current page or page table pointed by this entry is currently loaded in physical memory, so when accessed the address translation can be carried out. If is 0 this means that the page is not loaded into memory so a virtual address that contains this entry will cause a Page Fault.
 * **R/W** (Read/Write): If set the page can be both read and written, if clear is in read only mode. When this bit is set in a page Directory it tells the cpu that all its entries will share that setting
-* **User/Supervisor** It describe the privilege level, if clear the page has the Supervisor level, while if it is set the level is Supervisor.
+* **User/Supervisor** It describe the privilege level, if clear the page has the Supervisor level, while if it is set the level is Supervisor. The cpu identify Supervisor or User level for checking the CPL value if it is < 3 the the accesses are made in Supervisor mode, if = to 3 they are made in User Mode.
 * **PWT** (Page Level Write Through): controls the caching policy (writhe through or write back), i usually leave it to 0, for more information refer to the Intel Developer Manuals
 * **PCD** (Page Level Cache Disable): controls the caching of individual pages or tables, i usually leave it to 0, for more information refer to the Intel Developer Manuals
 * **A** (Accessed): This value is set by the CPU, if is 0 it means the page hasn't  been accessed yet. Is set when the page (or page teable) have been accessed at least once
-* **D** (Dirty): Indicates if a page has been writtent to when set. This flag applies only to Page Tables. This flag and the accessed flag are provided for being use by the memory management software, the CPU only set it when it's value is 0. Otherwise is up to the Memory Maanger to decide if it has to be cleared or not.
-* **PS** (Page Size): Used only on Page Directory Level, if set it indicates that the current entry point to a 2MB Page, if it is clear it means that the current entry is a 4kb page
+* **D** (Dirty): Indicates if a page has been written to when set. This flag applies only to Page Tables. This flag and the accessed flag are provided for being use by the memory management software, the CPU only set it when it's value is 0. Otherwise is up to the Memory Maanger to decide if it has to be cleared or not.
+* **PS** (Page Size): Used only on Page Directory Level, if set it indicates that the current entry point to a 2MB Page (or a 1GB page, but this feature has to be set with cpuid first), if it is clear it means that the current entry is a 4kb page
 * **PAT** (Page Attribute Table Index): It selects the PAT entry, refer to the Intel Manual for a more detailed explanation
 * **G** (Global) it requires the PGE bit set in in CR4, if set it indicates that when CR3 is loaded or a task switch occurs that page-table or page directory is not invalidated.
-* **EXB** is the Execute Disable bit, available only if supported by the CPU, otherwise is reserved. Refer to the intel manual for this bit.
+* **EXB** is the Execute Disable bit, also know as XD or NX, available only if supported by the CPU (can be checked wit CPUID), otherwise is reserved. Refer to the intel manual for this bit.
+
+Note about PWT and PCW, the definiton of those bits depends on the version of the hardware, on type of paging enabled, and other factors, so for a better understanding of those two bit please refer to the most updated intel documentation (is in the Paging section of the intel Software Developer Manual vol.3) 
 
 ## Address translation 
 

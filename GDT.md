@@ -127,7 +127,7 @@ If no, it's a code or data descriptor.
 These are further distinguished with the `type` field, as outlined below.
 
 | Start (in bits) | Length (in bits) | Description |
-|----------------|------------------|-------------|
+|:-----|:-----|------------------|
 | 0 | 16 | Limit bits 15:0 |
 | 15 | 16 | Base address bits 15:0 |
 | 32 | 8 | Base address bits 23:16 |
