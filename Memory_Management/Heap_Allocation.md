@@ -440,8 +440,8 @@ What is really needed to initialize the Heap is to decide an initial size (for e
 
 ```c
 
-uint64_t *heap_start;
-uint64_t *heap_end;
+Heap_Node *heap_start;
+Heap_Node *heap_end;
 void initialize_heap() {
   heap_start = INITIAL_HEAP_ADDRESS //Remember is a virtual address;
   heap_start->next = NULL;
