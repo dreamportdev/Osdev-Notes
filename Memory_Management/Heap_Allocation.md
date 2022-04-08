@@ -28,7 +28,7 @@ Under the assumptions above, what happens under the hood when we want to allocat
 
 ## Allocating and freeing memory
 
-As many other OS component there are many different algorithm that are designed and implement to manage memory, everyone of them has it pros and cons, here we try to explain a simple and efficient algorithm based on linked lists. 
+As many other OS component there are many different algorithm that are designed and implement to manage memory, everyone of them has its pros and cons, here we try to explain a simple and efficient algorithm based on linked lists. 
 
 ### Overview
 
@@ -363,7 +363,7 @@ Heap_Node *prev_node = cur_node->prev //cur_pointer is the node we want to check
 if (prev_node != NULL && prev_node->status == FREE) {
     // The prev node is free, and cur node is going to be freed so we can merge them
     Heap_Node next_node = cur_pointer->next;
-    previ_node->size = prev_node->size + cur_node->size + sizeof(Heap_Node);
+    prev_node->size = prev_node->size + cur_node->size + sizeof(Heap_Node);
     prev_node->next = cur_pointer->next;
     if (next_node != NULL) {
         next_node->prev = prev_node;
@@ -452,6 +452,13 @@ void initialize_heap() {
 } 
 ```
 
+But how to choose the initial address (INITIAL_HEAP_ADDRESS)? This really is arbitrary, we can pick any address that we like, but there are just few  constraint that we need to follow:
+
+* Some memory are used by the kernel, we don't want to overwrite anything with our heap, so let's keep sure that the area we are going is free.
+* Usually when paging is enabled, in many case the kernel is moved to one half of the memory space (usually referred as to HIGHER_HALF and LOWER_HALF) so when deciding the initial address we should place it in the correct half, so if the kernel is placed in the HIGHER and we are implementing the kernel heap it should go on the HIGHER Half and if it is for the user space heap it will goes on the LOWER half.
+
+Usually for the kernel heap, a good idea is to place it after the end of the kernel.
+
 Initially the head and the tail of the list are the same since we have just a single node.
 
 And that's it, that is how the heap is initialized, with a single node. So the first allocation will trigger a split from that node... and so on...
@@ -463,7 +470,7 @@ One final part that we will explain briefly, is what happens when we reach the e
 Here is where the Virtual Memory Manager will join the game. Basically what happens is:
 
 * The Heap Allocator first check if we have reached the end of the address space available (most unlikely) 
-* If not it will ask to the virtual Memory Manager to map one or more (depdending on implementation choiice) phyisical page(s) at the address(es) starting from `heap_end + heap_end->size + sizeof(heap_node)`
+* If not it will ask to the virtual Memory Manager to map a number of pages (depdending on implementation) at the address starting from `heap_end + heap_end->size + sizeof(heap_node)`
 * If the mapping fail, the allocation will fail as well (i.e. memory finished) 
 * If the mapping is succesfull, then we have just created a new node to be appended to the current heap, so once done we can proceed with the split if needed. 
 

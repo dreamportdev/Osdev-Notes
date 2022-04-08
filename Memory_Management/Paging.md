@@ -68,7 +68,7 @@ In this section we will see the X86_64 paging.
 
 ## Paging in Long Mode 
 
-In 64 bit mode we have up to 4 Levels of page tables. The number depends on the size we want to assign to each page. 
+In 64 bit mode we have up to 4 levels of page tables. The number depends on the size we want to assign to each page. 
 
 There are 3 possible scenarios: 
 
@@ -118,7 +118,7 @@ PML4 and PDPR entry structure are identical, while the PD one has few difference
 
 |63     | 62        | 51 ... 40            | 39 ... 12              | 11  ...  9 |
 |-------|-----------|----------------------|------------------------|------------|
-|**EXB**| Available | _Reserved must be 0_ | **Table Base Address** | Available  |
+|**XD**| Available | _Reserved must be 0_ | **Table Base Address** | Available  |
 
 
 |8   ...   6 | 5     |  4      |  3      |  2      |  1      | 0     |
@@ -138,7 +138,7 @@ A page table entry structure is still similar to the one above, but it contains 
 
 |63     | 62    | 51 ... 40  | 39 ... 12             | 11  ... 9 |
 |-------|-------|------------|-----------------------|-----------|
-|**EXB**| Avail | _Reserved must be 0_ | **Page Base Address** | Available |
+|**XD**| Avail | _Reserved must be 0_ | **Page Base Address** | Available |
 
 
 | 8     | 7       | 6      | 5     |  4      |  3      |  2      |  1      | 0     |
@@ -164,7 +164,7 @@ Below is a list of all the fields present in the table entries, with an explanat
 * **PS** (Page Size): Used only on Page Directory Level, if set it indicates that the current entry point to a 2MB Page (or a 1GB page, but this feature has to be set with cpuid first), if it is clear it means that the current entry is a 4kb page
 * **PAT** (Page Attribute Table Index): It selects the PAT entry, refer to the Intel Manual for a more detailed explanation
 * **G** (Global) it requires the PGE bit set in in CR4, if set it indicates that when CR3 is loaded or a task switch occurs that page-table or page directory is not invalidated.
-* **EXB** is the Execute Disable bit, also know as XD or NX, available only if supported by the CPU (can be checked wit CPUID), otherwise is reserved. Refer to the intel manual for this bit.
+* **XD** is the Execute Disable bit, also know as NX, available only if supported by the CPU (can be checked wit CPUID), otherwise is reserved. Refer to the intel manual for this bit.
 
 Note about PWT and PCW, the definiton of those bits depends on the version of the hardware, on type of paging enabled, and other factors, so for a better understanding of those two bit please refer to the most updated intel documentation (is in the Paging section of the intel Software Developer Manual vol.3) 
 
