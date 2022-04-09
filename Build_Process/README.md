@@ -115,7 +115,7 @@ $(LD) $(OBJS) -o output_filename_here.elf -nostdlib -static -pie --no-dynamic-li
 
 For an explanation of the above linker flags used:
 - `-nostdlib`: this is crucial for building a freestanding program, as it stops the linker automatically including the default libraries for the host platform. Otherwise your program will contain a bunch of code that wants to make syscalls to your host OS.
-- `-static`: A safeguard for linking against other libarires. The linker will error if you try to dynamically link with anything (i.e static linking only). Because again there is not runtime, there is no dynmaic linker.
+- `-static`: A safeguard for linking against other libarires. The linker will error if you try to dynamically link with anything (i.e static linking only). Because again there is not runtime, there is no dynamic linker. 
 - `-pie` and `--no-dynamic-linker`: Not strictly necessary, but forces the linker to output a relocatable program with a very narrow set of relocations. This is useful as it allows some bootloaders to perform relocations on the kernel.
 
 ### Building with Makefiles
@@ -128,6 +128,8 @@ There are other make-like tools out there (xmake, nmake) but these are less popu
 This section may expand to include other build systems (meson, cmake) soon.
 
 ## Quick Addendum: Easily Generating a Bootable ISO
+There are more details to this, however most bootloaders will provide a tool that lets you create a bootable iso, with the kernel, the bootloader itself and any other files you might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-desploy` for version 3.x.
+
 - Depends on bootloader, assume grub for now (grub-mkrescue). Also make reference to limine-install.
 - Talk about xorisso.
 - Maybe a separate file on the different boot protocols? how they differ, whats required to support them, and how to generate an iso using their tools.
