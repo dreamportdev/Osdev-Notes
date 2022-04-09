@@ -41,7 +41,6 @@ Again they not mean to be complete, and are more a place where i try to keep thi
 * [Northport](https://github.com/DeanoBurrito/northport) Another 64 bit Os written from scracth with SMP! by [DeanoBurrito](https://github.com/DeanoBurrito/)
 * [DreamOs](https://github.com/dreamos82/Dreamos) 32 Bits Os written from scratch, the project is discontinued but i think it was worth mentioning. By [Dreamos82]([Dreamos82](https://github.com/dreamos82))
 
-# Acknowledgments
-
-Thanks to: 
-* [**Dean T**](https://github.com/DeanoBurrito/) For his contributions in many sections of these notes! (i would say he is a co-author now)
+# Authors
+* [Ivan G](https://github.com/dreamos82) - Main author and creator of this note
+* [**Dean T**](https://github.com/DeanoBurrito/) - Co-Author
