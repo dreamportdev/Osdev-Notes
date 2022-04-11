@@ -78,6 +78,7 @@ An irq is raised when a key is pressed or released:
 * Once the IRQ is served, remember to send an EOI to the LAPIC, writing 0x0 to the address: 0xFEE00B0
 
 *To be Continued...*
+
 ### Useful Info
 
 * https://wiki.osdev.org/PS/2_Keyboard 
