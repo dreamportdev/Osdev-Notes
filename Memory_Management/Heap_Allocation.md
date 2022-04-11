@@ -52,7 +52,7 @@ The easiest way to start with creating our allocator is to ask: "What do a heap 
 
 Well the answer is, as we already know: it allocates memory, specifically in bytes. The bytes part is important, because as kernel developers we're probably used to dealing with pages and page-sized things. If the program asks for _X_ bytes, the allocator will return an address pointing to an area of memory that is at least _X_ bytes. The VMM is allocating memory, but the biggest difference is that the Heap is allocating bytes, while the VMM is allocating Pages.
 
-If we are writing an OS, we already know that the ram can be viewed as a very long array, where the index is the memory location address. The allocator is returning these indices. So we can already see the first detail we'll need to keep track of: keeping track of the next available address.
+If we are writing an OS, we already know that RAM can be viewed as a very long array, where the index into this array is the memory address. The allocator is returning these indices. So we can already see the first detail we'll need to keep track of: next available address.
 
 Let's start with a simple example, assume that we have an address space of 100 bytes, nothing has allocated yet, and the program makes the following consecutive `alloc()` calls: 
 
@@ -83,7 +83,7 @@ So now we have the following situation:
 |------|------|------|-----|--------|-----|-------|-----|-------|
 |  X   |  X   |  X   |     |   X    |     | cur   |     |       |
 
-Now the third `alloc()` call will be work similarly as the others, and you can imagine the results. 
+Now the third `alloc()` call will work similarly to the others, and you can imagine the results. `
 
 What we have so far is already an allocation algorithm, that's easy to implement and very fast! 
 Its implementation is very simple: 
@@ -294,7 +294,7 @@ Now we have a decent and working function that can free previously allocated mem
 * There is a lot of potential waste of space, for example if we are allocating 10 bytes, and the heap has two holes big enough the first is 40 bytes, the second 14, the algorithm will pick the first one free so the bigger one with a waste of 26 bytes. There can be different solution to this issue, but is out of the purpose of this tutorial (and eventually left as an exercise)
 * It can suffer of fragmentation. Basically there can be a lot of small freed areas that the allocator will not be able to use because of their size. A partial solution to this problem is described in the next paragraph. 
 
-Another thing worth doing to improve readability of the code is replace the direct pointer access with a more elegant data structure. This lets us add more fields (as we will in the next paragraph) as neede. 
+Another thing worth doing to improve readability of the code is replace the direct pointer access with a more elegant data structure. This lets us add more fields (as we will in the next paragraph) as needed.
 
 So far our allocator needs to keep track of just the size of the block returned and it's status The data structure for this could look like the following: 
 
@@ -399,7 +399,7 @@ if (prev_node != NULL && prev_node->status == FREE) {
     }
 }
 ```
-What we're describing here is the left node being "swallowed" the right one, and growing in size. The memory that the left node owns and is responsible for is now part of the right oneTo make it easier to understand, consider the portion of a hypothetical heap in the picture below: 
+What we're describing here is the left node being "swallowed" by the right one, and growing in size. The memory that the left node owns and is responsible for is now part of the right oneTo make it easier to understand, consider the portion of a hypothetical heap in the picture below: 
 
 ![heap_example_start](https://user-images.githubusercontent.com/59960116/161861475-67df25a7-17ea-491b-8dc5-45cac8ffb614.png)
 
@@ -449,7 +449,7 @@ After that the allocator can compute the address to return using `(uintptr_t)cur
 
 Before wrapping up there's a few things worth pointing out about implementing splitting: 
 
-* Remember that every node has some overhead, so when splitting we shouldn't have nodes smaller than `sizeof(Heap_Node)`, because otherwise they will never be allocated.
+* Remember that every node has some overhead, so when splitting we shouldn't have nodes smaller (or equal to) than `sizeof(Heap_Node)`, because otherwise they will never be allocated.
 * It's a good idea to have a minimum size for the memory a chunk can contain, to avoid having a large number of nodes and for easy alignment later on. For example if the minimum_allocable_size is 0x20 bytes, and we want to allocate 5 bytes, we will still receive a memory block of 0x20 bytes. The program may not know it was returned 0x20 bytes, but that is okay. What exactly you set this value to is implementatin specific, values of 0x10 and 0x20 are popular.
 * Always remember that there is the memory footprint of `sizeof(Heap_Node)` bytes while computing sizes that involve multiple nodes. If you decide to include the overhead size in the node's size, remember to also subtract it when checking for suitable nodes.
 
