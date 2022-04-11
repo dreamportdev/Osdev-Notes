@@ -12,9 +12,9 @@ In this section we will try to cover a more common use case that is probably wha
 
 We will cover the following topics: 
 
-* [Physical Memory Manager](PhysicalMemory.md)
+* [Physical Memory Manager](Physical_Memory.md)
 * [Paging](Paging.md)
-* Virtual Memory Manager
+* [Virtual Memory Manager](Virtual_Memory_Manager.md)
 * [Heap Allocation](Heap_Allocation.md)
 
 *Authors note: don't worry, we will try to keep it as simple as possible, using basic algorithms and explaining all the gray areas as we go. The logic may sometimes be hard to follow, you will most likely have to go through several parts of this section multiple times...*

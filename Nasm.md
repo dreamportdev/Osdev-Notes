@@ -85,7 +85,7 @@ But what if we want to declare a string? Well in  this case we can use a differe
 string_var:
 	db	"Hello", 10
 ```
-What does it mean? We are simply declaring a variable (string_variable) that starts at 'H', and fill the consecutive bytes with the next letters. But what about the last number? It is just an extra byte, that represents the newline character. So what we are really storing is the string "Hello\n"
+What does it mean? We are simply declaring a variable (string_variable) that starts at 'H', and fill the consecutive bytes with the next letters. But what about the last number? It is just an extra byte, that represents the newline character. So what we are really storing is the string "Hello\\n"
 
 Now what we have seen so far is valid for a variable that can be initialized with a value, but what if we don't know the value yet, but we want just to "label" it with a variable name? Well is pretty simple, we have equivalent directives for reserving memory: 
 
