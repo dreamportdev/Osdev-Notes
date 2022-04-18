@@ -50,8 +50,6 @@ The scancode set is made by two types of codes:
 
 The value of those code depends on the set in use.
 
-... TODO: add how to distinguish between MAKE and break on each set. 
-
 ## IRQ and IO-Apic
 
 * The Keyboard IRQ is the number 1. This corresponds to pin 1 on the IO Apic, that is controlled by entry 1 in Redirection Table, 
@@ -73,9 +71,11 @@ in this case then we have the offset for our entry at:  12h and 13h (called IORE
 ```
 An irq is raised when a key is pressed or released: 
 
-* If using scancodes set 1: The bit #7 is 0 when the key is pressed, an 1 otherwise.
+* If using scancodes set 1: The bit #7 is 0 when the key is pressed, and 1 otherwise.
 * If using scancodes set 2: When a key is released the data byte is prefixted by 0XF0
 * Once the IRQ is served, remember to send an EOI to the LAPIC, writing 0x0 to the address: 0xFEE00B0
+
+In addition, when we have multibyte scancodes (i.e. left ctrl, pause, and others) an irq is raised for every byte placed on the Data buffer.
 
 *To be Continued...*
 ### Useful Info
