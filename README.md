@@ -1,6 +1,9 @@
 # Osdev Notes
 
 [![Discord Chat](https://img.shields.io/discord/578193015433330698.svg?style=flat)](https://discordapp.com/channels/578193015433330698/578193713340219392)
+<span class="badge-buymeacoffee">
+<a href="https://buymeacoffee.com/dreamos82" title="Donate to this project using Buy Me A Coffee"><img src="https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg" alt="Buy Me A Coffee donate button" /></a>
+</span>
 
 This repository is a collection of small documents, notes and articles about various osdev topics.
 
