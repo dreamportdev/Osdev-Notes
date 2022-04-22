@@ -136,5 +136,91 @@ There are more details to this, however most bootloaders will provide a tool tha
 [here](GeneratingISO.md)
 
 ## Building and Using Debugging Symbols
-- -g flag, quick mention of different symbol formats (defaults to host, fine if debugging on host).
-- how to get these symbols: mb2 has a tag for sections, stivale2 provides the entire elf file.
+You'll never know when you need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in your kernel will increase the file size, but can be useful. If you want to remove them from an already compiled kernel `strip` can be used to strip excess info from a file.
+
+Including debug info in the kernel is the same as any other program, simply compile with the `-g` flag. 
+
+There are different versions of DRAWF (the debugging format used by elf files), and by default the compiler will use the most recent one for your target platform. However this can be overriden and the compiler can be forced to use a different debug format (if needed). Sometimes there can be issues if your debugger is from a different vendor to your compiler, or is much older.
+
+Getting access to these debug symbols is dependent on the boot protocol used:
+
+### Multiboot 2
+Multiboot 2 provides the Elf-Symbols (section 3.6.7 of the spec) tag to the kernel which provides the elf section headers and the location of the string table. Using these is described below in the stivale section.
+
+### Stivale 2
+Stivale2 uses a similar and slightly more complex (but more powerful) mechanism of providing the location of the entire kernel file in memory. This means you're not limited to just using elf files, and can access debug symbols from a kernel in any format. This is because you have the file base address and length and have to do the parsing yourself.
+
+Parsing elf files is beyond the scone of this section, but it's very straight forward. The elf header contains 2 fields of interest: `e_shoff` (**s**ection **h**eader **off**set) and `e_shstrndx` (**s**ection **h**eader string index).
+The elf section headers share a common format describing their contents. They can be thought of as an array of `Elf64_Shdr` structs.
+
+This array is `e_shoff` bytes from the start of the elf file.
+
+One particular elf section is the string table (called `.strtab` usually), which contains a series of null-terminated c style strings. Anytime a something in the elf file has a name, it will store an offset. This offset can be used as an index into the string table's data, giving you the first character of the name you're after.
+This applies to section names as well, which presents a problem: how do you we find the `.strtab` section header if we need the string table to determine the name a section header is using?
+
+The minds behind the elf format thought of that, and give us the field in the elf header `e_shstrndx`, which is the index of the string table section header. Then we can use that to determine the names of other section headers, and debug symbols too.
+
+Next you'll want to find the `.symtab` section header, who's contents are an array of `Elf64_Sym`. These symbols describe various parts of the program, some source file names, to linker symbols or even local variables. There is also other debug info stored in other sections (see the `.debug` section), but again that is beyond the scope of this section.
+
+Now to get the name of a section, you'll need to find the matching symbol entry, which will give you the offset of the associated string in the string table. With that you can now access mostly human-readable names for your kernel.
+
+Languages built around the C model will usually perform some kind of name mangling to enable features like function overloading, namespaces and so on. This is a whole topic on it's own.
+
+A brief example, all the Elf_* structures are detailed in the elf64 specification.
+```c
+//for stivale2
+uint64_t kernelFile = GetStivale2Tag(KERNEL_FILE_TAG)->kernel_file;
+Elf64_Ehdr* elfHeader = (Elf64_Ehdr*)kernelFile;
+
+#ifdef USING_MB2
+    Elf64_Shdr* strTable = sectionHeaders[GetMultiboot2Tag(ELF_SYMBOLS).shndx];
+    size_t headerCount = GetMultiboot2Tag(ELF_SYMBOLS).size / GetMultiboot2Tag(ELF_SYMBOLS).entsize;
+    Elf64_tShdr* sectionHeaders = GetMultiboot2Tag(ELF_SYMBOLS).headers;
+#elif USING_STIVALE2
+    Elf64_Shdr* strTable = sectionHeaders[elfHeader->shstrndx];
+    size_t headerCount = elfHeader->shnum;
+    Elf64_Shdr* sectionHeaders = (Elf64_Shdr*)(kernelFile + elfHeader->sh_offset);
+#endif
+
+const char* strTableData = (const char*)(kernelFile + strTable->sh_offset);
+Elf64_Shdr* symTable = nullptr;
+
+for (size_t i = 0; i < headerCount; i ++)
+{
+    Elf64_Shdr* shdr = sectionHeaders[i];
+    
+    //we use the string name and this section header's name to get the section name
+    const char* sectionName = strTableData[shdr->sh_name];
+    if (!strcmp(sectionName, ".symtab"))
+        continue;
+
+    symTable = shdr;
+    break;
+}
+
+//now we have the symbol table we can iterate through the array of symbols.
+//lets say we wanted to find out what was at address
+
+void print_symbol_name(uint64_t address)
+{
+    //we have these from before, how you store and retrieve this data is up to you.
+    Elf64_Shdr* symTable;
+    const char* stringTableData;
+
+    Elf64_Sym* symbols = kernelFile + symTable->sh_offset;
+
+    for (size_t i = 0; i < symTable->sh_size / symTable->e_entsize; i++)
+    {
+        const uint64_t symbolTop = symbols[i].st_value + symbols[i].st_size;
+
+        //we have to check if the address is within the symbol's range. Some symbols may only have 1 address (a variable), but some may occupy a range (a function), so we need to check an entire range:
+        if (address < symbols[i].st_value || address > symbolTop)
+            continue;
+        
+        //the address is inside of the symbol, now we can access info about that symbol. In this, just printing it's name.
+        print(stringTableData[symbols[i]->st_name]);
+        return;
+    }
+}
+
+```
