@@ -167,7 +167,7 @@ typedef struct {
 } key_event;
 ``` 
 
-And now is just matter of associating each bit with the key we need to keep track, so for example bit 0 can be for the shift key, bit 1 for the ctrl key, etc. 
+And now is just matter of associating each bit with the key we need to keep track, so for example bit 0 can be for the shift key, bit 1 for the ctrl key, etc. And the unused bits can be left as zero (and used for future needs)
 
 A good habit should be to create labels with `#define` (or whatever your language of choice offers you) to identify those bits so for the following examples let's define the label for the shift key:
 
@@ -187,6 +187,22 @@ and to clear (key released it):
 
 ```c
 keyboard_position[i].status_mask = keyboard_position & ~(1 << CTRL_MASK);
+```
+
+So now we need to just identify what key is being pressed/released and update the status_mask accordingly. 
+
+The case of caps lock can be handled in 2 ways, the first way is to add a boolean variable to the key_event struct to define the current keyboard status, or we can decide to use one of the unused bits in the status_mask. The only difference with the other cases is that we don't expect for the caps lock to be kept pressed. So the update will happen only once every key press (we don't care when it will be released). Ah and don't forget to update the led too.
+
+### The translation
+
+Now that all the parts of the driver are in place let's see how the translation will happen. 
+
+There are two types of translation: 
+
+* The first from scancode to kernel internal code (not mandatory but useful to support differents scancode sets
+* Second from kernel code to ascii art (even if not part of the driver itself is useful to know how it will happen)...
+
+
 
 ### Handling Press/Release status
 
