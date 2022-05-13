@@ -1,14 +1,14 @@
 # Handling scancodes
 
-Handling the keyboard interrupt was pretty simple, we just basically needed to add an irq to the APIC and read the scancode. But at the end what we got is just a number, and we want to eventually translated it into a character. 
+Handling the keyboard interrupt was pretty simple. The ps2 controller is a system device, so it's irq line was enabled in the ioapic, then an entry was added in the idt. Now inside of the interrupt handler we just added we can read the scancode from the keyboard.
 
 In this section we will see see how to build the Keyboard driver, and what are its responsibilities. 
 
-First of all the driver is not responsible of translating the scancode into printable characters (well sometime on early stages of development it does it too...)
+First of all the driver is not responsible of translating the scancode into printable characters (well sometime on early stages of development it does it too...) but it's main responsability is to translate keyboard specific scancode sets into some vendor neutral format.
 
 What it cares is only to keep track of the various keyboard events and make them available to any service that needs them.
 
-As already mentioned there are 3 different scancode sets, we will focus on just one (the set 1, since most of the keyboard even if using a different set will have the controller that automatically translates the scancode to that), by the way we will try to implement a generic way to translate, so when eventually a new set needs to be added the changes needed will be very little. 
+As already mentioned there are 3 different scancode sets, we will focus on just one (set 1, since most of the keyboard even if using a different set will have the ps2 controller that automatically translates the other scancode set default at power on  to set 1), by the way we will try to implement a generic way to translate, so when eventually a new set needs to be added the changes needed will be very little. 
 
 Now let's see what are the problem we need to solve when developing a keyboard driver: 
 
@@ -25,7 +25,7 @@ From now on we will assume that the scancode translation is enabled, so no matte
 
 In the previous section we have seen how the interrupt was generated and how to read data from the keyboard. But now we need to write a proper driver, trying to address the issues listed above (well not all of them since some are an higher level than they will be implemented "using" the driver, not by it.
 
-We will try to build the driver in small step adding one piece at time, so it will be easier to understand it. 
+We will try to build the driver in small steps adding one piece at time, so it will be easier to understand it. 
 
 ### Store key press history
 
@@ -47,7 +47,7 @@ If we want to store just the scancode we don't need much more so we can already 
 void keyboard_driver_irq_handler() {
 
     
-    int scancode = inb(0x60); // Read byte from the Keyboard data port
+    uint8_t scancode = inb(0x60); // Read byte from the Keyboard data port
     
     keyboard_buffer[buf_position] = scancode;
     buf_position = (buf_position + 1) % MAX_KEYB_BUFFER_SIZE;
@@ -102,7 +102,7 @@ uint8_t current_state;
 
 Now there are three scancodes thate are composed by  4 or 5, we are not going to cover them, but it can be a good exercise trying to find states for them too. The keys are Print Screen pressed/released and Pause (only pressed, it doesn't have a release state).
 
-Now the first question is: do we need to store the prefix? Well for this one the answer is that it mostly depends on the design decision for the driver, but it is not necessary, especially if we are going to translate the keyboard scancodes into kernel scancodes (in this way we don't store a set specific code, and supporting multiple scancode will require less code, since the translation into a symol will be done from the kernel code and not the scancode). 
+The first question is: do we need to store the prefix? Well for this one the answer is that it mostly depends on the design decision for the driver, but it is not necessary, especially if we are going to translate the keyboard scancodes into kernel scancodes (in this way we don't store a set specific code, and supporting multiple scancode will require less code, since the translation into a symol will be done from the kernel code and not the scancodes). 
 
 The state update is done by just updating the current_state variable. As already said that variable will start with the Normal State, so we will need an init function to e called before enabling the IRQ: 
 
@@ -136,14 +136,13 @@ The code snippet above just show how the states are updated, it doesn't care abo
 
 ### Handling the "Special" keys
 
-When talking about special keys we are referring to those keys that are considered like modifiers keys, when pressed they can alter the output from other keys (we are not talking about the scancode, but for the translated key), or they are simply used in combination with other keys, we are mostly referring to the _Ctrl_, _Alt_, _Shift_, and to some extent also the caps lock (even if this little bit easier to handle). 
+When talking about special keys we are referring to those keys that are considered like modifiers keys, when pressed they can alter the output from other keys (we are not talking about the scancode, but for the translated key), or they are simply used in combination with other keys, we are mostly referring to the _Ctrl_, _Alt_, _Shift_, _Gui_, _Super_,  and to some extent also the caps lock (even if this little bit easier to handle). 
 
-When these keys are being kept presed the driver need to know this informantion, because it has to behave accordingly: 
+When these keys are being kept pressed the driver need to know this informantion, because it has to behave accordingly: 
 
 * If the `shift` key is pressed the translation to ascii mechanism needs to know it because it has to return the Capital Symbol associated with that key (for Capital Symbol we mean or the Letter or the symbol above some keys) 
 * If `ctrl` and `alt` are pressed the driver needs to know it because it can trigger either a key combination or some of the "Alt"ernative symbols on some special keyboard keys.
 * If the caps lock key is pressed (not kept pressed) we need the translation function to return only the Capital version of the keys associated with alphabetical letters.
-* The `fn` button is similar to `ctrl` and `alt` but it usually will just trigger an alternate "behaviour" for the keys (** TODO: check if changes the scancode generated by the key**)
 
 So we basically need to keep track of the state of each of those buttons, and let the driver/translate function know if the keys are pressed. So it's time to update the key_event data structure. 
 With what? Wel probably the first thing that could come to mind is to add a variable for each of the keys, something like: 

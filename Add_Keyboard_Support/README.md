@@ -1,6 +1,6 @@
 # Adding keyboard support
 
-Writing an OS is great fun, but it would be better if it can interact with the user right, instead of only printing lot of stuff on the screen. 
+Writing an OS is great fun, but instead of only printing stuff to the screen, it would be better if we can interact with the user right?
 
 In this section we will see how to interact with keyboard, and get the user input. 
 
@@ -28,7 +28,7 @@ The scancode that is generated when a key is pressed is called the **make** code
 So in order to develop our keyboard driver we need to make a set of steps: 
 
 * First identify the scancode set used by our keyboard, this is important because it is going to influence our mapping
-* Enable the Keyboard IRQ, how to do this depends if we are using the PIC or the IOAPIC, but in both cases we need to set up a handler and unmask the relevan entry into a IRQ table
+* Enable the Keyboard IRQ, how to do this depends if we are using the PIC or the IOAPIC, but in both cases we need to set up a handler and unmask the relevant entry into a IRQ table
 * Read the scancode byte 
 * Store it in a buffer along with the current status (we will se later what the status is).
 

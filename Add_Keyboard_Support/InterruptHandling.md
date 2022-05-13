@@ -38,7 +38,7 @@ The ps2 keyboards uses two IO Ports for communication with the cpu:
 * To check if the translation is enabled, the command 0x20 must be sent on port 0x64, and then read the byte on 0x60. If the 6th bit is set than the translation is enabled. 
 * If we want to disable the translation we need: 
    - Read current controller configuration byte, with the 0x20 command (the byte will be sent on port 0x60)
-   - Clear the 6th on the current controller configuration byte
+   - Clear the 6th bit on the current controller configuration byte
    - Send the command 0x60 (it says that next byte on data port has to be written as the controller configuration byte) on port 0x64, then send the updated configuration byte to port 0x60
    - For our driver we will keep the translation enabled
 * The only scancode set guaranted to be supported by keyboards is the set2. Keep in mind that most of the time the kernel communicate with the 8042_PS2 Controller, and in this case the scancodes can be translated into set1.
