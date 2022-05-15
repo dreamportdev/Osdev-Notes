@@ -17,7 +17,7 @@ Before proceeding further let's have a quick high level overview of a keyboard.
 
 We'll be dealing with the PS/2 keyboard in this section, which communicates with us via the PS/2 controller in our system. Other keyboard running over more complex protocols (like USB) can be used to emulate a PS/2 keyboard, but this requires support from the device and motherboard. The good news for laptop developers is that most laptop keyboards (and trackpads) are actually still using PS/2 internally.
 
-Keyboards can accept several commands and generate interrupts, placing a byte is placed on the communication port. 
+Keyboards can accept several commands and generate interrupts, placing a byte on the communication port. 
 
 Whenever a key is pressed or released the keyboard sends some data to us via the communication port, this data is called a *scancode*, and is composed of one or more bytes. 
 
@@ -36,11 +36,11 @@ As you can see translation the scancode to a printable character is not in the l
 
 ### Useful Links
 
-* https://wiki.osdev.org/PS/2_Keyboard 
-* https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective
-* https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation
-* https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets
-* http://www.brokenthorn.com/Resources/OSDev19.html
+* [https://wiki.osdev.org/PS/2_Keyboard](https://wiki.osdev.org/PS/2_Keyboard)
+* [https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective](https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective)
+* [https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation](https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation)
+* [https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets](https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets)
+* [http://www.brokenthorn.com/Resources/OSDev19.html](http://www.brokenthorn.com/Resources/OSDev19.html)
 
 
 

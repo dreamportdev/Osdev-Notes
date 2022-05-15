@@ -1,4 +1,4 @@
-# Handling Scancodes
+# Keyboard Driver Implementation
 
 Now that we can get scancodes from the keyboard (see [here](InterruptHandling.md)), we'll look at building a simple ps/2 keyboard driver.
 
@@ -7,7 +7,7 @@ First of all, the driver is generally not responsible for translating the key pr
 Our keyboard driver does care about keeping track of any keyboard events (presses/releases), and making them available to any code that needs them.
 Quite often these events will be consumed (that is, read by some other code and then removed from the driver's buffer).
 
-As already mentioned there are 3 different scancode sets, we will focus on just one (set 1, since most of the keyboard even if using a different set will have the ps2 controller that automatically translates the other scancode set default at power on to set 1). We'll implement the translate function in a generic fashion to make adding other scancode sets easier in the future.
+As already mentioned there are 3 scan code sets. We'll focus on just one (set 1, since by default the ps2 controller translates the other sets to set 1 when the system is powered). We'll implement the translate function in a generic fashion to make adding other scancode sets easier in the future.
 
 Now let's see what are the problems we need to solve when developing a keyboard driver: 
 
@@ -100,7 +100,7 @@ There are some scancodes that have up to 4 or more bytes which we're not going t
 
 *Editor's note: This is one area where the state-machine implementation can break down. As you potentially need a separate state for each byte in the sequence. An alternative implementation, that's not covered here, is to have an array of `uint8_t`s, and a pointer to the latest byte in the buffer. The idea being: read a byte from the buffer, place it after the last received byte in the array, and then increment the variable of the latest byte. Then you can check if a full scancode has been received, for extended codes beginning with 0xE0 you're expecting 2 bytes, for normal codes only 1 byte. Once you've detected a full scancode in the buffer, process it, and reset the pointer in the buffer for the next byte to zero. Therefore the next byte gets placed at the start of the buffer. Now it's just a matter of making the buffer large enough, which is trivial.*
 
-Regarding storing the prefix byte, this comes down a design decision. In our case we're not going to store them as they dont contain any information we need later on, when translating these scancodes into the kenrel scancodes. Just to re-iterate: the idea of using a separate, unrelated, scancode set inside the kernel is that we're not bound to any implementation. Our keyboard driver can support as many sets as needed, and the running programs just use what the kernel provides, in this case it's own scancode set. It seems like a lot of work up front, but it's a very useful abstraction to have!
+Regarding storing the prefix byte, this comes down a design decision. In our case we're not going to store them as they dont contain any information we need later on, when translating these scancodes into the kernel scancodes. Just to re-iterate: the idea of using a separate, unrelated, scancode set inside the kernel is that we're not bound to any implementation. Our keyboard driver can support as many sets as needed, and the running programs just use what the kernel provides, in this case it's own scancode set. It seems like a lot of work up front, but it's a very useful abstraction to have!
 
 Now by changing the `current_state` variable, we can change how the code will treat the incoming data. We'll also need an init function, so we that can do some set up like setting the default state and zeroing the keyboard event buffer:
 
@@ -236,7 +236,7 @@ We could also filter them out when an application tries to get any pending key e
 
 We also don't check if the keyboard scancode is within the lookup table, which it may not be. This is something to consider.
 
-So now we have our internal representation of a scancode, and the `code` field in the `key_event` structure outlined above can used it. In the paragraph _Store Key Press History_ we have seen how the the interrupt handler should save the key event in the circular buffer. However that was before we had any translation. Using what we saw above we'll change the following line to now use the lookup table instead of storing the scancode directly:
+So now we have our internal representation of a scancode, and the `code` field in the `key_event` structure outlined above can use it. In the paragraph _Store Key Press History_ we have seen how the the interrupt handler should save the key event in the circular buffer. However that was before we had any translation. Using what we saw above we'll change the following line to now use the lookup table instead of storing the scancode directly:
 
 ```c
     keyboard_buffer[buf_position].code = scancode;
