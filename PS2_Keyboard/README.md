@@ -7,9 +7,8 @@ In this section we will see how to interact with keyboard, and get the user inpu
 The topics covered by this section are: 
 
 * [Handling the keyboard interrupt](InterruptHandling.md)
-* [Keyboard Commands](../Keyboard.md) 
+* [Keyboard Commands](../Keyboard.md) - Not ready yet 
 * [Writing a driver](DriverImplementation.md)
-* [Translating Scancodes](README.md)
 
 ## Keyboard Overview
 
