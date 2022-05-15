@@ -47,7 +47,7 @@ For x86_64 you would pass `--target=x86_64-elf`. Target triplets describe the ha
 
 Setting up a GCC cross compiler is a little more hands on, but still very simple. The first approach is to simply download a pre-compiled toolchain (see the link above). This is super simple, with the only major disavantage being that you may not be getting the latest version.
 
-The other approach is to compile GCC yourself. This takes more time, but it's worth understanding the process, [described here](CompilingGCC.md).
+The other approach is to compile GCC yourself. This takes more time, but it's worth understanding the process. The osdev wiki has a guide on this [here](https://wiki.osdev.org/GCC_Cross-Compiler).
 
 The following sections will use the common shorthands to kepe things simple:
 | Shorthand | Meaning                   |
@@ -125,10 +125,10 @@ For an example using makefiles, [check here](GNUMakefiles.md). Makefiles are a c
 
 There are other make-like tools out there (xmake, nmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make.
 
-This section may expand to include other build systems (meson, cmake) soon.
+This section may expand to include other build systems (meson, cmake) one day. For now we'll just cover makefiles as they're the lowest common denominator.
 
 ## Quick Addendum: Easily Generating a Bootable ISO
-There are more details to this, however most bootloaders will provide a tool that lets you create a bootable iso, with the kernel, the bootloader itself and any other files you might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-desploy` for version 3.x.
+There are more details to this, however most bootloaders will provide a tool that lets you create a bootable iso, with the kernel, the bootloader itself and any other files you might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
 - Depends on bootloader, assume grub for now (grub-mkrescue). Also make reference to limine-install.
 - Talk about xorisso.
@@ -136,7 +136,7 @@ There are more details to this, however most bootloaders will provide a tool tha
 [here](GeneratingISO.md)
 
 ## Building and Using Debugging Symbols
-You'll never know when you need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in your kernel will increase the file size, but can be useful. If you want to remove them from an already compiled kernel `strip` can be used to strip excess info from a file.
+You'll never know when you need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in your kernel will increase the file size, but can be useful. If you want to remove them from an already compiled kernel the `strip` program can be used to strip excess info from a file.
 
 Including debug info in the kernel is the same as any other program, simply compile with the `-g` flag. 
 

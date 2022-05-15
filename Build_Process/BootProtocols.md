@@ -22,13 +22,27 @@ This is where a bootloader comes in: a layer of abstraction between the kernel a
 *Authors note: I would consider writing a good bootloader an advanced topic in the osdev world. If you're new, please use an existing bootloader. It's a fun project, but not at the same time as an os. Using an existing bootloader will save you many issues down the road. And no, an assembly stub to get into long mode is not a bootloader.*
 
 ## Multiboot 2
-For this section we'll talking mainly about grub 2. There is a previous version of grub (called grub legacy), and if you have hardware that *must* run grub legacy, there are patches for legacy that add most of the version 2 features to it. This is highly recommended.
+For this section we'll mainly be talking about grub 2. There is a previous version of grub (called grub legacy), and if you have hardware that *must* run grub legacy, there are patches for legacy that add most of the version 2 features to it. This is highly recommended.
 
 One such feature is the ability for grub to load 64-bit elf kernels. This greatly simplifies creating a 64-bit OS with multiboot 2, as previously you would have needed to load a 32-bit elf, and the 64-bit kernel as a module, and then load the 64-bit elf yourself. Effectively re-writing stage3 of the bootloader.
 
 Regardless of what kind of elf is loaded, multiboot 2 is well defined and will always drop you into 32-bit protected mode, with the cpu in the state as described in the spec, [here](https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html). If you're writing a 64-bit kernel this means that you will need a hand-crafted 32-bit assembly stub to set up and enter long mode.
 
 The major difference between multiboot 1 and 2 is how data is communicated between the bootloader and kernel. In multiboot 2 a series of tags (it's a linked list of structs), each one with a pointer to the next tag in the chain.
+
+### Creating a Boot Shim
+The major caveat of multiboot when first getting started is that it drops you into 32-bit protected mode, meaning that you must setup long mode yourself. This also means you'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
+
+Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard -2GB address (0xffff'ffff'8000'0000 and above). 
+
+Entering long mode is fairly easy, it requires setting 3 flags:
+- PAE (physical address extension), bit 5 in CR4.
+- LME (long mode enable), bit 8 in EFER (this is an MSR).
+- PG (paging enable), bit 31 in cr0. This MUST be enabled last.
+
+Since we have enabled paging, we'll also need to populate cr3 with a valid paging structure. This needs to be done before setting the PG bit. Generally these initial page tables can be set up using 2mb pages with the present and writable flags set. Nothing else is needed for the initial pages.
+
+Now you will be operating in compatability mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
 
 ## Stivale 2
 Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
