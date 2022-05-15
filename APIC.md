@@ -1,5 +1,11 @@
 # APIC 
 
+## What is APIC
+
+APIC stands for *Advanced Programmable Interrupt Controller*, and it is used to handle interrupt received from the processor, it is a replacement of the old PIC8259 (that remains still available btw), but it offers more functionalities, especially when dealing with SMP, in fact one of the limitation of the PIC was that it was able to deal with only one cpu at time, and this is also the main reason why the APIC was firstly introduced. 
+
+Every core has it's own LAPIC, while usually there is a single IOAPIC.
+
 ## Types of APIC
 
 There are mainly two types of APIC:

@@ -13,22 +13,23 @@ I hope that someone will find them useful.
 Topics covered so far: 
 
 * [Drawing text on framebuffer](DrawingTextOnFB.md)
-* [Environment setup (for a 64bit os)](EnvironmentSetup.md)
+* [Environment setup (for a 64bit os)](Environment_Setup.md)
+* [Multiboot](Multiboot.md)
 * [Framebuffer](Framebuffer.md)
 * [Moving the kernel in the higher half](HigherHalf.md)
 * [Interrupt handling (64 bit)](IntterruptHandling.md)
-* [Multiboot](Multiboot.md)
 * [Nasm tips](Nasm.md)
-* [Paging](Paging.md)
-* [Memory Allocation](Memory_Allocation.md)
+* [Memory Management](Memory_Management/)
+    * [Paging](Memory_Management/Paging.md)
+    * [Memory Allocation](Memory_Management/Heap_Allocation.md)
+    * [Physical Memory](Memory_Management/PhysicalMemory.md)
+* [Global Descriptor Table](GDT.md)
 * [APIC](APIC.md)
 * [Keyboard](Keyboard.md)
 * [Timer](Timer.md)
-* [Physical Memory](PhysicalMemory.md)
 * [Debugging](Debug.md)
 * [RSDP_and_RSDT](RSDP_and_RSDT.md)
 * [C Language tips and tricks](C_Language_Info.md)
-* [Global Descriptor Table](GDT.md)
 * [TroubleShooting](Troubleshooting.md)
 * [Misc tips and tricks](TipsAndTricks.md)
 
@@ -43,4 +44,4 @@ Again they not mean to be complete, and are more a place where i try to keep thi
 # Acknowledgments
 
 Thanks to: 
-* [**Dean T**](https://github.com/DeanoBurrito/) For his contributions in many sections of these notes! 
+* [**Dean T**](https://github.com/DeanoBurrito/) For his contributions in many sections of these notes! (i would say he is a co-author now)

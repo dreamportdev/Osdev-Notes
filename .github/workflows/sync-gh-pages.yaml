@@ -1,0 +1,26 @@
+name: Sync gh-pages branch with master branch
+
+on:
+  push:
+    branches: [ master, feature-sync-pages ]
+  pull_request:
+    branches: [ master ]
+  
+jobs:
+  do_sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: setup git user
+      run: >
+        git config --local user.name "sync-gh-pages-script";
+        git config --local user.email "sync-gh-pages-script@noemail.com";
+
+    - name: merge and push
+      run: >
+        git fetch;
+        git checkout gh-pages;
+        git merge origin/master --allow-unrelated-histories;
+        git push origin gh-pages;

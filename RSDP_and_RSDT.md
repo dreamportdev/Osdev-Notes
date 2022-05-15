@@ -8,7 +8,7 @@ The newer version is backward compatible with the older
 ### RSDP Structure
 Basic data structure for RSDP v1 is: 
 
-```C
+```c
 struct RSDPDescriptor {
  char Signature[8];
  uint8_t Checksum;
@@ -42,14 +42,36 @@ struct RSDP2Descriptor
 * *XSDTAddress*: Address of the XSDT table. If this is non-zero, the RSDT address **must** be ignored and the XSDT is to be used instead.
 * *ExtendedChecksum*: Same as the previous checksum, just includes the new fields.
 
-## RSDT Data structure and filelds
+### RSDP Validation
+
+Before proceeding let's explain little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just mutter of cycling a byte array. Here the example code: 
+
+```c
+bool validate_RSDP(char *byte_array, size_t size) {
+ uint32_t sum = 0;
+ for(int i = 0; i < size; i++) {
+    sum += byte_array[i];
+ }
+ return (sum & 0xFF) == 0;
+}
+```
+
+Having last byte means that `result mod 0x100` is 0. Now there are two ways to test it:
+
+* Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored
+* Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with 0XFF value (0xFF is equivalent to the 0b11111111 byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
+
+The function above works perfectly with both versions of descriptors. 
+In the XSDT since it has more fields, the previous checksum field wont offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
+
+## RSDT Data structure and fields
 
 RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers many different table descriptors.
 
 The Rsdt is the root of other many different Descriptor tables (SDT), all of them may be splitted in two parts: 
 
 * the first part is the header, common between all the SDTs with the following structure:
-```C
+```c
 struct ACPISDTHeader {
   char Signature[4];
   uint32_t Length;
@@ -62,7 +84,7 @@ struct ACPISDTHeader {
   uint32_t CreatorRevision;
 };
 ```
-* The secon part is the table itself, every SDT has it's own table
+* The second part is the table itself, every SDT has it's own table
 
 ## RSDT vs XSDT
 
@@ -72,7 +94,7 @@ The RSDT is an SDT header followed by an array of `uint32_t`s, representing the 
 
 The XSDT is the same, except the array is of `uint64_t`s.
 
-```C
+```c
 struct RSDP
 {
   ACPISDTHeader sdtHeader; //signature "RSDP"
@@ -86,14 +108,14 @@ struct XSDT
 };
 
 //to get the sdt header at *n* index
-ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddress[*n*] : (uint64_t)rsdt->sdtAddress[*n*]);
+ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[*n*] : (uint64_t)rsdt->sdtAddresses[*n*]);
 ```
 
 ## Some useful infos
 
 *  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if you try to print it, you will most likely end up in printing garbage in the best case scenario.
-*  The RSDT Data is an array of uint32_t addresses. The number of items in the RSDT can be computed in the following way:
-```C
+*  The RSDT Data is an array of uint32_t addresses while the XSDT data is an array of uint64_t addresses. The number of items in the RSDT and XSDT can be computed in the following way:
+```c
 //for the RSDT
 size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
 //for the XSDT

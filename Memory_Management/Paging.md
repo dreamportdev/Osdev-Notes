@@ -38,7 +38,7 @@ If we are using 2MB pages this is how the address will be handled by the paging 
 * Bits 29 ... 21 are the PD entry
 * Offset in the Page dir 
 
-Every table has 512 elements, so we have an address space of 2^512 * 2^512 * 2^512 * 0x200000 (that is the page size) :w
+Every table has 512 elements, so we have an address space of 2^512 * 2^512 * 2^512 * 0x200000 (that is the page size)
 
 ### Address translation using 4kb pages
    
