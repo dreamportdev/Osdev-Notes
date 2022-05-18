@@ -2,7 +2,7 @@
 This section is a collection of useful strategies for memory protection. This mainly serves as a reminder that these features exist, and are worth looking into!
 
 ## WP bit
-On x86 platforms, we have the R/W bit in our page tables. This flag must be enabled in order for a page to be written to, otherwise the page is write-only (assuming the page is present at all).
+On x86 platforms, we have the R/W bit in our page tables. This flag must be enabled in order for a page to be written to, otherwise the page is read-only (assuming the page is present at all).
 
 However this is not actually true! Supervisor accesses (rings 0/1/2 - not ring 3) *can* write to readonly pages by default. This is not as bad as it might seem, as the kernel is usually carefully crafted to only access the memory it needs. However when you allow user code to access the kernel (via system calls for example), the kernel can be 'tricked' into writing into areas it wouldn't normally, via software or hardware bugs.
 
@@ -16,7 +16,7 @@ SMEP (Supervisor Memory Execute Protection) checks that while in a supervisor ri
 SMAP (Supervisor Memory Access Protection) will generate a page fault if the supervisor attempts to read or write to a user page. This is quite useful, but it brings up an interesting problem: how do the kernel and userspace programs communicate now? Well the engineers at Intel thought of this, and have repurposed the AC (alignment check) bit in the flags register. When AC is cleared, SMAP is active and will generate faults. When AC is set SMAP is temporarily disabled and supervisor rings can access user pages until AC is cleared again. Like most of the other flag bits, AC has dedicated instructions to set (`stac`) and clear (`clac`) it.
 
 Support for SMEP can be checked via cpuid, specifically leaf 7 (sub-leaf 0) bit 7 of the ebx register. SMAP can be checked for via leaf 7 (sub-leaf 0) bit 20 of ebx.
-These features were not introduced at the same, so it's possible to find a cpu that supports one and not the other.
+These features were not introduced at the same time, so it's possible to find a cpu that supports one and not the other. Futhermore, they were introduced relatively recently (2014-2015), so unlike other features (NX for example) they can't safely be assumed to be supported.
 
 *Authors Note: Some leaves of cpuid have multiple subleaves, and the subleaf must be explicitly specified. I ran into a bug while testing this where I didn't specify that the subleaf was 0, and instead the last value in rax was used. The old phrase 'garbage in, garbage out' holds true here, and cpuid returned junk data. Be sure to set the subleaf!*
 
