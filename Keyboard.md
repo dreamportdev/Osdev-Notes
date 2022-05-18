@@ -17,7 +17,41 @@ The ps2 keyboards use two IO Ports for communication with the cpu:
    - Clear the 6th on the current controller configuration byte
    - Send the command 0x60 (it says that next byte on data port has to be written as the controller configuration byte) on port 0x64, then send the updated configuration byte to port 0x60
 * The only scancode set guaranted to be supported by keyboards is the set2. Keep in mind that most of the time the kernel communicate with the 8042_PS2 Controller, and in this case the scancodes can be translated into set1.
- 
+
+## Sending Commands to the keyboard
+
+To send commands to the PS/2 Keyboard, we need to send the bytes directly to the Data Port (instead of the PS/2 controller command port). 
+
+### Get/Set Keyboard Scancode set
+
+The command to get/set the scancode set used by the controller is 0x60 followed by another byte: 
+
+| Value | Description           |
+|-------|-----------------------|
+|   0   | Get current set       |
+|   1   | Set scancode set 1    |
+|   2   | Set scancode set 2    |
+|   3   | Set scancode set 3    |
+
+Now the keyboard reply with 2 bytes, if we are setting a new scancdoe set the reply will be: 0xFA 0xFE, if reading the current used set the response will be: 0xFA and the second byte value will be one of the followings:
+
+| Value | Description       |
+|-------|-------------------|
+|   43  | Scancode set 1    |
+|   41  | Scancode set 2    |
+|   3f  | Scancode set 3    |
+
+### About scancodes 
+
+The scancode set is made by two types of codes: 
+
+* MAKE code that is the scancode generated when a key is pressed 
+* BREAK code is generated when a key is released.
+
+The value of those code depends on the set in use.
+
+... TODO: add how to distinguish between MAKE and break on each set. 
+
 ## IRQ and IO-Apic
 
 * The Keyboard IRQ is the number 1. This corresponds to pin 1 on the IO Apic, that is controlled by entry 1 in Redirection Table, 
@@ -44,8 +78,10 @@ An irq is raised when a key is pressed or released:
 * Once the IRQ is served, remember to send an EOI to the LAPIC, writing 0x0 to the address: 0xFEE00B0
 
 *To be Continued...*
+
 ### Useful Info
 
 * https://wiki.osdev.org/PS/2_Keyboard 
 * https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective
 * https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation
+* https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets

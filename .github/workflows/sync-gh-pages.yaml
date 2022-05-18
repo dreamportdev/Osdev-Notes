@@ -3,8 +3,6 @@ name: Sync gh-pages branch with master branch
 on:
   push:
     branches: [ master, feature-sync-pages ]
-  pull_request:
-    branches: [ master ]
   
 jobs:
   do_sync:
@@ -22,5 +20,5 @@ jobs:
       run: >
         git fetch;
         git checkout gh-pages;
-        git merge origin/master --allow-unrelated-histories;
+        git merge origin/master --allow-unrelated-histories -X theirs;
         git push origin gh-pages;

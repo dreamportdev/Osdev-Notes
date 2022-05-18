@@ -14,26 +14,44 @@ The font can be one of many different available (ttf, psf, etc.) in this tutoria
 
 If you are running on linux you can find some nearly ready to use fonts in */usr/share/consolefonts*
 
+In this section we are going to see how to use a font that has been stored into memory. 
+
+The steps involved are: 
+
+1. Find a suitable PSF font
+2. Add it to the kernel
+3. When the kernel is loading identify the PSF version and parse it accordingly
+4. Write functions to: pick the glyph (a single character) and draw it on the screen
+
+## Find a Font and add it to the kernel (1 and 2)
+
+As already said the best place to look for a font if you are running on linux is to look into the folder `/usr/share/consolefonts`, to know the psf version i  suggest to use the tool *gbdfed*, import the font with it (use the File->Import->console font menu), and tghen go to *View->Messages*, the should be a message simila to the following: 
+
+```
+Font converted from PSF1 to BDF.
+```
+
 Once you got your the font, it needs first to be converted into a ELF binary file that can be linked to our kernel. 
 
-To do that you can use the following command: 
+To do that is possible to use the following command: 
 
 ```bash
 objcopy -O elf64-x86-64 -B i386 -I binary font.psf font.o
 ```
 
-The parameters are: 
-* -O the output format (in my case was elf64-x86-64) 
+The `objcopy` command is a tool that copy a source file into another, and can change its format. 
+The parameters used in the example above are: 
+* -O the output format (in this case is elf64-x86-64) 
 * -B is the binary architecture 
 * -I the inpurt target
 
-Once converted into binary elf, we can link it to the kernel like any other compiled file, to do that just add the output file to the linker command: 
+Once converted into binary elf, it can be linked to the kernel like any other compiled file, to do that just add the output file to the linker command: 
 
 ```bash
 ld -n -o build/kernel.bin -T src/linker.ld <other_kernel_files> font.o -Map build/kernel.map
 ```
 
-With the font linked, we will have access to 3 new variables, like in the following example: 
+With the font linked, now is possible to access to 3 new variables, like in the following example: 
 
 ```bash
 readelf -s font.o
@@ -48,6 +66,45 @@ Symbol table '.symtab' contains 5 entries:
 ```
 (the variable name depends on the font name). 
 
+## Identify version and parse the PSF
+
+Currently there are two different version of PSF fonts available, they are identified with v1, and v2, to know what is the version of the font we need to check the magic number first: 
+
+* If the version is 1 the magic number is two bytes:
+
+```c
+#define PSF1_MAGIC0     0x36
+#define PSF1_MAGIC1     0x04
+```
+* Instead if we are using version 2 of psf the magic number has 4 bytes: 
+
+```c
+#define PSF2_MAGIC0     0x72
+#define PSF2_MAGIC1     0xb5
+#define PSF2_MAGIC2     0x4a
+#define PSF2_MAGIC3     0x86
+```
+
+The magic number are stored from the least significative (0) to the more significative (2 or 4 depending on the version)
+
+### PSF v1 Structure
+
+For version 1 of the psf, the data structure is pretty simple and contains only three fields: 
+
+* *magic* number: the value as already seen above is 0x0436 
+* *mode*: they are flags. If the value is 0x01 it means that the font will have 512 characters (there are few other values that can be checked here https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html)
+* *charsize* The character size in bytes
+
+All the fields above are declared as `unsigned char` variables, except for the magic number that is an array of 2 unsigned char. For version 1 fonts there are few values that are always the same:
+
+* *width* is always 8 (1 byte)
+* *height* since width is  exactly 1 byte, this means that *height* == *charsize*
+* *number of glyphs* is always 256 unless the mode field is set to 1, in this case it means that the font will have 512 characters
+
+The font data starts right after the header. 
+
+### PSF v2 structure
+
 The psf structure header has a fixed size of 32 bytes, with the following information: 
 
 * *magic* a magic value, that is: 0x864ab572
@@ -59,7 +116,7 @@ The psf structure header has a fixed size of 32 bytes, with the following inform
 * *height* Height of each glyph in pixels
 * *width* Width in pixels of each glyph. 
 
-All the fields are 4 bytes in size, so creating a structure that can hold it is pretty trivial.
+All the fields are 4 bytes in size, so creating a structure that can hold it is pretty trivial, except for the magic number that is an array of 4 usnigned char.
 
 Let's assume from now on that we have a data structure called PSF_font with all the fields specified above. The first thing that we need of course, is to access to this variable: 
 
@@ -105,8 +162,12 @@ uint8_t* first_glyph = (uint8_t*) &_binary_font_psf_start + default_font->header
 Since we know that every glyph has the same size, and this is available in the PSF_Header, if we want to access the *i-th* character, we just need to do the following: 
 
 ```C
-uint8_t* selected_glyph = (uint8_t*) &_binary_font_psf_start + default_font->headersize + (i * default_font->bytesperglyph);
+uint8_t* selected_glyph_v1 = (uint8_t*) &_binary_font_psf_start + sizeof(PSFv1_Header_Struct) + (i * default_font->bytesperglyph); //psf_v1
+
+uint8_t* selected_glyph_v2 = (uint8_t*) &_binary_font_psf_start + default_font->headersize + (i * default_font->bytesperglyph); //psf_v2
 ```
+
+Where in  the v1 case, `PSFv1_Header_Struct` is just the name of the struct containing the PSFv1 definition.
 
 If we want to write a function to display a character on the framebuffer, what parameters it should expect? 
 

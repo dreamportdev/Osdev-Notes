@@ -21,6 +21,7 @@ For example: we want to map it starting from address: 0xffffffff80000000 (even i
 Let's assume we are in 64 bit mode. The address is 0xffffffff80000000, if we are using 2Mb pages: 
 
 | 63 .... 48 | 47 ... 39 | 38   ... 32  31  30 | 29  ..  21 | 20 19 ...  0 |
+|------------|-----------|---------------------|------------|--------------|
 | 1   ...  1 | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0  0  ...  0 |
 |  Sgn. ext  |    PML4   |      PDPR           |   Page dir |    Offset    |
 

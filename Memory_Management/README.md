@@ -12,9 +12,9 @@ In this section we will try to cover a more common use case that is probably wha
 
 We will cover the following topics: 
 
-* [Physical Memory Manager](PhysicalMemory.md)
+* [Physical Memory Manager](Physical_Memory.md)
 * [Paging](Paging.md)
-* Virtual Memory Manager
+* [Virtual Memory Manager](Virtual_Memory_Manager.md)
 * [Heap Allocation](Heap_Allocation.md)
 
 *Authors note: don't worry, we will try to keep it as simple as possible, using basic algorithms and explaining all the gray areas as we go. The logic may sometimes be hard to follow, you will most likely have to go through several parts of this section multiple times...*
@@ -22,7 +22,7 @@ We will cover the following topics:
 Each of the layers has a dedicated section below, however we'll start with a high level look at how they fit together. Before proceeding let's briefly define the concepts above: 
 
 | Memory Management Layer | Description |
-|-|-------------|
+|---|-------------|
 | Physical Memory Manager | Responsible for keeping track of which parts of the available hardware memory (usually ram) are free/in-use. It usually allocates in fixed size blocks, the native page size. This is 4096 bytes on x86.|
 | Paging | It introduces the concepts of *virtual memory* and *virtual addresses*, providing the OS with a bigger address space, protection to the data and code in its pages, and isolation between programs. | 
 | Virtual memory manager | For a lot of projects, the VMM and paging will be the same thing. However the VMM should be seen as the virtual memory *manager*, and paging is just one tool that it uses to accomplish its job: ensuring that a program has memory where it needs it, when it needs it. Often this is just mapping physical ram to the requested virtual address (via paging or segmentaiton), but it can evolve into stealing pages from other processes. |
