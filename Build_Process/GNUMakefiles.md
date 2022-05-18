@@ -17,6 +17,64 @@ If you do use gnu make extensions, you now have a makefile that wont run under e
 
 ## Simple Makefile Example
 ```makefile
+#toolchain
+CC = x86_64-elf-gcc
+CXX = x86_64-elf-g++
+AS = x86_64-elf-as
+LD = x86_64_elf-ld
+
+#inputs
+C_SRCS = kernel_main.c util.c
+ASM_SRCS = boot.S
+TARGET = build/kernel.elf
+
+#flags
+CC_FLAGS = -g -ffreestanding
+LD_FLAGS = -T linker_script.lds -ffreestanding
+
+#auto populated variables
+OBJS = $(patsubst %.c, build/%.c.o, $(C_SRCS)) 
+OBJS += $(patsubst %.S, build/%.S.o, %(ASM_SRCS))
+
+.PHONY: all clean
+
+all: $(OBJS)
+    @echo "Linking program ..."
+    $(LD) $(LD_FLAGS) $(OBJS) -o $(TARGET)
+    @echo "Program linked, placed @ $(TARGET)"
+
+clean:
+    @echo "Cleaning build files ..."
+    -rm -r build/
+    @echo "Cleaning done!"
+
+build/%.c.o: %.c
+    @echo "Compiling C file: $<"
+    @mkdir -p $(shell dirname $@)
+    $(CC) $(CC_FLAGS) $< -c -o $@
+
+build/%.S.o: %.S
+    @echo "Assembling file: $<"
+    @mkdir -p $(shell dirname $@)
+    $(AS) $< -c -o $@
+```
+
+Okay! So there's a lot going on there. This is just how I like to organise my makefiles, and by no means a definitive guide.
+Since we may be using a cross compiler or changing compilers (it's a good idea to test with both gcc and clang) we've declared some variables representing the various programs we'll call when compiling. `CXX` is not used here, but if you're using c++ it's the common name for the compiler.
+
+Following that we have our inputs, `C_SRCS` is a list of our source files. Anytime we want to compile a new file, we'll add it here. The same goes for `ASM_SRCS`. Why do we have two lists of sources? Because they're going to be processed by different tools (c files -> c compiler, assembly files -> assembly compiler/assembler). `TARGET` is the output location and name of the file we're going to compile.
+
+Next up we have flags for the c compiler (`CC_FLAGS`) and the linker (`LD_FLAGS`). If we wanted flags for the assembler, we could a variable here for those too. After the flags we have our first example of where make can be really useful. 
+
+The linker wants a list of compiled object files, from the c compiler or assembler, not a list of the source files they came from. We already maintain a list of source files as inputs, but we dont have a list of the produced object files that the linker needs to know what to link in the final binary. We could create a second list, and keep that up to date, but that's more things to keep track off. More room for error as well.
+Make has built in search and replace functionality, in the form of the `patsubst` (pattern substitution) function. `patsubst` uses the wildcard (`%`) symbol to indicate the section of text we want to keep. Anything specified outside of the wildcard is used for pattern matching. It takes the following arguments:
+- Pattern used to select items from the input variable.
+- Pattern used to transform selected items into the output.
+- Input variable.
+
+Using `patsubst` we can transform the list of source files into a list of object files, that we can give to the linker. The second line `OBJS += ...` functions in the same way as the first, but we use the append operator instead of assign. Similar to how they work in other languages, here we *append* to the end of the variable, instead of overwriting it.
+
+```makefile
 #the c compiler we want to use
 CC = x86_64-elf-gcc
 #the c++ compiler we want to use. Unused in this example, but the common name for it.
