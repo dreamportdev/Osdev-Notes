@@ -78,7 +78,9 @@ call _function
 ; do something
 ```
 
-Now when a function is  called, the cpu put the next instruction on the stack. And here is where we will put the end function.i
+Now when a function is  called, the cpu put the next instruction on the stack. And here is where we will put the end function.
+
+* Then the thread_exit function should take also care of updating the thread status to DEAD (and by extension if it was the last thread on a task it should update that too)
  
 ## Switching tasks/thread
 
