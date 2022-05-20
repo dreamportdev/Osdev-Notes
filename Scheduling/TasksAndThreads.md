@@ -25,6 +25,12 @@ While a thread should contains at minimum:
 * Depending on how the scheduler is designed, it could contains a pointer to the next thread
 * Task containing the current thread
 
+### Prerequisites 
+
+Even if technically not necessary, is better to have implemented a memory allocation mechanism, ideally both physical and virtual memory manager should be implemented, if we want to have full tasks/thread separation and protection. But in case we don't want to have memory separation and protection in place a physical memory manager can be enough.
+
+Technically we could also decide to implement a "kind of" multitasking without any memory allocator, but in this case we must use an array with a fixed size. So the Operating system will be limited to a certain number of concurrent task, and this memory will be always be unavailable to the os even when the tasks are dead.
+
 ### Creating a thread
 
 When creating a thread we must first of all create it's execution frame (yeah even if not executed yet, it will need one).
