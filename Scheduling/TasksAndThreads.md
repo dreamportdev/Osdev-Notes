@@ -1,6 +1,7 @@
 # Tasks and Threads
 
 ** THIS SECTION IS IN EARLY STAGES For now it will be more a set of bullet lists with things to be expaneded in the future ** 
+
 ## Tasks
 
 ### What are tasks
@@ -67,8 +68,24 @@ After the thread finish its execution, we need a way to make it exit gracefully 
 * The programmer has called a thread_exit function so in this case we are fine
 * The programmer didn't called the function and the thread has terminated finished the execution of the function, at this point if it will not be stopped it will run into garbage. 
 
-To achieve that we need to have an "exit" function to be executed after the function in the thread terminates it's execution. But how to do it? We need to check on the X86_64 Abi calling convention (or what architecture applies to you). 
+To achieve that we need to have an "exit" function to be executed after the function in the thread terminates it's execution. But how to do it? We need to check on the X86_64 Abi calling convention (or what architecture applies to you). As usual there are multiple ways to achieve that, the easiest one is to create a wrapper function that takes two parameters
 
+* the first is the function we want to execute
+* the second is the variable containing the arguments (we will go back to this later) 
+
+This function will call the wrapper function passing the argument as it is and after that will call our exit function. So the code will look similar to the following;
+
+```c
+void thread_execution_wrapper( void (*function)(void *), void *arg) {
+    function(arg);
+    _thread_exit();
+}
+```
+
+What should do the exit function? Again this depends on the design choice, and as usual there are multiple paths, it depends if we want to exit the thread as soon as it calls the the exit function, or let the scheduler do that, just updating its status to the one correspinding to a terminated task (let's call it DEAD status). 
+
+* If the choice is to delete the thread as soon as it exit terminate the function what will happen then is that the thread is placed into a DEAD state, then the function will take care of removing the task from the scheduler queue, freeing all resources (stack, execution frame, page tables, etc.) that are allocated to it, and after that it will free the memory allocated to the task itself. Remember that when a task call the exit function is still the one being executed
+* In the other scenario, what the exit function does is basically just updating the status of the task to DEAD. And not much more. Then next time the scheduler will be called, it will pick the next task, execute it, and so on, after sometime it will pick up again the terminated task, it will see the status as DEAD, so it will start the same process explained above, free the associated resources to the thread, remove it from the queue, and free the thread item. After that the scheduler will pick the next task, if the status will be not DEAD it will prepare it for the execution
 So when a function is called we have: 
 
 * The first 6 parameters stored into the rdi, rsi, rdx, rcx, r8 to r15 registers
@@ -76,7 +93,7 @@ So when a function is called we have:
 * The return address is pushed on the stack after the parameters.
 * rax (and eventually rbx) are used for the return value
 
-The therd item in the bullet list is the one we are interested to. When a function is called in asm we have something like: 
+The third item in the bullet list is the one we are interested to. When a function is called in asm we have something like: 
 
 ```asm 
 mov rdi, 5 // First parameter
@@ -87,6 +104,8 @@ call _function
 Now when a function is  called, the cpu put the next instruction on the stack. And here is where we will put the end function.
 
 * Then the thread_exit function should take also care of updating the thread status to DEAD (and by extension if it was the last thread on a task it should update that too)
+* The schedule function when pick a task that has the status set to DEAD knows that it doesn´t have to execute it, and will call the routine to free the thread resources. 
+* If the thread is the last in a task, the task should be ready to be deleted too. So in this case we need to change the status to the task too. 
  
 ## Switching tasks/thread
 
