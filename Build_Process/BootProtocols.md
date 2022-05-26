@@ -31,7 +31,7 @@ Regardless of what kind of elf is loaded, multiboot 2 is well defined and will a
 The major difference between multiboot 1 and 2 is how data is communicated between the bootloader and kernel. In multiboot 2 a series of tags (it's a linked list of structs), each one with a pointer to the next tag in the chain.
 
 ### Creating a Boot Shim
-The major caveat of multiboot when first getting started is that it drops you into 32-bit protected mode, meaning that you must setup long mode yourself. This also means you'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
+The major caveat of multiboot when first getting started is that it drops you into 32-bit protected mode, meaning that you must set up long mode yourself. This also means you'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
 
 Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard -2GB address (0xffff'ffff'8000'0000 and above). 
 
@@ -60,6 +60,7 @@ Stivale 2 has a number of major differences to multiboot 2 though:
 - Unlike mb2, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
 
 To get the next tag in the chain, it's as simple as:
+
 ```
 stivale2_tag* next_tag = (stivale2_tag*)current_tag->next;
 if (next_tag == NULL)

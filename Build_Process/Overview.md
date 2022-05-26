@@ -65,6 +65,7 @@ Now that we have a toolchain setup we can test it all works by compiling a C fil
 Create a C source file, it's contents dont matter here as we wont be running it, just telling it compiles.
 
 Run the following to compile the file into an object file, and then to link that into the final executable.
+
 ```sh
 $(CC) hello_world.c -c -o hello_world.o -ffreestanding
 $(LD) hello_world.o -o hello_world.elf -nostdlib
@@ -102,13 +103,14 @@ And a few flags that are not required, but can be nice to have:
 ## Linking Object Files Together
 The GCC Linker (ld) and the compatable clang linker (lld.ld) can accept linker scripts.
 These describe the layout of the final executable to the linker: what things go where, with what alignment and permissions.
-Ultimately this file is what's loaded by the bootloader, so these details can be important.
+Ultimately this file is what's loaded by the bootloader, so these details are be important. More so than they would be in a regular program. 
 
 These are their own topic, and have a file dedicated to them [here](Build_Process/LinkerScripts.md). You likely havent used these when building userspace programs, as your compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) we need to be explicit about these things. 
 
 To use a linker script you add `-T script_name_here.ld` to the linker command.
 
 Outside of linker scripts, the linking process goes as you'd expect:
+
 ```sh
 $(LD) $(OBJS) -o output_filename_here.elf -nostdlib -static -pie --no-dynamic-linker
 ```
@@ -167,6 +169,7 @@ Now to get the name of a section, you'll need to find the matching symbol entry,
 Languages built around the C model will usually perform some kind of name mangling to enable features like function overloading, namespaces and so on. This is a whole topic on it's own.
 
 A brief example, all the Elf_* structures are detailed in the elf64 specification.
+
 ```c
 //for stivale2
 uint64_t kernelFile = GetStivale2Tag(KERNEL_FILE_TAG)->kernel_file;
@@ -213,11 +216,14 @@ void print_symbol_name(uint64_t address)
     {
         const uint64_t symbolTop = symbols[i].st_value + symbols[i].st_size;
 
-        //we have to check if the address is within the symbol's range. Some symbols may only have 1 address (a variable), but some may occupy a range (a function), so we need to check an entire range:
+        //we have to check if the address is within the symbol's range. 
+        //Some symbols may only have 1 address (a variable), 
+        //but some may occupy a range, like a function:
         if (address < symbols[i].st_value || address > symbolTop)
             continue;
         
-        //the address is inside of the symbol, now we can access info about that symbol. In this, just printing it's name.
+        //the address is inside of the symbol, now we can access info 
+        //about that symbol. In this, just printing it's name.
         print(stringTableData[symbols[i]->st_name]);
         return;
     }
