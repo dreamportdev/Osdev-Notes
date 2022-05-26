@@ -26,6 +26,7 @@ Topics covered so far:
     * [Paging](Memory_Management/Paging.md)
     * [Memory Allocation](Memory_Management/Heap_Allocation.md)
     * [Physical Memory](Memory_Management/PhysicalMemory.md)
+    * [Memory Protection](Memory_Management/Memory_Protection.md)
 * [Building & Boot Protocols](Build_Process/README.md)
     * [Bootloaders and Boot Protocols](Build_Process/BootProtocols.md)
     * [Building a Kernel](Build_Process/Overview.md)
