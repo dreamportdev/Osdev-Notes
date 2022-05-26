@@ -47,7 +47,7 @@ mov edi, eax
 mov esi, ebx
 ```
 
-otherwiseif you are in 32 bit mode, then you just need to place them on the stack:
+otherwise if you are in 32 bit mode, then you just need to place them on the stack:
 
 ```asm
 push ebx,

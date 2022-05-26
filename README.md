@@ -26,6 +26,7 @@ Topics covered so far:
     * [Paging](Memory_Management/Paging.md)
     * [Memory Allocation](Memory_Management/Heap_Allocation.md)
     * [Physical Memory](Memory_Management/PhysicalMemory.md)
+    * [Memory Protection](Memory_Management/Memory_Protection.md)
 * [Building & Boot Protocols](Build_Process/README.md)
     * [Bootloaders and Boot Protocols](Build_Process/BootProtocols.md)
     * [Building a Kernel](Build_Process/Overview.md)
@@ -44,12 +45,12 @@ Topics covered so far:
 * [TroubleShooting](Troubleshooting.md)
 * [Misc tips and tricks](TipsAndTricks.md)
 
-# Useful links
+## Useful links
 
 * [DreamOs64](https://github.com/dreamos82/Dreamos64) 64 bit Os written from scratch by [Dreamos82](https://github.com/dreamos82).
 * [Northport](https://github.com/DeanoBurrito/northport) Another 64 bit Os written from scratch with SMP! by [DeanoBurrito](https://github.com/DeanoBurrito/).
 * [DreamOs](https://github.com/dreamos82/Dreamos) 32 Bits Os written from scratch, the project is discontinued but I think it was worth mentioning. By [Dreamos82]([Dreamos82](https://github.com/dreamos82)).
 
-# Authors
+## Authors
 * [Ivan G](https://github.com/dreamos82) - Main author and creator of these notes.
 * [Dean T](https://github.com/DeanoBurrito/) - Co-Author.

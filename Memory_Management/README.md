@@ -10,12 +10,15 @@ The design and complexity of a memory manger can vary greatly, a lot depends on 
 
 In this section we will try to cover a more common use case that is probably what nearly all modern operating system uses, that is a 32/64 operating system with paging enabled, and various forms of memory allocators for the kernel and one for user space.
 
+There is also an additional section on memory protection features available in some CPUs.
+
 We will cover the following topics: 
 
 * [Physical Memory Manager](Physical_Memory.md)
 * [Paging](Paging.md)
 * [Virtual Memory Manager](Virtual_Memory_Manager.md)
 * [Heap Allocation](Heap_Allocation.md)
+* [Memory Protection](Memory_Protection.md)
 
 *Authors note: don't worry, we will try to keep it as simple as possible, using basic algorithms and explaining all the gray areas as we go. The logic may sometimes be hard to follow, you will most likely have to go through several parts of this section multiple times...*
 
@@ -55,7 +58,7 @@ Each of the layers has a dedicated section below, however we'll start with a hig
   - Buddy allocator. These are more complex to understand initially, but are generally much faster to allocate/free. They can lead to more fragmentation that a linked list style. 
   - Slab allocator. These work in fixed sized chunks, memory can simply be viewed as a single array of these chunks, and the allocator simply needs a bitmap to keep track of which chunks are free or not.
 
-## An example workflow
+## An Example Workflow
 
 To get a better picture of how things work, let's describe from a high level how the various components work together with an example. Suppose we want to allocate 5 bytes: 
 
