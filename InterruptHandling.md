@@ -20,6 +20,7 @@ typedef struct IDT_desc {
 ```
 
 Where: 
+
 * offset, offset_2 and offset_3 are the base address of interrupt handling function
 * segment_selector: it indicates the selector for the destination code segment (specified in the GDT)
 * ist: only the first 4 bits are used it is the interrupt stack table
@@ -77,7 +78,7 @@ There are few things to keep in mind:
 * In 64bit mode... the *PUSHA* instruction is gone :(
 * Another difference (maybe in this case an improvement), registers pushed on the stack when passing the control to the handler now are always the same, no matter we are doing a privilege level change or not. 
 
-So when passing the control to the handler the following registers are always pushed on the stack: 
+So when passing the control to the handler the following registers are always pushed on the stack by the CPU: 
 
 |        |
 |--------|
@@ -87,9 +88,51 @@ So when passing the control to the handler the following registers are always pu
 | CS     |
 | RIP    |
 
-but we will probably want to save more stuff on the stuck while serving interrupts, or we could lose some important data on other registers that was being used by our kernel. 
+but we will need to save more stuff on the stuck while serving interrupts, or we could lose some important data on other registers that was being used by our kernel. 
 
-What we want to save are the other register not saved automatically by the cpu. As mentioned above when we are in 32 bits mode we can easily use the PUSHA instruction, that pushes the content of the general purpose registers on the stack, but when we enter 64 bit mode this instruction is gone so we need to save them manually. The registers to push are: rax,rbx,rcx,rdx,rbp,rsi,rdi that are the 64bits equivalent of the 32 bit general purpose registers, but in addition the x86_64 architecture add a set new registers that we need to push: r8,r9,r10,r11,r12,r13,r14,r15. These registers must be popped on the stack just after we serve the the interrupt but in a reverse order, starting from last to the first. Again in 32 bits mode we can use the POPA instruction that is basically the opposite of pusha. But in 64 bits we need again to pop them one by one. 
+What we want to save are the other registers that area not saved by the cpu. As mentioned above when we are in 32 bit mode we can easily use the PUSHA instruction, that pushes the content of all the general purpose registers on the stack, but unfortunately in 64 bit mode this instruction is gone so we need to do it manually. The registers to push are: _rax,rbx,rcx,rdx,rbp,rsi,rdi_ that are the 64bits equivalent of the 32 bit general purpose registers, but in addition the x86_64 architecture add a set of new registers that we need also to push: _r8,r9,r10,r11,r12,r13,r14,r15_. These registers must be popped on the stack just after we serve the the interrupt but in a reverse order, starting from last to the first. Again in 32 bits mode we can use the POPA instruction that is basically the opposite of pusha. But in 64 bits we need again to pop them one by one. 
+
+So the first thing our interrupt handling routine does will be something like: 
+
+```asm
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rbp
+    push rsi
+    push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+```
+
+and then after serving the interrupt it will pop everything in reverse order: 
+
+```asm
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rbp
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+```
+
+The order of the registers is not really important when pushing them, but what is important is that we pop them we do in reverse order.
 
 ## Misc Notes
 If you want to halt the cpu, and interrupts are enabled, be sure to use `hlt` inside of a loop.
