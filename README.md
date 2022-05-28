@@ -26,6 +26,7 @@ Topics covered so far:
     * [Paging](Memory_Management/Paging.md)
     * [Memory Allocation](Memory_Management/Heap_Allocation.md)
     * [Physical Memory](Memory_Management/PhysicalMemory.md)
+    * [Memory Protection](Memory_Management/Memory_Protection.md)
 * [Global Descriptor Table](GDT.md)
 * [APIC](APIC.md)
 * [Keyboard](PS2_Keyboard/)
