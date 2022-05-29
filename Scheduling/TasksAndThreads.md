@@ -117,3 +117,16 @@ In this guide we will show one of the simplest algorithm available, the "round r
 * If not, just exit without do nothing
 * Else, pick the current task, and change it's status to a non-running status, and save it's current execution context.
 * Try to pick a new task, set it in the running status and return it's saved context. 
+
+### Thread Sleep
+
+* To implement thread sleep we need to have the IRQ timer configured correctly
+
+The idea of a sleep function is to place the calling thread in a sleep state for a specific amount of time. While in the sleep state, the scheduler will check it's wakeup time, if it is not passed yetit will skip to the next one, otherwise will reset the wakeup time, and execute the thread. 
+
+The `thread_sleep` function will take just one parameter, that is the amount of time we want it to wait (usually in ms). The function once called it just needs to: 
+
+* change the status of the thread from RUN to SLEEP (the status label are totally arbitrary)
+* set the wakeuptime variable to: `current_time + millis_to_wait` where current_time can be either the current time in milliseconds or the kernel uptime in milliseconds, and millis_to_way is the parameter to the sleep function that tells the scheduler for how long it has to sleep.
+
+
