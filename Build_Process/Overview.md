@@ -132,10 +132,14 @@ This section may expand to include other build systems (meson, cmake) one day. F
 ## Quick Addendum: Easily Generating a Bootable ISO
 There are more details to this, however most bootloaders will provide a tool that lets you create a bootable iso, with the kernel, the bootloader itself and any other files you might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
+TODO:
 - Depends on bootloader, assume grub for now (grub-mkrescue). Also make reference to limine-install.
 - Talk about xorisso.
 - Maybe a separate file on the different boot protocols? how they differ, whats required to support them, and how to generate an iso using their tools.
 [here](GeneratingISO.md)
+
+## Testing with An Emulator
+TODO:
 
 ## Building and Using Debugging Symbols
 You'll never know when you need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in your kernel will increase the file size, but can be useful. If you want to remove them from an already compiled kernel the `strip` program can be used to strip excess info from a file.

@@ -1,19 +1,10 @@
 # Makefiles
 There's a million and one excellent resources on makefiles out there, so this article is less of a tutorial and more of a collection of interesting things.
 
-## Useful Features
-- override
-- immediate vs delayed macro expansion
-- target chains
-- built in functions (patsubst, shell, wildcard) 
-
 ## GNUMakefile vs Makefile
 There's multiple different make-like programs out there, a lot of them share a common base, usually the one specified in posix. GNU make also has a bunch of custom extensions it adds, which can be quite useful. These will render your makefiles only usable for gnu make, which is the most common version. So this is fine, but if you care about being fully portable between make versions, you'll have to avoid these.
 
 If you do use gnu make extensions, you now have a makefile that wont run under every version of make. Fortunately the folks at gnu allow you to name your makefile `GNUMakefile` instead, and this will run as normal. However other versions of make won't see this file, meaning they wont try to run it.
-
-## GNU Make Extensions
-- Coming soon!
 
 ## Simple Makefile Example
 
@@ -81,7 +72,7 @@ The `all` and `clean` targets work as you'd expect, building the final output or
 
 The line `-rm -r build/` begins with a minus/hyphen. Normally if a command fails (returns a non-zero exit code), make will abort the sequence of commands and display an error. Beginning a line a hyphen tells make to ignore the error code. Make will still tell you an error occured, but it won't stop the executing the make file. In this case this is what we want.
 
-The last two rules tell make how it should create a ``*.c.o` or `*.S.o` file if it needs them. They have a dependency on a file of the same name, but with a different extension (`*.c` or `*.S`). This means make will fail with an error if the source file does not exist, or if we forget to add it to the `SRCS` variables above. We do a protective mkdir, to ensure that the filepath used for output actually exists.
+The last two rules tell make how it should create a `*.c.o` or `*.S.o` file if it needs them. They have a dependency on a file of the same name, but with a different extension (`*.c` or `*.S`). This means make will fail with an error if the source file does not exist, or if we forget to add it to the `SRCS` variables above. We do a protective mkdir, to ensure that the filepath used for output actually exists.
 
 Make has a few built-in symbols that are used through the above example makefile. These are called automatic variables, and are described in the makefile manual.
 
@@ -92,6 +83,7 @@ There are other built in functions and symbols that have useful meanings, howeve
 ## Complex Makefile Example (with recursion!)
 What about bigger projects? Well you aren't limited to a single makefile, one makefile can include another one (essentially copy-pasting it into the current file) using the `include` keyword. 
 For example, to include `extras.mk` (.mk is a common extension for non-primary makefiles) into `Makefile` you would add the line somewhere:
+
 ```makefile
 include extras.mk
 ```
@@ -103,7 +95,7 @@ One import note about using `import` is to remember that the included file will 
 You can also run `make` itself as part of a command to build a target. This opens the door to a whole new world of makefiles calling further makefiles and including othes.
 
 ### Think Bigger!
-*__Authors Note:__ This section is written using a personal project as a reference, there are definitely other ways to approach this, but I thought it would be an interesting exaple to look at how I approached this for my kernel/OS. - DT.*
+*__Authors Note:__ This section is written using a personal project as a reference, there are definitely other ways to approach this, but I thought it would be an interesting example to look at how I approached this for my kernel/OS. - DT.*
 
 Now what about managing a large project with many sub-projects, custom and external libraries that all interact? As an example lets look at the northport os, it features the following structure of makefiles:
 
@@ -166,4 +158,3 @@ Whew, there's a lot going on there! Let's look at why the various parts exist:
     - The root makefile contains a variable `CPU_ARCH` which contains either 'x86_64' or 'rv64g'. If using the gcc toolchain, the tools are selected by using the `CPU_ARCH` variable (g++ is actually named `$(CPU_ARCH)-elf-g++`, or `x86_64-elf-g++`), and for the clang toolchain it's passed to the `--target=` argument.
 
 - This allows us to piggy-back on the variable, and place `include arch/$(CPU_ARCH)/local.mk` inside the kernel makefile. Now the kernel changes what is built based on the same rule, ensuring we're always using the correct files. Cool!
-    
