@@ -36,6 +36,7 @@ The major caveat of multiboot when first getting started is that it drops you in
 Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard -2GB address (0xffff'ffff'8000'0000 and above). 
 
 Entering long mode is fairly easy, it requires setting 3 flags:
+
 - PAE (physical address extension), bit 5 in CR4.
 - LME (long mode enable), bit 8 in EFER (this is an MSR).
 - PG (paging enable), bit 31 in cr0. This MUST be enabled last.
@@ -51,13 +52,14 @@ TODO: DT
 
 ## Stivale 2
 Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
-While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downside 
+While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
 
 It's spec it available [here](https://github.com/stivale/stivale/blob/master/STIVALE2.md), and there is a header available [here](https://github.com/stivale/stivale/blob/master/stivale2.h). You'll also need a copy of the limine bootloader to use it, available [here](https://github.com/limine-bootloader/limine).
 For an example on how to get started, see the official barebones [here](https://github.com/stivale/stivale2-barebones/), and check out the limine discord.
 
 It operates in a similar way to multiboot 2, by using a linked list of tags, although this time in both directions (kernel -> bootloader and bootloader -> kernel). Tags from the kernel to the bootloader are called `header_tag`s, and ones returned from the bootloader are called `struct_tag`s.
 Stivale 2 has a number of major differences to multiboot 2 though:
+
 - The kernel starts in 64-bit long mode, by default. No need for a protected mode stub to setup up some initial paging.
 - The kernel starts with the first 4GB of memory and any usable regions of memory identity mapped.
 - Stivale 2 also sets up a 'higher half direct map', or hhdm. This is the same identity map as the lower half, but it starts as the hhdm_offset returned in a struct tag when the kernel runs. The idea is that as long you ensure all your pointers are in the higher half, you can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
@@ -74,12 +76,13 @@ if (next_tag == NULL)
 
 ### Fancy Features
 Stivale 2 also provides some more advanced features:
+
 - It can enable 5 level paging, if requested.
 - It boots up AP (all other) cores in the system, and provides an easy interface to run code on them.
 - It supports KASLR, loading your kernel at a random offset each time.
 - It can also provide things like EDID blobs, address of the PXE server (if booted this way), and a device tree blob on some platforms.
 
-The limine bootloader not only supports x86, but also has tentative ARM (uefi required) support. There is also a stivale2-compatable bootloader called [sabaton](https://github.com/FlorenceOS/Sabaton), providing broader support for ARM platforms.
+The limine bootloader not only supports x86, but also has tentative ARM (uefi required) support. There is also a stivale2-compatible bootloader called [sabaton](https://github.com/FlorenceOS/Sabaton), providing broader support for ARM platforms.
 
 ### Creating a Stivale2 Header
 TODO: DT

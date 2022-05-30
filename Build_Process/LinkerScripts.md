@@ -3,10 +3,11 @@ If you've never done any kind of low level programming before, it's unlikely you
 
 A linker script is just a description of the final linked binary. It tells the linker how you want the various bits of code and data from your compiled source files (currently they're unlinked object files) to be laid out in the final executable.
 
-For the rest of this section we'll assume you're using *elf* as your file format. If you're building a UEFI binary you'll need to PE/COFF+ as per the spec, and that's a separate beast of it's own. There's nothing x86 specific here, but it was written with x86 in mind, other architectures may have slight differences. We also reference some fields of structs, these are described very plainly in the elf64 base specification.
+For the rest of this section we'll assume you're using *elf* as your file format. If you're building a UEFI binary you'll need to use PE/COFF+ instead, and that's a separate beast of it's own. There's nothing x86 specific here, but it was written with x86 in mind, other architectures may have slight differences. We also reference some fields of structs, these are described very plainly in the elf64 base specification.
 
 ## Anatomy of a Script
 A linker script is made up of 4 main area:
+
 - **Options**: A collection of options that can be set within the linker, to change how the output binary is generated. 
 - **Memory**: This tells the linker what memory is available, and where, on the target device. Is absent the linker assumes RAM starts at 0 and covers all memory addresses. This is what we want for x86, so this section is usually absent.
 - **Program Headers**: Program headers are specific to the elf format. They describe how the data of the elf file should be loaded into memory before it is run.
@@ -18,6 +19,7 @@ Since the memory section doesn't see too much use on x86, it's not explained her
 
 ### LMA (Load Memory Address) vs VMA (Virtual Memory Address)
 Within the sections area of the linker script, sections are described using two address. They're defined as:
+
 - Load Memory Address: This is where the section is to be loaded.
 - Virtual Memory Address: This is where the code is expected to be when run. Any jumps or branches in your code, any variable references are linked using this address. 
 
@@ -49,6 +51,7 @@ A program header can be seen as a block of *stuff* that the program loader will 
 | PT_NOTE    | 4     | Contains non-useful data, often the linker name and version. |
 
 Modern linkers are quite clever, and will often deduce which program headers are needed, but it never hurts to specify these yourself. For a freestanding kernel you will need at least threee program headers, all of type PT_LOAD:
+
 - text, with execute and read permissions.
 - rodata, with only the read permission.
 - data, with both read and write permissions.

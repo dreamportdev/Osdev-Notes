@@ -58,7 +58,7 @@ xorisso -as mkisofs -b limine-cd.bin -no-emul-boot \
 
 That's a lot of flags! Because of how flexible the iso format is, we need to be quite specific when building one. If you're curious about how crazy things can get, take a look at the flags grub-mkrescue generates behind the scenes.
 
-Now we have an iso will our kernel, config and bootloader files on it, we just need to install limine into the boot partitions, we can do this using `limine-deploy` like so:
+Now we have an iso with our kernel, config and bootloader files on it. We just need to install limine into the boot partitions, we can do this using `limine-deploy` like so:
 
 ```sh
 limine-deploy my_iso.iso

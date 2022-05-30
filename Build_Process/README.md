@@ -8,6 +8,7 @@ This section covers some of the very first topics you'll need to know when build
 - [Generating A Bootable Iso](GeneratingIso.md)
 
 ## Useful Links
+
 - [Grub and grub.cfg documentation](https://www.gnu.org/software/grub/manual/grub/grub.html)
 - [Multiboot 2 Specification.](https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html)
 - [Limine documentation.](https://github.com/limine-bootloader/limine)

@@ -60,6 +60,7 @@ Next up we have flags for the c compiler (`CC_FLAGS`) and the linker (`LD_FLAGS`
 
 The linker wants a list of compiled object files, from the c compiler or assembler, not a list of the source files they came from. We already maintain a list of source files as inputs, but we dont have a list of the produced object files that the linker needs to know what to link in the final binary. We could create a second list, and keep that up to date, but that's more things to keep track off. More room for error as well.
 Make has built in search and replace functionality, in the form of the `patsubst` (pattern substitution) function. `patsubst` uses the wildcard (`%`) symbol to indicate the section of text we want to keep. Anything specified outside of the wildcard is used for pattern matching. It takes the following arguments:
+
 - Pattern used to select items from the input variable.
 - Pattern used to transform selected items into the output.
 - Input variable.
@@ -141,6 +142,7 @@ northport/
 ```
 
 Whew, there's a lot going on there! Let's look at why the various parts exist:
+
 - When the user runs `make` in the shell, the root makefile is run. This file is mostly configuration, specifying the toolchain and the options it'll use.
 
 - This makefile then recursively calls make on each of the sub-projects. 

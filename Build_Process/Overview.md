@@ -25,7 +25,7 @@ The two main compiler toolchains used are gcc and clang. They differ a lot in ph
 
 ## Differences Between GCC and Clang
 
-The main difference is that GCC requires a completely separate set of bianries (mean ing a separate build) for each target architecture, while clang is designed in a modular fashion and will swap out the parts for each target architecture as needed. This ultimately means you will need to build (or download) a separate gcc toolchain for each target platform, while clang only needs a single toolchain setup.
+The main difference is that GCC requires a completely separate set of binaries (meaning a separate build) for each target architecture, while clang is designed in a modular fashion and will swap out the parts for each target architecture as needed. This ultimately means you will need to build (or download) a separate gcc toolchain for each target platform, while clang only needs a single toolchain setup.
 
 However, each GCC toolchain will use the platform-specific headers by default, where as clang seems to have insane defaults in this area. You'll generally always want to have the platform-specific headers GCC supplies regardless of which toolchain you build with.
 
@@ -33,6 +33,7 @@ Compiling GCC from source doesn't take too long on a modern CPU (~10 minutes for
 
 ## Setting up a build environment
 Setting up a proper build environment can be broken down into a few steps:
+
 - Setup a cross compilation toolchain.
 - Install an emulator.
 - Install any additional tools.
@@ -79,6 +80,7 @@ Regarding the flags used above, `-ffreestanding` tells the compiler that this co
 Now there are still several things to be aware of: for example the compiler will make the assumption that all of the cpu's features are available. On x86_64 it'll assume that the FPU and sse(2) are available. This is true in userspace, but not so for the kernel, as we have to set them up before they work!
 
 Telling the compiler to not use these features can be done by passing some extra flags:
+
 - `-mno-red-zone`: disables the red-zone, a 128 byte region reserved on the stack for optimizations. Hardware interrupts are not aware of the red-zone, and will clobber it. So we ned to disable it in the kernel or we'll loose data.
 - `-mno-80387`: Not strictly necessary, but tells the compiler that the FPU is not available, and to process floating point calculations in software instead of hardware, and to not use the FPU registers.
 - `-mno-mmx`: Disables using the FPU registers for 64-bit integer calculations.
@@ -86,6 +88,7 @@ Telling the compiler to not use these features can be done by passing some extra
 - `-mno-sse -mno-sse2`: Disables SSE and SSE2, which use the 128-bit xmm registers, and require setup before use.
 
 There are also a few other compiler flags that are useful, but not necessary:
+
 - `-fno-stack-protector`: Disables stack protector checks, which use the compiler library to check for stack smashing attacks. Since we're not including the standard libaries, we cant use this unless we implement the functions ourselves. Not really worth it.
 - `-fno-omit-frame-pointer`: Sometimes the compiler will skip creating a new stack frame for optimization reasons. This will mess with stack traces, and only increases the memory usage by a few bytes here and there. Well worth having.
 - `-Wall` and `-Wextra`: These flags need no introduction, they just enable all default warnings, and then extra warnings on top of that. Some people like to use `-Wpedantic` as well, but it can cause some false positives.
@@ -94,16 +97,18 @@ There are also a few other compiler flags that are useful, but not necessary:
 This section should be seen as an extension to the section above on compiling C files, compiler flags included.
 
 When compiling C++ for a freestanding environment, there are a few extra flags that are required:
+
 - `-fno-rtti`: Tells the compiler not to generate **R**un**t**ime **t**ype **i**nformation. This requires runtime support from the compiler libaries, and the os. Neither of which we have in a freestanding environment.
-- `-fno-exceptions`: Requires the compiler libraries to work, again which we dont have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) will still required you to declare them `noexcept` so the correct symbols are generated.
+- `-fno-exceptions`: Requires the compiler libraries to work, again which we dont have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) still require you to declare them `noexcept` so the correct symbols are generated.
 
 And a few flags that are not required, but can be nice to have:
+
 - `-fno-unwind-tables` and `-fno-asynchronous-unwind-tables`: tells the compiler not to generate unwind tables. These are mainly used by exceptions and runtime type info (rtti - dynamic_cast and friends). Disabling them just cleans up the resulting binary, and reduces its file size.
 
 ## Linking Object Files Together
 The GCC Linker (ld) and the compatable clang linker (lld.ld) can accept linker scripts.
 These describe the layout of the final executable to the linker: what things go where, with what alignment and permissions.
-Ultimately this file is what's loaded by the bootloader, so these details are be important. More so than they would be in a regular program. 
+Ultimately this file is what's loaded by the bootloader, so these details are super important. More so than they would be in a regular program. 
 
 These are their own topic, and have a file dedicated to them [here](Build_Process/LinkerScripts.md). You likely havent used these when building userspace programs, as your compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) we need to be explicit about these things. 
 
@@ -116,6 +121,7 @@ $(LD) $(OBJS) -o output_filename_here.elf -nostdlib -static -pie --no-dynamic-li
 ```
 
 For an explanation of the above linker flags used:
+
 - `-nostdlib`: this is crucial for building a freestanding program, as it stops the linker automatically including the default libraries for the host platform. Otherwise your program will contain a bunch of code that wants to make syscalls to your host OS.
 - `-static`: A safeguard for linking against other libarires. The linker will error if you try to dynamically link with anything (i.e static linking only). Because again there is not runtime, there is no dynamic linker. 
 - `-pie` and `--no-dynamic-linker`: Not strictly necessary, but forces the linker to output a relocatable program with a very narrow set of relocations. This is useful as it allows some bootloaders to perform relocations on the kernel.
@@ -154,6 +160,7 @@ run-with-kvm:
 ```
 
 There are a few other qemu flags you might want to be aware of:
+
 - `-machine xyz` changes the machine that qemu emulates to xyz. To get a list of supported machines, use `-machine help`. Recommended is to use `-machine -q35` as it provides some modern features like the mcfg for accessing pci over mmio instead of over IO ports.
 - `-smp` used to configure how many processors and their layout. If wanting to support smp, it's recommended to enable this early on as it's easier to fix smp bugs as they are added, rather than fixing them all at once if you add smp support later. To emulate a simple quad-core cpu use `-smp cores=4`.
 - `-monitor` qemu provides a built in monitor for debugging. Super useful! It's always available in it's own tab (under view->monitor) but you can move the monitor to terminal that was used to launch qemu using `-monitor stdio`. The built in terminal is fairly basic, so this is recommended.
