@@ -160,8 +160,8 @@ SECTIONS
         TEXT_END = ,;
     } :text
 
-    /* a trick to ensure the next is in the next phys page */
-    /* so we can use different page protection flags (r/w/x). */
+    /* a trick to ensure the section next is on the next physical */
+    /* page so we can use different page protection flags (r/w/x). */
     . += CONSTANT(MAXPAGESIZE);
 
     .rodata : 

@@ -44,6 +44,11 @@ Since we have enabled paging, we'll also need to populate cr3 with a valid pagin
 
 Now you will be operating in compatability mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
 
+It's worth noting that this boot shim will need it's own linker sections for code and data, since until you have entered long mode the higher half sections used by the rest of the kernel won't be available, as we have no memory at those addresses yet.
+
+### Creating a Multiboot 2 Header
+TODO: DT
+
 ## Stivale 2
 Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
 While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downside 
@@ -75,3 +80,6 @@ Stivale 2 also provides some more advanced features:
 - It can also provide things like EDID blobs, address of the PXE server (if booted this way), and a device tree blob on some platforms.
 
 The limine bootloader not only supports x86, but also has tentative ARM (uefi required) support. There is also a stivale2-compatable bootloader called [sabaton](https://github.com/FlorenceOS/Sabaton), providing broader support for ARM platforms.
+
+### Creating a Stivale2 Header
+TODO: DT
