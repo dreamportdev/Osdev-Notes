@@ -20,7 +20,7 @@ Topics covered so far:
     * [Building a Kernel](Build_Process/Overview.md)
     * [Linker Scripts](Build_Process/LinkerScripts.md)
     * [Makefiles](Build_Process/GNUMakefiles.md)
-    * [Generating a Bootable Iso](Build_Process/GeneratingISO.md)
+    * [Generating a Bootable Iso](Build_Process/GeneratingIso.md)
 * [Drawing text on framebuffer](DrawingTextOnFB.md)
 * [Multiboot](Multiboot.md)
 * [Framebuffer](Framebuffer.md)

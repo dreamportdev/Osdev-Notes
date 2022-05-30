@@ -129,17 +129,40 @@ There are other make-like tools out there (xmake, nmake) but these are less popu
 
 This section may expand to include other build systems (meson, cmake) one day. For now we'll just cover makefiles as they're the lowest common denominator.
 
-## Quick Addendum: Easily Generating a Bootable ISO
+## Quick Addendum: Easily Generating a Bootable Iso
 There are more details to this, however most bootloaders will provide a tool that lets you create a bootable iso, with the kernel, the bootloader itself and any other files you might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
-TODO:
-- Depends on bootloader, assume grub for now (grub-mkrescue). Also make reference to limine-install.
-- Talk about xorisso.
-- Maybe a separate file on the different boot protocols? how they differ, whats required to support them, and how to generate an iso using their tools.
-[here](GeneratingISO.md)
+While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in it's own section [here](GeneratingIso.md).
+
+If you're just here for a quick reference, grub uses `grub-mkrescue` and a grub.cfg file, limine uses `limine-deploy` and a limine.cfg file.
 
 ## Testing with An Emulator
-TODO:
+Now we have an iso with our bootloader and kernel installed onto it, how do we test this? Well there's a number of emulators out there, with varying levels of performance and debug utility. Generally the more debug functionality an emulator provides, the slower it will run. A brief comparison of some common x86 emulators is provided below.
+
+- Qemu is great middle ground between debugging and speed. By default your OS will run using software virtualization (qemu's implementation is called tcg), but you can optionally enable kvm with the `--enable-kvm` flag for hardware-assisted virtualization. Qemu also provides a wide range of supported platforms.
+- Bochs is x86 only at the time of writing, and can be quite slow. Very useful for figuring things out at the early stages, or for testing very specific hardware combinations though, as you get the most control over the emulated machine.
+- VirtualBox/VMWare. These are grouped together as they're more industrial virtualization software. They aim to be as fast as possible, and provide little to no debug functionality. Useful for testing compatability, but not day-to-day development.
+
+We'll be using qemu for this example, and assuming the output filename of the iso is contained in the makefile variable `ISO_FILENAME`.
+
+```makefile
+# runs our kernel
+run:
+    qemu-system-x86_64 -cdrom $(ISO_FILENAME)
+run-with-kvm:
+    qemu-system-x86_64 -cdrom $(ISO_FILENAME) --enable-kvm
+```
+
+There are a few other qemu flags you might want to be aware of:
+- `-machine xyz` changes the machine that qemu emulates to xyz. To get a list of supported machines, use `-machine help`. Recommended is to use `-machine -q35` as it provides some modern features like the mcfg for accessing pci over mmio instead of over IO ports.
+- `-smp` used to configure how many processors and their layout. If wanting to support smp, it's recommended to enable this early on as it's easier to fix smp bugs as they are added, rather than fixing them all at once if you add smp support later. To emulate a simple quad-core cpu use `-smp cores=4`.
+- `-monitor` qemu provides a built in monitor for debugging. Super useful! It's always available in it's own tab (under view->monitor) but you can move the monitor to terminal that was used to launch qemu using `-monitor stdio`. The built in terminal is fairly basic, so this is recommended.
+- `-m xyz` is used to set the amount of ram given to the VM. It supports common suffixes like 'M' for MiB, 'G' for GiB and so on.
+- `-cpu xyz` sets the cpu model to emulate, like `-machine` and list can be viewed by running qemu with `-cpu help`. There are some special options like 'host' that try to emulator the host's cpu, or 'qemu64' which provides a generic cpu with as many host-supported features. There is also 'max' which provides every feature possible either through kvm or software implementations.
+- `-d` for enable debug traces of certain things. `-d int` is the most useful, for logging the output of any interrupts that occur. If you're running with uefi instead of bios you may get a lot of SMM enter/exit interrupts during boot, these can be disabled (in the log) by using `-d int -M smm=off`.
+- `-D` sets the output for the debug log. If not specified this is stdout, but you can redirect it to anywhere.
+- `-S` pauses the emulator before actually running any code. Useful for attaching a debugger early on.
+- `-s` creates a gdb server on port 1234. Inside of gdb you can attach to this server and debug your kernel/bootloader using `target remote :1234`.
 
 ## Building and Using Debugging Symbols
 You'll never know when you need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in your kernel will increase the file size, but can be useful. If you want to remove them from an already compiled kernel the `strip` program can be used to strip excess info from a file.
