@@ -6,10 +6,10 @@ A linker script is just a description of the final linked binary. It tells the l
 For the rest of this section we'll assume you're using *elf* as your file format. If you're building a UEFI binary you'll need to use PE/COFF+ instead, and that's a separate beast of it's own. There's nothing x86 specific here, but it was written with x86 in mind, other architectures may have slight differences. We also reference some fields of structs, these are described very plainly in the elf64 base specification.
 
 ## Anatomy of a Script
-A linker script is made up of 4 main area:
+A linker script is made up of 4 main areas:
 
-- **Options**: A collection of options that can be set within the linker, to change how the output binary is generated. 
-- **Memory**: This tells the linker what memory is available, and where, on the target device. Is absent the linker assumes RAM starts at 0 and covers all memory addresses. This is what we want for x86, so this section is usually absent.
+- **Options**: A collection of options that can be set within the linker, to change how the output binary is generated. These normally take the form `OPTION_NAME(VALUE)`.
+- **Memory**: This tells the linker what memory is available, and where, on the target device. If absent the linker assumes RAM starts at 0 and covers all memory addresses. This is what we want for x86, so this section is usually not specified.
 - **Program Headers**: Program headers are specific to the elf format. They describe how the data of the elf file should be loaded into memory before it is run.
 - **Sections**: These tell the linker how to map the sections of the object files into the final elf file.
 
@@ -29,7 +29,7 @@ So instead, you load the kernel at a lower physical memory address (by setting L
 
 ### Adding Symbols
 If you're not familiar with the idea of a symbol, it's a lower level concept that simply represents *a thing* in your program. 
-A symbol has an address, and usually some extra details that describe it. These details tell you if the symbol is a variable, the start of a function, maybe a label from assembly code, or even something else. It's important to note that when being used in code, a symbol **is** the address associated with it.
+A symbol has an address, and some extra details to describe it. These details tell you if the symbol is a variable, the start of a function, maybe a label from assembly code, or even something else. It's important to note that when being used in code, a symbol **is** the address associated with it.
 
 You can think of a symbol as a pointer. 
 
@@ -56,7 +56,7 @@ Modern linkers are quite clever, and will often deduce which program headers are
 - rodata, with only the read permission.
 - data, with both read and write permissions.
 
-*But what about the bss, and other zero-initialized data?* Well that's stored in the data program header. Program headers have two variables for their size, one is the file size (the amount of data stored in the file) and the other is their memory size (the amount of memory they use when loaded). If the memory size is bigger than the file size, that memory is expected to be zeroed (as per the elf spec), and thus the bss can be placed there!
+*But what about the bss, and other zero-initialized data?* Well that's stored in the data program header. Program headers have two variables for their size, one is the file size and the other is their memory size. If the memory size is bigger than the file size, that memory is expected to be zeroed (as per the elf spec), and thus the bss can be placed there!
 
 ### Example
 An example of what a program headers section might look like:

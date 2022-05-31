@@ -48,7 +48,132 @@ Now you will be operating in compatability mode, a subset of long mode that pret
 It's worth noting that this boot shim will need it's own linker sections for code and data, since until you have entered long mode the higher half sections used by the rest of the kernel won't be available, as we have no memory at those addresses yet.
 
 ### Creating a Multiboot 2 Header
-TODO: DT
+Multiboot 2 has a header available at the bottom of it's specification that we're going to use here.
+
+We'll need to modify our linker script a little since we boot up in protected mode, with no virtual memory:
+
+```
+SECTIONS
+{
+    KERNEL_VIRT_BASE = 0xffffffff8000000;
+    . = 1M;
+
+    .mb2_hdr : 
+    {
+        KEEP(*(.mb2_hdr))
+    }
+
+    .mb2_text :
+    {
+        .mb2_text
+    }
+
+    . += KERNEL_VIRT_BASE
+
+    .text ALIGN(4K) : AT(. - KERNEL_VIRT_BASE)
+    {
+        *(.text)
+    }
+
+    .rodata ALIGN(4K) : AT(. - KERNEL_VIRT_BASE)
+    {
+        *(.rodata)
+    }
+
+    .data ALIGN(4K) : AT(. - KERNEL_VIRT_BASE)
+    {
+        *(COMMON)
+        *(.data)
+        *(.bss)
+    }
+}
+```
+
+This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xffff'ffff'8000'0000` lower than it's virtual address. This magic address is -2GB, and is commonly used because it allows the compiler to do 32-bit jumps instead of 64-bit ones, resulting in a smaller code size.
+
+However the first two sections are both loaded and linked at lower memory addresses. The first is our multiboot header, this is just static data, it dosnt really matter where it's loaded, as long as it's in the final file somewhere. The second section contains our protected mode boot shim: a small bit of code that sets up paging, and boots into long mode.
+
+The next thing is to create our multiboot2 header and boot shim. Multiboot2 headers require some calculations that easier in assembly, so we'll be writing it in assembly for this example. It would look something like this:
+
+```x86asm
+.section .mb2_hdr
+
+# multiboot2 header: magic number, mode, length, checksum
+mb2_hdr_begin:
+.long 0xE85250d6
+.long 0
+.long (mb2_hdr_end - mb2_hdr_begin)
+.long -(0xE85250d6 + (mb2_hdr_end - mb2_hdr_begin))
+
+# framebuffer tag: type = 5
+mb2_framebuffer_req:
+    .short 5
+    .short 1
+    .long (mb2_framebuffer_end - mb2_framebuffer_req)
+    # preferred width, height, bpp.
+    # leave as zero to indicate "dont care"
+    .long 0
+    .long 0
+    .long 0
+mb2_framebuffer_end:
+
+# the end tag: type = 0, size = 8
+.long 0
+.long 8
+mb2_hdr_end:
+```
+
+A full boot shim is left as an exercise to the reader, as you may want to do extra things before moving into long mode. Or you may not, but an skeleton of what's required is provided below. 
+
+```x86asm
+.section .data
+boot_stack_base:
+    .byte 0x1000
+
+# backup the address of mb2 info struct, since ebx may be clobbered
+.section .mb_text
+    mov %ebx, %edi
+    
+    # setup a stack, and reset flags
+    mov $(boot_stack_base + 0x1000), %esp
+    pushl $0x2
+    popf
+
+/* do protected mode stuff here */
+/* set up your own gdt */
+/* set up page tables for a higher half kernel */
+/* don't forget to identity map all of physical memory */
+
+    # load cr3
+    mov pml4_addr, %eax
+    mov %eax, %cr3
+
+    # enable PAE
+    mov $0x20, %eax
+    mov %eax, %cr4
+
+    # set LME (this is a good time to enable NX if supported)
+    mov $0xC0000080, %ecx
+    rdmsr
+    orl $(1 << 8), %eax
+    wrmsr
+
+    # now we're ready to enable paging, and jump to long mode
+    mov %cr0, %eax
+    orl $(1 << 31)
+    mov %eax, %cr0
+
+    # now we're in compatability mode,
+    # after a long-jump to a 64-bit CS we'll be
+    # in long-mode proper.
+    push $gdt_64bit_cs_selector
+    push $target_function
+    lret
+```
+
+After performing the long-return (`lret`) we'll be running `target_function` in full 64-bit long mode. It's worth noting that as this point we still have the lower-half stack, so it may be worth having some more assembly that changes that, before jumping directly to C.
+
+Some of the things were glossed there, like paging and setting up a gdt, are explained in their own sections.
 
 ## Stivale 2
 Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
@@ -81,8 +206,75 @@ Stivale 2 also provides some more advanced features:
 - It boots up AP (all other) cores in the system, and provides an easy interface to run code on them.
 - It supports KASLR, loading your kernel at a random offset each time.
 - It can also provide things like EDID blobs, address of the PXE server (if booted this way), and a device tree blob on some platforms.
+- A fully ANSI-compliant terminal is provided. This does require the kernel to make certain promises about memory layout and the GDT, but it's a very useful debug tool or basic shell in the early stages.
 
 The limine bootloader not only supports x86, but also has tentative ARM (uefi required) support. There is also a stivale2-compatible bootloader called [sabaton](https://github.com/FlorenceOS/Sabaton), providing broader support for ARM platforms.
 
 ### Creating a Stivale2 Header
-TODO: DT
+The limine bootloader provides a `stivale2.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file. 
+
+*Authors Note: I like to place my limine header tags in a separate file, for organisation purposes, but as long as they appear in the final binary, they can be anywhere. You can also implement this in assembly if you really want.*
+
+First of all, we'll need an extra section in our linker script, this is how the bootloader knows our kernel can be booted via stivale2:
+
+```
+.stivale2hdr :
+{
+    KEEP(*(.stivale2hdr))
+}
+```
+
+If you're not familiar with the `KEEP()` command in linker scripts, it tells the linker to keep that section even if it's not referenced by anything. Useful in this case, since the only reference will be the bootloader, which the linker can't know about at link-time.
+
+Next we'll to create space for our stack (stivale2 requires us to provide our own) and define the stivale2 header, like so:
+
+```c
+#include <stivale2.h>
+
+//8K for the initial stack, a reasonable default
+static uint8_t init_stack[0x2000];
+
+__attribute__((section(".stivale2hdr)))
+static stivale2_header stivale2_hdr = 
+{
+    .entry_point = 0,
+    .stack = (uintptr_t)init_stack + 0x2000,
+    .flags = (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
+    .tags = (uintptr_t)&framebuffer_tag
+};
+```
+
+If you're not familiar with the `__attribute__(())` syntax, it's a compiler extensions (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.stivale2hdr` section, as is required by the stivale2 spec.
+
+Next we set some fields in the stivale2 header:
+
+- `entry_point`: Is used to override the ELF's entry point address. Set this to zero to use the regular entry function we set in the linker script.
+- `stack`: Self explanatory, used to set the stack the kernel code will start with.
+- `flags`: A bitfield of flags. Bit 1 asks the bootloader to return higher half addresses to us for tags, modules and other things. Bit 2 asked the bootloader to make use of the nx-bit and write-enable bits in the page tables when loading the kernel. Bit 3 is recommended and enables the bootloader to load us at any physical address as long as the virtual address is the same. Bit 4 is required to be set, as it disables a legacy feature.
+- `tags`: A pointer to the first stivale2 tag in the linked list of requests.
+
+In the example above we actually set the first tag to a framebuffer request, so lets see what that would look like:
+
+```c
+static stivale2_header_tag_framebuffer framebuffer_tag = 
+{
+    .tag = 
+    {
+        .identifier = STIVALE2_HEADER_TAG_FRAMEBUFFER,
+        .next = 0,
+    },
+    .framebuffer_width = 0,
+    .framebuffer_height = 0,
+    .framebuffer_bpp = 0
+};
+```
+
+The `framebuffer_*` fields can be used to ask for a specific kind of framebuffer, but leaving them to zero tells the bootloader we want to best possible available. The `next` field can be used to point to the next header tag, if we had another one we wanted. The full list of tags is available in the stivale2 specification (see the useful links section).
+
+The last detail is to change the signature of our kernel entry function to:
+
+```c
+void kernel_start(stivale2_struct* stivale2_data);
+```
+
+This struct points to a list of tags, each containing details about the machine we're booted on. These are called struct tags (bootloader -> kernel) as opposed to the tags we defined before (header tags: kernel -> bootloader). To get info about a specific feature, simply walk the linked list of tags, the next tag's address is available in the `tag->next` field. The end of the list is indicated by a nullptr.

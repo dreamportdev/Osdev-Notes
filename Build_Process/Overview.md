@@ -1,14 +1,14 @@
 # Building A Kernel from C/C++ Source Files.
 
-Basic knowledge of compiling these languages is assumed, but kernel specific notes are detailed below. This article goes over how and why to build a freestanding program.
+Basic knowledge of compiling these languages is assumed, but kernel specific details are detailed below. This section goes over how and why to build a freestanding program.
 
 ## Freestanding Environment
 If you build a C file with no extra flags, you'll end up with an executable that starts running code at the function `void main(int argc, char** argv, char** envp)`.
 However, this is actually not where your program starts executing! A number of libraries from your host os, compiler and sometimes specific to your language will be added to your program automatically. This eases development for regular applications, but complicates life a little for developing a kernel.
 
-A userspace program normally begins at `void _start()`, which is part of the c standard library, and will setup things like some global state, and parts of the environment. It will also call `_init()` which calls global constructors for languages like C++. Things like environment variables dont automatically exist in a program's memory space, they have to be fetched from somewhere, same with the command line. This all happens in `_start()`.
+A userspace program actually begins executing at `void _start()`, which is part of the c standard library, and will setup things like some global state, and parts of the environment. It will also call `_init()` which calls global constructors for languages like C++. Things like environment variables don't automatically exist in a program's memory space, they have to be fetched from somewhere. Same with the command line. This all happens in `_start()`.
 
-Since we will be writing the operating system, we can't depend on any functionality that requires our *host operating system*, like these libraries. This is called a freestanding program. It has no external dependencies.
+Since we will be writing the operating system, we can't depend on any functionality that requires our *host operating system*, like these libraries. A program like this is called a freestanding program. It has no external dependencies.
 
 *Authors note: techincally your kernel can depend on some utility libraries, or sections of the compiler runtime. However the idea is you should build your code with nothing extra added by default, and only add things back in that are also freestanding.*
 
@@ -21,7 +21,7 @@ Often this is not necessary for hobby os projects, as we are running our code on
 
 A cross compiler is always required when building your os for a different cpu architecture to your host. Building code for an risc-v cpu, while running on an x86 cpu would require a cross compiler for example.
 
-The two main compiler toolchains used are gcc and clang. They differ a lot in philosophy, but are comparable for a lot of the things we care about. GCC is much older and so it established a lot of the conventions used, such as the majority ofs compiler flags, inline assembly and some language extensions. Clang honours most (if not all) of these, and the two seem to be feature equivilent, with the exception of some experimental features.
+The two main compiler toolchains used are gcc and clang. They differ a lot in philosophy, but are comparable for a lot of the things we care about. GCC is much older and so it established a lot of the conventions used, such as the majority of compiler flags, inline assembly and some language extensions. Clang honours most (if not all) of these, and the two seem to be feature equivilent, with the exception of some experimental features.
 
 ## Differences Between GCC and Clang
 
@@ -77,7 +77,7 @@ You can optionally use `readelf` or `objdump` to inspect the compiled elf.
 
 Regarding the flags used above, `-ffreestanding` tells the compiler that this code is freestanding and should not reference outside code. `-nostdlib` tells the linker a similar thing, and tells it not to link against any of the standard libraries. The only code in the final executable now is yours.
 
-Now there are still several things to be aware of: for example the compiler will make the assumption that all of the cpu's features are available. On x86_64 it'll assume that the FPU and sse(2) are available. This is true in userspace, but not so for the kernel, as we have to set them up before they work!
+Now there are still several things to be aware of: for example the compiler will make the assumption that all of the cpu's features are available. On x86_64 it'll assume that the FPU and sse(2) are available. This is true in userspace, but not so for the kernel, as we have to initialize parts of the cpu hardware for those features to be available.
 
 Telling the compiler to not use these features can be done by passing some extra flags:
 
@@ -89,7 +89,7 @@ Telling the compiler to not use these features can be done by passing some extra
 
 There are also a few other compiler flags that are useful, but not necessary:
 
-- `-fno-stack-protector`: Disables stack protector checks, which use the compiler library to check for stack smashing attacks. Since we're not including the standard libaries, we cant use this unless we implement the functions ourselves. Not really worth it.
+- `-fno-stack-protector`: Disables stack protector checks, which use the compiler library to check for stack smashing attacks. Since we're not including the standard libaries, we can't use this unless we implement the functions ourselves. Not really worth it.
 - `-fno-omit-frame-pointer`: Sometimes the compiler will skip creating a new stack frame for optimization reasons. This will mess with stack traces, and only increases the memory usage by a few bytes here and there. Well worth having.
 - `-Wall` and `-Wextra`: These flags need no introduction, they just enable all default warnings, and then extra warnings on top of that. Some people like to use `-Wpedantic` as well, but it can cause some false positives.
 
@@ -108,9 +108,9 @@ And a few flags that are not required, but can be nice to have:
 ## Linking Object Files Together
 The GCC Linker (ld) and the compatable clang linker (lld.ld) can accept linker scripts.
 These describe the layout of the final executable to the linker: what things go where, with what alignment and permissions.
-Ultimately this file is what's loaded by the bootloader, so these details are super important. More so than they would be in a regular program. 
+This is incredibly important for a kernel, as it's the file that will be loaded by the bootloader, which may impose certain restrictions or provide certain features.
 
-These are their own topic, and have a file dedicated to them [here](Build_Process/LinkerScripts.md). You likely havent used these when building userspace programs, as your compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) we need to be explicit about these things. 
+These are their own topic, and have a section dedicated to them [here](Build_Process/LinkerScripts.md). You likely havent used these when building userspace programs, as your compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) we need to be explicit about these things. 
 
 To use a linker script you add `-T script_name_here.ld` to the linker command.
 
@@ -129,18 +129,16 @@ For an explanation of the above linker flags used:
 ### Building with Makefiles
 Now compiling and building one file isn't so bad, but the same process for muliple files can quickly get out of hand. This is especially true when you only want to build files that have been modified, and use previously compiled versions of other files.
 
-For an example using makefiles, [check here](GNUMakefiles.md). Makefiles are a common tool used for building many pieces of software due to how how easy and commmon `make` is. Specifically GNU make. GNU make is also chosen as it comes installed by default in many linux distros, and is almost always available if it's not already installed.
+For an example using makefiles, [check here](GNUMakefiles.md). Make is a common tool used for building many pieces of software due to how easy and commmon `make` is. Specifically GNU make. GNU make is also chosen as it comes installed by default in many linux distros, and is almost always available if it's not already installed.
 
 There are other make-like tools out there (xmake, nmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make.
-
-This section may expand to include other build systems (meson, cmake) one day. For now we'll just cover makefiles as they're the lowest common denominator.
 
 ## Quick Addendum: Easily Generating a Bootable Iso
 There are more details to this, however most bootloaders will provide a tool that lets you create a bootable iso, with the kernel, the bootloader itself and any other files you might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
 While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in it's own section [here](GeneratingIso.md).
 
-If you're just here for a quick reference, grub uses `grub-mkrescue` and a grub.cfg file, limine uses `limine-deploy` and a limine.cfg file.
+If you're just here for a quick reference, grub uses `grub-mkrescue` and a grub.cfg file, limine reqiures you to build the iso yourself with a limine.cfg on it, and then run `limine-deploy`.
 
 ## Testing with An Emulator
 Now we have an iso with our bootloader and kernel installed onto it, how do we test this? Well there's a number of emulators out there, with varying levels of performance and debug utility. Generally the more debug functionality an emulator provides, the slower it will run. A brief comparison of some common x86 emulators is provided below.
