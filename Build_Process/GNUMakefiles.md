@@ -56,7 +56,7 @@ Since we may be using a cross compiler or changing compilers (it's a good idea t
 
 Following that we have our inputs, `C_SRCS` is a list of our source files. Anytime we want to compile a new file, we'll add it here. The same goes for `ASM_SRCS`. Why do we have two lists of sources? Because they're going to be processed by different tools (c files -> c compiler, assembly files -> assembly compiler/assembler). `TARGET` is the output location and name of the file we're going to compile.
 
-*Authors Note: In this example I've declared each input file in C_SRCS manually, but you could also make use the builtin function `$(shell)` to use a program like find to search for you source files automatically, based on their file extension. Another level of automation! It might look something like: `C_SRCS = $(shell find -name "*.c")`, this would seach for all files ending with ".c" in the same directory as the makefile.
+*Authors Note: In this example I've declared each input file in C_SRCS manually, but you could also make use the builtin function `$(shell)` to use a program like find to search for you source files automatically, based on their file extension. Another level of automation! It might look something like: `C_SRCS = $(shell find -name "*.c" )`, this would seach for all files ending with ".c" in the same directory as the makefile.*
 
 Next up we have flags for the c compiler (`CC_FLAGS`) and the linker (`LD_FLAGS`). If we wanted flags for the assembler, we could a variable here for those too. After the flags we have our first example of where make can be really useful. 
 
