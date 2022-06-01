@@ -63,7 +63,7 @@ The rip will contain the function that is associated with the thread, sp contain
 
 ### Exiting the thread
 
-After the thread finish its execution, we need a way to make it exit gracefully (otherwise it start to run into grabage omst likely...) so there are two possible scenarios:
+After the thread finish its execution, we need a way to make it exit gracefully (otherwise it start to run into garbage most likely...) so there are two possible scenarios:
 
 * The programmer has called a thread_exit function so in this case we are fine
 * The programmer didn't called the function and the thread has terminated finished the execution of the function, at this point if it will not be stopped it will run into garbage. 
@@ -82,7 +82,7 @@ void thread_execution_wrapper( void (*function)(void *), void *arg) {
 }
 ```
 
-What should do the exit function? Again this depends on the design choice, and as usual there are multiple paths, it depends if we want to exit the thread as soon as it calls the the exit function, or let the scheduler do that, just updating its status to the one correspinding to a terminated task (let's call it DEAD status). 
+What should the exit function do? Again this depends on the design choice, and as usual there are multiple paths, it depends if we want to exit the thread as soon as it calls the the exit function, or let the scheduler do that, just updating its status to the one correspinding to a terminated task (let's call it DEAD status). 
 
 * If the choice is to delete the thread as soon as it exit terminate the function what will happen then is that the thread is placed into a DEAD state, then the function will take care of removing the task from the scheduler queue, freeing all resources (stack, execution frame, page tables, etc.) that are allocated to it, and after that it will free the memory allocated to the task itself. Remember that when a task call the exit function is still the one being executed
 * In the other scenario, what the exit function does is basically just updating the status of the task to DEAD. And not much more. Then next time the scheduler will be called, it will pick the next task, execute it, and so on, after sometime it will pick up again the terminated task, it will see the status as DEAD, so it will start the same process explained above, free the associated resources to the thread, remove it from the queue, and free the thread item. After that the scheduler will pick the next task, if the status will be not DEAD it will prepare it for the execution
