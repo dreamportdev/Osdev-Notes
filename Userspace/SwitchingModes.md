@@ -81,6 +81,6 @@ And voila! We're running user code with a user stack.
 In practice this should be done as part of a task-switch, usually as part of the assembly stub used for returning from an interrupt (hence using `iret`).
 
 ## Getting Back to Supervisor Mode
-This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. Mapping memory or filesystem access for example.
+This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too.
 
 The third way is to use an interrupt. Any interrupt will do, but the most common one is a timer. As an example you could set the local APIC timer to fire every 20ms, and this would guarentee that some supervisor code runs every 20ms.
