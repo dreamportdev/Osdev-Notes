@@ -1,5 +1,5 @@
 # Makefiles
-There's a million and one excellent resources on makefiles out there, so this article is less of a tutorial and more of a collection of interesting things.
+There's a million and one excellent resources on makefiles out there, so this section is less of a tutorial and more of a collection of interesting things.
 
 ## GNUMakefile vs Makefile
 There's multiple different make-like programs out there, a lot of them share a common base, usually the one specified in posix. GNU make also has a bunch of custom extensions it adds, which can be quite useful. These will render your makefiles only usable for gnu make, which is the most common version. So this is fine, but if you care about being fully portable between make versions, you'll have to avoid these.
@@ -56,9 +56,11 @@ Since we may be using a cross compiler or changing compilers (it's a good idea t
 
 Following that we have our inputs, `C_SRCS` is a list of our source files. Anytime we want to compile a new file, we'll add it here. The same goes for `ASM_SRCS`. Why do we have two lists of sources? Because they're going to be processed by different tools (c files -> c compiler, assembly files -> assembly compiler/assembler). `TARGET` is the output location and name of the file we're going to compile.
 
+*Authors Note: In this example I've declared each input file in C_SRCS manually, but you could also make use the builtin function `$(shell)` to use a program like find to search for you source files automatically, based on their file extension. Another level of automation! It might look something like: `C_SRCS = $(shell find -name "*.c")`, this would seach for all files ending with ".c" in the same directory as the makefile.*
+
 Next up we have flags for the c compiler (`CC_FLAGS`) and the linker (`LD_FLAGS`). If we wanted flags for the assembler, we could a variable here for those too. After the flags we have our first example of where make can be really useful. 
 
-The linker wants a list of compiled object files, from the c compiler or assembler, not a list of the source files they came from. We already maintain a list of source files as inputs, but we dont have a list of the produced object files that the linker needs to know what to link in the final binary. We could create a second list, and keep that up to date, but that's more things to keep track off. More room for error as well.
+The linker wants a list of compiled object files, from the c compiler or assembler, not a list of the source files they came from. We already maintain a list of source files as inputs, but we don't have a list of the produced object files that the linker needs to know what to link in the final binary. We could create a second list, and keep that up to date, but that's more things to keep track off. More room for error as well.
 Make has built in search and replace functionality, in the form of the `patsubst` (pattern substitution) function. `patsubst` uses the wildcard (`%`) symbol to indicate the section of text we want to keep. Anything specified outside of the wildcard is used for pattern matching. It takes the following arguments:
 
 - Pattern used to select items from the input variable.
@@ -71,7 +73,7 @@ Next up is an important line: `.PHONY: `. Make targets are presumed to output a 
 
 The `all` and `clean` targets work as you'd expect, building the final output or cleaning the build files. It's worth noting the '@' symbol in front of echo. When at the start of a line, it tells make not to echo the rest of the line to the shell. In this case we're using echo because we want to output text without the shell trying to run it. Therefore we tell make not to output the echo line itself, since echo will already write the following text to the shell.
 
-The line `-rm -r build/` begins with a minus/hyphen. Normally if a command fails (returns a non-zero exit code), make will abort the sequence of commands and display an error. Beginning a line a hyphen tells make to ignore the error code. Make will still tell you an error occured, but it won't stop the executing the make file. In this case this is what we want.
+The line `-rm -r build/` begins with a minus/hyphen. Normally if a command fails (returns a non-zero exit code), make will abort the sequence of commands and display an error. Beginning a line with a hyphen tells make to ignore the error code. Make will still tell you an error occured, but it won't stop the executing the make file. In this case this is what we want.
 
 The last two rules tell make how it should create a `*.c.o` or `*.S.o` file if it needs them. They have a dependency on a file of the same name, but with a different extension (`*.c` or `*.S`). This means make will fail with an error if the source file does not exist, or if we forget to add it to the `SRCS` variables above. We do a protective mkdir, to ensure that the filepath used for output actually exists.
 
@@ -81,6 +83,9 @@ That's a lot of text! But here we can see an example of a number of make functio
 
 There are other built in functions and symbols that have useful meanings, however discovering them is left as an exercise to the reader.
 
+## Built In Variables
+TODO: $@ $^ $D
+
 ## Complex Makefile Example (with recursion!)
 What about bigger projects? Well you aren't limited to a single makefile, one makefile can include another one (essentially copy-pasting it into the current file) using the `include` keyword. 
 For example, to include `extras.mk` (.mk is a common extension for non-primary makefiles) into `Makefile` you would add the line somewhere:
@@ -89,9 +94,9 @@ For example, to include `extras.mk` (.mk is a common extension for non-primary m
 include extras.mk
 ```
 
-This would place the contents of the included file *at the line where it was included*. This means the usual top to bottom reading of a makefile is followed as well. This works similar to how `#define` works in C/C++.
+This would place the contents of the included file (extras.mk) *at the line where it was included*. This means the usual top to bottom reading of a makefile is followed as well. You can think of this as how `#define` works in C/C++, it's a glorified copy-and-paste mechanism.
 
-One import note about using `import` is to remember that the included file will run with the current directly of the file that uses import, not the directly of the where the included file is.
+One *import*ant note about using `import` is to remember that the included file will run with the current working directory of the file that used the import, not the directly of the where the included file is.
 
 You can also run `make` itself as part of a command to build a target. This opens the door to a whole new world of makefiles calling further makefiles and including othes.
 
@@ -149,12 +154,12 @@ Whew, there's a lot going on there! Let's look at why the various parts exist:
     - For example, the kernel makefile will be run, and it will have all of the make variables specified in the root makefile in it's environment.
     - This means if we decide to change the toolchain, or want to add debug symbols to *all* projects, we can do it in a single change.
     - Libraries and userland apps work in a similar way, but there is an extra layer. What I've called the glue makefile. It's very simple, it just passes through the make commands from above to each sub project. 
-    - This means we dont need to update the root makefile everytime a new userland app is updated, or a new library.
+    - This means we don't need to update the root makefile everytime a new userland app is updated, or a new library.
     - It also allows us to override some variables for every library or every userspace app, instead of globally. Useful!
 
 - There are a few extra makefiles:
     - Run.mk is totally optional if you just want to build the system. It contains anything to do with qemu or gdb, so it can easily be removed if the end user only wants to build the project, and not run it.
-    - LibCommon.mk and UserlandCommon.mk contain common definitions that most userland apps/libraries would want. Like a `make clean` target, automatically copying the output to a global 'apps' directory, rules for building c++ object files from source, etc. This saves having to write those rules per project. They can instead be written one, and then included into each makefile.
+    - LibCommon.mk and UserlandCommon.mk contain common definitions that most userland apps/libraries would want. Like a `make clean` target, automatically copying the output to a global 'apps' directory, rules for building c++ object files from source, etc. This saves having to write those rules per project. They can instead be written once, and then included into each makefile.
 
 - The kernel/arch dir contains several local.mk files. Only one of these is included at a time, and they include any platform-specific source files. These are also contained in the same directory. This is a nice way to automate what gets built.
     - The root makefile contains a variable `CPU_ARCH` which contains either 'x86_64' or 'rv64g'. If using the gcc toolchain, the tools are selected by using the `CPU_ARCH` variable (g++ is actually named `$(CPU_ARCH)-elf-g++`, or `x86_64-elf-g++`), and for the clang toolchain it's passed to the `--target=` argument.

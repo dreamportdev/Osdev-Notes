@@ -89,9 +89,11 @@ PHDRS
 While program headers are a fairly course mechanism for telling the program loader what it needs to do in order to get our program running, sections allow us a lot of control over how the code and data within those areas is arranged.
 
 ### The '.' Operator
-When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll need to update the linker script manually everytime things change in size. Enter the dot operator (`.`), it represents the current VMA (remember this is the runtime address). 
+When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll potentially need to update the linker script everytime the code or data sections change in size. Instead, we can use the dot operator (`.`). It represents the current VMA (remember this is the runtime address), and allows us to perform certian opeations on it, without specifying exactly what the address is. 
 
-The linker will automatically increment this when placing sections, and the current vma is read/write, so we have complete control over this process if we want.
+We can align it to certain values, add relative offsets based on it's current address and a few other things. Linker scripts accept 
+
+The linker will automatically increment the VMA when placing sections. The current VMA is read/write, so we have complete control over this process if we want.
 
 Often simply setting it at the beginning (before the first section) is enough, like so:
 
@@ -103,7 +105,7 @@ SECTIONS
 }
 ```
 
-If you're wondering why most higher half kernels are loaded at this address, it's because it's the upper-most 2GB of the 66-bit address space
+If you're wondering why most higher half kernels are loaded at this address, it's because it's the upper-most 2GB of the 64-bit address space
 
 ### Incoming vs Outgoing Sections
 A section description has 2 parts: incoming sections (all your object files), and how they are placed into outgoing sections (the final output file).
@@ -118,7 +120,19 @@ Let's consider the following example:
 } :text
 ```
 
-First we give this output section a name, in this case it's `.text`. To the right of the colon is where we would place any extra attributes for this section or override the LMA. By default the LMA will be the same as the VMA, but if you need you can override it here, with something like `.text : AT(0x1234)`. The text section would now have the VMA of 0 unless we've overriden it like before, but LMA of 0x1234. Unless you know you need to change the LMA, let this part empty like the example.
+First we give this output section a name, in this case it's `.text`. To the right of the colon is where we would place any extra attributes for this section or override the LMA. By default the LMA will be the same as the VMA, but if required it can be overriden here using the `AT()` syntax. Two examples are provided below: the first sets the LMA of a section to an absolute address, and the second shows the use of another operator (`ADDR()`) in combination with `AT()` to get the VMA of a section, and then use it for calculating where to place the LMA. This results in a section with an LMA relative to it's VMA.
+
+```
+/* absolute LMA, set to 0x1234 */
+.text : AT(0x1234)
+{}
+
+/* relative LMA, set to (VMA - 0x1234) */
+.text = AT(ADDR(.text) - 0x1234)
+{}
+```
+
+Note that in the above examples the VMA is undefined. Again, unless you know you need to change the LMA leaving it blank (and therefore it will be set to the VMA) is best.
 
 Next up we have a number of lines describing the input sections, with the format `FILES(INPUT_SECTIONS)`. In this case we want all files, so we use the wildcard '*', and then all sections from those files that begin with ".text", so we make use of the wildcard again.
 

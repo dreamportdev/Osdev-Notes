@@ -5,9 +5,11 @@ This section covers 2 protocols: multiboot 2 and stivale 2.
 
 Multiboot 2 supercedes multiboot 1, both of which are the native protocols of grub. This means that anywhere grub is installed, a multiboot kernel can be loaded. This means testing will be easy on most linux machines. Multiboot 2 is quite an old, but very robust protocol.
 
-Stivale 2 (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. Stivale 2 is a more complex spec to read through, but it leaves the machine is a more known state prior to handing off to the kernel.
+Stivale 2 (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. Stivale 2 is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
 While this article was being written, limine has since added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with some major architectural changes. If you're familiar with the concepts of stivale2, the limine protocol is easy enough to understand.
+
+All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
 ### What about the earlier versions?
 Both protocols have their earlier versions (multiboot 1 & stivale 1), but these are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set you get for the short term gains. The only thing multiboot 1 is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the x86 emulation, so there are better ways to do that.
@@ -26,14 +28,16 @@ For this section we'll mainly be talking about grub 2. There is a previous versi
 
 One such feature is the ability for grub to load 64-bit elf kernels. This greatly simplifies creating a 64-bit OS with multiboot 2, as previously you would have needed to load a 32-bit elf, and the 64-bit kernel as a module, and then load the 64-bit elf yourself. Effectively re-writing stage3 of the bootloader.
 
-Regardless of what kind of elf is loaded, multiboot 2 is well defined and will always drop you into 32-bit protected mode, with the cpu in the state as described in the spec, [here](https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html). If you're writing a 64-bit kernel this means that you will need a hand-crafted 32-bit assembly stub to set up and enter long mode.
+Regardless of what kind of elf is loaded, multiboot 2 is well defined and will always drop you into 32-bit protected mode, with the cpu in the state as described in the specification. If you're writing a 64-bit kernel this means that you will need a hand-crafted 32-bit assembly stub to set up and enter long mode.
 
 The major difference between multiboot 1 and 2 is how data is communicated between the bootloader and kernel. In multiboot 2 a series of tags (it's a linked list of structs), each one with a pointer to the next tag in the chain.
 
 ### Creating a Boot Shim
 The major caveat of multiboot when first getting started is that it drops you into 32-bit protected mode, meaning that you must set up long mode yourself. This also means you'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
 
-Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard -2GB address (0xffff'ffff'8000'0000 and above). 
+Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard address used for higher half kernels: 0xffff'ffff'8000'0000. This address is sometimes referred to as the -2GB region(yes that's a minus), as a catch-all term for the upper-most 2GB of any address space. Since the exact address will be different depending on the number of bits used for the address space (32-bit vs 64-bit for example), referring to it as an underflow value is more portable.
+
+If you're curious as to why it's referred to as *minus* 2GB, it's a catch-all term for the upper-most 2GB of the address space, regardless of how big the address space may be (the upper 2GB of 32-bit and 64-bit addresses spaces are different addresses!).
 
 Entering long mode is fairly easy, it requires setting 3 flags:
 
@@ -41,7 +45,9 @@ Entering long mode is fairly easy, it requires setting 3 flags:
 - LME (long mode enable), bit 8 in EFER (this is an MSR).
 - PG (paging enable), bit 31 in cr0. This MUST be enabled last.
 
-Since we have enabled paging, we'll also need to populate cr3 with a valid paging structure. This needs to be done before setting the PG bit. Generally these initial page tables can be set up using 2mb pages with the present and writable flags set. Nothing else is needed for the initial pages.
+If you're unfamiliar with paging, there is a section that goes into more detail in the memory management chapter.
+
+Now, since we have enabled paging, we'll also need to populate cr3 with a valid paging structure. This needs to be done before setting the PG bit. Generally these initial page tables can be set up using 2mb pages with the present and writable flags set. Nothing else is needed for the initial pages.
 
 Now you will be operating in compatability mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
 
@@ -89,7 +95,7 @@ SECTIONS
 }
 ```
 
-This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xffff'ffff'8000'0000` lower than it's virtual address. This magic address is -2GB, and is commonly used because it allows the compiler to do 32-bit jumps instead of 64-bit ones, resulting in a smaller code size.
+This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xffff'ffff'8000'0000` lower than it's virtual address. 
 
 However the first two sections are both loaded and linked at lower memory addresses. The first is our multiboot header, this is just static data, it dosnt really matter where it's loaded, as long as it's in the final file somewhere. The second section contains our protected mode boot shim: a small bit of code that sets up paging, and boots into long mode.
 
@@ -171,7 +177,7 @@ boot_stack_base:
     lret
 ```
 
-After performing the long-return (`lret`) we'll be running `target_function` in full 64-bit long mode. It's worth noting that as this point we still have the lower-half stack, so it may be worth having some more assembly that changes that, before jumping directly to C.
+After performing the long-return (`lret`) we'll be running `target_function` in full 64-bit long mode. It's worth noting that at this point we still have the lower-half stack, so it may be worth having some more assembly that changes that, before jumping directly to C.
 
 Some of the things were glossed there, like paging and setting up a gdt, are explained in their own sections.
 
@@ -179,8 +185,7 @@ Some of the things were glossed there, like paging and setting up a gdt, are exp
 Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
 While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
 
-It's spec it available [here](https://github.com/stivale/stivale/blob/master/STIVALE2.md), and there is a header available [here](https://github.com/stivale/stivale/blob/master/stivale2.h). You'll also need a copy of the limine bootloader to use it, available [here](https://github.com/limine-bootloader/limine).
-For an example on how to get started, see the official barebones [here](https://github.com/stivale/stivale2-barebones/), and check out the limine discord.
+To use stivale2, you'll need a copy of the limine bootloader. A link to it and the stivale2 specification are available at the start of this chapter. There is also a C header file containing all the structs and magic numbers used by the protocol. A link to a barebones example is also provided.
 
 It operates in a similar way to multiboot 2, by using a linked list of tags, although this time in both directions (kernel -> bootloader and bootloader -> kernel). Tags from the kernel to the bootloader are called `header_tag`s, and ones returned from the bootloader are called `struct_tag`s.
 Stivale 2 has a number of major differences to multiboot 2 though:
@@ -208,7 +213,7 @@ Stivale 2 also provides some more advanced features:
 - It can also provide things like EDID blobs, address of the PXE server (if booted this way), and a device tree blob on some platforms.
 - A fully ANSI-compliant terminal is provided. This does require the kernel to make certain promises about memory layout and the GDT, but it's a very useful debug tool or basic shell in the early stages.
 
-The limine bootloader not only supports x86, but also has tentative ARM (uefi required) support. There is also a stivale2-compatible bootloader called [sabaton](https://github.com/FlorenceOS/Sabaton), providing broader support for ARM platforms.
+The limine bootloader not only supports x86, but tentatively supports aarch64 as well (uefi is required). There is also a stivale2-compatible bootloader called Sabaton, providing broader support for ARM platforms.
 
 ### Creating a Stivale2 Header
 The limine bootloader provides a `stivale2.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file. 
@@ -226,7 +231,7 @@ First of all, we'll need an extra section in our linker script, this is how the 
 
 If you're not familiar with the `KEEP()` command in linker scripts, it tells the linker to keep that section even if it's not referenced by anything. Useful in this case, since the only reference will be the bootloader, which the linker can't know about at link-time.
 
-Next we'll to create space for our stack (stivale2 requires us to provide our own) and define the stivale2 header, like so:
+Next we'll need to create space for our stack (stivale2 requires us to provide our own) and define the stivale2 header, like so:
 
 ```c
 #include <stivale2.h>
@@ -244,7 +249,7 @@ static stivale2_header stivale2_hdr =
 };
 ```
 
-If you're not familiar with the `__attribute__(())` syntax, it's a compiler extensions (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.stivale2hdr` section, as is required by the stivale2 spec.
+If you're not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.stivale2hdr` section, as is required by the stivale2 spec.
 
 Next we set some fields in the stivale2 header:
 

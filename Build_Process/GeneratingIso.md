@@ -3,7 +3,7 @@ Generating a bootable iso is specific to your bootloader of choice, both grub an
 The generated iso can then be used as a cdrom in an emulator, or burnt to a real disk or usb thumb drive as you would for installing any other operating system.
 
 ## Xorisso
-Xorisso is tool used to create iso disk images. Iso is actually quite a complex format, as it aims to be compatable with a lot of different formats and ways of booting.
+Xorisso is a tool used to create iso disk images. Iso is actually quite a complex format, as it aims to be compatible with a lot of different formats and ways of booting.
 
 A walkthrough of xorisso is outside the scope of this section, but just know it's the standard tool for working with the iso format.
 
@@ -16,7 +16,7 @@ The tool is very straight forward, you create a root folder and populate that wi
 disk/
   \-boot/
       |-grub/
-      |   \-grub.csfg
+      |   \-grub.cfg
       \-kernel.elf
 ```
 
@@ -41,9 +41,9 @@ menuentry "My Operating System" {
 Note the last command `boot`, this tells grub to complete the boot process and actually run our kernel.
 
 ## Limine (Stivale 2, multiboot 2)
-Limine requires us to build the iso itself, and then provides a tool to install itself onto the iso. 
+The process for limine is a little more manual: we must build the iso ourselves, and then use the provided tool to install limine onto the iso we created.
 
-To get started we'll want to create a working directory to use as the root of our iso. In this case we'll use `disk/`. Next we'll need to clone the latest binary branch of limine (using `git clone https://github.com/limine-bootloader/limine.git --branch=v3.0-branch-binary --depth=1`) and copy 'limine.sys', 'limine-cd.bin', and 'limine-cd-efi.bin' into `disk/limine/`, creating that directory if it dosn't exist.
+To get started we'll want to create a working directory to use as the root of our iso. In this case we'll use `disk/`. Next we'll need to clone the latest binary branch of limine (using `git clone https://github.com/limine-bootloader/limine.git --branch=v3.0-branch-binary --depth=1`) and copy 'limine.sys', 'limine-cd.bin', and 'limine-cd-efi.bin' into `disk/limine/`, creating that directory if it doesn't exist.
 
 Now we can copy our limine.cfg and kernel into your working directory. Limine.cfg needs to be in one of a few locations in order to be found, the best place is the root directory. 
 
@@ -67,7 +67,7 @@ limine-deploy my_iso.iso
 That took a little more work than grub, but this can (and should) be automated as part of your build system. If you can't find `limine-deploy` in the cloned limine directory, you may need to run `make -C limine` in the cloned directory for it to be build.
 
 ### Limine.cfg
-Similar to grub, limine also uses a config file. This config file has it's own [documentation](https://github.com/limine-bootloader/limine/blob/trunk/CONFIG.md).
+Similar to grub, limine also uses a config file. This config file has it's own documentation, which is available in the limine repository.
 
 Limine.cfg lists each boot entry as a title, followed by a series of key-value pairs. To boot our example from above using stivale 2, our config might look like the following:
 
