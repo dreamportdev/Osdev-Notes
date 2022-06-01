@@ -42,13 +42,13 @@ Keep reading to see how we use symbols later in the example makefile.
 ## Program Headers
 A program header can be seen as a block of *stuff* that the program loader will need in order to load the program properly. What this *stuff* is, and how it should be interpreted depend on the `p_type` field of a program header. This field can contain a number of values, the common ones being:
 
-| Name       | Value | Description |
-|------------|-------|-------------|
-| PT_NULL    | 0     | Just a placeholder, a null value. Does nothing. |
-| PT_LOAD    | 1     | Means this program header describes that should be loaded, in orer for the program to run. The flags specify read/write/execute permissions. |
-| PT_DYNAMIC | 2     | Advanced use, for dynamically linking functions into a program or relocating a program when it is loaded. |
-| PT_INTERP  | 3     | A program can request a specific progam loader here, often this is just the default for the operating system. |
-| PT_NOTE    | 4     | Contains non-useful data, often the linker name and version. |
+| Name         | Value | Description                                     |
+|--------------|--------|-------------------------------------------------|
+| PT_NULL      | 0     | Just a placeholder, a null value. Does nothing. |
+| PT_LOAD      | 1     | Means this program header describes that should be loaded, in orer for the program to run. The flags specify read/write/execute permissions. |
+| PT_DYNAMIC   | 2     | Advanced use, for dynamically linking functions into a program or relocating a program when it is loaded. |
+| PT_INTERP    | 3     | A program can request a specific progam loader here, often this is just the default for the operating system. |
+| PT_NOTE      | 4     | Contains non-useful data, often the linker name and version. |
 
 Modern linkers are quite clever, and will often deduce which program headers are needed, but it never hurts to specify these yourself. For a freestanding kernel you will need at least threee program headers, all of type PT_LOAD:
 
