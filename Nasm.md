@@ -253,9 +253,9 @@ je .value3_case
 
 ## Data structures
 
-As you can imagine assembly doesn't have intrinsic concept of data structures, but luckily we have the support of the preprocessor where that help us in declaring structures as set of macros. 
+As you can imagine assembly doesn't have intrinsic concept of data structures, but luckily we have the support of the preprocessor where that let us declare struct like blocks.
 
-This guide will just introduce quickly how to define a basic struct using the preprocessor, but for more info and use cases is better to check the netwide assembler official documentation (section 5.9)
+This guide will just introduce quickly how to define a basic struct,for more information and use cases is better to check the netwide assembler official documentation (see the useful links section)
 
 Let's for example assume we have the following C struct:
 
@@ -263,12 +263,12 @@ Let's for example assume we have the following C struct:
 struct task {
     uint32_t id;
     char name[8];
-}
+};
 ```
 
-How nasm render a struct is basically declaring a list of offset labels in this way  we can use them to access the field starting from the struct memory location,
+How nasm render a struct is basically declaring a list of offset labels in this way  we can use them to access the field starting from the struct memory location (*Authors note: yeah it is a trick...*)
 To create a struct in nasm we use the `struc` and `endstruc` keywords, and the fields are defined between these them. 
-The example above can be rendered in the following wayy: 
+The example above can be rendered in the following way:
 
 ```asm
 struc task
@@ -277,7 +277,7 @@ struc task
 endstruc
 ```
 
-what the code above is doing is creating three symbols: id as 0 representing the offset from the beginning of a task structure and name as 4 (still the offset). But this notation has a drawback, it defines the label as global constant, so you can't have another struct declared with same field names, to solve this problem you can use the following notation: 
+what this code is doing is creating three symbols: id as 0 representing the offset from the beginning of a task structure and name as 4 (still the offset) and the task symbol that is 0 too. This notation has a drawback, it defines the labels as global constants, so you can't have another struct or label declared with same name, to solve this problem you can use the following notation: 
 
 ```asm
 struc task
@@ -294,7 +294,8 @@ Now if we have a memory location or register that contains our structure, for ex
 mov rbx, dword [(rax + task.id)]
 ```
 
-This is how to access a struct, but what if we want to create an instance of it? Well in this case we can use the macros `istruc` and `iend`, and using `at` to access the fields. For example if we want create an instance of task with the values 1 for the id field and "test" for the name field, we can use the following syntax: 
+This is how to access a struct, besically we add the label representing an offset to its base address.
+Bbut what if we want to create an instance of it? Well in this case we can use the macros `istruc` and `iend`, and using `at` to access the fields. For example if we want create an instance of task with the values 1 for the id field and "test" for the name field, we can use the following syntax: 
 
 ```asm
 istruc task
@@ -303,7 +304,7 @@ istruc task
 iend
 ```
 
-In this way we have declared a struc for the first of the two examples. But again this doesn't work with the second one, where in that case we have to use the full label name (so add the prefix task:
+In this way we have declared a struc for the first of the two examples. But again this doesn't work with the second one, because the labels are different. In that case we have to use the full label name (that means adding the prefix task):
 
 ```asm
 istruc task
