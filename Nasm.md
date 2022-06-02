@@ -252,3 +252,67 @@ je .value3_case
 ```
 
 ## Data structures
+
+As you can imagine assembly doesn't have intrinsic concept of data structures, but luckily we have the support of the preprocessor where that help us in declaring structures as set of macros. 
+
+This guide will just introduce quickly how to define a basic struct using the preprocessor, but for more info and use cases is better to check the netwide assembler official documentation (section 5.9)
+
+Let's for example assume we have the following C struct:
+
+```c
+struct task {
+    uint32_t id;
+    char name[8];
+}
+```
+
+How nasm render a struct is basically declaring a list of offset labels in this way  we can use them to access the field starting from the struct memory location,
+To create a struct in nasm we use the `struc` and `endstruc` keywords, and the fields are defined between these them. 
+The example above can be rendered in the following wayy: 
+
+```asm
+struc task
+    id:         resd    1
+    name:       resd 8
+endstruc
+```
+
+what the code above is doing is creating three symbols: id as 0 representing the offset from the beginning of a task structure and name as 4 (still the offset). But this notation has a drawback, it defines the label as global constant, so you can't have another struct declared with same field names, to solve this problem you can use the following notation: 
+
+```asm
+struc task
+    .id:    resd    1
+    .name:  resb    8
+endstruc
+```
+
+In this case the ofssets label created are `task.id`, `task.name`. So to put it in simpler terms what does we really have here are some label that represents offset, and to access the fields of a structure what we do is adding these offsets to the memory location containing it.
+
+Now if we have a memory location or register that contains our structure, for example let's say that we have the pointer to our structure stored in the register rax and we want to copy the id field in the register rbx:
+
+```nasm
+mov rbx, dword [(rax + task.id)]
+```
+
+This is how to access a struct, but what if we want to create an instance of it? Well in this case we can use the macros `istruc` and `iend`, and using `at` to access the fields. For example if we want create an instance of task with the values 1 for the id field and "test" for the name field, we can use the following syntax: 
+
+```asm
+istruc task
+    at id   dd  1
+    at name db 'hello123'
+iend
+```
+
+In this way we have declared a struc for the first of the two examples. But again this doesn't work with the second one, where in that case we have to use the full label name (so add the prefix task:
+
+```asm
+istruc task
+    at task.id      dd 1
+    at task.name    db 'hello123'
+iend
+```
+
+### Useful links
+
+[Nasm String section](https://www.nasm.us/xdoc/2.15/html/nasmdoc3.html#section-3.4.2)
+[Nasm Struct Section](https://www.nasm.us/xdoc/2.15/html/nasmdoc5.html#section-5.9.1)
