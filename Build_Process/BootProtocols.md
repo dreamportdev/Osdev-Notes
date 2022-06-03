@@ -299,13 +299,13 @@ This struct points to a list of tags, each containing details about the machine 
 Since both multiboot 2 and stivale 2 return their info in linked lists, a brief example of how to traverse these lists is given below. These functions provide a nice abstraction to search the list for a specific tag, rather than manually searching each time.
 
 ### Multiboot 2
-Multiboot 2 gives us a pointer to the multiboot info struct, which contains 2x 32-bit fields. These can be safely ignored, as the list is null-terminated (a tag with a type 0, and size of 8). The first tag is at 8 bytes after the start of the mbi. All the structures and defines used here are available in the header provided by the multiboot specification (check the bottom section, in the example kernel).
+Multiboot 2 gives us a pointer to the multiboot info struct, which contains 2x 32-bit fields. These can be safely ignored, as the list is null-terminated (a tag with a type 0, and size of 8). The first tag is at 8 bytes after the start of the mbi. All the structures and defines used here are available in the header provided by the multiboot specification (check the bottom section, in the example kernel), including the `MULTIBOOT_TAG_TYPE_xyz` defines (where xyz is a feature described by a tag). For example the memory map is `MULTIBOOT_TAG_TYPE_MMAP`, and framebuffer is `MULTIBOOT_TAG_TYPE_FRAMEBUFFER`.
 
 ```c
 //placed in ebx when the kernel is booted
 multiboot_info* mbi;
 
-void* multboot2_find_tag(uint32_t type)
+void* multiboot2_find_tag(uint32_t type)
 {
     multiboot_tag* tag = (multiboot_tag*)(uintptr_t)mbi + 8);
     while (1)
@@ -316,12 +316,14 @@ void* multboot2_find_tag(uint32_t type)
         if (tag->type == type)
             return tag;
         
-        tag = (multiboot_tag*)((uintptr_t)tag + tag->size);
+        uintptr_t next_addr = (uintptr_t)tag + tag->size;
+        next_addr = (next_addr / 8 + 1) * 8;
+        tag = (multiboot_tag*)next_addr;
     }
 }
 ```
 
-The last line of the loop is a little messy, in fact most compilers will let you omit the final cast to the `void*`, and will convert the integer expression directory to a pointer for you (gcc and clang both allow this).
+Lets talk about the last three lines of the loop, where we set the `tag` variable to the next value. The multiboot 2 spec says that tags should always be 8-byte aligned. While this is not a problem most of the time, it is *possible* we could get a misaligned pointer by simply adding `size` bytes to the current pointer. So to be on safe side, and spec-compliant, we'll align the value up to the nearest 8 bytes.
 
 ### Stivale 2
 Stivale 2 gives us a pointer to a header at the start of the list, and then each item (including this header) contains a `next` pointer to the next item, and an `id` item with a unique 64-bit identifier for that tag. All the structures and defines are available in the standard `stivale2.h`. We'll know we've reached the end of the list when the `next` pointer is `NULL`.
