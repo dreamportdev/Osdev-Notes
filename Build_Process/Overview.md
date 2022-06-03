@@ -172,6 +172,8 @@ There are a few other qemu flags you might want to be aware of:
 - `-D` sets the output for the debug log. If not specified this is stdout, but you can redirect it to anywhere.
 - `-S` pauses the emulator before actually running any code. Useful for attaching a debugger early on.
 - `-s` creates a gdb server on port 1234. Inside of gdb you can attach to this server and debug your kernel/bootloader using `target remote :1234`.
+- `-no-reboot` when qemu encounters a triple fault, it will reset the machine (meaning it restarts, and runs from the bootloader again). This flag tells qemu to pause the virtual machine immediately after the faulting instruction. Very useful for debugging!
+- `-no-shutdown` some configurations of qemu will shutdown if `-no-reboot` is specified, instead of pausing the VM. This flag forces qemu to stay open, but paused.
 
 ## Building and Using Debugging Symbols
 You'll never know when you need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in your kernel will increase the file size, but can be useful. If you want to remove them from an already compiled kernel the `strip` program can be used to strip excess info from a file.

@@ -7,7 +7,7 @@ Multiboot 2 supercedes multiboot 1, both of which are the native protocols of gr
 
 Stivale 2 (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. Stivale 2 is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
-While this article was being written, limine has since added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with some major architectural changes. If you're familiar with the concepts of stivale2, the limine protocol is easy enough to understand.
+While this article was being written, limine has since added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural architectural changes, but similar concepts behind it. If you're familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
 
 All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
@@ -30,7 +30,15 @@ One such feature is the ability for grub to load 64-bit elf kernels. This greatl
 
 Regardless of what kind of elf is loaded, multiboot 2 is well defined and will always drop you into 32-bit protected mode, with the cpu in the state as described in the specification. If you're writing a 64-bit kernel this means that you will need a hand-crafted 32-bit assembly stub to set up and enter long mode.
 
-The major difference between multiboot 1 and 2 is how data is communicated between the bootloader and kernel. In multiboot 2 a series of tags (it's a linked list of structs), each one with a pointer to the next tag in the chain.
+One of the major differences between the two protocols is how info is passed between the kernel and bootloader:
+
+- Multiboot 1 has a fixed size header within the kernel, that is read by the bootloader. This limits the number of options available, and wastes space if not all options are used.
+- Multiboot 2 uses a fixed sized header that includes a `size` field, which contains the number of bytes of the header + all of the following requests. Each request contains an `identifier` field and then some request specific fields. This has slightly more overhead, but is more flexible. The requests are terminated with a special 'null request' (see the specs on this).
+
+- Multiboot 1 returns info the kernel via a single large structure, with a bitmap indicating which sections of the structure are considered valid.
+- Multiboot 2 returns a pointer to a series of tags. Each tag has an `identifier` field, used to determine it's contents, and a size field that can be used to calculate the address of the next tag. This list is also terminated with a special null tag.
+
+One important note about multiboot 2: the memory map is essentially the map given by the bios/uefi. The areas used by bootloader memory (like the current gdt/idt), kernel and info structure given to the kernel are all allocated in *free* regions of memory. The specification does not say that these regions must then be marked as *used* before giving the memory map to the kernel. This is actually how grub handles this, so should definitely do a sanity check on the memory map.
 
 ### Creating a Boot Shim
 The major caveat of multiboot when first getting started is that it drops you into 32-bit protected mode, meaning that you must set up long mode yourself. This also means you'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
@@ -181,6 +189,9 @@ After performing the long-return (`lret`) we'll be running `target_function` in 
 
 Some of the things were glossed there, like paging and setting up a gdt, are explained in their own sections.
 
+You'll also want to pass the multiboot info structure to your kernel's main function. 
+The interface between a higher level language like C and assembly (or another high level language) is called the ABI (application binary interface). This is discussed more in the section about C, but for now if you want to pass a single `uint64_t` (or a pointer of any kind, which the info structure is) simply move it to `rdi`, and it'll be available as the first argument in C.
+
 ## Stivale 2
 Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
 While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
@@ -283,3 +294,56 @@ void kernel_start(stivale2_struct* stivale2_data);
 ```
 
 This struct points to a list of tags, each containing details about the machine we're booted on. These are called struct tags (bootloader -> kernel) as opposed to the tags we defined before (header tags: kernel -> bootloader). To get info about a specific feature, simply walk the linked list of tags, the next tag's address is available in the `tag->next` field. The end of the list is indicated by a nullptr.
+
+## Finding Bootloader Tags
+Since both multiboot 2 and stivale 2 return their info in linked lists, a brief example of how to traverse these lists is given below. These functions provide a nice abstraction to search the list for a specific tag, rather than manually searching each time.
+
+### Multiboot 2
+Multiboot 2 gives us a pointer to the multiboot info struct, which contains 2x 32-bit fields. These can be safely ignored, as the list is null-terminated (a tag with a type 0, and size of 8). The first tag is at 8 bytes after the start of the mbi. All the structures and defines used here are available in the header provided by the multiboot specification (check the bottom section, in the example kernel).
+
+```c
+//placed in ebx when the kernel is booted
+multiboot_info* mbi;
+
+void* multboot2_find_tag(uint32_t type)
+{
+    multiboot_tag* tag = (multiboot_tag*)(uintptr_t)mbi + 8);
+    while (1)
+    {
+        if (tag->type == 0 && size == 8)
+            return NULL; //we've reached the terminating tag
+        
+        if (tag->type == type)
+            return tag;
+        
+        tag = (multiboot_tag*)((uintptr_t)tag + tag->size);
+    }
+}
+```
+
+The last line of the loop is a little messy, in fact most compilers will let you omit the final cast to the `void*`, and will convert the integer expression directory to a pointer for you (gcc and clang both allow this).
+
+### Stivale 2
+Stivale 2 gives us a pointer to a header at the start of the list, and then each item (including this header) contains a `next` pointer to the next item, and an `id` item with a unique 64-bit identifier for that tag. All the structures and defines are available in the standard `stivale2.h`. We'll know we've reached the end of the list when the `next` pointer is `NULL`.
+
+```c
+//given to the kernel entry function
+stivale2_struct* s2_struct;
+
+//returns null if tag could not be found
+void* stivale2_find_tag(uint64_t id)
+{
+    stivale2_tag* tag = s2_struct->next;
+
+    while (tag != NULL)
+    {
+        if (tag->id == id)
+            return tag;
+        tag = tag->next;
+    }
+
+    return NULL;
+}
+```
+
+The above function can be used with the defines in `stivale2.h`, which follow the format `STIVALE2_STRUCT_TAG_xyz_ID`, where `xyz` represents the feature that is described in the tag. For example, the framebuffer would be `STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID` and the memory map is `STIVALE2_STRUCT_TAG_MEMMAP_ID`. It's a little verbose, but easy to search for.

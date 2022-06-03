@@ -88,7 +88,27 @@ That's a lot of text! But here we can see an example of a number of make functio
 There are other built in functions and symbols that have useful meanings, however discovering them is left as an exercise to the reader.
 
 ## Built In Variables
-TODO: $@ $^ $D
+Make includes a few special built in variables (make calls them *automatic variables*). This list is not complete, but is most of the common ones, with the rest being available in the documentation. Remember variables are evaluated, and then replaced by their contents before the actual command containing them is run.
+
+The following group use the following as their example:
+
+```makefile
+output.o: input.c build_dir
+    @echo "doing stuff"
+```
+
+- `$@`: Evaluates to the target name of the current rule, in the example this would be `output.o`.
+- `$<`: Evaluates to the first prequesite, in the example this would be `input.c`.
+- `$^`: Evaluates to a list of the all the prerequisites, in the example this would be `input.c build_dir`.
+
+For the following, the example used is a file path:
+
+```
+/project/build/file.o
+```
+
+- `$(@D)`: Contains the directory path, in this case `/project/build`. Note the trailing slash is not present.
+- `$(@F)`: Contains the filename in the path, in this case `file.o`.
 
 ## Complex Makefile Example (with recursion!)
 What about bigger projects? Well you aren't limited to a single makefile, one makefile can include another one (essentially copy-pasting it into the current file) using the `include` keyword. 
