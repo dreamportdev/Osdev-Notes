@@ -5,7 +5,7 @@ This section is focused on x86, but a lot of high level concepts apply to other 
 ## Some Terminology
 The x86 architecture defines 4 rings of operation, with ring 0 have full hardware access, and ring 3 having the least. The intent was for drivers to run in rings 1 and 2, with some permissions granted to those rings. However overtime most programs were written to run with either full kernel permissions (ring 0) or as a user program (ring 3).
 
-By the time paging was added to x86, rings 1 & 2 were essentially non-existent. That's why paging has a single bit to indicate whether a page is user or supervisor. Supervisor being the term used to refer to privileged ring 0 code and data. This trend carries across to other platforms too, where permissions are often binary.
+By the time paging was added to x86, rings 1 & 2 were essentially non-existent. That's why paging has a single bit to indicate whether a page is user or supervisor. Supervisor being the term used to refer to privileged ring 0 code and data. This trend carries across to other platforms too, where permissions are often binary. If you're curious, rings 1 & 2 do count as supervisor for page accesses.
 
 Risc-V for example, defines supervisor mode and user mode, as well as machine mode. Machine mode is analogous to system management mode on x86. Sounds familiar?
 

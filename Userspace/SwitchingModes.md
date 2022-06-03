@@ -81,6 +81,21 @@ And voila! We're running user code with a user stack.
 In practice this should be done as part of a task-switch, usually as part of the assembly stub used for returning from an interrupt (hence using `iret`).
 
 ## Getting Back to Supervisor Mode
-This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too.
+This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated section to system calls.
 
-The third way is to use an interrupt. Any interrupt will do, but the most common one is a timer. As an example you could set the local APIC timer to fire every 20ms, and this would guarentee that some supervisor code runs every 20ms.
+The third way is inside of an interrupt handler. While you *can* run interrupts in user mode (an advanced topic for sure), most interrupts will result in supervisor code running, in the form of the interrupt handler. Any interrupt will work, for example a page fault or ps/2 keyboard irq, but the most common one is a timer. Since you can program a timer to tick at a fixed interval, you can ensure that supervisor code gets to run at a fixed interval. That code may return immediately, but it gives the kernel a chance to look at the program and machine states and see if anything needs to be done. Commonly the handler code for the timer also runs the scheduler tick, and can trigger a task switch.
+
+Handling interrupts while the cpu is in user mode is a surpringly big topic, and so it has a section of it's own. If you're here just for reference, the short of it is:
+
+- Populate and and load a TSS into the task register (TR).
+- Set `rsp0` stack to something valid.
+- Enter user mode and wait for a hardware interupt.
+
+### Software Interrupts
+On x86(_64) IDT entries have a 2-bit DPL field. The DPL (Descriptor Privilege Level) represents the highest ring that is allowed to call that interrupt from software. This is usually left to zero as default, meaning that ring 0 can use the `int` instruction to trigger an interrupt from software, but all rings higher than 0 will cause a a general protection fault. This means that user mode software (ring 3) will always trigger a #GP instead of being able to call an interrupt handler.
+
+While this is a good default behaviour, as it stops a user program from being able to call the page fault handler for example, it presents a problem: without the use of dedicated instructions (which may not exist), how do we issue a system call?
+
+Fortunately the solution is less words than the question: Set the DPL field to 3.
+
+Now any attempts to call an IDT entry with a `DPL < 3` will still cause a general protection fault. If the entry has `DPL == 3`, the interrupt handler will be called as expected. Note that the handler runs with the code selector of the IDT entry, which is kernel code, so care should be taken when accessing data from the user program. This is how most legacy system calls work, linux uses the infamous `int 0x80` as it's system call vector.
