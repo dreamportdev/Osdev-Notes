@@ -142,6 +142,7 @@ There are a number of other ones `/i` will format the output as cpu instructions
 The format specifier can be prefixed with a number of repeats. For example if you wanted to examine 10 instructions at address 0x1234, you could do:
 `x/10i 0x1234`, and gdb would show you that.
 
+
 ### How did I get here?
 * `bt/backtrace/info stack` will show you the current call stack, with lower numbers meaning deeper (current breakpoint is stack frame 0).
 * `up/down` can be used to move up and down the callstack.
@@ -164,6 +165,10 @@ This syntax supports all sorts of things, like casts and working with pointers.
 
 Breakpoints can also be issued contextually too! If you're at a breakpoint `main.c:123`, you can simply use `b 234` to break at line 234 in the same file.
 
+It is possible at any time to print the list of breakpoints using the command: `info breakpoint`
+
+And finally breakpoints can be deleted as well using `delete [breakpoints]`
+
 It's worth noting if you're debugging a kernel running with kvm, you wont be able to use software breakpoints (above) like normal. 
 GDB does support hardware breakpoints using `hb` instead of `b` for above, although their functionality can be limited, depending on what the hardware supports.
 Best to do serious debugging without kvm, and only use hardware debugging when absolutely necessary.
@@ -178,6 +183,15 @@ Tui layouts can be switched at any time, or you can return to your regular shell
 The layouts offer little interaction besides the usual terminal in/out, but can useful for quickly referencing things, or examining exactly what instructions are running.
 
 If you are using debian, you most-likely need to install the *gdb* package, because by default *gdb-minimal* is being installed, which doesn't contain the TUI.
+
+Currently these are the type of tui layouts  available in gdb:
+
+* asm - shows the asm code being executed
+* src - shows the actual source code line executed
+* regs - shows the content of the cpu registers
+* split - generate a split view that shows theasm and the src layout
+
+When there are multiple windows open, the focus could be moved to a view different from the command one, in this case a lot of keyboard shortcuts/keys will have no effect in that window (for example arrow keys will not move horizontally in the line or vertically through the command history. To control the focus the command `focus xyz` can be used, where xyz is one of the view specified above. For example to get back the focus to  the command view just type: `focus cmd`
 
 ## Virtual Box
 
