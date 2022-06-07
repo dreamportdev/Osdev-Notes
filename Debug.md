@@ -184,14 +184,14 @@ The layouts offer little interaction besides the usual terminal in/out, but can 
 
 If you are using debian, you most-likely need to install the *gdb* package, because by default *gdb-minimal* is being installed, which doesn't contain the TUI.
 
-Currently these are the type of tui layouts  available in gdb:
+Currently these are the type of tui layouts available in gdb:
 
 * asm - shows the asm code being executed
 * src - shows the actual source code line executed
 * regs - shows the content of the cpu registers
 * split - generate a split view that shows theasm and the src layout
 
-When there are multiple windows open, the focus could be moved to a view different from the command one, in this case a lot of keyboard shortcuts/keys will have no effect in that window (for example arrow keys will not move horizontally in the line or vertically through the command history. To control the focus the command `focus xyz` can be used, where xyz is one of the view specified above. For example to get back the focus to  the command view just type: `focus cmd`
+When in a view with multiple windows, you can use focus xyz to change which window has the current focus. Most key combinations are directed to the currently focused window, so if something isn't working as expected, that might be why. For example to get back the focus to the command view just type: `focus cmd`
 
 ## Virtual Box
 
