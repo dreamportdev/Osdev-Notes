@@ -26,7 +26,7 @@ The pit counter is 16bits, this means it can't count up to 1 second, because the
 Everytime the the counter reaches 0, an irq is generated. So let's say for example we want to create an interrupt every millisecond (1/1000 of second) to know how many cycles are needed we need to divide the clock rate by the duration we want (1ms): 
 
 ```
-1,193180 (clock rate) / 1000 (1ms) = 1193.18 (cycles in 1m̀s)
+1,193180 (clock rate) / 1000 (1ms) = 1193.18 (cycles in 1ms)
 ```
 
 Now one problem is that we can't use decimal number so we need to round up to the closer integer, that is in this case 1193. 
@@ -43,7 +43,7 @@ The table below shows theocnfiguration byte:
 | 4 - 5  | Access mode it tells how the channel how to read/write the counter register. It can be: low/high/low first then high |
 | 6 - 7  | Select the channel we want to use, consider that channel 1 is unavailable. We are going to use channel 0             |
 
-Again for more details on the byte in our case we want: 
+In our case we want: 
 
 * Binary Mode (0)
 * Operating mode 2: (010)
@@ -91,7 +91,7 @@ Refer to the paragraph above, what we want to achieve on this step is configure 
 
 #### Configure the PIT Timer: IRQ Handling
 
-The irq handling will be pretty easy, we just need to incremente a global counter variable, that will count how many ms passed (the "how many" will depende on how you configured the pit), just keep in mind that this variable must be declared as volatile. The irq handling function will be as simple as it seems: 
+The irq handling will be pretty easy, we just need to increment a global counter variable, that will count how many ms passed (the "how many" will depend on how you configured the pit), just keep in mind that this variable must be declared as volatile. The irq handling function will be as simple as it seems: 
 
 ```C
 void irq_handler() {
@@ -101,7 +101,7 @@ void irq_handler() {
 
 ### Configure the APIC Timer (2)
 
-This step is just an initialization step for the apic, before proceeding make sure that it the timer is stopped, to do that just write 0 to the Initial Count Register. 
+This step is just an initialization step for the apic, before proceeding make sure that the timer is stopped, to do that just write 0 to the Initial Count Register. 
 
 The APIC Timer has 3 main register: 
 
@@ -121,12 +121,12 @@ In this step we need first to configure the timer registers:
 In this step we just need to make an active waiting, basically something like: 
 
 ```C
-while(pitTicks < AMOUNT_OF_TIME_WE_WANT_TO_WAIT) {
+while(pitTicks < TIME_WE_WANT_TO_WAIT) {
     // Do nothing...
 }
 ```
 
-pitTicks is a global variable set to be increased every time an IRQ from the PIT has been fired, and that depends on how the PIT is configured. So if we configured it to generate an IRQ every 1ms, and we want for example 15ms, will need the vlaue for AMOUNT_OF_TIME_WE_WANT_TO_WAIT will be 15. 
+pitTicks is a global variable set to be increased every time an IRQ from the PIT has been fired, and that depends on how the PIT is configured. So if we configured it to generate an IRQ every 1ms, and we want for example 15ms, will need the vlaue for `TIME_WE_WANT_TO_WAIT` will be 15. 
 
 ### Compute the number of ticks from the APIC Counter and obtain the calibrated value  (5,6,7)
 
@@ -135,13 +135,13 @@ That step is pretty easy, we need to read the APIC current count register (offse
 This register will tell us how many ticks are left before the register reaches 0. So to geth the number of ticks done so far we need to:
 
 ```
-apic_ticks_done = initial_count_register_value - current_count_register_value
+apic_ticks_done = initial_count_reg_value - current_count_reg_value
 ````
 
-this number tells us how many apic ticks were done in the AMOUNT_OF_TIME_WE_WANT_TO_WAIT. Now if we do the following division:
+this number tells us how many apic ticks were done in the `TIME_WE_WANT_TO_WAIT`. Now if we do the following division:
 
 ```
-apic_ticks_done / AMOUNT_OF_TIME_WE_WANT_TO_WAIT
+apic_ticks_done / TIME_WE_WANT_TO_WAIT
 ```
 
 we will get the ticks done in unit of time. This value can be used for the initial count register as it is (or in multiple depending on what frequency we want the timer interrupt to be fired)
