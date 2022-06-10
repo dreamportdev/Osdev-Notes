@@ -30,6 +30,7 @@ x * sizeof(variable_type)
 ```
 
 Pointers can be compared too, with the operators: ==, <=, >=, <.>, of course the comparison is based  on the address contained in the pointer. 
+
 ## Inline assembly  
 
 The inline assembly instruction has the following format: 
