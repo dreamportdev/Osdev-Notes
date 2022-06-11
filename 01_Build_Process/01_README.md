@@ -1,11 +1,11 @@
 # Kernel Build Process & Booting
 This section covers some of the very first topics you'll need to know when building a kernel. Why you need a custom linker script, and how to write one, setting up a build system (we use make) and finally which boot protocol and bootloader to use.
 
-- [General Overview](Overview.md)
-- [Boot Protocols & Bootloaders](BootProtocols.md)
-- [Makefiles](GNUMakefiles.md)
-- [Linker Scripts](LinkerScripts.md)
-- [Generating A Bootable Iso](GeneratingIso.md)
+- [General Overview](02_Overview.md)
+- [Boot Protocols & Bootloaders](03_Boot_Protocols.md)
+- [Makefiles](04_Gnu_Makefiles.md)
+- [Linker Scripts](05_Linker_Scripts.md)
+- [Generating A Bootable Iso](06_Generating_Iso.md)
 
 ## Useful Links
 
