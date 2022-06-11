@@ -89,3 +89,12 @@ There's a few ways to go about this:
 - Each core has a separate GDT, allowing you to use the same selector in each GDT for that core's TSS. This option uses the most memory, but is the most straightforward to implement.
 - Have a single GDT shared between all cores, but each core gets a separate TSS selector. This would require some logic to decide which core uses which selector.
 - Have a single GDT and a single TSS descriptor within it. This works because the task register caches the values it loads from the GDT until it is next reloaded. Since the TR is never changed by the cpu, if we never change it ourselves, we are free to change the TSS descriptor after using it to load the TR. This would require logic to determine which core can use the TSS descriptor to load it's own TSS. Uses the least memory, but the most code of the three options.
+
+### Software Interrupts
+On x86(_64) IDT entries have a 2-bit DPL field. The DPL (Descriptor Privilege Level) represents the highest ring that is allowed to call that interrupt from software. This is usually left to zero as default, meaning that ring 0 can use the `int` instruction to trigger an interrupt from software, but all rings higher than 0 will cause a a general protection fault. This means that user mode software (ring 3) will always trigger a #GP instead of being able to call an interrupt handler.
+
+While this is a good default behaviour, as it stops a user program from being able to call the page fault handler for example, it presents a problem: without the use of dedicated instructions (which may not exist), how do we issue a system call?
+
+Fortunately the solution is less words than the question: Set the DPL field to 3.
+
+Now any attempts to call an IDT entry with a `DPL < 3` will still cause a general protection fault. If the entry has `DPL == 3`, the interrupt handler will be called as expected. Note that the handler runs with the code selector of the IDT entry, which is kernel code, so care should be taken when accessing data from the user program. This is how most legacy system calls work, linux uses the infamous `int 0x80` as it's system call vector.
