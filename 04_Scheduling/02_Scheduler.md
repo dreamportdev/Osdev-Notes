@@ -20,7 +20,7 @@ Ok but we now want to go deeper, so first of all let's see what is the workflow 
     * While searching for the READY tasks, it could be useful (but this is totally up to the design choices again) to also do some housekeeping on the non-reaady tasks, for example has the current task finished it's execution? can it be removed from the list? Does the tasks in WAIT State still needs to wait? 
 * Once loaded the new task it finish the execution and return the new context to the operating system.
 
-Probably after having read the above explanation, it can have been raised more questions than answers, but don't worry this chapter will try to answer as many questions as it can. 
+Probably after having read the above explanation, it can have been raised more questions than answersi (but nothing prevent us to have the schedule function called by just pressing a specific button!), but don't worry this chapter will try to answer as many questions as it can. 
 
 Probably on of the first questions is: Who is calling the `schedule()`  function? It is easy, usually is the interrupt handler, in particular the timer IRQ (but not necessarily only that). So we can imagine to have our ISR hadling routine to be something like: 
 
@@ -39,4 +39,25 @@ switch(interrupt_number) {
 }
 ```
 
-So when the function is called we need to check if it has finished it's allocated time. Who decides it? How long it is? How we calculate it? Well the answer is that this is a design choice, we can schedule a thread at every single timer interrupt, or give it a certain number of *ticks* (where a *tick* is the time passed between a schedule function call and the next one), that number can be fixed (decided at compile time, or by a configuration parameter of the kernel), or variable (for example if we are having tasks with different priorities, maybe we want to give more time to higher priority tasks). But in any case the minimum amount of time a task is in execution is for at least 1 tick.
+So when the function is called we need to check if it has finished it's allocated time. Who decides it? How long it is? How we calculate it? Well the answer is that this is a design choice, we can schedule a thread at every single timer interrupt, or give it a certain number of *ticks* (where a *tick* is the time passed between a schedule function call and the next one), that number can be fixed (decided at compile time, or by a configuration parameter of the kernel), or variable (for example if we are having tasks with different priorities, maybe we want to give more time to higher priority tasks). But in any case the minimum amount of time a task is in execution is for at least 1 *tick*.
+
+Let's assume that we want to execute our tasks for ten ticks, and let's assume that our *thread_t* structure has a ticks field, we can start to draft a schedule function: 
+
+```c
+//This define probably will go in a header file
+#define MAX_NUMBER_OF_TASK_TICKS 10
+
+context_t* schedule(context_t* context) {
+    // ... more code will go here 
+    if (current_thread->ticks < MAX_NUMBER_OF_TASK_TICKS) {
+        current_thread->ticks = current_thread->ticks + 1;
+        return context;
+    }
+    // more code will go here
+}
+```
+
+The above code snippet check if the time slot is finished for the task that is stored in the `current_thread` variable, if not will increment the number of ticks and exit there returning the untouched context.
+
+Now if the `current_thread` har reached it's allocated time, it's time to pick the next one. 
+
