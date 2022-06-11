@@ -11,6 +11,8 @@ Risc-V for example, defines supervisor mode and user mode, as well as machine mo
 
 In summary, supervisor mode is the kernel and anything running in ring 0 (drivers, interrupt handlers, etc ...), user mode is anything else that dosn't need full hardware permissions.
 
+We'll try to use the terms supervisor and user where possible, as this is the suggested approach to thinking about tihs, but will refer to protection rings where it's more accurate to do so.
+
 ## A Change in Perspective
 Up until this point, we've just had kernel code running, maybe in multiple threads, maybe not. When we start running user code, it's a good idea to think about things from a different perspective. The kernel is not running a user program, rather the user program is running and the kernel is a library that provides some functions for the user program to call.
 
@@ -18,9 +20,9 @@ Of course there is only a single kernel, and it's the same kernel that runs alon
 
 These functions that the kernel provides to user programs are special, they're called system calls. They're code that runs in supervisor mode, but can be called by user mode. This means you must be extremely careful what you allow system calls to do, and what data is returned. Every argument that is given to a system call should be scrutinized and validated anyway it can be.
 
-* [Switching Modes](SwitchingModes.md)
-* [Handling Interrupts](HandlingInterrupts.md)
-* [System Calls](SystemCalls.md)
+* [Switching Modes](02_SwitchingModes.md)
+* [Handling Interrupts](03_HandlingInterrupts.md)
+* [System Calls](04_SystemCalls.md)
 
 # Useful Links
 TODO(DT):

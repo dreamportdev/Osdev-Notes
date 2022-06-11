@@ -92,6 +92,7 @@ Handling interrupts while the cpu is in user mode is a surpringly big topic, and
 - Enter user mode and wait for a hardware interupt.
 
 ### Software Interrupts
+TODO: this would make more sense in the interrupts section?
 On x86(_64) IDT entries have a 2-bit DPL field. The DPL (Descriptor Privilege Level) represents the highest ring that is allowed to call that interrupt from software. This is usually left to zero as default, meaning that ring 0 can use the `int` instruction to trigger an interrupt from software, but all rings higher than 0 will cause a a general protection fault. This means that user mode software (ring 3) will always trigger a #GP instead of being able to call an interrupt handler.
 
 While this is a good default behaviour, as it stops a user program from being able to call the page fault handler for example, it presents a problem: without the use of dedicated instructions (which may not exist), how do we issue a system call?
