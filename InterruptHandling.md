@@ -132,7 +132,7 @@ and then after serving the interrupt it will pop everything in reverse order:
     pop rax
 ```
 
-The order of the registers is not really important when pushing them, but what is important is that we pop them we do in reverse order.
+The order of the registers is not really important when pushing them, but what is important is that when we pop them we do in reverse order.
 
 ## Misc Notes
 If you want to halt the cpu, and interrupts are enabled, be sure to use `hlt` inside of a loop.

@@ -59,5 +59,15 @@ context_t* schedule(context_t* context) {
 
 The above code snippet check if the time slot is finished for the task that is stored in the `current_thread` variable, if not will increment the number of ticks and exit there returning the untouched context.
 
-Now if the `current_thread` har reached it's allocated time, it's time to pick the next one. 
+Now if the `current_thread` har reached it's allocated time, it's time to pick the next one. But before doing that we need to save make sure that next time `current_thread` will be picked up, it will resume from the exact point it is being interrupted. This is achieved by saving the current execution context. And what is it? Well we already encountered that, in the (interrupt handling)[../InterruptHandling.md] chapter, it is the status of the cpu in that exact istant, all the registers value (the instruction pointer, the stack values, the general purpose registers etc). And this gives us a big hint on how we are going to switch between threads: we will avail of our interrupt handler (*Authors note: of course this is not the only way to switch between task, but this is in our opinion one of the easiest to implement).*)
+
+Let's recall quickly what our interrupt handling routine does: 
+
+* It first save the context pushing all registers on the stack
+* Then it calls the interrupt handling function, that serves the interrupt
+* It restore the context from the stack
+* Return (if possible) the control to the kernel
+
+This means that we have the current execution status saved already on the stack, so we need just to find a way to save it, but before it we need to make sure that the scheduler knows what is the starting address of the saved registers, so we need to make sure that the `rsp` address is passed to the interrupt handler routine
+
 
