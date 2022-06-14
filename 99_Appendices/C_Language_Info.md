@@ -48,6 +48,7 @@ asm("assenmbly_template"
 * One special clobber exists: "memory". This is a read/write barrier. It tells the compiler you've accessed memory other than what was specified as input/ouput operands. The cause of many optimization issues!
 * Every operand can have more than one item, they must be comma separated.
 * Every operand consists of a constraint and c expression pair. A constrait can also have a modifier itself 
+* Operand parameters are indicated with an increasing number prefixed by a %, so the first attribute is %0, second is %1, etc. And the order they appears in the output/input operands section represent their numbering
 
 Below is the list of the constraint modifiers: 
 
@@ -63,11 +64,12 @@ The constraints are many and depends also on the architecture. Usually they are 
 * 0, 1, ..., 9 - when a constraint is a nuber, it is called a *matching_constraint*, and this means that the same use the same register in output as the corresponding input registers. 
 * m - this constraint indicates to use a memory operand supported by the architecture. 
 * a, b, c, etc. - The letters usually indicate the registers we want to use, so for example a it means rax (or eax or ax depending on the mode), b means rbx (or ebx or bx), etc. 
+* g - this constaints indicates that a general register, memory or immediate operand is used.
 
 An example of an inline assembly instruction of this type is: 
 
 ```C
-asm("movl %2, %%ecx;" 
+asm("movl %2, %%rcx;" 
         "rdmsr;"
         : "=a" (low), "=d" (high)
         : "g" (address)
@@ -82,7 +84,14 @@ Let's dig into the syntax:
 * When a %% is used to identify a register, it means that it is an operand (it's value is provided in the operand section), otherwise a single % is used.
 * Every operand has it's own constraint, that is the letter in front of the variable referred in the oprand section
 * If an operand is output then it will have a "=" in front of constraint (for example "=a")
-* The operand variable is specified next to the constraint between brackets
+* The operand variable is specified next to the constraint between bracket
+* Even if the example above has only %2, we can say that: %0 is the low varible, %1 is high, and %2 is address
+
+But if we want to use immediate values in an instruction we must prefix them with the `$`, symbol so for example if we want to mov 5 into rcx register: 
+
+```C
+asm("movl $5, %rcx;");
+```
 
 ## C +(+) assembly together - Calling Conventions
 
