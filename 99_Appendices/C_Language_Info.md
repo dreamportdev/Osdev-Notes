@@ -52,8 +52,8 @@ asm("assenmbly_template"
 
 Below is the list of the constraint modifiers: 
 
-| Symbol | Meaning  |
-|+------+|+--------+|
+| Symbol |   Meaning               |
+|--------|-------------------------|
 |   =    | Indicates that this is an output operand, whatever was the previous value, it will be discarded and replaced with something else | 
 |   +    | It indicates that the operand is both read and written by the instruction. | 
 |   &    | It indicates that the opreand can be modified before the instruction completion. | 
