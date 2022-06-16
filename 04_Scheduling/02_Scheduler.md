@@ -30,7 +30,7 @@ switch(interrupt_number) {
         //do something with keyboard
         break;
     case TIMER_INTERRUPT:
-        // there could be some code here 
+        // eventually doing some other stuff 
         schedule(context); // <-- here we call the scheduler
         break;
     case ANOTHER_INTERRUPT:
@@ -68,6 +68,10 @@ Let's recall quickly what our interrupt handling routine does:
 * It restore the context from the stack
 * Return (if possible) the control to the kernel
 
-This means that we have the current execution status saved already on the stack, so we need just to find a way to save it, but before it we need to make sure that the scheduler knows what is the starting address of the saved registers, so we need to make sure that the `rsp` address is passed to the interrupt handler routine
+This means that we have the current execution status saved already on the stack, so we just need to find a way to save it, but before doing that we need to make sure that the scheduler knows what is the starting address of the saved registers, so we need to make sure that the `rsp` address is passed to the interrupt handler routine. If it was not done before, we need to make few changes to our interrupt handling:
+
+* After saving the context we need to pass the current value of rsp to the interrupt handling function, this depends on the architecture used, in our case if we are using x86-64 architecture the first function parameter is placed on the `rdi` register.
+* We need to make sure that the interrupt routine will return the context (returning the updated/new rsp value)
+* This is optional but it can make the code more reaadable, create a data structure that represent the context.
 
 
