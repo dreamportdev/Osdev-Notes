@@ -2,15 +2,26 @@
 
 ## What is it? 
 
-In a multitasking system (from now on the term *multitasking* refer to both multitasking and multithreading, if there is need to make a distinction the proper term will be used), the scheduler is the operating system componet that is responsible of selecting and loading the next task to be executed by the CPU. 
+In a multitasking system (from now on, the term *multitasking* can refer to both multitasking and multithreading, if there is need to make a distinction the proper term will be used), the scheduler is the operating system componet that is responsible of selecting and loading the next task to be executed by the CPU. 
 
-There are many algorithm that can be used to implement it, and they try to solve different issues or optimize different scenarios, for example a real time operating system will probably wants to execute higher priority tasks more often, where a desktop operating system will probably wants only to divide the time evenly between tasks, etc. 
+The idea of a task scheduler is pretty straightforward, it picks a task from a list, grant it some execution time, then put it back in the list and pick the next one.
 
-As usual the purpose of this guide is not to explain the algoirthms, for them there are many Operating System Books that can be used as reference, our purpose is to understand how is it implemented, and make our own scheduler, so we will implement a very simple algorithm that will serve tasks on a FCFS basis (First Come First Served) without priority.
+On how to select the task from the list there are many algorithms that can be used to implement it, and they try to solve different issues or optimize different scenarios, for example a real time operating system will probably wants to execute higher priority tasks more often, where a desktop operating system will probably wants only to divide the time evenly between tasks, etc. 
 
-## What it does? in a nutshell
+As usual the purpose of this guide is not to explain the algoirthms, for them there are many Operating System Books that can be used as reference, our purpose is to understand how it is implemented, and make our own one, so we will implement a very simple algorithm that will serve tasks on a FCFS basis (First Come First Served) without priority.
 
-The most basic explanation of a scheduler is just of a function that picks item from a list and load its "context" to let it execute for a while. 
+## Overview of how a scheduler work
+
+As we said above a task scheduler is basically a function that picks a task from a list and execute it for some time and when done places it back in the list to pick a new one. 
+
+But before going directly into the workflow let's answer few questions: 
+
+* Who is going to call the scheduler? Again this is a design choice (nothing prevent us to have the scheduler function called only when a big red button plugged to the computer is pressed), but usually what we expect is to have it called periodically, and the most common way of doing it is having it called within the timer interrupt handler routine. 
+* What is a task? This concept will be described in more detail on the next chapter, but generally speaking a task is a data structure that reperesent an application running, and threads if implemented are portion of tasks that can run concurrently. 
+* How long a task is supposed to execute before being replaced? That is another design choice that depends on different factors (for example algorithm used, personal choice, it can be even customized by the user), but usually the minimum is the time between one timer interrupt and the next other. 
+
+
+ 
 
 Ok we now want to go deeper, so first of all let's see what is the workflow of a scheduling function:
 
