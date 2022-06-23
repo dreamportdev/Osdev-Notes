@@ -16,22 +16,36 @@ As we said above a task scheduler is basically a function that picks a task from
 
 But before going directly into the workflow let's answer few questions: 
 
-* Who is going to call the scheduler? Again this is a design choice (nothing prevent us to have the scheduler function called only when a big red button plugged to the computer is pressed), but usually what we expect is to have it called periodically, and the most common way of doing it is having it called within the timer interrupt handler routine. 
+* Who is going to call the scheduler? Again this is a design choice but usually what we expect is to have it called periodically. 
 * What is a task? This concept will be described in more detail on the next chapter, but generally speaking a task is a data structure that reperesent an application running, and threads if implemented are portion of tasks that can run concurrently. 
-* How long a task is supposed to execute before being replaced? That is another design choice that depends on different factors (for example algorithm used, personal choice, it can be even customized by the user), but usually the minimum is the time between one timer interrupt and the next other. 
+* How long a task is supposed to execute before being replaced? That is another design choice that depends on different factors (for example algorithm used, personal choice, it can be even customized by the user), but usually the minimum is the time between one timer interrupt and the next other.
+* Are there cases where the task is not finished yet, but it is unavailable to run at the moment? Yes, and it will be discussed later, and the scheduler must be aware of that.  
 
 
- 
+The basic idea behind ever scheduler is more or less the following: 
 
-Ok we now want to go deeper, so first of all let's see what is the workflow of a scheduling function:
-
-* As soon as the function is called it checks the current executing task if it has finished it's allocated time. If no, it will end here, and exit, if yes it will proceed to the next step. how the scheduler decide if the allocated time is ended it is a design decision, there is no right or wrong answer.
-* If the task has finished it's allocated time, the scheduler take the current context (don't worry we will explain it later, but *spoiler alert* technically you already know what it is) and save it to the current task, then proceed to the next step, if not it will end here.
-* After having saved the context of the current running task, it needs to pick up the next from the list. The scheduler will start to pick task one after each other searching for the first *ready* to execute task available (generally there are more than one task ready to execute and which one is taken it depends totally on the algorithm implemented, but the basic idea is: it pick a task to execute), and loads it
+* As soon as the function is called it checks the current executing task if it has finished it's allocated time. If not, it will end here, and exit, if yes it will proceed to the next step. 
+* If the task has finished it's allocated time, the scheduler take the current context (we have already seen this concept in the Interrupt handling chapter) and save it to the current executing task, then proceed to the next step.
+* After having saved the context of the current running task, it needs to pick up the next one from the list. It will start to pick task one after each other searching for the first *ready* to execute task available (generally there are more than one task ready to execute and which one is taken it depends totally on the algorithm implemented, but the basic idea is: it pick a task to execute), and loads it as the current executing one
     * During the search of the READY task, it could be useful (but not necessary, is  up to the design choices again) to do some housekeeping on the non-reaady tasks. For example: has the current task finished it's execution? Can it be removed from the list? Does the tasks in WAIT State still needs to wait? 
 * Once the new task is loaded the scheduler return the new context to the operating system.
 
-Now probably we are wondering who is calling the *scheduler*  function? It is easy, usually is the interrupt handler, in particular the timer IRQ (but not necessarily only that). So we can imagine to have our ISR hadling routine to be something like: 
+The basic scheduler we are going to implement will have the following characteristics: 
+
+1. It will execute tasks in a First Come First Served basis
+2. The tasks will be kept in a fixed size array (to keep the implementation simple, and focus on the main topic)
+3. The execution time for each task will be just 1 timer tick. (so they will be changed every time the timer interrupt will be called)
+
+
+Now that we have an idea of what we have to write we can start describing how it will be implement
+
+### Part 1 Calling the scheduler
+
+The first thing that we need to do is to decide when to call the scheduler, as already mentioned above it can be called in many different cases and it's totally up to us (nothing prevent us to have the scheduler function called only when a big red button plugged to the computer is pressed).
+
+But in a multitasking operating system, where what expect is at least that every task gets it's own fair share of cpu-time, we want it to be called at regular intervals of time. And this can be easily achieved letting the timer interrupt handler routine do the call i( you have followed this guide you probably have it already implemented). 
+
+Let's assume that we have a centralized interrupt handling routine that the correspoding action is selected within a switch statement, and we (will) have a `schedule()` function to call. In this case according to the design outlined above we want `schedule()` to be called within the interrupt timer case (labeled as TIMER_INTERRUPT in the example): 
 
 ```c 
 switch(interrupt_number) {
@@ -40,7 +54,7 @@ switch(interrupt_number) {
         break;
     case TIMER_INTERRUPT:
         // eventually doing some other stuff 
-        schedule(context); // <-- here we call the scheduler
+        schedule(); // <-- here we call the scheduler
         break;
     case ANOTHER_INTERRUPT:
         // ...
@@ -48,7 +62,10 @@ switch(interrupt_number) {
 }
 ```
 
-iWhen the function is called we need to check if it has finished it's allocated time. Who decides it? How long it is? How we calculate it? Well the answer is that this is a design choice, we can schedule a thread at every single timer interrupt, or give it a certain number of *ticks* (where a *tick* is the time passed between a schedule function call and the next one), that number can be fixed (decided at compile time, or by a configuration parameter of the kernel), or variable (for example if we are having tasks with different priorities, maybe we want to give more time to higher priority tasks). But in any case the minimum amount of time a task is in execution is for at least 1 *tick*. 
+Is that all? More or less, we may eventually want to have it called in other cases too (i.e. maybe while serving a syscall, or create a custom interrupt to handle specific cases), but the logic is always the same, we call it in all the parts where we decide is time to have a task switch. 
+
+
+When the function is called we need to check if it has finished it's allocated time. Who decides it? How long it is? How we calculate it? Well the answer is that this is a design choice, we can schedule a thread at every single timer interrupt, or give it a certain number of *ticks* (where a *tick* is the time passed between a schedule function call and the next one), that number can be fixed (decided at compile time, or by a configuration parameter of the kernel), or variable (for example if we are having tasks with different priorities, maybe we want to give more time to higher priority tasks). But in any case the minimum amount of time a task is in execution is for at least 1 *tick*. 
 
 In the examples that follow we will try to keep things simple and will change task every time the scheduler is called. 
 
