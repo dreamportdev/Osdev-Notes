@@ -125,24 +125,11 @@ Even if we are not really doing a check in our simple algorithm, because we will
 
 Depending on the algorithm selected (or created) we can decide to let tasks execute for more time than one *quantum* (this terms indicates the amount of time between two ticks of the timer), and in this case we will need to implement a mechanism to decidere whether the task should be interrupted or not. 
 
-** DO I REALLY NEED THIS EXAMPLE? **
-For example, imagine an algorithm where tasks have 2 priority level: HIGH and LOW, and we want to have tasks with priority set to high to run for two ticks instead of one, in this case we can expect that the task data structure will have a `priority` field and a `ticks` field, we can expect to have this step implemented in the following way: 
+When the function is called we need to check if it has finished it's allocated time. Who decides it? How long it is? How we calculate it? Well the answer is that this is a design choice, we can schedule a task at every single timer interrupt, or give it a certain number of *ticks*, that number can be fixed (decided at compile time, or by a configuration parameter of the kernel), or variable (for example if we are having tasks with different priorities, maybe we want to give more time to higher priority tasks). But in any case the minimum amount of time for a task in execution is for at least 1 *tick*. 
 
-```c 
-void schedule() {
-    // ... there could be more code here
-    if (current_task->priority == HIGH && current_task->ticks < 2) {
-        current_task->ticks++;
-        return;
-    }
-    current_task->ticks = 0;
-    // if the algorithm arrived here, it means that the task needs to be preempted...
-}
-```
+As mentioned above we will try to keep things simple and will change task every time the scheduler is called. So we will skip this check
 
-When the function is called we need to check if it has finished it's allocated time. Who decides it? How long it is? How we calculate it? Well the answer is that this is a design choice, we can schedule a thread at every single timer interrupt, or give it a certain number of *ticks* (where a *tick* is the time passed between a schedule function call and the next one), that number can be fixed (decided at compile time, or by a configuration parameter of the kernel), or variable (for example if we are having tasks with different priorities, maybe we want to give more time to higher priority tasks). But in any case the minimum amount of time a task is in execution is for at least 1 *tick*. 
-
-In the examples that follow we will try to keep things simple and will change task every time the scheduler is called. 
+### Next stuff to be completed...
 
 Now if the `current_thread` har reached it's allocated time, it's time to pick the next one. But before doing that we need to save make sure that next time `current_thread` will be picked up, it will resume from the exact point it is being interrupted. This is achieved by saving the current execution context. And what is it? Well we already encountered that, in the [interrupt handling](../InterruptHandling.md) chapter, it is the status of the cpu in that exact istant, all the registers value (the instruction pointer, the stack values, the general purpose registers etc). And this gives us a big hint on how we are going to switch between threads: we will avail of our interrupt handler (*Authors note: of course this is not the only way to switch between task, but this is in our opinion one of the easiest to implement).*)
 
