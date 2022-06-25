@@ -37,7 +37,62 @@ The basic scheduler we are going to implement will have the following characteri
 3. The execution time for each task will be just 1 timer tick. (so they will be changed every time the timer interrupt will be called)
 
 
-Now that we have an idea of what we have to write we can start describing how it will be implement
+
+Now that we have an idea of what we have to write we can start describing how it will be implemented
+
+### Prerequisites and initialization
+
+Our scheduler to work correctly needs to keep track of some information, related to the current execution status. 
+
+The first thing that it needs is a list that holds all the tasks that it are currently active (with *active* we mean that are not finished their execution yet), as we mentioned above we will do it using a simple array: 
+
+```c
+//This probably will go in the header file
+#define MAX_TASK 100
+
+task_t* tasks_list[MAX_TASK]
+```
+
+The datatype `task_t` is not a real type, and is a data structure that we have to implement, it will be explained in detail in the *Tasks and thread* Chapter, but for now let's assume it contains the context information, the name and the current task status:
+
+```c
+#define TASK_NAME_MAX_LEN 64
+
+typedef struct {
+    char name[TASK_NAME_MAX_LEN];
+    status_t task_status;
+    cpu_status_t context
+} task_t;
+```
+
+Here we go again, there are new customized datatypes, let's start with the simple one `status_t` that is just an enum to use a more human readable status identifier, for now we assume that our tasks will have just three statuses:
+
+* READY: the task is ready to be executed
+* RUNNING: this task is currently running on a cpu/core
+* DEAD: this task has reached the end of it's life (it has been killed or it just finished executing the code), and can be deleted
+
+Our enum will look like: 
+
+```c
+typedef enum {
+    READY,
+    RUNNING,
+    DEAD
+} status_t;
+```
+
+For the `cpu_status_t` this is more tricky, it represent the current execution context of the cpu, a detail of what a context is can be found on the "Interrupt Descriptor Table" chapter **is that a good idea? or it is too much in detail for the notes implementing the cpu_status_t structure? Should it be explained here, or in the IDT chapter mentioning that it will become useful later?**
+
+Next thing that he scheduler need is to keep track of what is the current executing task, so this is implementation specific, for example if we are using a linked list it will probably be a pointer to the `task_t` strucutre, but in our case, since we are using an array we can use a simple integer to point to the current executing task.
+
+```c
+size_t current_executing_task_idx;
+```
+
+Now that we have all the variables and structures declared we need to initialize the scheduler, in our simple scenario there are just few things that we have to do: 
+
+* Initialize the array of active tasks to NULL (we will use NULL as identifier for an available position in the array)
+* Initialize the `current_executing_task_idx` to 0. 
 
 ### Part 1 Calling the scheduler
 
