@@ -22,6 +22,3 @@ These functions provided by the kernel are special, they're called *system calls
 * [Handling Interrupts](03_Handling_Interrupts.md)
 * [System Calls](04_System_Calls.md)
 * [An Example Syscall ABI](05_Example_ABI.md)
-
-# Useful Links
-TODO(DT):

@@ -3,7 +3,7 @@
 ## Getting to User Mode
 There are a few ways to do this, but the most straight foward way is the use the `iret` instruction.
 
-`iret` pops 5 arguments off of the stack, and then performs several operations at once (atomically):
+`iret` pops 5 arguments off of the stack, and then performs several operations atomically:
 
 - It pops `rip` and `cs` from the stack, this is like a far jump/return. `cs` sets the mode for instruction fetches, and `rip` is the first instruction to run after `iret`.
 - It pops `rflags` into the flags register.
@@ -58,7 +58,7 @@ First we push the 5 values on to the stack, in this order:
 
 Then we execute `iret`, and we're off! Welcome to user mode!
 
-This is not how it should be done in practice, but for the purposes of an example, here is a function to switch to user mode. Here we're the example user cs of `0x1B` and user ss of `0x23`.
+This is not how it should be done in practice, but for the purposes of an example, here is a function to switch to user mode. Here we're the example user cs of `0x1B` (`0x18 | 3`) and user ss of `0x23` (`0x20 | 3`).
 
 ```c
 __attribute__((naked, noreturn))
@@ -77,6 +77,8 @@ void switch_to_user_mode(uint64_t stack_addr, uint64_t code_addr)
 
 And voila! We're running user code with a user stack. 
 In practice this should be done as part of a task-switch, usually as part of the assembly stub used for returning from an interrupt (hence using `iret`).
+
+Note the use of the `naked` and `noreturn` attributes. These are hints for the compiler that it can use certain behaviours. Not *necessary* here, but nice to have.
 
 ## Getting Back to Supervisor Mode
 This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated chapter on system calls.

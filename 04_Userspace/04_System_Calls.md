@@ -116,7 +116,7 @@ As we hinted at before, there are actually two pairs of instructions: a pair des
 
 Since AMD designed the 64-bit version of x86 (x86_64), they made their instructions architectural and deprecated Intel's. For 64-bit platforms, we have the `syscall` and `sysret` instructions. Functionally very similar to the other pair, they do have slight differences. Since we're focused on x86_64, we'll only discuss the 64-bit versions.
 
-In summary: you're on a 32-bit platform, use `sysenter`/`sysexit`, for 64-bit use `syscall`/`sysret`.
+In summary: if you're on a 32-bit platform, use `sysenter`/`sysexit`, for 64-bit use `syscall`/`sysret`.
 
 ### Using Syscall & Sysret
 Before using these instructions we'll need to perform a bit of setup first. They require the GDT to have a very specific layout.
