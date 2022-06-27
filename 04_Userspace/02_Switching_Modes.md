@@ -1,9 +1,7 @@
 # Switching Modes
-This section just talks about x86_64 for now. 
 
 ## Getting to User Mode
-This is pretty straight forward! We're going to make use of the `iret` instruction to do this.
-Remember in 64-bit mode, all stack operations are 64-bits wide.
+There are a few ways to do this, but the most straight foward way is the use the `iret` instruction.
 
 `iret` pops 5 arguments off of the stack, and then performs several operations at once (atomically):
 
@@ -11,12 +9,12 @@ Remember in 64-bit mode, all stack operations are 64-bits wide.
 - It pops `rflags` into the flags register.
 - It pops `rsp` and `ss` from the stack. This changes the mode for data accesses, and the stack used after `iret`.
 
-This is a very powerful instruction because it allows us to change the mode of both code and data accesses, as well as jump to new code all at once. It has the added benefit of switching the stack at the same time, which is fantastic.
+This is a very powerful instruction because it allows us to change the mode of both code and data accesses, as well as jump to new code all at once. It has the added benefit of switching the stack and flags at the same time, which is fantastic. This is everything we need to properly jump to user code.
 
-Changing the flags atomically like this means we can from having interrupts disabled in supervisor mode, to enabling interrupts are soon as we're in user code. Without any risk of getting an interrupt in the middle of changing to user mode.
+Changing the flags atomically like this means we can go from having interrupts disabled in supervisor mode, to interrupts enabled in user code. All without the risk of having an interrupt occuring while we change these values ourselves.
 
 ### What to Push Onto The Stack
-Now let's talk about what these values should be. `rflags` is an easy one: set it to 0x202. Bit 2 is a legacy feature and must always be set, the other bit (`0x200`) is the interrupt enable flag. This means all other flags are cleared, and is what C/C++ and other languages expect flags to look like.
+Now let's talk about what these values should be. `rflags` is an easy one: set it to 0x202. Bit 2 is a legacy feature and must always be set, the other bit (`0x200`) is the interrupt enable flag. This means all other flags are cleared, and is what C/C++ and other languages expect flags to look like when starting a program.
 
 For `ss` and `cs` it depends on the layout of your GDT. We'll assume that you have 5 entries in your GDT:
 
@@ -26,7 +24,7 @@ For `ss` and `cs` it depends on the layout of your GDT. We'll assume that you ha
 - 0x18, User Code (ring 3)
 - 0x20, User Data (ring 3)
 
-Now `ss` and `cs` are *selectors*, which you'll remember is not just the byte offset into the gdt, but the lower three bits contain a field called RPL. Requested Priviledge Level is a legacy feature, but it's still enforced by the cpu, so we have to use it. RPL is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring you want to jump to.
+Now `ss` and `cs` are *selectors*, which you'll remember is not just the byte offset into the gdt, but the lower two bits contain a field called RPL. Requested Priviledge Level is a legacy feature, but it's still enforced by the cpu, so we have to use it. RPL is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring you want to jump to.
 
 So if we're going to ring 0 (supervisor), RPL can be left at 0. If going to ring 3 (user) we'd set it to 3.
 
@@ -43,7 +41,7 @@ As you might have noticed, the kernel/supervisor selectors don't need to have th
 
 If RPL is not set correctly, you'll get a #GP.
 
-As for what to set `rip` and `rsp` to, the target code you want to run, and the stack you want to run it on. It's a good idea to run user and supervisor code on separate stacks. This way the supverisor stack can have the U/S bit cleared, and prevent user mode accessing supervisor data that may be stored on the stack.
+As for what to set `rip` and `rsp` to, the target code you want to run, and the stack you want to run it on. It's a good idea to run user and supervisor code on separate stacks. This way the supverisor stack can have the U/S bit cleared in the paging structure, and prevent user mode accessing supervisor data that may be stored on the stack.
 
 ### Extra Considerations
 Since we have paging enabled, that means page-level protections are in effect. If we try to run code from a page that has the NX-bit set (bit 63), we'll page fault. The same is true for trying to run code or access a stack from a page with the U/S bit cleared. On x86 this bit must be set at every level in the paging structure.
@@ -60,11 +58,11 @@ First we push the 5 values on to the stack, in this order:
 
 Then we execute `iret`, and we're off! Welcome to user mode!
 
-This is not how it should be done in practice, but an example function of what this might look like, using the example GDT from above. Here we're pre-calculated the user cs as `0x1B` and user ss as `0x23` for simplicity.
+This is not how it should be done in practice, but for the purposes of an example, here is a function to switch to user mode. Here we're the example user cs of `0x1B` and user ss of `0x23`.
 
 ```c
 __attribute__((naked, noreturn))
-void SwitchToUserMode(uint64_t stack_addr, uint64_t code_addr)
+void switch_to_user_mode(uint64_t stack_addr, uint64_t code_addr)
 {
     asm volatile(" \
         push $0x23 \n\
@@ -81,7 +79,7 @@ And voila! We're running user code with a user stack.
 In practice this should be done as part of a task-switch, usually as part of the assembly stub used for returning from an interrupt (hence using `iret`).
 
 ## Getting Back to Supervisor Mode
-This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated section to system calls.
+This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated chapter on system calls.
 
 The third way is inside of an interrupt handler. While you *can* run interrupts in user mode (an advanced topic for sure), most interrupts will result in supervisor code running, in the form of the interrupt handler. Any interrupt will work, for example a page fault or ps/2 keyboard irq, but the most common one is a timer. Since you can program a timer to tick at a fixed interval, you can ensure that supervisor code gets to run at a fixed interval. That code may return immediately, but it gives the kernel a chance to look at the program and machine states and see if anything needs to be done. Commonly the handler code for the timer also runs the scheduler tick, and can trigger a task switch.
 
