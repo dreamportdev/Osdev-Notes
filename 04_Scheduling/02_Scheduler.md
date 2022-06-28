@@ -45,7 +45,7 @@ The first thing that it needs is a list that holds all the tasks that it are cur
 
 ```c
 //This probably will go in the header file
-#define MAX_TASK 100
+#define MAX_TASKS 100
 
 task_t* tasks_list[MAX_TASK]
 ```
@@ -127,9 +127,34 @@ As mentioned above we will try to keep things simple and will change task every 
 
 ### Selecting task to execute
 
-The main purpose of the scheduler is of course to select the next task to run (and pause/stop the current one). How is done depends heavily on the algorithm implemented, that in our case is very simple: it select them on order of arrival, the older get executed first, and once the last is reached it starts again from the firstuntil there are tasks to execute. 
+The main purpose of the scheduler is of course to select the next task to run (and pause/stop the current one). How is done depends heavily on the algorithm implemented, that in our case is very simple: it select them on order of arrival, the older get executed first, and once the last is reached it starts again from the first until there are tasks to execute. 
 
-This is called a Round Robin algorithm. 
+This is called a Round Robin algorithm. Let's focus just on the selection for now, ignoring all other parts (like status check, context save/load), there is just one thing we need to be aware of: when we reach the last item in the array to go back to the beginning. We have defined the maximum number of tasks in the MAX_TASKS constant, so our increment will look like: 
+
+```c
+void schedule() {
+    current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS
+}
+```
+
+This is a simple trick that use the "Modulo" operation to get the remainder of the division by MAX_TASKS, because we are always guaranteed that the remainder will always be between 0 and MAX_TASKS. 
+And that's it, this is how we get to the next item and start all over again when we hit the end (of course it assumes that all the variables are correctly initialized). 
+
+But that is not enough because and there are some issues that are related to our design, the first one is: since we are using a fixed size array when a task will finish it's execution time, it will be removed by replacing the value pointer with NULL. So in this case we need to make sure that the selected index is not empty, and it contains an actual task (otherwise prepare for some very strange behaviour...). This can be achieved by adding a while loop that keep increasing the index until it finds an item in the array that is not NULL: 
+
+```c
+voide schedule() {
+
+    current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+    while(tasks_list[current_executing_task_idx] == NULL) {        
+        current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+    }
+}
+``` 
+
+
+
+
 ### Next stuff to be completed...
 
 Now if the `current_thread` har reached it's allocated time, it's time to pick the next one. But before doing that we need to save make sure that next time `current_thread` will be picked up, it will resume from the exact point it is being interrupted. This is achieved by saving the current execution context. And what is it? Well we already encountered that, in the [interrupt handling](../InterruptHandling.md) chapter, it is the status of the cpu in that exact istant, all the registers value (the instruction pointer, the stack values, the general purpose registers etc). And this gives us a big hint on how we are going to switch between threads: we will avail of our interrupt handler (*Authors note: of course this is not the only way to switch between task, but this is in our opinion one of the easiest to implement).*)
