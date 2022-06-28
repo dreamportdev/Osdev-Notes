@@ -143,7 +143,7 @@ And that's it, this is how we get to the next item and start all over again when
 But that is not enough because and there are some issues that are related to our design, the first one is: since we are using a fixed size array when a task will finish it's execution time, it will be removed by replacing the value pointer with NULL. So in this case we need to make sure that the selected index is not empty, and it contains an actual task (otherwise prepare for some very strange behaviour...). This can be achieved by adding a while loop that keep increasing the index until it finds an item in the array that is not NULL: 
 
 ```c
-voide schedule() {
+void schedule() {
 
     current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
     while(tasks_list[current_executing_task_idx] == NULL) {        
