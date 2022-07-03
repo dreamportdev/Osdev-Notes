@@ -1,7 +1,7 @@
 # System Calls
 System calls are a way for a user mode program to request something from the kernel, or other supervisor code. For this section we're going to focus on a user program calling the kernel directly. If you're writing a micro-kernel, system calls can be more complicated, as they might be redirected to other supervisor (or even user) programs, but we're not going to talk about that here.
 
-On x86_64 there are a few ways to perform a system call. The first is to dedicate an interrupt vector to be used for software interrupts. This is the most common, and straightforward way. There other main way is to use the dedicated instructions (`sysenter` and friends), however these are rather niche and have some issues of their own. This is discussed below.
+On x86_64 there are a few ways to perform a system call. The first is to dedicate an interrupt vector to be used for software interrupts. This is the most common, and straightforward way. The other main way is to use the dedicated instructions (`sysenter` and friends), however these are rather niche and have some issues of their own. This is discussed below.
 
 There are other obscure ways to perform syscalls. For example, executing a bad instruction will cause the cpu to trigger a #UD exception. This transfers control to supervisor code, and could be used as an entry to a system call. While not recommended for beginners, there was one hobby OS kernel that used this method.
 
@@ -32,7 +32,7 @@ As mentioned before, the DPL field is the highest ring that is allowed to call t
 Now we have an interrupt that can be called from software in user mode, and a handler that will be called on the supervisor side.
 
 ### A Quick Example
-We're going to use vector `0xFE` as our system call handler, and assume that your interrupt stub pushes all registers onto the stack before executing the interrupt handler (we're taking this as the `registers_t*` argument).
+We're going to use vector `0xFE` as our system call handler, and assume that your interrupt stub pushes all registers onto the stack before executing the interrupt handler (we're taking this as the `cpu_status_t*` argument).
 We'll also assume that `rdi` is used to pass the system call number, and `rsi` passes the argument to that syscall. These are things that should be decided when writing the ABI for your kernel.
 
 First we'll set up things on the kernel side:
@@ -42,7 +42,7 @@ First we'll set up things on the kernel side:
 void set_idt_entry(uint8_t vector, void* handler, uint8_t dpl);
 
 //see below
-registers_t* syscall_handler(registers_t* regs);
+cpu_status_t* syscall_handler(cpu_status_t* regs);
 
 void setup_syscalls()
 {
@@ -68,12 +68,12 @@ There's a few tricks happening with the inline assembly above. First is the `nak
 
 Next we're using two special constraints for the input and output operands. "S" and "D" are the source and destination registers, or on x86 the `rsi` and `rdi` registers. This means the compiler will ensure that those registers are loaded with the values we specify before the assembly body is run. The compiler will then also move the value of "S" (`rsi`) into `arg` after the assembly body has run. This is where we'll be placing the return value of the system call, hence why the `return arg` line below.
 
-For more details on line assembly, see the dedicated section on it, or check your compiler's manual.
+For more details on inline assembly, see the dedicated section on it, or check your compiler's manual.
 
-Now assuming everything is setup correctly, running the above code in user mode should trigger your kernel's system call handler. In this example, the `syscall_handler` function. As an example of how that might look:
+Now assuming everything is setup correctly, running the above code in user mode should trigger your kernel's system call handler. In the example below, the `syscall_handler` function should end up running, and we've just implemented system calls!
 
 ```c
-registers_t* syscall_handler(registers_t* regs)
+cpu_status_t* syscall_handler(cpu_status_t* regs)
 {
     log("Got syscall %lx, with argument %lx", regs->rdi, regs->rsi);
 
@@ -99,8 +99,6 @@ registers_t* syscall_handler(registers_t* regs)
     return regs;
 }
 ```
-
-In this case we used the dispatch pattern, but you can do anything you want here.
 
 ## Using Dedicated Instructions
 On x86_64 there exists a pair of instructions that allow for a "fast supervisor entry/exit". The reason these instructions are considered fast is they bypass the whole interrupt procedure. Instead, they are essentially a pair of far-jump/far-return instructions, with the far-jump to kernel code using a fixed entry point.
@@ -137,7 +135,7 @@ sysretq
 o64 sysret
 ```
 
-Now we have our GDT set up according, we just have to tell the CPU about it. We'll do this via the `STAR` MSR (0xC0000081). This particular MSR contains 3 fields:
+Now we have our GDT set up accordingly, we just have to tell the CPU about it. We'll do this via the `STAR` MSR (0xC0000081). This particular MSR contains 3 fields:
 
 - The lowest 32-bits are used by the the 32-bit `syscall` operation. This is the address the CPU will jump to when running `syscall` in 32-bit protected mode. They are ignored in long mode.
 - Bits 47:32 are the kernel CS to be loaded. Remember from above that the kernel SS will be loaded from the next GDT descriptor after the kernel CS.

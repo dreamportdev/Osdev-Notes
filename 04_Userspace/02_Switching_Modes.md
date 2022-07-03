@@ -24,7 +24,7 @@ For `ss` and `cs` it depends on the layout of your GDT. We'll assume that you ha
 - 0x18, User Code (ring 3)
 - 0x20, User Data (ring 3)
 
-Now `ss` and `cs` are *selectors*, which you'll remember is not just the byte offset into the gdt, but the lower two bits contain a field called RPL. Requested Priviledge Level is a legacy feature, but it's still enforced by the cpu, so we have to use it. RPL is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring you want to jump to.
+Now `ss` and `cs` are *selectors*, which you'll remember are not just a byte offset into the gdt, but the lowest two bits contain a field called RPL. Requested Privilege Level is a legacy feature, but it's still enforced by the cpu, so we have to use it. RPL is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring you want to jump to.
 
 So if we're going to ring 0 (supervisor), RPL can be left at 0. If going to ring 3 (user) we'd set it to 3.
 
@@ -41,7 +41,7 @@ As you might have noticed, the kernel/supervisor selectors don't need to have th
 
 If RPL is not set correctly, you'll get a #GP.
 
-As for what to set `rip` and `rsp` to, the target code you want to run, and the stack you want to run it on. It's a good idea to run user and supervisor code on separate stacks. This way the supverisor stack can have the U/S bit cleared in the paging structure, and prevent user mode accessing supervisor data that may be stored on the stack.
+As for the other two values? We're going to set `rip` to the instruction we want to execute after using `iret`, and `rsp` can be set to the stack you want to use. Remember that on x86 the stack grows downwards, so if you allocate memory this should be set to the *highest* address of that region. It's a good idea to run user and supervisor code on separate stacks. This way the supverisor stack can have the U/S bit cleared in the paging structure, and prevent user mode accessing supervisor data that may be stored on the stack.
 
 ### Extra Considerations
 Since we have paging enabled, that means page-level protections are in effect. If we try to run code from a page that has the NX-bit set (bit 63), we'll page fault. The same is true for trying to run code or access a stack from a page with the U/S bit cleared. On x86 this bit must be set at every level in the paging structure.
@@ -81,7 +81,7 @@ In practice this should be done as part of a task-switch, usually as part of the
 Note the use of the `naked` and `noreturn` attributes. These are hints for the compiler that it can use certain behaviours. Not *necessary* here, but nice to have.
 
 ## Getting Back to Supervisor Mode
-This is trickier! Since you dont want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated chapter on system calls.
+This is trickier! Since you don't want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated chapter on system calls.
 
 The third way is inside of an interrupt handler. While you *can* run interrupts in user mode (an advanced topic for sure), most interrupts will result in supervisor code running, in the form of the interrupt handler. Any interrupt will work, for example a page fault or ps/2 keyboard irq, but the most common one is a timer. Since you can program a timer to tick at a fixed interval, you can ensure that supervisor code gets to run at a fixed interval. That code may return immediately, but it gives the kernel a chance to look at the program and machine states and see if anything needs to be done. Commonly the handler code for the timer also runs the scheduler tick, and can trigger a task switch.
 

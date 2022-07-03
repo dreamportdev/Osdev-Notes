@@ -14,7 +14,7 @@ We'll also be using those same four data registers to return data from the syste
 
 Something that was alluded to before was the idea of treating the data registers as a single big block. This would let us pass more than 4 values, and could even pass through more complex structs or unions. 
 
-The last piece is how we're going to trigger a system call. We're going to use an interrupt, and use interrupt vector 0x50. You can use whatever you like, as long as it doesn't conflict with other interrupts.
+The last piece is how we're going to trigger a system call. We're going to use an interrupt, specificially vector 0x50 for our example ABI. You can use whatever you like, as long as it doesn't conflict with other interrupts.
 
 There are some other design considerations that haven't been discussed so far, including:
 

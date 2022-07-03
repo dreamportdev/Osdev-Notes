@@ -7,9 +7,9 @@ The x86 architecture defines 4 rings of operation, with ring 0 having the most h
 
 By the time paging was added to x86, rings 1 and 2 were essentially non-existent. That's why paging has a single bit to indicate whether a page is user or supervisor. Supervisor being the term used to refer to privileged ring 0 code and data. This trend carries across to other platforms too, where permissions are often binary. If you're curious, rings 1 and 2 do count as supervisor for page accesses.
 
-Risc-V for example, defines supervisor mode and user mode, as well as machine mode. Machine mode is analogous to system management mode on x86. Sound familiar?
+For example, the risc-v platform has supervisor mode and user mode. Later ARM processors have PL0 and PL1, sound familiar?
 
-We'll try to use the terms supervisor and user where possible, as this is the suggested approach to thinking about tihs, but will refer to protection rings where it's more accurate to do so.
+We'll try to use the terms supervisor and user where possible, as this is the suggested approach to thinking about this, but will refer to protection rings where it's more accurate to do so.
 
 ## A Change in Perspective
 Up until this point, we've just had kernel code running, maybe in multiple threads, maybe not. When we start running user code, it's a good idea to think about things from a different perspective. The kernel is not running a user program, rather the user program is running and the kernel is a library that provides some functions for the user program to call.

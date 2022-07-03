@@ -1,5 +1,5 @@
 # Handling Interrupts
-This is not a complete guide on how to handle interrupts. It assumes you already have an IDT setup and working in supervisor mode. This section is focused on handling interrupts when you have user mode programs executing.
+This is not a complete guide on how to handle interrupts. It assumes you already have an IDT setup and working in supervisor mode, if you don't - take a look the earlier chapter that covers how to set up an IDT and the basics of handling interrupts. This section is focused on handling interrupts when you have user mode programs executing.
 
 On x86_64 there are two main structures involved in handling interrupts. The first is the IDT, which you should already be familiar with. The second is the task state segment (TSS). While the TSS is not technically mandatory for handling interrupts, once you leave ring 0 it's functionally impossible to handle interrupts without it. 
 
@@ -39,7 +39,7 @@ As per the manual, the reserved fields should be left as zero. The rest of the f
 - `istX`: where `X` is a non-zero identifier. These are the IST (Interrupt Stack Table) stacks, and are used by the IST field in the IDT descriptors. If an IDT descriptor has non-zero IST field, the cpu will always load the stack in the corresponding IST field in the TSS. This overrides the loading of a stack from an `rspX` field. This is useful for some interrupts that can occur at any time, like a machine check or NMI, or if you do sensitive work in a specific interrupt and don't want to leak data afterwards.
 - `io_bitmap_offset`: Works in tandem with the `IOPL` field in the flags register. If `IOPL` is less than the current privilege level, IO port access is not allowed (results in a #GP). Otherwise IO port accesses can allowed by setting a bit in a bitmap (cleared bits deny access). This field in the tss specifies where this bitmap is located in memory, as an offset from the base of the tss. If `IOPL` is zero, ring 0 can implicitly access all ports, and `io_bitmap_offset` will be ignored in all rings.
 
-With the exception of the IO permissions bitmap, the TSS is all about switching stacks for interrupts. It's worth nothing that if an interrupt doesn't use an IST, and occurs while the cpu is in ring 0, no stack switch will occur. Remember that the `rspX` stacks only used when the cpu switches from a less privileged mode. Setting the IST field in an IDT entry will always force a stack switch, if that's needed. 
+With the exception of the IO permissions bitmap, the TSS is all about switching stacks for interrupts. It's worth noting that if an interrupt doesn't use an IST, and occurs while the cpu is in ring 0, no stack switch will occur. Remember that the `rspX` stacks only used when the cpu switches from a less privileged mode. Setting the IST field in an IDT entry will always force a stack switch, if that's needed. 
 
 ### Loading a TSS
 Loading a TSS has three major steps. First we need to create an instance of the above structure in memory somewhere. Second we'll need to create a new GDT descriptor that points to our TSS structure. Third we'll use that GDT descriptor to load our TSS into the task register (`TR`).
@@ -51,15 +51,15 @@ The layout of the TSS system descriptor is broken down below in the following ta
 
 | Bits  | Should Be Set To | Description                         |
 |-------|------------------|-------------------------------------|
-| 15:0  | 0xFFFF           | Represents the limit field for this segment. Ignored in long mode, but best set to max value in case you support compatability mode in the future.
+| 15:0  | 0xFFFF           | Represents the limit field for this segment. Ignored in long mode, but best set to max value in case you support compatibility mode in the future. |
 | 31:16 | TSS address bits 15:0 | Contains the lowest 16 bits of the tss address. |
 | 39:32 | TSS address bits 23:16 | Contains the next 8 bits of the tss address. |
 | 47:40 | 0b10001001 | Sets the type of GDT descriptor, this magic value indicates it's a valid TSS descriptor. If you're curious as to how this value was created, see the manual or the section on the GDT. |
-| 55:48 | 0b10000 | Additional fields for the TSS entry. This bit means the TSS is `available`, it's generally unused in long mode, but has some side effects if you enable compatability mode. |
+| 55:48 | 0b10000 | Additional fields for the TSS entry. This bit means the TSS is `available`, it's generally unused in long mode, but has some side effects if you enable compatibility mode. |
 | 63:56 | TSS address bits 31:24 | Contains the next 8 bits of the tss address. |
 | 95:64 | TSS address bits 63:32 | Contains the upper 32 bits of the tss address. |
 
-Now for the third step, we need to load the task register. This is similar to the segment registers, in that is has visible and invisible parts. It's loaded in a similar manner, although we use a dedicated instruction instead of a simple `mov`.
+Now for the third step, we need to load the task register. This is similar to the segment registers, in that it has visible and invisible parts. It's loaded in a similar manner, although we use a dedicated instruction instead of a simple `mov`.
 
 The `ltr` instruction (load task register) takes the byte offset into the GDT we want to load from. This is the offset of the TSS descriptor we created before. For the example below, we'll assume this descriptor is at offset 0x28.
 
@@ -80,7 +80,7 @@ Now that we have a TSS, lets review what happens when the cpu is in user mode, a
 - Your interrupt handler runs on the new stack.
 
 ### The TSS and SMP
-Something to be aware of if you support multiple cores is that the TSS has no way of ensuring exclusivity. Meaning is core 0 loads the `rsp0` stack and begins to use it for an interrupt, and core 1 gets an interrupt it will also happily load `rsp0` from the same TSS. This ultimately leads to much hair pulling and confusing stack corruption bugs.
+Something to be aware of if you support multiple cores is that the TSS has no way of ensuring exclusivity. Meaning if core 0 loads the `rsp0` stack and begins to use it for an interrupt, and core 1 gets an interrupt it will also happily load `rsp0` from the same TSS. This ultimately leads to much hair pulling and confusing stack corruption bugs.
 
 The easiest way to handle this is to have a separate TSS per core. Now you can ensure that each core only accesses it's own TSS and the stacks within. However we've created a new problem here: Each TSS needs it's own entry in the GDT to be loaded, and we can't know how many cores (and TSSs) we'll need ahead of time.
 
