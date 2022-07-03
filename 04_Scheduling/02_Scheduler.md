@@ -24,7 +24,7 @@ But before going explaining its the workflow let's answer few questions:
 
 The basic idea behind ever scheduler is more or less the following: 
 
-* The first thing that the scheduler function does when called is checking if the task should be preempted or not, that depends design decision, in the most simple scenario we switch task at every scheduler tick (but there can be more complex designs). If the task doesn't need to be switched yet, it exits here, otherwise it takes the current context (we have already seen this concept in the Interrupt handling chapter) and save it to the current executing task, then proceed to the next step.
+* The first thing that the scheduler function does when called is checking if the task should be preempted or not, that depends on design decision, in the most simple scenario we switch task at every scheduler tick (but there can be more complex designs). If the task doesn't need to be switched yet, it exits here, otherwise it takes the current context (we have already seen this concept in the Interrupt handling chapter) and save it to the current executing task, then proceed to the next step.
 * After having saved the context of the current task, it needs to pick up the next one from the list. It will start to pick tasks one after each other searching for the first one that is  *ready* to execute  (there are probably more than one ready to execute and which one is taken depends totally on the algorithm implemented. The selected one will be the new current task.
     * During the search of the READY task, it could be useful (but not necessary, is  up to the design choices again) to do some housekeeping on the non-reaady tasks. For example: has the current task finished it's execution? Can it be removed from the list? Does the tasks in WAIT State still needs to wait? 
 * Once the new task is loaded the scheduler return the new context to the operating system.
@@ -77,7 +77,7 @@ typedef enum {
 } status_t;
 ```
 
-For the `cpu_status_t` this is more tricky, it represent the current execution context of the cpu, a detail of what a context is can be found on the "Interrupt Descriptor Table" chapter **is that a good idea? or it is too much in detail for the notes implementing the cpu_status_t structure? Should it be explained here, or in the IDT chapter mentioning that it will become useful later?**
+As for `cpu_status_t`, it'll store the current context of the thread. What's a context? It needs to be able to store enough state to allow us to stop the thread, do other stuff on the cpu, and then start running the thread again. All without the thread knowing it was stopped. It's essentially a snapshot of the parts of the cpu that the running thread can see. To be more concrete about it we'll be storing all of the general purpose registers (on x86 that's rax - r15), the current stack and on x86 we'll need an iret frame, since we'll be running inside of an interrupt handler. This is starting to sound very familiar! This is exactly the structure we described in the interrupts chapter. Setting up our context in this way allows us to reuse the same structure, and since on x86 we store all those details on the stack, we just need to store a pointer to the top of the stack.
 
 Next thing that he scheduler need is to keep track of what is the current executing task, so this is implementation specific, for example if we are using a linked list it will probably be a pointer to the `task_t` strucutre, but in our case, since we are using an array we can use a simple integer to point to the current executing task.
 
@@ -152,7 +152,19 @@ void schedule() {
 }
 ``` 
 
+Now our schedule function every time that is called will pick the next not null item (task) in the array. But there is a problem: if there are no tasks in the array, the while loop will never end, and so the interrupt handler will never exit, leaving the kernel stuck there. And that's true, but we will see how to solve this problem later in the chapter, for now let's just pretend that this case never happen, and continue with our implementation.
 
+### Saving the task context 
+
+In the previous section we have seen how to iterate throught tasks, but that basically just iterating through items of a list, so for now our scheduler is still doing nothing. Once the next task to be executed has been selected selected, the first thing that the scheduler has to do is stop the current task, and save its current status. If you have implemented the interrupt handler following this guide you should already have the context being passed to the it, so now we need to change the signature of our schedule function, adding a new parameter: 
+
+```c
+void schedule(cpu_status_t* context);
+````
+
+### this part will be explaine during the scontext switch 
+
+The other issue is that if there are no tasks left on the array, this loop will runn enldlessy, in theory, in practice it will most likely run into garbage as soon as it return from the interrupt. The details about this problem will be more clear later, but to fix it we just need to make sure that we don't run out of tasks, and the easiest way to do it, is have an idle
 
 
 ### Next stuff to be completed...
