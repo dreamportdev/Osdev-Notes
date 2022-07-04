@@ -51,7 +51,7 @@ Constructing a segment selector is done like so:
 ```c
 bool is_ldt_selector; //whether this selector uses the GDT (0), or the LDT (1)
 uint8_t target_cpu_ring; //ring 0 = full access (kernel space), rings 1/2 = less access, ring 3 = least access (user space).
-uint16_t selector = byte_offset_of_descriptor | (target_cpu_pro & 0b11) | ((target_cpu_ring & 0b1) << 2)
+uint16_t selector = byte_offset_of_descriptor | (target_cpu_ring & 0b11) | ((is_ldt_selector & 0b1) << 2)
 ```
 
 It's worth noting that in the early stages of your kernel you only be using the GDT and kernel selectors, meaning these fields are zero. Therefore this calculation is not necessary, you can simply use the byte offset into the GDT as the selector.
