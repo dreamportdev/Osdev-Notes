@@ -154,13 +154,63 @@ void schedule() {
 
 Now our schedule function every time that is called will pick the next not null item (task) in the array. But there is a problem: if there are no tasks in the array, the while loop will never end, and so the interrupt handler will never exit, leaving the kernel stuck there. And that's true, but we will see how to solve this problem later in the chapter, for now let's just pretend that this case never happen, and continue with our implementation.
 
-### Saving the task context 
+### Saving and restoring the task context 
 
-In the previous section we have seen how to iterate throught tasks, but that basically just iterating through items of a list, so for now our scheduler is still doing nothing. Once the next task to be executed has been selected selected, the first thing that the scheduler has to do is stop the current task, and save its current status. If you have implemented the interrupt handler following this guide you should already have the context being passed to the it, so now we need to change the signature of our schedule function, adding a new parameter: 
+In the previous section we have seen how to iterate throught tasks, but that basically was just iterating through items of a list, not very useful. 
+
+#### Saving Context
+
+Once the next task to be executed has been selected, the first thing that the scheduler has to do is stop the current task, and save its current status. If you have implemented the interrupt handler following this guide you should already have the context being passed to, what we want is to pass down the context to the schedule function, but first  we need to change its signature of our schedule function, adding a new parameter: 
 
 ```c
 void schedule(cpu_status_t* context);
 ````
+
+And now add the context parameter where the function is called. Now with this new parameter we have a snapshot of the cpu just before the interrupt was fired, and what was it was doing just before it? Running our task, so what we just need to do is update the context variable of the current tas just before picking the next: 
+
+```c
+void schedule(cpu_status_t* context) {
+    tasks_list[current_executing_task_idx].context = context
+    current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+    while(tasks_list[current_executing_task_idx] == NULL) {        
+        current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+    }
+}
+
+```
+
+that's it, this is how how we save the status of the current executing task. 
+
+#### Restoring context
+
+After the previous task status has been saved and the next task has been selected we are now ready to make the switch. How to do it is pretty straightforward, but let's have a quick recap on how we are handling interrupts: 
+
+1. The first thing is that whenever an interrupt is fired an asm code snippet is called saves the current cpu registers status, on the stack, 
+2. Then once the status is saved, it place the current stack pointer (`rsp`) on the `rdi` register (it is the first c function parameter for x86_64 architecture) and call the interrupt handler. This parameter is our `context` variable (that is passed also to the scheduler)
+3. Then our interrupt handler function (unless we are writing an os entirely in asm, this usually is on our language of choice, in our case C)  does whatever it needs to serve the interrupt  and  the context variable. Returning a variable, according to the ABI calling convention is corresponding to placing the returning value to the `rax` register
+4. Now we are back in the asm code where `rax` value is placed on the `rsp` register, and then the context restored...
+5. and everyone lived happily after (until the next interrupt will happens...) 
+
+So what is happening is that we pass the context as a parameter to the interrupt handler routine, and when we leave it we return it and use the returned value to restore the cpu status just before resuming the normal execution. 
+
+And the context being passed is the stack pointer, now the whole idea behind the interrupt handling routine is that we save the context on the stack before starting the interrupt handler, and restore it once the interrupt is done. So what happens if instead of restoring the context from the same stack pointer, we restore it from a different one? 
+
+What will happens is that it resumes the execution of whatever was stored in that other context (if it was a valid one), hence we have a *task switch*. 
+
+And to implement this change we just need to make two tiny adjustments to our scheduler function: change its return type from `void` to `cpu_status_t*` and return the newly loaded context to the caller: 
+
+```c
+cpu_status_t* schedule(cpu_status_t* context) {
+    tasks_list[current_executing_task_idx].context = context
+    current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+    while(tasks_list[current_executing_task_idx] == NULL) {        
+        current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+    }
+    return tasks_list[current_executing_task_idx].context;
+}
+```
+
+And now our scheduler is capable of switching tasks. /* should i mention that this should work only if the rsp is changed with the new stack? */
 
 ### this part will be explaine during the scontext switch 
 
