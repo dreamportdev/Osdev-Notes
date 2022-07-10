@@ -269,28 +269,12 @@ void task_wrapper( void (*_task_entry_point)(void *), void *arg) {
 
 The task_wrapper function will be the one that will be placed on the rip field. And for the function parameters they will be placed in the stack. But we will get back to it with more detail in the next chapter. 
 
+## Wrapping up
 
+This chapter has covered nearly everything needed to get the context switch done, there are few gaps about task handling and creation that will be covered in the next chapter. As already mentioned we tried to keep the algorithm as simple as possible to focus on the concept of task switching, but from here there are many improvements that can be implemented on the scheduler, few examples: 
 
-### this part will be explaine during the scontext switch 
-
-The other issue is that if there are no tasks left on the array, this loop will runn enldlessy, in theory, in practice it will most likely run into garbage as soon as it return from the interrupt. The details about this problem will be more clear later, but to fix it we just need to make sure that we don't run out of tasks, and the easiest way to do it, is have an idle
-
-
-### Next stuff to be completed...
-
-Now if the `current_thread` har reached it's allocated time, it's time to pick the next one. But before doing that we need to save make sure that next time `current_thread` will be picked up, it will resume from the exact point it is being interrupted. This is achieved by saving the current execution context. And what is it? Well we already encountered that, in the [interrupt handling](../InterruptHandling.md) chapter, it is the status of the cpu in that exact istant, all the registers value (the instruction pointer, the stack values, the general purpose registers etc). And this gives us a big hint on how we are going to switch between threads: we will avail of our interrupt handler (*Authors note: of course this is not the only way to switch between task, but this is in our opinion one of the easiest to implement).*)
-
-Let's recall quickly what our interrupt handling routine does: 
-
-* It first save the context pushing all registers on the stack
-* Then it calls the interrupt handling function, that serves the interrupt
-* It restore the context from the stack
-* Return (if possible) the control to the kernel
-
-This means that we have the current execution status saved already on the stack, so we just need to find a way to save it, but before doing that we need to make sure that the scheduler knows what is the starting address of the saved registers, so we need to make sure that the `rsp` address is passed to the interrupt handler routine. If it was not done before, we need to make few changes to our interrupt handling:
-
-* After saving the context we need to pass the current value of rsp to the interrupt handling function, this depends on the architecture used, in our case if we are using x86-64 architecture the first function parameter is placed on the `rdi` register.
-* We need to make sure that the interrupt routine will return the context (returning the updated/new rsp value)
-* This is optional but it can make the code more reaadable, create a data structure that represent the context.
+* Replace the array with another type of list possibly dynamic
+* Add more task statuses (we will add at least another one in the next chapter)
+* Add some kind of priority mechanism or differentiate tasks time running on the cpu. 
 
 
