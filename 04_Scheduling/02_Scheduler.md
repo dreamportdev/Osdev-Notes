@@ -160,13 +160,13 @@ In the previous section we have seen how to iterate throught tasks, but that bas
 
 #### Saving Context
 
-Once the next task to be executed has been selected, the first thing that the scheduler has to do is stop the current task, and save its current status. If you have implemented the interrupt handler following this guide you should already have the context being passed to, what we want is to pass down the context to the schedule function, but first  we need to change its signature of our schedule function, adding a new parameter: 
+Once the next task to be executed has been selected, the first thing that the scheduler has to do is stop the current task, and save its current status. If you have implemented the interrupt handler following this guide you should already have the context being passed to, what we want is to pass down the context to the schedule function, but first  we need to change its signature, adding a new parameter: 
 
 ```c
 void schedule(cpu_status_t* context);
 ````
 
-And now add the context parameter where the function is called. Now with this new parameter we have a snapshot of the cpu just before the interrupt was fired, and what was it was doing just before it? Running our task, so what we just need to do is update the context variable of the current tas just before picking the next: 
+And now add the context parameter where the function is called. Now with this new parameter we have a snapshot of the cpu just before the interrupt was fired, and what was it was doing just before it? Running our task, so what we just need to do is update the context variable of the current task just before picking the next: 
 
 ```c
 void schedule(cpu_status_t* context) {
@@ -183,11 +183,11 @@ that's it, this is how how we save the status of the current executing task.
 
 #### Restoring context
 
-After the previous task status has been saved and the next task has been selected we are now ready to make the switch. How to do it is pretty straightforward, but let's have a quick recap on how we are handling interrupts: 
+After the previous task has been saved and the next one has been selected we are now ready to make the switch. How to do it is pretty straightforward, but let's have a quick recap on how we are handling interrupts: 
 
 1. The first thing is that whenever an interrupt is fired an asm code snippet is called saves the current cpu registers status, on the stack, 
 2. Then once the status is saved, it place the current stack pointer (`rsp`) on the `rdi` register (it is the first c function parameter for x86_64 architecture) and call the interrupt handler. This parameter is our `context` variable (that is passed also to the scheduler)
-3. Then our interrupt handler function (unless we are writing an os entirely in asm, this usually is on our language of choice, in our case C)  does whatever it needs to serve the interrupt  and  the context variable. Returning a variable, according to the ABI calling convention is corresponding to placing the returning value to the `rax` register
+3. Then our interrupt handler function (unless we are writing an os entirely in asm, this usually is on our language of choice, in our case C)  does whatever it needs to serve the interrupt and return the context variable. Returning a variable, according to the ABI calling convention is corresponding to placing the returning value to the `rax` register
 4. Now we are back in the asm code where `rax` value is placed on the `rsp` register, and then the context restored...
 5. and everyone lived happily after (until the next interrupt will happens...) 
 
@@ -195,7 +195,7 @@ So what is happening is that we pass the context as a parameter to the interrupt
 
 And the context being passed is the stack pointer, now the whole idea behind the interrupt handling routine is that we save the context on the stack before starting the interrupt handler, and restore it once the interrupt is done. So what happens if instead of restoring the context from the same stack pointer, we restore it from a different one? 
 
-What will happens is that it resumes the execution of whatever was stored in that other context (if it was a valid one), hence we have a *task switch*. 
+What will happens is that it resumes the execution of whatever was stored on that other context (if it was a valid one), hence we have a *task switch*. 
 
 And to implement this change we just need to make two tiny adjustments to our scheduler function: change its return type from `void` to `cpu_status_t*` and return the newly loaded context to the caller: 
 
@@ -210,7 +210,66 @@ cpu_status_t* schedule(cpu_status_t* context) {
 }
 ```
 
-And now our scheduler is capable of switching tasks. /* should i mention that this should work only if the rsp is changed with the new stack? */
+And now our scheduler is capable of switching tasks (if you have remembered to replace `rsp` with the value returned from the interrupt handler in `rax`).
+
+### The task status
+
+In the paragraphs above we covered mostly everything that is needed to make the task switching possible, in fact it is already able to switch between them. But there are some  problem and limitations, that we should consider. Let's see what they are. 
+
+The high level definition of a task is of a program or portion of prorgam that is being executed by a cpu, but usually programs have a lifecycle, they start, run for a while and sooner or later they will terminate in many cases (of course this is not generally true there are many programs that are supposed to run indefenetely). 
+
+This means that sooner or later one or more of our tasks can finish its work and would like to terminate, but with the actual scheduler what will more likely happen is that once the program has terminated it will remanins in the queue and next time it will be selected for execution it starts to run into garbage causing unpredicatble behaviour. So our scheduler needs to know if a task is terminated or not. 
+
+And consider also another scenario: imagine we have a process that needs to wait for output from a slow i/o device, that will take few seconds to run, now with the current scheduler what will happen is that the task will be granted execution time hundred of times while it is actually doing nothing, wasting cpu time that could be used by other processes. Again if the scheduler could know that the task is waiting for an action to be completed, we could make it more efficient probably putting the task to sleep. 
+
+This is where the status variable comes handy, by defining several states we can let the scheduler know what is the current status of the task so it can take the appropriate action. This is another area where the number of states totally depend on design decision and the scheduler, there is no fixed number or best choice. So again it's up to us. 
+
+In this section we will start with only 3 states, the ones defined above: READY, RUN, DEAD (we will cover the sleeping scenario in the next chapter). The name is pretty self explanatory:
+
+* READY is the status of a task that is in the queue waiting for it's turn and able to be executed
+* RUNNING is the status of a task being executed by the cpu 
+* DEAD is the status of a task that has terminated (or being killed) and waits to be removed from the queue. 
+
+So our algorithm before executing a task will check its status and take the appropriate action: 
+
+* If the task that has been picked has the status as READY it means that it can be executed so we can select it and go ahead
+* If the task that has been picked has the status as DEAD it has to be removed from the array, in our case we need to set the status as null. 
+
+And of course we need to update the status of the current executing task from RUNNING to READY or DEAD depending on the case. So the updated code will look similar to the following:  
+
+```c
+cpu_status_t* schedule(cpu_status_t* context) {
+    tasks_list[current_executing_task_idx].context = context
+    tasks_list[current_executing_task_idx].status = READY;
+    current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+    while (tasks_list[current_executing_task_idx] == NULL) {        
+        current_executing_task_idx = (current_executing_task_idx + 1) % MAX_TASKS;
+        if (tasks_list[current_executing_task_idx] != NULL && tasks_list[current_executing_task_idx].status == DEAD) {
+            tasks_list[current_executing_task_idx] = NULL;
+            continue;
+        }
+    }
+    return tasks_list[current_executing_task_idx].context;
+}
+```
+
+Now the question is: how we mark the task as DEAD. This will be explained in detail in the Tasks and Threads chapter, but let's introduce it in this paragraph. When we create a task we also pass a function pointer that will be the entry point for it, and in theory it should be placed in the `rip` field of the frame, the only problem is that in this way we have no way to update the task status and prevent it to run into garbage. The trick here is to wrap the entry point into another function, that will do just two things: 
+
+* First call the function pointer
+* And then call a suicide function. 
+
+The function will look like this: 
+
+```c
+void task_wrapper( void (*_task_entry_point)(void *), void *arg) {
+    _task_entry_point(arg);
+    task_suicide();
+}
+``` 
+
+The task_wrapper function will be the one that will be placed on the rip field. And for the function parameters they will be placed in the stack. But we will get back to it with more detail in the next chapter. 
+
+
 
 ### this part will be explaine during the scontext switch 
 
