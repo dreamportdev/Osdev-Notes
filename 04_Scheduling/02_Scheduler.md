@@ -22,7 +22,7 @@ But before going explaining its the workflow let's answer few questions:
 * Are there cases where the task is not finished yet, but it is unavailable to run at the moment? Yes, and it will be discussed later, and the scheduler must be aware of that.  
 
 
-The basic idea behind ever scheduler is more or less the following: 
+The basic idea behind every scheduler is more or less the following: 
 
 * The first thing that the scheduler function does when called is checking if the task should be preempted or not, that depends on design decision, in the most simple scenario we switch task at every scheduler tick (but there can be more complex designs). If the task doesn't need to be switched yet, it exits here, otherwise it takes the current context (we have already seen this concept in the Interrupt handling chapter) and save it to the current executing task, then proceed to the next step.
 * After having saved the context of the current task, it needs to pick up the next one from the list. It will start to pick tasks one after each other searching for the first one that is  *ready* to execute  (there are probably more than one ready to execute and which one is taken depends totally on the algorithm implemented. The selected one will be the new current task.
