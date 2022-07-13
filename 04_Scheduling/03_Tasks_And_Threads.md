@@ -1,10 +1,26 @@
-# Tasks and Threads
+# Processes and Threads
+
+## Definitions
+
+Even if in the previous chapter we briefly introduced the concept of process, here we are going to have a more detailed explanation and introduce a also the whreads concept. 
+
+* _Process_ - Even we introduced it in the previous chapter, let's give a more detailed definition for it. A _process_ (also known as thread, job) is a program in execution they are identified by a _Process Control Block_ (PCB) that holds it's definition. Part of the definition is design dependent, but all the informations needed when switching between tasks are stored there. 
+* _Threads_ - Threads are often referred as lightweight processes, they are part of the process, and contains portion of the program to run, they can be scheduled too, introducing the concept of parallelism (that we explain briefly later). An os that support multiple threads per process is called `Multithread`. A process in this scenario is composed of at least one thread. They share some information with the process, like virtual memory space, privilege level, memory heap, but in the same time each threads has it's own stack, it's own registers, instruction pointer, etc.
+
+Now as already said many times the design decisions will have an impact on how a process will be structured when developing a scheduler we can end up in one of the following scenarios:  
+
+* _Single task - Single thread_ Ok this is just basically a kernel without a scheduler i mentioned it only for completion of information, so it doesn't even classify as multi-tasking! 
+* _Single task - Multiple threads_ - Is not very useful, but in amateur osdev is the entry point toward real multi-tasking. This scenario is when we have a single virtual memory space, memory heap, and many threads running within it. 
+* _Multi task - single thread_ - Multi-threading is not really necessary we if we don't want to have parallelism within a program. In this case we have the PCB and a single thread that will be execuyting the program. 
+* _Multi task - Multiple threads_ - Similar to the above case, but in now a single process can have more than one threads running, each one running part of it concurrently (They can maybe run the same piece of code concurrently), this introduce the new feature of parallelism (and introduce also lot of new things that we need to take care). 
+
+In this chapter we are going to implement a *multi task, single thread* environment, but ready to become multi-thread with few adjustments. 
 
 ** THIS SECTION IS IN EARLY STAGES For now it will be more a set of bullet lists with things to be expaneded in the future ** 
 
-## Tasks
+## Processes
 
-### What are tasks
+### What are processes
 
 In a task usually there are the following information: 
 
@@ -28,27 +44,58 @@ While a thread should contains at minimum:
 
 ### Prerequisites 
 
-Even if technically not necessary, is better to have implemented a memory allocation mechanism, ideally both physical and virtual memory manager should be implemented, if we want to have full tasks/thread separation and protection. But in case we don't want to have memory separation and protection in place a physical memory manager can be enough.
+The list of prerequisites vary a lot depending on some design decision, but the following is a good set of features that we should have already implemented before starting to work on processes/threads creation and scheduling: 
 
-Technically we could also decide to implement a "kind of" multitasking without any memory allocator, but in this case we must use an array with a fixed size. So the Operating system will be limited to a certain number of concurrent task, and this memory will be always be unavailable to the os even when the tasks are dead.
+* We  should have already implemented a memory allocation mechanism, both physical and virtual memory manager (especially if we want to have full processes/thread separation and protection).
+* Interrupts must be configured and enabled.
+* At least one time ready to use
+
 
 ### Creating a thread
 
 When creating a thread we must first of all create it's execution frame (yeah even if not executed yet, it will need one).
 
-### Execution frame
+### Iret  frame
 
-One of the way to implement stack switching is replacing the current iret frame with a the one contained in the next thread. To do that a task need when created to build an ad-hoc frame that will not cause any crash. What it should contain? Well this is basically a copy of the stack frame during the handling of an interrupt routine. 
+One of the way to implement stack switching is replacing the current iret frame with the one contained in the next thread. To do that a task needs when created to build an ad-hoc frame that will not cause any crash. What it should contain? Well this is basically a copy of the stack frame during the handling of an interrupt routine, in our case is represented by the `cpu_status_t` structure. When a task is newly created all the registers we can safely assume that can be initalized to Zero. The most important information needed is what will be the value of the `instruction pointer`, that is the entry point of the task, and of course the pointer to the function we want to start. This value will be stored in the `rip` field of the structure.
+
+Depending on design decisions, we could want also to pass one or more arguments to the function being called.
 
 ### What a task should contain ?
 
+We already started to see what a task should contain at minimum, and we start from there below the data structure we used in the scheduler chapter: 
+
+```c
+typedef struct {
+    status_t task_status;
+    cpu_status_t context;
+} task_t;
+
+```
+
+As already mentioned the context is the iret frame that was explained in the (interrupts chapter)[../InterruptHandling.md], and the status so far is an enum containing three states: READY, RUNNING and DEAD. And this is already enough to scheduler our processes, but this implementaion is very limited. For example, let's imagine that we have a program that needs to depend on other task output, and we need to refer to it somehow, currently there is no way to make it, because there is no actual distinction between them. A quick fix for it is to add a unique identifier for each task. The identifier is just a `size_t` variable that will be incremented for every task created. 
+
+Now imagine tha we want to implement a `ps` like command on our os, currently what it will be able to print is just it's id, and few extra information but mostly addresses, that make hard to identify what that task is actually running, so another nice addition (even though not necessary) can be a name field, so whenever we create a task we also give it a name (but this field require a `strcpy()` like function implemented, let's assume we have one, our new task structure will look like: 
+
+```c 
+//This will probably go in a header
+#define MAX_NAME_LEN 32
+
+typedef struct {
+    size_t task_id;
+
+    char name[MAX_NAME_LEN]
+
+    status_t task_status;
+    cpu_status_t context;
+} task_t;
+``` 
+
 So what are the information that we should store in a task? That depends on the design choices, because if we are implementing a multitask/single thread os it will need more information, but if we are going to implement a multi-task/multi-threaded OS some of the information will be stored in the Thread structure. So let's start with the minimum set of information that we need to save into a task: 
 
-* First of all a name, all tasks have a task name, most of the time is the excuatble name, sometime something different
-* Every task will have their own task id, this value usually is used by the scheduler to pick up the next task to execute or and in all the scenarios where an access to the task is needed (for example interprocess comunication)
 * A reference to it's own virtual addressing space, that is a pointer to a PML4 table (this only if we are going to implement an os where every task has it's own address space)
 
-### Context Switching
+v### Context Switching
 
 * Usually context switch is done during an IRQ (when it depends on design decision. 
 
@@ -107,9 +154,9 @@ Now when a function is  called, the cpu put the next instruction on the stack. A
 * The schedule function when pick a task that has the status set to DEAD knows that it doesn´t have to execute it, and will call the routine to free the thread resources. 
 * If the thread is the last in a task, the task should be ready to be deleted too. So in this case we need to change the status to the task too. 
  
-## Switching tasks/thread
+## Switching processes/thread
 
-So who is responsible of switching tasks? The scheduler, that every time is called it checks if the current task needs to be replaced with a new one, and eventually pick the "best" next task candidate. How to decide who is the next depends on the scheduling algorithm implemented and the design choice of the operating system (there are many scheduling algorithm). 
+So who is responsible of switching processes? The scheduler, that every time is called it checks if the current task needs to be replaced with a new one, and eventually pick the "best" next task candidate. How to decide who is the next depends on the scheduling algorithm implemented and the design choice of the operating system (there are many scheduling algorithm). 
 
 In this guide we will show one of the simplest algorithm available, the "round robin" algorithm. The idea behind it is very basic:
 
