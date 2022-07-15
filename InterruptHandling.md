@@ -36,7 +36,7 @@ In order for us to be able to handle interrupts, we're going to need to create a
 
 ### Interrupt Descriptors
 
-The protected mode IDT descriptors have a different format to the long mode versions. We're focusing on long mode, so they're what's described below. The structure of an interrupt descriptor is as follows:
+The protected mode IDT descriptors have a different format to their long mode counterparts. Since we're focusing on long mode, they are what's described below. The structure of an interrupt descriptor is as follows:
 
 ```c
 struct interrupt_descriptor
@@ -56,7 +56,7 @@ The three `address_` fields represent the 64-bit address of our handler function
 
 The selector field is the *code selector* the cpu will load into `%cs` before running the interrupt handler. This should be your kernel code selector. Since your kernel code selector should be running in ring 0, there is no need to set the RPL field. This selector can just be the byte offset into the GDT you want to use. 
 
-The `ist` field can safely be left at zero to disable the IST mechanism. For the curious, this is used in combination with the TSS to force the cpu to switch stacks when handling a specific interrupt vector. This is covered later on when we go to userspace. 
+The `ist` field can safely be left at zero to disable the IST mechanism. For the curious, this is used in combination with the TSS to force the cpu to switch stacks when handling a specific interrupt vector. This feature can be useful for certain edge cases like handling NMIs. ISTs and the TSS are covered later on when we go to userspace. 
 
 The `flags` field is a little more complex, and is actually a bitfield. It's format is as follows:
 
@@ -72,7 +72,7 @@ Let's look closer at the type field. We have two options here, with only one dif
 - Interrupt gate: `0b1110`.
 - Trap gate: `0b1111`.
 
-The DPL field is used to control which cpu rings can trigger this vector with a software interrupt. On x86 there are four protection rings (0 being the most privileged, 3 the least). Setting DPL = 0 means that only ring 0 can issue a software interrupt for this vector, if a program in another ring tries to do this it will instead trigger a *general protection fault*. This is expanded on more in the userspace chapter, and should be left to zero for now.
+The DPL field is used to control which cpu rings can trigger this vector with a software interrupt. On x86 there are four protection rings (0 being the most privileged, 3 the least). Setting DPL = 0 means that only ring 0 can issue a software interrupt for this vector, if a program in another ring tries to do this it will instead trigger a *general protection fault*. For now we have no use for software interrupts, so we'll set this to 0 to only allow ring 0 to trigger them. 
 
 That's a lot writing, but in practice it won't be that complex. Let's create a function to populate a single IDT entry for us. In this example we'll assume your kernel code selector is 0x8, but yours may not be.
 
@@ -96,7 +96,7 @@ void set_idt_entry(uint8_t vector, void* handler, uint8_t dpl)
 }
 ```
 
-In the above example you we just used an array for our IDT. You can create your own type to handle that if you want, or you can leave it bare like we did.
+In the above example we just used an array of descriptors for our IDT, because that's really all it is! However if you prefer, you can create your own type that represents the array.
 
 ### Loading an IDT
 
@@ -112,6 +112,8 @@ struct idtr
 
 Again, note the use of the packed attribute. In long mode the limit field should be set to 0xFFF (16 bytes per descriptor * 256 descriptors, and substract 1 because that's how this is encoded). The `base` field needs to contain the *logical address* of the idt. This is usually the virtual address, but if you have re-enabled segmentation in long mode (some cpus allow this), this address ignores segmentation.
 
+*Authors Note: The reason for substracting one from the size of the idt is interesting. Loading an IDT with zero entries would effectively be pointless, as there would be nothing there to handle interrupts, and so no point in having loaded it in the first place. Since the size of 1 is useless, the length field is encoded as one less than the actual length. This has the benefit of reducing the 12-bit value of 4096 (for a full IDT), to a smaller 11-bit value of 4096. One less bit to store!*
+
 ```c
 void load_idt(void* idt_addr)
 {
@@ -122,9 +124,9 @@ void load_idt(void* idt_addr)
 }
 ```
 
-In this example we stored `idtr` on the stack, which gets cleaned up when the function returns. This is okay because the IDTR register is like a segment register in that it caches whatever value was loaded into it. So it's okay that our idtr structure is no present, as the register will still have it. The actual IDT can't be on the stack, as the cpu does not cache that.
+In this example we stored `idtr` on the stack, which gets cleaned up when the function returns. This is okay because the IDTR register is like a segment register in that it caches whatever value was loaded into it, similar to the GDTR. So it's okay that our idtr structure is no longer present after the function returns, as the register will have a copy of the data our structure contained. Having said that, the actual IDT can't be on the stack, as the cpu does not cache that.
 
-At this point you should be able to install an interrupt handler into your IDT, load the IDT and set the interrupts flag. Your kernel will likely crash as soon as an interrupt is triggered though, as there are some special things we need to perform inside of an interrupt handler.
+At this point you should be able to install an interrupt handler into your IDT, load the IDT and set the interrupts flag. Your kernel will likely crash as soon as an interrupt is triggered though, as there are some special things we need to perform inside of the interrupt handler before it can finish.
 
 ## Interrupt Handler Stub
 
@@ -132,7 +134,9 @@ Since an interrupt handler uses the same general purpose registers as the code t
 
 There are a number of ways we could go about something like this, we're going to use some assembly (not too much!) as it gives us the fine control over the cpu we need. There are other ways, like the infamous `__attribute__((interrupt))`, but these have their own issues and limitations. This small bit of assembly code will allow us to add other things as we go.
 
-There are a number of places you could store the state of the general purpose registers registers, we're going to use the stack as it's extremely simple to implement. In protected mode we have the `pusha`/`popa` instructions for this, but they're not present in long mode so we have to do this ourselves.
+*Authors Note: Using `__attribute__((interrupt))` may seem tempting with how simple it is, and it lets you avoid assembly! This is easy mistake to make (one I made my myself early on). This method is best avoided as covers the simple case of saving all the general purpose registers, but does nothing else. Later on you will want to do other things inside your interrupt stub, and thus have to abandon the attribute and write your own stub anyway. Better to get it right from the beginning. - DT.*
+
+There are a number of places you could store the state of the general purpose registers, we're going to use the stack as it's extremely simple to implement. In protected mode we have the `pusha`/`popa` instructions for this, but they're not present in long mode so we have to do this ourselves.
 
 There is also one other thing: when an interrupt is served the cpu will store some things on the stack, so that when the handler is done we can return to the previous code. The cpu pushes the following on to the stack (in this order):
 
@@ -143,7 +147,9 @@ There is also one other thing: when an interrupt is served the cpu will store so
 - `%rip`: The previous instruction pointer.
 
 Optionally, for some vectors the cpu will push a 64-bit error code (see the table below for specifics).
-This structure is known as an *iret frame*, because to return from an interrupt we use the `iret` instruction, which pops those five values from the stack. Hopefully the flow of things is clear at this point: the cpu serves the interrupt, pushes those five values onto the stack. Our handler function runs, and then executes the `iret` instruction to pop the previously pushed values off the stack, and return to the interrupted code.
+This structure is known as an *iret frame*, because to return from an interrupt we use the `iret` instruction, which pops those five values from the stack. 
+
+Hopefully the flow of things is clear at this point: the cpu serves the interrupt, pushes those five values onto the stack. Our handler function runs, and then executes the `iret` instruction to pop the previously pushed values off the stack, and return to the interrupted code.
 
 ### An Example Stub
 
@@ -179,7 +185,7 @@ iret
 
 You'll notice we added 16 bytes to the stack before the `iret`. This is because there will be an error code (real or dummy) and the vector number that we need to remove, so that the iret frame is at the top of the stack. If we don't do this, `iret` will use the wrong data and likely trigger a general protection fault.
 
-As for the general purpose registers, the other they're pushed doesn't really matter, as long as they're popped in reverse. You can skip storing `%rsp`, as it's value is already preserved in the `iret` frame. That's the generic part of our interrupt stub, now we just need the handlers for each vector. They're very simple!
+As for the general purpose registers, the order they're pushed doesn't really matter, as long as they're popped in reverse. You can skip storing `%rsp`, as it's value is already preserved in the `iret` frame. That's the generic part of our interrupt stub, now we just need the handlers for each vector. They're very simple!
 
 We're also going to align each handler's function to 16 bytes, as this will allow us to easily install all 256 handlers using a loop, instead of installing them individually.
 
@@ -199,7 +205,7 @@ vector_1_handler:
 pushq $0
 //vector number
 pushq $1
-jmp interrupty_stub
+jmp interrupt_stub
 
 [ ... Skipping ahead ... ]
 
@@ -211,7 +217,7 @@ pushq $13
 jmp interrupt_stub
 ```
 
-There's still a lot of repetition, so you could take advantage of your assemblers macro features to automate that down into a few lines. That's beyond the scope of this chapter though.
+There's still a lot of repetition, so you could take advantage of your assembler's macro features to automate that down into a few lines. That's beyond the scope of this chapter though.
 Because of the 16-byte alignment, we know that handler number `xyz` is offset by `xyz * 16` bytes from the first handler. 
 
 ```c
@@ -223,7 +229,7 @@ for (size_t i = 0; i < 256; i++)
 
 ### Sending EOI
 
-With that done, we can now enter and return from interrupt handlers correctly! You should keep in mind that this is handling interrupts with the cpu. The cpu usually does not send interrupts to itself, it receives them from an external device like the local APIC. APICs are discussed in their own chapter, but you will need to tell the local APIC that you haven't handled the latest interrupt. This is called sending the EOI (End Of Interrupt) signal.
+With that done, we can now enter and return from interrupt handlers correctly! You should keep in mind that this is just handling interrupts from the cpu's perspective. The cpu usually does not send interrupts to itself, it receives them from an external device like the local APIC. APICs are discussed in their own chapter, but you will need to tell the local APIC that you have handled the latest interrupt. This is called sending the EOI (End Of Interrupt) signal.
 
 You can send the EOI at any point inside the interrupt handler, since even if the local APIC tries to send another interrupt, the cpu won't serve it until the interrupts flag is cleared. Remember that the interrupt gate type we used for our descriptors? That means the cpu cleared the interrupts flag when serving this interrupt.
 
@@ -326,7 +332,7 @@ That's it! One thing to note is that whatever you return from `interrupt_dispatc
 
 ### Reserved Vectors
 
-There's some one piece of housekeeping to take care of! On x86 there first 32 interrupt vectors are reserved. These are used to signal certain conditions within the cpu, and these are well documented within the Intel/AMD manuals. A brief summary of them is given below.
+There's one piece of housekeeping to take care of! On x86 there first 32 interrupt vectors are reserved. These are used to signal certain conditions within the cpu, and these are well documented within the Intel/AMD manuals. A brief summary of them is given below.
 
 |  Vector Number | Shorthand | Description                           | Has Error Code |
 |----------------|-----------|---------------------------------------|----------------|
@@ -355,8 +361,8 @@ There's some one piece of housekeeping to take care of! On x86 there first 32 in
 While some of these vectors are unused, they are still reserved and might be used in the future. So consider using them yourself as an error. Most of these are fairly rare occurances, however we will quickly explain a few of the common ones:
 
 - Page Fault: Easily the most common one to run into. It means there was an issue with translating a virtual address into a physical one. This does push an error code which describes the memory access that triggered the page fault. Note the error describes what was being attempted, not what caused translation to fail. The `%cr2` register will also contain the virtual address that was being translated. 
-- General Protection Fault: A GP fault can come from a large number of places, although it's generally from an instruction dealing with the segment registers in some way. This includes `iret` (it modifies cs/ss), and others like `lidt`/`ltr`. It also pushes an error code, which is described below.
-- Double Fault: This means something has gone horribly wrong. Commonly this occurs because the cpu could not call the GP fault handler, but it can be triggered by hardware conditions too. This should considered your last chance to clean up and save any state. If a double fault is not handled, the cpu will 'triple fault', meaning the system resets.
+- General Protection Fault: A GP fault can come from a large number of places, although it's generally from an instruction dealing with the segment registers in some way. This includes `iret` (it modifies cs/ss), and others like `lidt`/`ltr`. It also pushes an error code, which is described below. A GP fault can also come from trying to execute a privileged instruction outside when it's not allowed to be. This case is different to an undefined opcode, as the instruction exists, but is just not allowed.
+- Double Fault: This means something has gone horribly wrong, and the system is not in a state that can be recovered from. Commonly this occurs because the cpu could not call the GP fault handler, but it can be triggered by hardware conditions too. This should considered your last chance to clean up and save any state. If a double fault is not handled, the cpu will 'triple fault', meaning the system resets.
 
 A number of the reserved interrupts will not be fired by default, they require certain flags to be set. For example the x87 fpu error only occurs if `CR0.NE` is set, otherwise the fpu will silently fail. The SIMD error will only occur if the cpu has been told to enable SSE. Others like bound range exceeded or device not available can only occur on specific instructions, and are generally unseen. 
 
@@ -399,5 +405,5 @@ while (true)
     asm("hlt");
 
 //not good!
-asm("hlt);
+asm("hlt");
 ```
