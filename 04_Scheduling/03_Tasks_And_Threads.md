@@ -4,7 +4,7 @@
 
 Even if in the previous chapter we briefly introduced the concept of process, here we are going to have a more detailed explanation and introduce a also the whreads concept. 
 
-* _Process_ - Even we introduced it in the previous chapter, let's give a more detailed definition for it. A _process_ (also known as thread, job) is a program in execution they are identified by a _Process Control Block_ (PCB) that holds it's definition. Part of the definition is design dependent, but all the informations needed when switching between tasks are stored there. 
+* _Process_ - We introduced it in the previous chapter, let's give a more detailed definition for it. A _process_ (also known as task, job) is a program in execution, it is identified by a _Process Control Block_ (PCB) that holds it's definition. Part of the definition is design dependent, but all the informations needed when switching between tasks are stored there. 
 * _Threads_ - Threads are often referred as lightweight processes, they are part of the process, and contains portion of the program to run, they can be scheduled too, introducing the concept of parallelism (that we explain briefly later). An os that support multiple threads per process is called `Multithread`. A process in this scenario is composed of at least one thread. They share some information with the process, like virtual memory space, privilege level, memory heap, but in the same time each threads has it's own stack, it's own registers, instruction pointer, etc.
 
 Now as already said many times the design decisions will have an impact on how a process will be structured when developing a scheduler we can end up in one of the following scenarios:  
@@ -14,12 +14,71 @@ Now as already said many times the design decisions will have an impact on how a
 * _Multi task - single thread_ - Multi-threading is not really necessary we if we don't want to have parallelism within a program. In this case we have the PCB and a single thread that will be execuyting the program. 
 * _Multi task - Multiple threads_ - Similar to the above case, but in now a single process can have more than one threads running, each one running part of it concurrently (They can maybe run the same piece of code concurrently), this introduce the new feature of parallelism (and introduce also lot of new things that we need to take care). 
 
-In this chapter we are going to implement a *multi task, single thread* environment, but ready to become multi-thread with few adjustments. 
+In this chapter we are going to implement a *multi process (task), single thread* environment, but ready to become multi-thread with few adjustments. 
 
 ** THIS SECTION IS IN EARLY STAGES For now it will be more a set of bullet lists with things to be expaneded in the future ** 
 
 ## Processes
 
+In the previous chapter we have introduced the bare minimum information for a process to run, that was defined in the following structure: 
+
+```c
+typedef struct {
+    status_t process_status;
+    cpu_status_t context;
+} process_t;
+```
+
+The two fields above are all what we need to achieve a very simple multitasking. But them alone leave many limitations and problems that we need to solve: 
+
+* They can't be easily identified if we want for example to manually kill them, or just find what their represent
+* All the processes are running in the same virtual address space (even if technically possible that is not a good idea)
+* They all share the same virtual memory allocator (that can be ok, but we can have some processes that have full access to some memory areas while others not maybe have read only access to it)
+* If they are using any resource we are not keeping track of them
+* It can make harder to write a scheduler that want to prioritize processes according to some algorithm
+
+The list above is not complete, but these are some of the major issues with our initial struct. We'll look at how to solve some of these, and you'll get to see how the control block develops in our case.
+
+
+### Identifying a process
+
+So the first problem we face, is that the process as it is doesn't have any identification information, so once created is hard to associate a process with the actual program, imagine you want to print to implement a `ps` like command, with the actual level of information is impossible, since there is no way to identification information about the process. Also imagine we are implementing a `kill` command, and we want to kill a process, again we can't because there is no PID. 
+
+So what we need to do to solve these issues is just add more details to the process. The minimum that we need for now is: 
+
+* A unique identifier, the Process ID (PID) 
+* A process name
+
+Even if they don´t add specific characteristics to our scheduler, they help the identification of a process. Let's then update our struct with these new information: 
+
+```c
+typedef struct 
+    size_t pid;
+    char name[NAME_MAX_LEN];
+    status_t process_status;
+    cpu_status_t context;
+} process_t;
+```
+
+Where `NAME_MAX_LEN` is a constant with the maximum length for our process it´s up to us. The pid is a unique number, it can even be a uuid if we want, but the easiest way to achieve this is just using sequential number that starts from zero. To achive this we just need to add a global variable that contains the next available number. Now since we are using size_t on a 64bit architecture, we don't need to worry about overflowing the variable size, technically we can decide to reuse pids that are no longer used by a process, that is totally up to us, but in our simple scenario we will increment a global variable: 
+
+```
+size_t next_free_pid = 0;
+```  
+
+### Virtual memory space
+
+TBD 
+
+### Resource and priorities
+
+TBD
+
+
+
+### Why a process 
+
+.... ? ?  ?
 ### What are processes
 
 In a task usually there are the following information: 
