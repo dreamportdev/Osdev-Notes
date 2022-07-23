@@ -52,7 +52,7 @@ So what we need to do to solve these issues is just add more details to the proc
 Even if they don´t add specific characteristics to our scheduler, they help the identification of a process. Let's then update our struct with these new information: 
 
 ```c
-typedef struct 
+typedef struct {
     size_t pid;
     char name[NAME_MAX_LEN];
     status_t process_status;
@@ -62,13 +62,33 @@ typedef struct
 
 Where `NAME_MAX_LEN` is a constant with the maximum length for our process it´s up to us. The pid is a unique number, it can even be a uuid if we want, but the easiest way to achieve this is just using sequential number that starts from zero. To achive this we just need to add a global variable that contains the next available number. Now since we are using size_t on a 64bit architecture, we don't need to worry about overflowing the variable size, technically we can decide to reuse pids that are no longer used by a process, that is totally up to us, but in our simple scenario we will increment a global variable: 
 
-```
+```c
 size_t next_free_pid = 0;
 ```  
 
+
 ### Virtual memory space
 
-TBD 
+On of the most useful features of having the paging enabled is that we have the concept of Virtual Memory available (for a complete definition refer to the [Paging](,,/02_Memory_Management/Paging.md) and [Virtual Memory](../02_Memory_Management/04_Virtual_Memory_Manager.md) chapter), and from a process point of view it means that we can have each process with it's own addressing space. 
+
+What are the improvements that we can have from adding this feature: 
+
+* The most important one is that it provides isolation between processes, so same address location in two different process will point to two different physicall addresses (unless we we want it otherwise in some special cases). 
+* Every process will have it's own memory heap (technically we can implement also different type of processes to use different type of memory allocators. 
+
+What we need to add this feature to our proceess? The paging in x86_64 bits is handled by a set of hierarchical page directories/tables, and the address is basically containing the entry number in those tables. The root address of this table is stored in the PDBR (if you have not clear how it works, go back and read the paging chapter), then the first thing we need to change in our process structure is to add a new variable to store the value of the PDBR register: 
+
+```c
+typedef struct {
+    size_t pid;
+    char name[NAME_MAX_LEN];
+    status_t process_status;
+    cpu_status_t context;
+    uint64_t pdbr;
+} process_t;
+
+```
+
 
 ### Resource and priorities
 
@@ -154,7 +174,7 @@ So what are the information that we should store in a task? That depends on the 
 
 * A reference to it's own virtual addressing space, that is a pointer to a PML4 table (this only if we are going to implement an os where every task has it's own address space)
 
-v### Context Switching
+### Context Switching
 
 * Usually context switch is done during an IRQ (when it depends on design decision. 
 
