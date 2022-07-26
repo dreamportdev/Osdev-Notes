@@ -89,6 +89,82 @@ typedef struct {
 
 ```
 
+Adding the pdbr reference is not enough. Let's see why:
+
+* The first problem is that the PDBR contains the pointer to the root page directory of the virtual memory space (remember that an address with pagin enabled is a composition of table indexes), so this means we need to allocate for it.
+* A memory address to be accessibile, has to have the present flag set, and various directories/table entries to be properly configured
+* The step above means that when we create a new virtual memory space, we lose any reference to the kernel, so this means that as soon as we switch to the new pdbr, if the kernel is not mapped where it is suppose to be we will cause our kernel to crash, so we need to remap the kernel in the new process memory environment. How to map it is explained in the Paging chapter.
+
+Implementing them is just a variation of what we have seen in the Paging chapter, so we'll leave it as an exercies.
+
+#### Memory allocation
+
+Having every process with it's own memory space, will let us introduce a new feature: per process virtual memory allocator. 
+
+This simply means that now every process will be able to have it's own allocator (read [The heap](../02_Memory_Management/05_Heap_Allocation.md)), but that's not all, we can eventually also have different allocators depending on process type. Again the main change that we need on the struct is adding a new field on the process structure that will be the entry point of our memory allocator, the variable type depends strongly on design choices, in our case let's use the same data type we used in the Heap chapter: 
+
+```c
+typedef struct {
+    size_t pid;
+    char name[NAME_MAX_LEN];
+    status_t process_status;
+    cpu_status_t context;
+    uint64_t pdbr;
+    Heap_Node* heap_root;
+    Heap_Node* cur_heap_position;
+} process_t;
+
+```
+
+You can notie that we have actually added two variabiles, this is because of our memory allocation algorithm. 
+
+Of course we need to make changes to our memory allocation function, the logic can be kept the same but what we need to change are the variable used, now we no longer want to use a global variable as a base for our allocator, but we want to pick it from the current process. So If we take for example the third_alloc() function in the Heap chapter what we need to do is replace the references to the global variables with the pointer stored in the current process, so we will have something like: 
+
+```c
+void *third_alloc(size_t size) {
+  Heap_Node* cur_heap_position = get_current_running_process()->cur_heap_position;
+  cur_pointer = get_current_running_process()->heap_root;
+
+  while(cur_pointer < cur_heap_position) {
+    cur_size = *cur_pointer;
+    status = *(cur_pointer + 1);
+
+    if(cur_size >= size && status == FREE) {
+       status = USED;
+       return cur_pointer + 2;
+    }
+    cur_pointer = cur_pointer + (size + 2);
+  }
+
+  *cur_heap_position=size;  
+  cur_heap_position = cur_heap_position + 1;
+  *cur_heap_position = USED;
+  cur_heap_position = cur_heap_position + 1;
+  uint8_t *addr_to_return = cur_heap_position;
+  cur_heap_position+=size;
+  return (void*) addr_to_return;
+}
+```
+
+Be careful that the function above was not a complete one, we used it just as a nexample of how the updated code shoul look like, and of course we must do similar changes to the free function too. 
+
+What does it mean? Let's make an example: 
+
+* Process 1 make the following malloc call:
+
+```c
+    int *a = malloc(sizeof(int));
+```
+
+* Proess 2 make the following call:
+
+```c
+    custom_struct *cs = malloc(sizeof(custom_struct))
+```
+
+And in both cases the address returned is 0x10000. Apparently they are the same. But the pdb address in process 1 is different from pdbr address in process 2, and this means that we will have different page directories/and tables used. Since they are different we are physically referring to two different items, and they are not related so the will contain two different physical addresses (yes we can in theory having them pointing to the same physical address, and in some case we will also do it, for example when mapping the kernel, but is our physical memory manager duty to make sure that we don't allocate the same physical address twice). 
+
+
 
 ### Resource and priorities
 
