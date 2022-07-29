@@ -67,7 +67,7 @@ size_t next_free_pid = 0;
 ```  
 
 
-### Virtual memory space
+### Virtual Memory Space
 
 On of the most useful features of having the paging enabled is that we have the concept of Virtual Memory available (for a complete definition refer to the [Paging](,,/02_Memory_Management/Paging.md) and [Virtual Memory](../02_Memory_Management/04_Virtual_Memory_Manager.md) chapter), and from a process point of view it means that we can have each process with it's own addressing space. 
 
@@ -91,11 +91,9 @@ typedef struct {
 
 Adding the pdbr reference is not enough. Let's see why:
 
-* The first problem is that the PDBR contains the pointer to the root page directory of the virtual memory space (remember that an address with pagin enabled is a composition of table indexes), so this means we need to allocate for it.
+* The first problem is that the PDBR contains the pointer to the root page directory of the virtual memory space (remember that an address with paging enabled is a composition of table indexes), so this means we need to allocate for it.
 * A memory address to be accessibile, has to have the present flag set, and various directories/table entries to be properly configured
-* The step above means that when we create a new virtual memory space, we lose any reference to the kernel, so this means that as soon as we switch to the new pdbr, if the kernel is not mapped where it is suppose to be we will cause our kernel to crash, so we need to remap the kernel in the new process memory environment. How to map it is explained in the Paging chapter.
-
-Implementing them is just a variation of what we have seen in the Paging chapter, so we'll leave it as an exercies.
+* The step above means that when we create a new virtual memory space, we lose any reference to the kernel, so this means that as soon as we switch to the new pdbr, if the kernel is not mapped where it is suppose to be we will cause our kernel to crash, so we need to remap the kernel in the new process memory environment. How to map it, is explained in the Paging chapter.
 
 #### Memory allocation
 
@@ -116,7 +114,7 @@ typedef struct {
 
 ```
 
-You can notie that we have actually added two variabiles, this is because of our memory allocation algorithm. 
+You can notice that we have actually added two variabiles, this is because of our memory allocation algorithm. 
 
 Of course we need to make changes to our memory allocation function, the logic can be kept the same but what we need to change are the variable used, now we no longer want to use a global variable as a base for our allocator, but we want to pick it from the current process. So If we take for example the third_alloc() function in the Heap chapter what we need to do is replace the references to the global variables with the pointer stored in the current process, so we will have something like: 
 
