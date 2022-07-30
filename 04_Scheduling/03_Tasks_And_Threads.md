@@ -168,7 +168,33 @@ And in both cases the address returned is 0x10000. Apparently they are the same.
 
 TBD
 
+## From Proesses to Threads
 
+Now that we have implemented a basic, but complete process structure, let's introduce the Thread concept. 
+
+A thread is the smallest unit of processing that can be executed by an OS. A thread in modern operating systems usually lives within a process. A process can have one or multiple threads, and they represents portion of the programs being executed, and they can be scheduled concurrently, they share part of the execution environment with the process:
+
+* The heap
+* The memory environment
+* Resources (... correct?) 
+
+But they have their own stack, their own function to be called (multiple threads can eventually call the same function, and they will be executed independently), their own context depending on the algorithm they can have their own priority, and so on. 
+
+In our example we will going to have a single thread per process (not very useful) but, we will make it easy to add more threads in the future. 
+
+Let's go through the changes that we need.
+
+### A new data type
+
+Since a thread is a sub-component of a process, that needs to be scheduled it is useful to wrap the information needed in a new data structure, it will make easier to handle it. 
+
+But what does a thread contain? Let's see: 
+
+* A thread like a process needs a way to be uniquely identified (again not strictly necessary) but maybe we want to implement functions to kill threads, or put them to sleep, so we are going to need a thread id field, just like we did in the process, it can be again just an intenger, a uuid, or what we think will fit better to our needs, we are going for just an integer number.
+* Since it is the part of the process that it is going to execute the actual program (or parts of it) it will need its own context, this means that we need a field for storing the current context
+* They can have different statuses just like processes, they can be running, waiting for their turn, sleeping, etc, it again depends on design choices, but we need a status field too.
+
+The information above are the minimum set of information that probably are needed to implement a thread. 
 
 ### Why a process 
 
