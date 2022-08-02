@@ -193,8 +193,19 @@ But what does a thread contain? Let's see:
 * A thread like a process needs a way to be uniquely identified (again not strictly necessary) but maybe we want to implement functions to kill threads, or put them to sleep, so we are going to need a thread id field, just like we did in the process, it can be again just an intenger, a uuid, or what we think will fit better to our needs, we are going for just an integer number.
 * Since it is the part of the process that it is going to execute the actual program (or parts of it) it will need its own context, this means that we need a field for storing the current context
 * They can have different statuses just like processes, they can be running, waiting for their turn, sleeping, etc, it again depends on design choices, but we need a status field too.
+* Another optional information to make thread identification easier can be a thread name.
 
-The information above are the minimum set of information that probably are needed to implement a thread. 
+We can wrap the information above in a new data structure, and update the process structure accordingly: 
+
+```c
+struct {
+    size_t tid;
+    cpu_status_t* context;
+    void* stack;
+    thread_status_t status;
+    char *name[THREAD_NAME_LEN];
+} thread_t
+```
 
 ### Why a process 
 
