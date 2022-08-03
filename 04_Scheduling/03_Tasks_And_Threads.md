@@ -95,6 +95,13 @@ Adding the pdbr reference is not enough. Let's see why:
 * A memory address to be accessibile, has to have the present flag set, and various directories/table entries to be properly configured
 * The step above means that when we create a new virtual memory space, we lose any reference to the kernel, so this means that as soon as we switch to the new pdbr, if the kernel is not mapped where it is suppose to be we will cause our kernel to crash, so we need to remap the kernel in the new process memory environment. How to map it, is explained in the Paging chapter.
 
+This design has at leas a problem that we should be aware of:
+
+
+when we create a pml4 for a new process, we copy the current upper half of the current thread (the kernel). Now each process would have its own copy of the higher half of the pml4, but the page table entries they point to will be the same. 
+Any modifications we make to those will be seen by all processes, the big issue is if we cross a single PML4 entry address range, we might need to modify or add a new pml4 entry, but in this case with each process with a different pml4 copy, will make them unaware of any changes. 
+This problem will be unlikely happening in a hobby kernel, and a solution is beyond the scope of this notes.
+
 #### Memory allocation
 
 Having every process with it's own memory space, will let us introduce a new feature: per process virtual memory allocator. 
@@ -168,7 +175,7 @@ And in both cases the address returned is 0x10000. Apparently they are the same.
 
 TBD
 
-## From Proesses to Threads
+## From Processes to Threads
 
 Now that we have implemented a basic, but complete process structure, let's introduce the Thread concept. 
 
@@ -207,9 +214,31 @@ struct {
 } thread_t
 ```
 
-### Why a process 
+The `thread_status_t` field is not defined yet, so depending on the design decisions and or the scheduling algorithm implemented it can be the same as the process statuses or not, for now let's assume that the thread statuses are the same with process statuses, and just declare it as a new data type: 
 
-.... ? ?  ?
+```c
+typedef status_t thread_status_t;
+```
+
+We need to update also the `process_t` data structure with few changes: 
+
+* We need to remove from a field the that is moved into the thread: the context
+* We need to add a new field that will contain at least one thread. 
+
+```c
+typedef struct {
+    size_t pid;
+    char name[NAME_MAX_LEN];
+    status_t process_status;
+    uint64_t pdbr;
+    thread_t* threads; // This is our new field
+    Heap_Node* heap_root;
+    Heap_Node* cur_heap_position;
+} process_t;
+
+```
+
+
 ### What are processes
 
 In a task usually there are the following information: 
