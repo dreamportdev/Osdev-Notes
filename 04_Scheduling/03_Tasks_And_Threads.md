@@ -66,6 +66,22 @@ Where `NAME_MAX_LEN` is a constant with the maximum length for our process it´s
 size_t next_free_pid = 0;
 ```  
 
+### Creating a process
+
+Creating a process is pretty trivial, since what we need is just to allocate a `process_t` structure if needed (in our case not since we are using a fixed length  array), and initialize with the correct data, the implementation is left as exercise, but here are few guidelines: 
+
+* The pid number is selected internally by the `create_process` function. 
+* The minimum set of parameters that we should pass to the function is: the name, the function we want to call, and eventually the parameters we want to pass. 
+* We can assume that once a process is created it will be in a ready state (but we can eventually decide to have a different state for newly created objects. 
+
+THe function header will probably looks similar to the following
+
+```c
+task_t create_process(char *name, void (*function)(void*), void*);
+```
+
+Once the process is created is important to add it to the process queue, so it will be ready to be kept up by the scheduler. The only important thing is that we need to make sure that in case its context status will not be overwriten by the scheduler trying to save the context (normally it should not happen, but when designing the scheduler better keep it in mind to avoid unpredictable behaviour)
+
 
 ### Virtual Memory Space
 
@@ -224,6 +240,7 @@ We need to update also the `process_t` data structure with few changes:
 
 * We need to remove from a field the that is moved into the thread: the context
 * We need to add a new field that will contain at least one thread. 
+* And finally we need to add a `thread_t` pointer field, that will contain the list of threads
 
 ```c
 typedef struct {
@@ -238,6 +255,19 @@ typedef struct {
 
 ```
 
+Now that we have updated our process, we need to make few adjustments to our `create_process` function: 
+
+* Now it needs to allocate a `thread_t*` data structure and populate it
+* It can be a good idea to create a `create_thread` function that takes care of it.
+* The thread_name can be the same as  process name, or we can give it its own name, this is a design decision to make. 
+
+The scheduler needs to be updated too, the main change is thata now the iret_frame (the process context) is no longer in the `process_t` structure, but now is a field within `threads` field. So we need to update the function to read it from there. 
+
+These are most of the changes needed to start to use threads, even if in our case we are allowing a single thread per process, moving towards mulitple threads per process is pretty easy now, we just need eventually to make them into a linked list, adding a `thread_t *next` field to the data structure (or using a fixed length array like we did in the process scheduler), and update our scheduler to iterate through the threads within a process. 
+
+Then we can create new threads, and append them into an existing process. 
+
+### Section below are just notes probably will be removed
 
 ### What are processes
 
