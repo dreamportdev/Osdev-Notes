@@ -177,7 +177,7 @@ What does it mean? Let's make an example:
     int *a = malloc(sizeof(int));
 ```
 
-* Proess 2 make the following call:
+* Process 2 make the following call:
 
 ```c
     custom_struct *cs = malloc(sizeof(custom_struct))
@@ -265,7 +265,12 @@ The scheduler needs to be updated too, the main change is thata now the iret_fra
 
 These are most of the changes needed to start to use threads, even if in our case we are allowing a single thread per process, moving towards mulitple threads per process is pretty easy now, we just need eventually to make them into a linked list, adding a `thread_t *next` field to the data structure (or using a fixed length array like we did in the process scheduler), and update our scheduler to iterate through the threads within a process. 
 
-Then we can create new threads, and append them into an existing process. 
+Then we can create new threads, and append them into an existing process.
+
+### Changes to the scheduler
+
+In our simple scenario, with a single thread per process, the scheduler can works mostly the same way, we just need to make sure to update all the references to the context, that were in the main `process_t` structure, and now are a filed of the new type `thred_t`. 
+
 
 ### Section below are just notes probably will be removed
 
