@@ -269,7 +269,7 @@ Then we can create new threads, and append them into an existing process.
 
 ### Changes to the scheduler
 
-In our simple scenario, with a single thread per process, the scheduler can works mostly the same way, we just need to make sure to update all the references to the context, that were in the main `process_t` structure, and now are a filed of the new type `thred_t`. 
+In our simple scenario, with a single thread per process, the scheduler can works mostly the same way, we just need to make sure to update all the references to the context, that were in the main `process_t` structure, and now are a filed of the new type `thread_t`. 
 
 
 ### Section below are just notes probably will be removed
