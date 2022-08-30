@@ -158,7 +158,7 @@ Now our schedule function every time that is called will pick the next not null 
 
 ### Saving and restoring the process context 
 
-In the previous section we have seen how to iterate throught processes, but that basically was just iterating through items of a list, not very useful. 
+In the previous section we have seen how to iterate through processes, but that basically was just iterating through items of a list, not very useful.
 
 #### Saving Context
 
