@@ -85,20 +85,19 @@ void release(spinlock_t *lock);
 But how can we ensure mutual exclusion then? The basic idea is pretty straight forward, imagine we update both processes to use the acquire and release function while accessing the the shared resource(be aware in order to have a functionig lock mechanism we should have some kind of memory allocation mechanism implemented). This is the first process:
 
 ```c
- //Process A
+//Process A
 #define SHARED_RESOURCE 0xDEADBEEF 
 
-// Other code doing other stuff
 char string_to_send[] = "I am the first string"
 
 spinlock_t *lock = malloc(sizeof(spinlock_t));
 
 int i = 0;
-acquire(&lock);
+acquire(lock);
 while(i < strlen(string_to_send) {
     *((int *) shared_resource) = string_to_send[i++];
 }
-release(&lock)
+release(lock)
 // Some other code 
 ``` 
 
@@ -106,16 +105,15 @@ and below the second one:
 
 ```c
 #define SHARED_RESOURCE 0xDEADBEEF 
-// Other code doing other stuff
 char string_to_send[] = "While i am the second"
 
-spinlock_t *lock = malloc(sizeof(spinlock_t));
 int i = 0;
-acquire(&lock);
+// We don't define a new lock since we are using the same one for process A
+acquire(lock);
 while(i < strlen(string_to_send) {
     *shared_resource = string_to_send[i++];
 }
-release(&lock);
+release(lock);
 // Some other code 
 ```
 
@@ -132,7 +130,7 @@ void acquire(spinlock_t *lock) {
     }
 }
 ```
-
+What our function does is an active waiting, so it just use it's cpu time waiting for the resource to be released, this is the reason of the name `spin lock`. 
 The release function is pretty simple, it just has to set the locked field to `false`: 
 
 ```c
@@ -158,7 +156,7 @@ Consider the sequence of tasks outlined in the previous section, let's see what 
 
 As we can see this simple algorithm has prevented two processes to interfere with each other. So can we assume that now we are safe? Well... no, there is one problem with the above implementation, this doesn't ensure mutual exclusion in a multi processor environment. Imagine we have 2 different processors calling the acquire at the same time (when we have a multi-cpu environment we have several processes/thread that run simultaneously) and they reach the if statement at the same time with the locked variable still to false, they will both reclaim the lock and will start to write to the shared resource, causing again a _race condition_. 
 
-But how to solve this issue? We need a real atomic operation that has to be used within the acquire loop. There are different solutions that we can adopt (for example use the `xchgl` instruction in the for loop, that is guaranteed to be atomic), but as usual we want to keep thing extremely simple, and in this case we can avail of the help of the compiler (gcc) that provides a whole set of atomic functions to be used by our kernel. 
+But how to solve this issue? We need a real _atomic operation_ that has to be used within the acquire loop. By _atomic_ we mean an operation that can do in a single step whatever it exactly need to be done.  There are different solutions that we can adopt (for example use the `xchgl` instruction in the for loop, that is guaranteed to be atomic), but as usual we want to keep thing extremely simple, and in this case we can avail of the help of the compiler (gcc) that provides a whole set of atomic functions to be used by our kernel. 
 
 In this case the function that we need to use is: 
 
@@ -199,7 +197,7 @@ What we have seen in this chapter is a simple locking mechanism to protect share
 * It doesn't guarantee the order of the processes requiring access to it. So if processes A, B and C require access to the shared resource, they are not guaranteed to be granted the lock in the same order, and in some scenario this could be a problem
 * It also doesn't prevent a _deadlock_ to happen. A _deadlock_ is a scenario where there are two or more processes that are waiting to acquire a shared resource that is hold by the other one. For example if A is holding resource X and needs to acquire a lock on Y, while B is holding a lock on Y and needs to acquire a lock on X, if not handled correctly we will have A and B stuck in the acquire loop forever.
 
-
 Solution to the problems above (and others that can arise) is a research area and out of scope of this guide, but is good to know that there are many algorithms available that are target to solve or mitigate these issues, and could be a good idea to add few of them to our kernel. 
 
+Spin locks are not the only type of locks available, there are other algorithms that can be implemented that have different purpsoes, like semaphores, that can be used system wide by different processes, or locks that doesn't use busy wait (so if the resource is busy they will just go to sleep again). 
 
