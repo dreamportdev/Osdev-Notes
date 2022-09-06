@@ -17,7 +17,7 @@ char string_to_send[] = "I am the first string"
 
 int i = 0;
 while(i < strlen(string_to_send) {
-    *((int *) shared_resource) = string_to_send[i++];
+    *((char *) shared_resource) = string_to_send[i++];
 }
 ```
 
@@ -29,9 +29,8 @@ char string_to_send[] = "While i am the second"
 
 int i = 0;
 while(i < strlen(string_to_send) {
-    *shared_resource = string_to_send[i++];
+    *((char *)shared_resource) = string_to_send[i++];
 }
-// Some other code 
 ```
 
 This task as we can see is using the same resource of process A, if B start it's execution after A is finished, in this case we are fine, but if we are in a multi-tasking environment it can be very likely that we have A and B being interrupted and executed many times before they quit. For example imagine we have the following tasks sequence: 
@@ -92,7 +91,7 @@ spinlock_t *lock = malloc(sizeof(spinlock_t));
 int i = 0;
 acquire(lock);
 while(i < strlen(string_to_send) {
-    *((int *) shared_resource) = string_to_send[i++];
+    *((char *) shared_resource) = string_to_send[i++];
 }
 release(lock)
 ``` 
@@ -107,7 +106,7 @@ int i = 0;
 // We don't define a new lock since we are using the same one for process A
 acquire(lock);
 while(i < strlen(string_to_send) {
-    *shared_resource = string_to_send[i++];
+    *((char *) shared_resource) = string_to_send[i++];
 }
 release(lock);
 ```
