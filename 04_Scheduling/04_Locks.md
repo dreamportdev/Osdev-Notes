@@ -13,21 +13,18 @@ Now we have initially a single process that is sending a string to the serial po
 ```c 
 #define SHARED_RESOURCE 0xDEADBEEF 
 
-// Other code doing other stuff
 char string_to_send[] = "I am the first string"
 
 int i = 0;
 while(i < strlen(string_to_send) {
     *((int *) shared_resource) = string_to_send[i++];
 }
-// Some other code 
 ```
 
 So with just one task accessing the shared resource everything is fine, and we have no problem. But now let's create a second Process (Process B), that wants to use the same resource for a different purpose
 
 ```c
 #define SHARED_RESOURCE 0xDEADBEEF 
-// Other code doing other stuff
 char string_to_send[] = "While i am the second"
 
 int i = 0;
@@ -98,7 +95,6 @@ while(i < strlen(string_to_send) {
     *((int *) shared_resource) = string_to_send[i++];
 }
 release(lock)
-// Some other code 
 ``` 
 
 and below the second one: 
@@ -114,7 +110,6 @@ while(i < strlen(string_to_send) {
     *shared_resource = string_to_send[i++];
 }
 release(lock);
-// Some other code 
 ```
 
 Now what we want is that once a process has acquired the lock, the other one(s) must be kept waiting somehow. A lock is _acquired_ if the `locked` field in the `spinlock_t` type variable is currently false and set to `true` by the current process. Otherwise, thre is another process that is already using that shared resource then the `locked` field is already set true, and the current process then should just keep trying until it will be able to set the `locked` field from false to true. Let's outline a first draft of the acquire function: 
