@@ -169,94 +169,165 @@ Now any further operations on this file can use the returned id to reference thi
 
 ### Priorities
 
-There are many ways to implement priorities, but the easiest way to get started is with multiple process queues: one per periority level. Then your scheduler would always check the highest priority queue first, and if there's no threads in the READY state, check the next queue and so on.
+There are many ways to implement priorities, the easiest way to get started is with multiple process queues: one per periority level. Then your scheduler would always check the highest priority queue first, and if there's no threads in the READY state, check the next queue and so on.
 
 ## From Processes To Threads
+
+Let's talk about how threads fit in with the current design. Currently each process is both a process and a thread. We'll need to move some of the fields of the `process_t` struct into a `thread_t` struct, and then maintain a list a threads per-process.
+
+As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can one or multiple threads, but a thread always belongs to a single process. 
+
+Threads within the same process share a lot of things:
+
+- The virtual address space, which is managed by the VMM, so this is included too.
+- Resource handles, like sockets or open files.
+
+Each thread will need it's own stack, and it's own context. That's all that's needed for a thread, but you may want to include fields for a unique id and human-readable name, similar to the a process. This brings up the question of do you use the same pool of ids for threads and processes? There's no good answer here, you can, or you can use separate pools. The choice is yours!
+
+We'll also need to keep track of the thread's current status, and you may want some place to keep flags of your own (is it a kernel thread vs user thread etc).
+
+### Changes Required
+
+Let's look at what our `thread_t` structure will need:
+
+```c
+typdef struct {
+    size_t tid;
+    cpu_status_t* context;
+    status_t status;
+    char* name[THREAD_NAME_LEN];
+    thread_t* next;
+} thread_t;
+```
+
+The `status_t` struct is the same one previously used for the proceses, but since we are scheduling threads now, we'll use it for the thread.
+
+You might be wondering where the stack is stored, and it's actually the `context` field. You'll remember that we store the current context on the stack when an interrupt is served, so this field actually represents both the stack and the context.
+
+We'll also need to adjust our process, to make use of threads:
+
+```c
+typedef struct {
+    size_t pid;
+    thread_t* threads;
+    void* root_page_table;
+    char name[NAME_MAX_LEN];
+} process_t;
+```
+
+We're going to use a linked list as our data structure to manage threads. Adding a new thread would look something like the following:
+
+```c
+size_t next_thread_id = 0;
+
+thread_t* add_thread(process_t* proc, char* name, void(*function)(void*), void* arg)
+{
+    thread_t* thread = malloc(sizeof(thread_t));
+    if (proc->threads = NULL)
+        proc->threads = thread;
+    else
+    {
+        for (thread_t* scan = proc->threads; scan != NULL; scan = scan->next)
+        {
+            if (scan->next != NULL)
+                continue;
+            scan->next = thread;
+            break;
+        }
+    }
+
+    strncpy(thread->name, name, NAME_MAX_LEN);
+    thread->tid = next_thread_id++;
+    thread->status = READY;
+    thread->next = NULL:
+    thread->context.iret_ss = KERNEL_SS;
+    thread->context.iret_rsp = alloc_stack();
+    thread->context.iret_flags = 0x202;
+    thread->context.iret_cs = KERNEL_CS;
+    thread->context.iret_rip = (uint64_t)function;
+    thread->context.rdi = (uint64_t)arg;
+    thread->context.rbp = 0;
+
+    return thread;
+}
+```
+
+You'll notice this function looks almost identical to the `create_process` function from before. That's because a lot of it is the same! The first part of the function is just inserting the new thread at the end of the list of threads.
+
+Let's look at how our `create_process` function would look now:
+
+```c
+process_t* create_process(char* name)
+{
+    process_t* process = alloc_process();
+    process->pid = next_process_id++;
+    process->threads = NULL;
+    process->root_page_table = vmm_create();
+    strncpy(process->name, name, NAME_MAX_LEN);
+    return process;
+}
+```
+
+The `alloc_process` function is just a placeholder, for brevity, `vmm_create` is also a placeholder. Replace these with your own code.
+
+The last part is we'll need to update the scheduler to deal with threads instead of processes. A lot of the things the scheduler was interacting with are now contained per-thread, rather than per-process. 
+
+That's it! Our scheduler now supports multiple threads and processes. As always there are a number of improvements to be made:
+
+- The `create_process` function could add a default thread, since a process with no threads is not very useful. Or it may not, it depends on your design.
+- Similarly, `add_thread` could accept `NULL` as the process to add to, and in this case create a new process for the thread instead of returning an error.
 
 ### Exiting A Thread
 
 ### Thread Sleep
 
-//--- original text below here ---//
+Being able to sleep for an amount of time is very useful. Note that most sleep functions offer a `best effort` approach, and shouldn't be used for accurate time-keeping. Most operating system kernels will provide a more involved, but more accurate time API. Hopefully you'll understand why shortly.
 
-## From Processes to Threads
-
-Now that we have implemented a basic, but complete process structure, let's introduce the Thread concept. 
-
-A thread is the smallest unit of processing that can be executed by an OS. A thread in modern operating systems usually lives within a process. A process can have one or multiple threads, and they represents portion of the programs being executed, and they can be scheduled concurrently, they share part of the execution environment with the process:
-
-* The heap
-* The memory environment
-* Resources (... correct?) 
-
-But they have their own stack, their own function to be called (multiple threads can eventually call the same function, and they will be executed independently), their own context depending on the algorithm they can have their own priority, and so on. 
-
-In our example we will going to have a single thread per process (not very useful) but, we will make it easy to add more threads in the future. 
-
-Let's go through the changes that we need.
-
-### A new data type
-
-Since a thread is a sub-component of a process, that needs to be scheduled it is useful to wrap the information needed in a new data structure, it will make easier to handle it. 
-
-But what does a thread contain? Let's see: 
-
-* A thread like a process needs a way to be uniquely identified (again not strictly necessary) but maybe we want to implement functions to kill threads, or put them to sleep, so we are going to need a thread id field, just like we did in the process, it can be again just an intenger, a uuid, or what we think will fit better to our needs, we are going for just an integer number.
-* Since it is the part of the process that it is going to execute the actual program (or parts of it) it will need its own context, this means that we need a field for storing the current context
-* They can have different statuses just like processes, they can be running, waiting for their turn, sleeping, etc, it again depends on design choices, but we need a status field too.
-* Another optional information to make thread identification easier can be a thread name.
-
-We can wrap the information above in a new data structure, and update the process structure accordingly: 
-
-```c
-struct {
-    size_t tid;
-    cpu_status_t* context;
-    void* stack;
-    thread_status_t status;
-    char *name[THREAD_NAME_LEN];
-} thread_t
-```
-
-The `thread_status_t` field is not defined yet, so depending on the design decisions and or the scheduling algorithm implemented it can be the same as the process statuses or not, for now let's assume that the thread statuses are the same with process statuses, and just declare it as a new data type: 
-
-```c
-typedef status_t thread_status_t;
-```
-
-We need to update also the `process_t` data structure with few changes: 
-
-* We need to remove from a field the that is moved into the thread: the context
-* We need to add a new field that will contain at least one thread. 
-* And finally we need to add a `thread_t` pointer field, that will contain the list of threads
+Putting a thread to sleep is very easy, and we'll just need to add one field to our thread struct:
 
 ```c
 typedef struct {
-    size_t pid;
-    char name[NAME_MAX_LEN];
-    status_t process_status;
-    uint64_t pdbr;
-    thread_t* threads; // This is our new field
-    Heap_Node* heap_root;
-    Heap_Node* cur_heap_position;
-} process_t;
-
+... other fields here ...
+    uint64_t wake_time;
+} thread_t;
 ```
 
-Now that we have updated our process, we need to make few adjustments to our `create_process` function: 
+We will also need a new status for the thread:  `SLEEPING`.
 
-* Now it needs to allocate a `thread_t*` data structure and populate it
-* It can be a good idea to create a `create_thread` function that takes care of it.
-* The thread_name can be the same as  process name, or we can give it its own name, this is a design decision to make. 
+To actually put a thread to sleep, we'd need to do the following:
 
-The scheduler needs to be updated too, the main change is thata now the iret_frame (the process context) is no longer in the `process_t` structure, but now is a field within `threads` field. So we need to update the function to read it from there. 
+- Change the thread's status to `SLEEPING`. Now the scheduler will not run it since it's not in the `READY` state.
+- Set the `wake_time` variable to the requested amount of time in the future.
+- Force the scheduler to change tasks, so that the sleep function does not immediately return, and then sleep on the next task switch.
 
-These are most of the changes needed to start to use threads, even if in our case we are allowing a single thread per process, moving towards mulitple threads per process is pretty easy now, we just need eventually to make them into a linked list, adding a `thread_t *next` field to the data structure (or using a fixed length array like we did in the process scheduler), and update our scheduler to iterate through the threads within a process. 
+We will need to modify the scheduler check the wake time of any sleeping threads it encounters. If the wake time is in the past, then we can change the thread's state back to `READY`.
 
-Then we can create new threads, and append them into an existing process. 
+As an example of how this might be implemented is shown below:
+
+```c
+void thread_sleep(thread_t* thread, size_t millis)
+{
+    thread->status = SLEEPING;
+    thread->wake_time = current_uptime_ms() + millis;
+    scheduler_yield();
+}
+```
+
+### Advanced Designs
+
+We've discussed the common approach to writing a scheduler using a periodic timer. There is another more advanced design: the tickless scheduler. While we won't implement this here, it's worth being aware of. 
+
+The main difference is how the scheduler interacts with the timer. A periodic scheduler tells the timer to trigger at a fixed interval, and runs in response to the timer interrupt. A tickless scheduler instead uses a one-shot timer, and set the timer to send an interrupt when the next task switch is due.
+
+At a first glance this may seem like the same thing, but it eliminates unnecessary timer interrupts, when no task switch is occuring. It also removes the idea of a `quantum`, since you can run a thread for any arbitrary amount of time, rather than a number of timer intervals.
+
+*Authors note: Tickless schedulers are usually seens as more accurrate and operate with less latency than periodic ones, but this comes at the cost of added complexity.*
+
+//--- original text below here ---//
 
 ### Exiting the thread
 
+--resource cleanup
 After the thread finish its execution, we need a way to make it exit gracefully (otherwise it start to run into garbage most likely...) so there are two possible scenarios:
 
 * The programmer has called a thread_exit function so in this case we are fine
@@ -311,16 +382,4 @@ In this guide we will show one of the simplest algorithm available, the "round r
 * If not, just exit without do nothing
 * Else, pick the current task, and change it's status to a non-running status, and save it's current execution context.
 * Try to pick a new task, set it in the running status and return it's saved context. 
-
-### Thread Sleep
-
-* To implement thread sleep we need to have the IRQ timer configured correctly
-
-The idea of a sleep function is to place the calling thread in a sleep state for a specific amount of time. While in the sleep state, the scheduler will check it's wakeup time, if it is not passed yetit will skip to the next one, otherwise will reset the wakeup time, and execute the thread. 
-
-The `thread_sleep` function will take just one parameter, that is the amount of time we want it to wait (usually in ms). The function once called it just needs to: 
-
-* change the status of the thread from RUN to SLEEP (the status label are totally arbitrary)
-* set the wakeuptime variable to: `current_time + millis_to_wait` where current_time can be either the current time in milliseconds or the kernel uptime in milliseconds, and millis_to_way is the parameter to the sleep function that tells the scheduler for how long it has to sleep.
-
 

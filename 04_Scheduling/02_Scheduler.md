@@ -196,6 +196,9 @@ cpu_status_t* schedule(cpu_status_t* context) {
 
 We'll look at the DEAD state more in the next chapter, but for now we can set a processes state to DEAD to signal it's termination. When a thread is in the DEAD state, it will be removed from the queue the next time the scheduler encounters it.
 
+### The Idle Process
+TODO:
+
 ## Wrapping Up
 
 This chapter has covered everything needed to have a basic scheduler up and running. In the next chapter we'll look at creating and destroying processes. As mentioned this scheduler was written to be simple, not feature-rich. There are a number of ways you could improve upon it in your own design:
@@ -204,7 +207,3 @@ This chapter has covered everything needed to have a basic scheduler up and runn
 * Add more states for a process to be in. We're going to add one more in the next chapter.
 * Implement priority queues, where the scheduler runs threads from a higher priority first if they're available, otherwise it selects background processes.
 * Add support for multiple processor cores. This can be very tricky, so some thought needs to go into how you design for this.
-
-//---TODO: cleanup resources from a dead process.
-//---TODO: mention tickless approach.
-//---TODO: idle process.
