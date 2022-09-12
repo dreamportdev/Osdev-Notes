@@ -82,7 +82,7 @@ As mentioned above we're going to have the scheduler run in response to the time
 For the following sections we assume your interrupt handlers look like the ones described in the interrupt handling chapter, and all route to a single function. We're going to have a function called `scheduler()` that will do process selection for us. Patching that into our interrupt routing function would look something like:
 
 ```c
-switch (interrupt_number){
+switch (interrupt_number) {
     case KEYBOARD_INTERRUPT:
         //do something with keyboard
         break;
@@ -197,7 +197,27 @@ cpu_status_t* schedule(cpu_status_t* context) {
 We'll look at the DEAD state more in the next chapter, but for now we can set a processes state to DEAD to signal it's termination. When a thread is in the DEAD state, it will be removed from the queue the next time the scheduler encounters it.
 
 ### The Idle Process
-TODO:
+
+We mentioned the idle process before. When there are no processes in the `READY` state, we'll run the idle process. It's purpose is to do nothing, and in a priority-based scheduler it's always the lowest priority. 
+
+The main function for the idle process is very simple. It can be just three lines of assembly!
+
+```x86asm
+loop:
+    hlt
+    jmp loop
+```
+
+That's all it needs to do: halt the cpu. We halt inside a loop so that we wake from an interrupt we halt again, rather than trying to execute whatever comes after the jump instructon.
+
+You can also do this in C with inline assembly:
+
+```c
+void idle_main(void* arg) {
+    while (true)
+        asm("hlt");
+}
+```
 
 ## Wrapping Up
 

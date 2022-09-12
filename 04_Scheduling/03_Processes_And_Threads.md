@@ -62,11 +62,9 @@ Creating a process is pretty trivial. We need a place to store the new `process_
 ```c
 size_t next_free_pid = 0;
 
-process_t* create_process(char* name, void(*function)(void*), void* arg)
-{
+process_t* create_process(char* name, void(*function)(void*), void* arg) {
     process_t* process;
-    for (size_t i = 0; i < MAX_PROCESSES; i++)
-    {
+    for (size_t i = 0; i < MAX_PROCESSES; i++) {
         if (processes_list[i] != NULL)
             continue;
         process = &processes_list[i];
@@ -155,8 +153,7 @@ We've used `size_t` as the type to hold our resource ids here. To open a file, l
 ```c
 size_t open_file(process_t* proc, char* name) {
     size_t system_id = vfs_open_file(name);
-    for (size_t i = 0; i < MAX_RESOURCE_IDS; i++)
-    {
+    for (size_t i = 0; i < MAX_RESOURCE_IDS; i++) {
         if (proc->resources[i] != 0)
             continue;
         proc->resources[i] = system_id;
@@ -185,6 +182,8 @@ Threads within the same process share a lot of things:
 Each thread will need it's own stack, and it's own context. That's all that's needed for a thread, but you may want to include fields for a unique id and human-readable name, similar to the a process. This brings up the question of do you use the same pool of ids for threads and processes? There's no good answer here, you can, or you can use separate pools. The choice is yours!
 
 We'll also need to keep track of the thread's current status, and you may want some place to keep flags of your own (is it a kernel thread vs user thread etc).
+
+TODO: idle process -> idle thread
 
 ### Changes Required
 
@@ -220,15 +219,12 @@ We're going to use a linked list as our data structure to manage threads. Adding
 ```c
 size_t next_thread_id = 0;
 
-thread_t* add_thread(process_t* proc, char* name, void(*function)(void*), void* arg)
-{
+thread_t* add_thread(process_t* proc, char* name, void(*function)(void*), void* arg) {
     thread_t* thread = malloc(sizeof(thread_t));
     if (proc->threads = NULL)
         proc->threads = thread;
-    else
-    {
-        for (thread_t* scan = proc->threads; scan != NULL; scan = scan->next)
-        {
+    else {
+        for (thread_t* scan = proc->threads; scan != NULL; scan = scan->next) {
             if (scan->next != NULL)
                 continue;
             scan->next = thread;
@@ -257,8 +253,7 @@ You'll notice this function looks almost identical to the `create_process` funct
 Let's look at how our `create_process` function would look now:
 
 ```c
-process_t* create_process(char* name)
-{
+process_t* create_process(char* name) {
     process_t* process = alloc_process();
     process->pid = next_process_id++;
     process->threads = NULL;
@@ -305,8 +300,7 @@ We will need to modify the scheduler check the wake time of any sleeping threads
 As an example of how this might be implemented is shown below:
 
 ```c
-void thread_sleep(thread_t* thread, size_t millis)
-{
+void thread_sleep(thread_t* thread, size_t millis) {
     thread->status = SLEEPING;
     thread->wake_time = current_uptime_ms() + millis;
     scheduler_yield();
