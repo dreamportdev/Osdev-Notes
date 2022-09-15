@@ -8,7 +8,7 @@ Imagine we have a shared resource that can be accessed at a specific address. Th
 
 For our example we're going to say this resouce is a NS16550 uart at address `0xDEADBEEF`. If you're not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms. 
 
-The key things to know are that if you write a byte at that address, it will be sent over the serial port to whatever is one the other send. So if you want to send a message, you must send it one character at a time, at the address specified (`0xDEADBEEF`).
+The key things to know are that if you write a byte at that address, it will be sent over the serial port to whatever is on the other end. So if you want to send a message, you must send it one character at a time, at the address specified (`0xDEADBEEF`).
 
 ## The Problem
 
@@ -56,7 +56,7 @@ This situation we've described is an example of a _race condition_. The order of
 
 ## Implementing A Lock
 
-A _lock_ provides us with something called mutual exclusion: only one thread can hold the lock at a time, while the rest must wait for the lock to be free again before they can take. While a thread is holding the lock, it's allowed to access the shared resource.
+A _lock_ provides us with something called mutual exclusion: only one thread can hold the lock at a time, while the rest must wait for the lock to be free again before they can take the lock. While a thread is holding the lock, it's allowed to access the shared resource.
 
 We'll need a few things to achieve that:
 
@@ -100,7 +100,7 @@ It's worth noting that each instance of a lock is independent, so to protect a s
 
 Let's look at how `acquire` and `release` should function:
 
-- `acquire` will wait until the lock if free, and then take it. This prevents a thread from going any further than this function until it has the lock.
+- `acquire` will wait until the lock is free, and then take it. This prevents a thread from going any further than this function until it has the lock.
 - `release` is much simpler, it simply frees the lock. This indicates to other threads that they can now take the lock.
 
 We've used a boolean to represent the lock, and are going to use `true` for locked/taken, and `false` for free/unlocked. Let's have look at a naive implementation for these functions:
@@ -139,7 +139,7 @@ Now we can see how locks can be used to keep two threads from interfering with e
 
 Unfortunately this implementation has some issues, and can fail to ensure mutual exclusion in several ways:
 
-- We haven't marked the lock variable as `volatile`, so the acquire and release operations may or may not be written to memory. This means other threads might not even see the changes made to the lock variable
+- We haven't marked the lock variable as `volatile`, so the acquire and release operations may or may not be written to memory. This means other threads might not even see the changes made to the lock variable.
 - If we're operating in a multiprocessor environment, this is also an issue, because the other processors won't see the updated lock state. Even if we do use `volatile`, two threads on separate processors could still both take the lock at the same time. This is because processors will generally perform a `read-modify-write` operation, which leaves time for another processor to read the old state, while another is modifying it.
 
 ## Atomic Operations
@@ -179,7 +179,7 @@ While atomic operations are fantastic, they are often quite slow compared to the
 
 ## Locks and Interrupts
 
-With the introduction of locks we've also introduced a new proble.
+With the introduction of locks we've also introduced a new problem.
 Using the previous example of the shared uart, used for logging, let's see what might happen:
 
 - A thread wants to log something, so it takes the uart lock.

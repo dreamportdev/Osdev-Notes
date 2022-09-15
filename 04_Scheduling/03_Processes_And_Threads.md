@@ -32,11 +32,11 @@ While this is functional, there's a few problems:
 - We can't keep track of any resources they might be using, like file handles or network sockets.
 - We can't prioritize them, as we dont know which ones are more important.
 
-We're not going to look at how to solve all of these, but we'll the important ones.
+We're not going to look at how to solve all of these, but we'll cover the important ones.
 
 ### Indentifying A Process
 
-How do we tell which process is which? We're going to use a unique number as our process id (`pid`). This will let us refer to any process by passing this number around. This is `pid` can be used for programs like `ps`, `kill` and others.
+How do we tell which process is which? We're going to use a unique number as our process id (`pid`). This will let us refer to any process by passing this number around. This `pid` can be used for programs like `ps`, `kill` and others.
 
 While an identifier is all that's required here, it can also be nice to have a `process name`. Unlike the `pid` this isn't authoritative, it can't be used to uniquely identify a process, but it does provide a nice description.
 
@@ -57,7 +57,7 @@ How do we assign pids? We're using to use a bump allocator: which if you'll reme
 
 ### Creating A New Process
 
-Creating a process is pretty trivial. We need a place to store the new `process_t` struct, in our case the static array, but you might have another data struct for it. We'll want a new function that creates a new process for us. We're going to need the starting address for the new process, and it can be nice to in an argument to this function.
+Creating a process is pretty trivial. We need a place to store the new `process_t` struct, in our case the static array, but you might have another data struct for it. We'll want a new function that creates a new process for us. We're going to need the starting address for the code we want our process to run, and it can be nice to pass an argument to this starting function.
 
 ```c
 size_t next_free_pid = 0;
@@ -118,7 +118,7 @@ When creating a new process we'll need to populate these new page tables: make s
 
 Copying the higher half page tables like this can introduce a subtle issue: If the kernel modifies a pml4 entry in one process the changes won't be visible in any of the other processes. Let's say the kernel heap expands across a 512 GiB boundary, this would modify the next pml4 (since each pml4 entry is responsible for 512 GiB of address space). The current process would be able to see the new part of the heap, but upon switching processes the kernel could fault when trying to access this memory.
 
-While we're not going to implement a solution to this, but it's worth being aware of. One possible solution is to keep track of the current 'generation' of the kernel pml4 entries. Everytime a kernel pml4 is modified the generation number is increased, and whenever a new processes is loaded it's kernel pml4 generation is checked against the current generation. If the current generation is higher, we copy it's kernel tables over, and now the page tables in are synchronized again.
+While we're not going to implement a solution to this, but it's worth being aware of. One possible solution is to keep track of the current 'generation' of the kernel pml4 entries. Everytime a kernel pml4 is modified the generation number is increased, and whenever a new processes is loaded it's kernel pml4 generation is checked against the current generation. If the current generation is higher, we copy it's kernel tables over, and now the page tables are synchronized again.
 
 Don't forget to load the new process's page tables before leaving the `schedule()`.
 
@@ -126,24 +126,24 @@ Don't forget to load the new process's page tables before leaving the `schedule(
 
 Let's talk about the heap for a moment. With each process being isolated, they can't really share any data, meaning they can't share a heap, and will need to bring their own. The way this usually works is programs link with a standard library, which includes a heap allocator. This heap is exposed through the familiar `malloc()`/`free()` functions, but behind the scenes this heap is calling the VMM and asking for more memory when needed. 
 
-Of course the kernel is the exception, because it doesn't live in it's own process, but instead lives in *every* process. It's heap is available in every process, but can only be used by the kernel.
+Of course the kernel is the exception, because it doesn't live in it's own process, but instead lives in *every* process. Its heap is available in every process, but can only be used by the kernel.
 
 What this means is when we look at loading programs in userspace, these programs will need to provide their own heap. However we're only running threads within the kernel right now, so we can just use the kernel heap.
 
 ### Resources
 
-Resources are typically implemented an opaque handle: a resource is given an id by the subsystem it interacts with, and that id is used to represent the resource outside of the subsystem. Other kernel subsystems or programs can use this id to perform operations with the resource. These resources are usually tracked per process. 
+Resources are typically implemented as an opaque handle: a resource is given an id by the subsystem it interacts with, and that id is used to represent the resource outside of the subsystem. Other kernel subsystems or programs can use this id to perform operations with the resource. These resources are usually tracked per process. 
 
 As an example, let's look at opening a file. We wont go over the code for this, as it's beyond the scope of this chapter, but it serves as a familiar example.
 
-When a program goes to open a file, it asks the kernel's VFS (virtual file system) to locate a file by name. Assuming the file exists and can be accesses, the VFS loads the file into memory and keeps track of the buffer holding the loaded file. Let's say this is the 23rd file the VFS has opened, it might be assigned the id 23. You could simply use this id as your resource id, however that is a system-wide id, and not specific to the current process. 
+When a program goes to open a file, it asks the kernel's VFS (virtual file system) to locate a file by name. Assuming the file exists and can be accessed, the VFS loads the file into memory and keeps track of the buffer holding the loaded file. Let's say this is the 23rd file the VFS has opened, it might be assigned the id 23. You could simply use this id as your resource id, however that is a system-wide id, and not specific to the current process. 
 
 Commonly each process holds a table that maps process-specific resource ids to system resource ids. A simple example would be an array, which might look like the following:
 
 ```c
 #define MAX_RESOURCE_IDS 255
 typedef struct {
-... other fields ...
+    //other fields
     size_t resources[MAX_RESOURCE_IDS];
 } process_t;
 ```
@@ -166,20 +166,20 @@ Now any further operations on this file can use the returned id to reference thi
 
 ### Priorities
 
-There are many ways to implement priorities, the easiest way to get started is with multiple process queues: one per periority level. Then your scheduler would always check the highest priority queue first, and if there's no threads in the READY state, check the next queue and so on.
+There are many ways to implement priorities, the easiest way to get started is with multiple process queues: one per priority level. Then your scheduler would always check the highest priority queue first, and if there's no threads in the READY state, check the next queue and so on.
 
 ## From Processes To Threads
 
 Let's talk about how threads fit in with the current design. Currently each process is both a process and a thread. We'll need to move some of the fields of the `process_t` struct into a `thread_t` struct, and then maintain a list a threads per-process.
 
-As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can one or multiple threads, but a thread always belongs to a single process. 
+As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can bes one or multiple threads, but a thread always belongs to a single process. 
 
 Threads within the same process share a lot of things:
 
 - The virtual address space, which is managed by the VMM, so this is included too.
 - Resource handles, like sockets or open files.
 
-Each thread will need it's own stack, and it's own context. That's all that's needed for a thread, but you may want to include fields for a unique id and human-readable name, similar to the a process. This brings up the question of do you use the same pool of ids for threads and processes? There's no good answer here, you can, or you can use separate pools. The choice is yours!
+Each thread will need it's own stack, and it's own context. That's all that's needed for a thread, but you may want to include fields for a unique id and human-readable name, similar to a process. This brings up the question of do you use the same pool of ids for threads and processes? There's no good answer here, you can, or you can use separate pools. The choice is yours!
 
 We'll also need to keep track of the thread's current status, and you may want some place to keep flags of your own (is it a kernel thread vs user thread etc).
 
@@ -254,7 +254,7 @@ Let's look at how our `create_process` function would look now:
 
 ```c
 process_t* create_process(char* name) {
-    process_t* process = alloc_process();
+    process_t* process = malloc();
     process->pid = next_process_id++;
     process->threads = NULL;
     process->root_page_table = vmm_create();
@@ -263,7 +263,7 @@ process_t* create_process(char* name) {
 }
 ```
 
-The `alloc_process` function is just a placeholder, for brevity, `vmm_create` is also a placeholder. Replace these with your own code.
+The `vmm_create` function is just a placeholder, but it should create a new vmm instance for our new process. The details of this function are described more in the chapter on the virtual memory manager itself. Ultimately this function should set up some new page tables for the new process, and then map the existing kernel into the higher half of these new tables. You may wish to do some other things here as well. 
 
 The last part is we'll need to update the scheduler to deal with threads instead of processes. A lot of the things the scheduler was interacting with are now contained per-thread, rather than per-process. 
 
@@ -295,7 +295,7 @@ To actually put a thread to sleep, we'd need to do the following:
 - Set the `wake_time` variable to the requested amount of time in the future.
 - Force the scheduler to change tasks, so that the sleep function does not immediately return, and then sleep on the next task switch.
 
-We will need to modify the scheduler check the wake time of any sleeping threads it encounters. If the wake time is in the past, then we can change the thread's state back to `READY`.
+We will need to modify the scheduler to check the wake time of any sleeping threads it encounters. If the wake time is in the past, then we can change the thread's state back to `READY`.
 
 As an example of how this might be implemented is shown below:
 
@@ -315,7 +315,7 @@ The main difference is how the scheduler interacts with the timer. A periodic sc
 
 At a first glance this may seem like the same thing, but it eliminates unnecessary timer interrupts, when no task switch is occuring. It also removes the idea of a `quantum`, since you can run a thread for any arbitrary amount of time, rather than a number of timer intervals.
 
-*Authors note: Tickless schedulers are usually seens as more accurrate and operate with less latency than periodic ones, but this comes at the cost of added complexity.*
+*Authors note: Tickless schedulers are usually seen as more accurrate and operate with less latency than periodic ones, but this comes at the cost of added complexity.*
 
 //--- original text below here ---//
 
