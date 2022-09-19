@@ -40,7 +40,7 @@ But how do we mark a page as taken or free? We need to translate row/column in a
 * The page size (we should know what is the size of the page you are using XD), Let's call it PAGE_SIZE
 * How many bits are in a row (it's up to us to decide it, in this example we are using an unsigned char, but most probably in real life it is going to be a uin32_t for 32bit OS or uint64_t for 64bit os) let's call it BITS_PER_ROW
 
-So to get the address we just need to do: 
+To get the address we just need to do: 
 
 * bit_number = (row * BITS_PER_ROW) + column
 * address = bit_number * PAGE_SIZE
@@ -51,9 +51,9 @@ Let's pause for a second, and have a look at bit_number, what it represent? Mayb
  |------------|---|---|---|-----|-----|-----|----|------|-----|----|
  | \*bitmap   | 1 | 1 | 1 | ... | *0* | ... |  0 |  *0* | ... |  0 |
   
-So it just represent the offset in bit from &bitmap (the starting address of the bitmap). 
+It just represent the offset in bit from &bitmap (the starting address of the bitmap). 
 
-So in our example with *row=0 column=3* (and page size of 4k) we get:
+In our example with *row=0 column=3* (and page size of 4k) we get:
 
 * bit_number = (0 * 8) + 3 = 3
 * address = bit_number * 4k = 3 * 4096 = 3 * 0x1000 = 0x3000
