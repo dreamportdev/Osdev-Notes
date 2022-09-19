@@ -210,7 +210,7 @@ loop:
 
 That's all it needs to do: halt the cpu. We halt inside a loop so that we wake from an interrupt we halt again, rather than trying to execute whatever comes after the jump instructon.
 
-You can also do this in C with inline assembly:
+You can also do this in C using inline assembly:
 
 ```c
 void idle_main(void* arg) {
@@ -218,6 +218,8 @@ void idle_main(void* arg) {
         asm("hlt");
 }
 ```
+
+The idle task is scheduled a little differently: it should only run when there is nothing else to run. You wouldn't want it to run when there is real work to do, because it's essentially throwing away a full quantum that could be used by another thread.
 
 ## Wrapping Up
 

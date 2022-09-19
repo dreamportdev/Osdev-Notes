@@ -165,7 +165,7 @@ First of all, lets write our generic stub. We're going to route all interrupts t
 interrupt_stub:
 push %rax
 push %rbx
-[ ... push other registers here ... ]
+//push other registers here
 push %r14
 push %r15
 
@@ -173,7 +173,7 @@ call interrupt_disaptch
 
 pop %15
 pop %r14
-[ ... pop registers in reverse order ... ]
+//push other registers here
 pop %rbx
 pop %rax
 
@@ -207,7 +207,7 @@ pushq $0
 pushq $1
 jmp interrupt_stub
 
-[ ... Skipping ahead ... ]
+//skipping ahead
 
 .align 16
 vector_13_handler:
@@ -276,7 +276,7 @@ struct cpu_status_t
 {
     uint64_t r15;
     uint64_t r14;
-    [ ... other pushed registers ... ]
+    //other pushed registers
     uint64_t rbx;
     uint64_t rax;
 
@@ -317,7 +317,7 @@ void interrupt_dispatch(cpu_status_t* context)
 All that's left is to modify the assembly `interrupt_stub` to handle this. It's only a few lines:
 
 ```x86asm
-[ ... push other registers here ... ]
+//push other registers here
 push %r15
 
 mov %rsp, %rdi
@@ -325,7 +325,7 @@ call interrupt_dispatch
 mov %rax, %rsp
 
 pop %r15
-[ ... pop other registers ... ]
+//pop other registers here
 ```
 
 That's it! One thing to note is that whatever you return from `interrupt_dispatch` will be loaded as the new stack, so only return things you know are valid. Returning the existing stack is fine, but don't try to return `NULL` or anything as an error.

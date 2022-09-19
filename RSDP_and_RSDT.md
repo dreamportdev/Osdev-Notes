@@ -30,7 +30,7 @@ For v2 the structure is similar to above:
 ```c
 struct RSDP2Descriptor
 {
-  ... v1 fields ...
+  //v1 fields
   uint32_t Length;
   uint64_t XSDTAddress;
   uint8_t ExtendedChecksum;

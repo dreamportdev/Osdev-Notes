@@ -183,8 +183,6 @@ Each thread will need it's own stack, and it's own context. That's all that's ne
 
 We'll also need to keep track of the thread's current status, and you may want some place to keep flags of your own (is it a kernel thread vs user thread etc).
 
-TODO: idle process -> idle thread
-
 ### Changes Required
 
 Let's look at what our `thread_t` structure will need:
@@ -274,6 +272,52 @@ That's it! Our scheduler now supports multiple threads and processes. As always 
 
 ### Exiting A Thread
 
+After the thread has finished its execution, we'll need a way for it to exit gracefully. If we dont, and the thread is scheduled again after running the last of its code, we'll try to run whatever comes after the code: likely junk, resulting in a #UD of #GP.
+
+This also places a requirement on the programmer when creating threads: they must call `thread_exit` before the main function used for the thread returns, otherwise we will crash.
+
+We're going to go a step further an implement a wrapper function that will call the thread's main function, and then call `thread_exit` for us. This will only work for kernel threads, but it removes the burden from the programmer. Our wrapper function will look like the following:
+
+```c
+void thread_execution_wrapper(void (*function)(void*), void* arg) {
+    function(arg);
+    thread_exit();
+}
+```
+
+Now we'll need to modify `create_thread` to make use of our wrapper to make use of the wrapper function. Since we're targeting x86_64 we're using the appropriate calling convention which tells us which registers to use for passing arguments. 
+
+```c
+thread->context.rip = (uint64_t)thread_execution_wrapper;
+thread->context.rdi = (uint64_t)function;
+thread->context.rsi = (uint64_t)arg;
+```
+
+The implementation of `thread_exit` can look very different depending on what you want to do. In our case we're going to change the thread's status to DEAD. 
+
+```c
+void thread_exit() {
+    current_thread->status = DEAD;
+    while (true);
+}
+```
+
+At this point you can successfully exit a thread, but the thread's resources are still around. The big one is the thread control block and the stack. You can free these in `thread_exit` but be careful you're not exiting the current thread. If you do, you'll free the stack you're currently using. You could switch to a kernel-only stack here, and then safely free the stack. 
+
+Alternatively you could place the thread into a 'cleanup queue' that is processed a special thread that frees the resources associated with threads. Since the cleanup thread has it's own stack and resources, you can safely free those in the queued threads.
+
+Another option, which we've chosen here, is to update the thread's status here. Then when the scheduler encounters a thread in the DEAD state, it will free it's resources there.
+
+Note that we use an infinite loop at the end of `thread_exit` since that function cannot return (it would return to the junk after the thread's main function). This will busy-wait until the end of the current quantum, however you could also call the scheduler to reschedule early here.
+
+#### Last Thread Standing
+
+What about freeing processes? As always there are a few approaches, but the easiest is the check if the thread you're about to free is the last in the process. If it is, the process should be deleted too. 
+
+Cleaning up a process requires significantly more work, tearing down page tables properly, freeing other resources, sometimes there is buffered data to flush. This should be approached with some care, so as not the delete the currently page tables in use.
+
+reschedule after exiting?
+
 ### Thread Sleep
 
 Being able to sleep for an amount of time is very useful. Note that most sleep functions offer a `best effort` approach, and shouldn't be used for accurate time-keeping. Most operating system kernels will provide a more involved, but more accurate time API. Hopefully you'll understand why shortly.
@@ -282,7 +326,7 @@ Putting a thread to sleep is very easy, and we'll just need to add one field to 
 
 ```c
 typedef struct {
-... other fields here ...
+//other fields here
     uint64_t wake_time;
 } thread_t;
 ```
@@ -316,64 +360,3 @@ The main difference is how the scheduler interacts with the timer. A periodic sc
 At a first glance this may seem like the same thing, but it eliminates unnecessary timer interrupts, when no task switch is occuring. It also removes the idea of a `quantum`, since you can run a thread for any arbitrary amount of time, rather than a number of timer intervals.
 
 *Authors note: Tickless schedulers are usually seen as more accurrate and operate with less latency than periodic ones, but this comes at the cost of added complexity.*
-
-//--- original text below here ---//
-
-### Exiting the thread
-
---resource cleanup
-After the thread finish its execution, we need a way to make it exit gracefully (otherwise it start to run into garbage most likely...) so there are two possible scenarios:
-
-* The programmer has called a thread_exit function so in this case we are fine
-* The programmer didn't called the function and the thread has terminated finished the execution of the function, at this point if it will not be stopped it will run into garbage. 
-
-To achieve that we need to have an "exit" function to be executed after the function in the thread terminates it's execution. But how to do it? We need to check on the X86_64 Abi calling convention (or what architecture applies to you). As usual there are multiple ways to achieve that, the easiest one is to create a wrapper function that takes two parameters
-
-* the first is the function we want to execute
-* the second is the variable containing the arguments (we will go back to this later) 
-
-This function will call the wrapper function passing the argument as it is and after that will call our exit function. So the code will look similar to the following;
-
-```c
-void thread_execution_wrapper( void (*function)(void *), void *arg) {
-    function(arg);
-    _thread_exit();
-}
-```
-
-What should the exit function do? Again this depends on the design choice, and as usual there are multiple paths, it depends if we want to exit the thread as soon as it calls the the exit function, or let the scheduler do that, just updating its status to the one correspinding to a terminated task (let's call it DEAD status). 
-
-* If the choice is to delete the thread as soon as it exit terminate the function what will happen then is that the thread is placed into a DEAD state, then the function will take care of removing the task from the scheduler queue, freeing all resources (stack, execution frame, page tables, etc.) that are allocated to it, and after that it will free the memory allocated to the task itself. Remember that when a task call the exit function is still the one being executed
-* In the other scenario, what the exit function does is basically just updating the status of the task to DEAD. And not much more. Then next time the scheduler will be called, it will pick the next task, execute it, and so on, after sometime it will pick up again the terminated task, it will see the status as DEAD, so it will start the same process explained above, free the associated resources to the thread, remove it from the queue, and free the thread item. After that the scheduler will pick the next task, if the status will be not DEAD it will prepare it for the execution
-So when a function is called we have: 
-
-* The first 6 parameters stored into the rdi, rsi, rdx, rcx, r8 to r15 registers
-* The rest of the parameters are pushed on the stack
-* The return address is pushed on the stack after the parameters.
-* rax (and eventually rbx) are used for the return value
-
-The third item in the bullet list is the one we are interested to. When a function is called in asm we have something like: 
-
-```asm 
-mov rdi, 5 // First parameter
-call _function
-; do something
-```
-
-Now when a function is  called, the cpu put the next instruction on the stack. And here is where we will put the end function.
-
-* Then the thread_exit function should take also care of updating the thread status to DEAD (and by extension if it was the last thread on a task it should update that too)
-* The schedule function when pick a task that has the status set to DEAD knows that it doesn´t have to execute it, and will call the routine to free the thread resources. 
-* If the thread is the last in a task, the task should be ready to be deleted too. So in this case we need to change the status to the task too. 
- 
-## Switching processes/thread
-
-So who is responsible of switching processes? The scheduler, that every time is called it checks if the current task needs to be replaced with a new one, and eventually pick the "best" next task candidate. How to decide who is the next depends on the scheduling algorithm implemented and the design choice of the operating system (there are many scheduling algorithm). 
-
-In this guide we will show one of the simplest algorithm available, the "round robin" algorithm. The idea behind it is very basic:
-
-* Check if the current task execution has reached the threshold time (the _threshold_ is again a design choice there is no constrain on it's value)
-* If not, just exit without do nothing
-* Else, pick the current task, and change it's status to a non-running status, and save it's current execution context.
-* Try to pick a new task, set it in the running status and return it's saved context. 
-
