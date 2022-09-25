@@ -25,6 +25,7 @@ The steps involved are:
 
 ## Find a Font and add it to the kernel (1 and 2)
 
+
 As already said the best place to look for a font if you are running on linux is to look into the folder `/usr/share/kbd/consolefonts`, to know the psf version i  suggest to use the tool *gbdfed*, import the font with it (use the File->Import->console font menu), and tghen go to *View->Messages*, the should be a message simila to the following: 
 
 ```
