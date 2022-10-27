@@ -34,7 +34,7 @@ struct ipc_shared_memory {
 
 The `ipc_shared_memory` struct holds everything we'll need. The `physical_base` and `length` fields describe the physical memory (read: pages allocated from your physical memory manager) used by this shared memory instance. It's important to note that the address is a *physical* one, since virtual addresses are useless outside of their virtual address space. Since each process is isolated in it's own address space, we cannot store a virtual address here.
 
-The `ref_count` field is how many processes are currently using this physical memory, if this drops to zero we can safely free the physical memory used and consider the shared memory instance finished. The `name` field holds a string used to identify this shared memory instance, and the `next` pointer is used for the linked list.
+The `ref_count` field is how many processes are currently using this physical memory. If this ever reaches zero, it means no-one is using this memory, and we can safely free the physical pages. The `name` field holds a string used to identify this shared memory instance, and the `next` pointer is used for the linked list.
 
 ### Creating Shared Memory
 
@@ -48,6 +48,8 @@ Let's look at what could happen if a program wants to create some shared memory,
 - The ipc manager returns the address of the physical memory it just allocated to the VMM.
 - The VMM maps this physical memory at the virtual address it selected earlier.
 - The VMM can now return this virtual address to the program, and the program can access the shared memory at this address.
+
+We're going to focus on the three steps involving the ipc manager. Our function for creating a new shared memory region will look like the following:
 
 ```c
 spinlock_t* list_lock;
@@ -72,23 +74,129 @@ void* create_shared_memory(size_t length, const char* name) {
     
     tail->next = shared_mem;
     release(list_lock);
+
+    return shared_mem->physical_base;
 }
 ```
 
-Notice the use of the lock around when we access the linked list. Since this single list is shared by any process that interacts with the ipc manager, we need to protect it from entering a corrupted state. The lock should be allocated and initialized by some earlier code.
+This code is the core to implementing shared memory, it allows us to create a new shared memory region and gives us it's physical address. The VMM can then map this physical address into the memory space of the process like it would do with any other memory.
 
--- pmm_alloc_pages() and PAGE_SIZE
+Notice the use of the lock functions (`acquire` and `release`) when we access the linked list. Since this single list is shared between all processes that use shared memory, we have to protect it so we accidentally corrupt it. This is discussed further in the chapter on scheduling.
 
 ### Accessing Shared Memory
 
--- dont passing pointers through shared memory. Use base + offsets.
+We've successfully created shared memory in one process, now the next step is allowing another process to access it. Since each instance of shared memory has a name, we can search for an instance this way. Once we've found the correct instance it's a matter of returning the physical address and length, so the VMM can map it. We're going to return a pointer to the `ipc_shared_memory` struct itself, but in reality you only need the base and length fields. 
+
+Here's our example function:
+
+```c
+ipc_shared_memory* access_shared_memory(const char* name) {
+    ipc_shared_memory* found = list;
+    acquire(list_lock);
+
+    while (found != NULL) {
+        if (strcmp(name, found->name) == 0) {
+            release(list_lock);
+            return found;
+        }
+        found = found->next;
+    }
+    release(list_lock);
+    return NULL;
+}
+```
+
+At this point all that's left is to modify the virtual memory manager to support shared memory. This is usually done by allowing certain flags to be passed when calling `vmm_alloc` or equivalent functions.
+
+An example of how that might look:
+
+```c
+#define VMM_FLAG_SHARED_MEMORY  (1 << 0)
+
+void* vmm_alloc(size_t length, size_t flags) {
+    uintptr_t phys_base = 0;
+    if (flags & VMM_FLAG_SHARED_MEMORY)
+        phys_base = access_shared_memory("examplename")->physical_base;
+    else
+        phys_base = pmm_alloc_pages(length / PAGE_SIZE);
+    
+    //the rest of the this function can look as per normal.
+}
+```
+
+We've glossed over a lot of the implementation details here, like how you pass the name of the shared memory to the ipc manager. You could add an extra argument to `vmm_alloc`, or have a separate function entirely. The choice is yours. Traditionally functions like this accept a file descriptor, and the filename associated with that descriptor is used, but feel free to come up with your own solution.
+
+### Potential Issues
+
+There's a few potential issues to be aware of with shared memory. The biggest one is to be careful when writing data that contains pointers. Since each process interacting with shared memory may see the shared physical memory at a different virtual address, any pointers you write here may not be valid.
+
+Best practice is to store data *relative to the base*, this way each process can read the pointer from the shared memory, and add it's own virtual offset.
+
+Another problem that may arise is your compile optimizing away reads and writes to the shared memory. This can happen because the compiler sees these memory accesses are having no effect on the rest of the program. This is the same issue you might have experienced with MMIO (memory mapped io) devices, and the solution is the same: make any reads or write `volatile`.
 
 ### Cleaning Up
 
--- ref count in practice
+At some point our programs are going to exit, and when they do we'll want to reclaim any memory they were using. We mentioned using reference counting to prevent use-after-free bugs with shared memory, so let's take a look at that in practice.
+
+Again, this assumes your vmm has some way of knowing which regions of allocated virtual memory it owns, and which regions are shared memory. For our example we've stored the `flags` field used with `vmm_alloc`.
+
+```c
+void vmm_free(void* addr) {
+    size_t flags = vmm_get_flags(addr);
+    uintptr_t phys_addr = get_phys_addr(addr);
+
+    if (flags & VMM_FLAG_SHARED_MEMORY)
+        free_shared_memory(phys_addr);
+    else
+        pmm_free_pages(phys_addr, length / PAGE_SIZE);
+
+    //do other vmm free stuff, like adjusting page tables.
+}
+```
+
+The `vmm_get_Flags` is a made up function, it just returns the flags used for a particular virtual memory allocation, we also use a function to manually walk the page tables and get the physical address mapped to this virtual address (`get_phys_addr`). For details on how to get the physical address mapped to a virtual one, see the section on paging.
+
+That's the VMM modified, but what does `free_shared_memory` do? As mentioned before, it will decrement the reference count by 1, and if the count is set to 0, we free the physical pages.
+
+```c
+void free_shared_memory(void* phys_addr) {
+    ipc_shared_memory* found = list;
+    ipc_shared_memory* prev = NULL;
+    acquire(list_lock);
+
+    while (found != NULL) {
+        if (strcmp(name, found->name) == 0) {
+            release(list_lock);
+            found = list;
+        }
+        prev = found;
+        found = next;
+    }
+
+    found->ref_count--;
+    if (found->ref_count == 0) {
+        pmm_free_pages(found->physical_base, found->length / PAGE_SIZE);
+        free(found->name);
+        if (prev == NULL)
+            list = found->next;
+        else
+            prev->next = found->next;
+        free(found);
+    }
+    release(list_lock);
+}
+```
+
+Again we're omitted error handling and checking for `NULL` to keep the examples concise, but you should handle these cases in your code. The first part of the function should look similar, it's the same code used in `access_shared_memory`. The interesting part happens when the reference count reaches zero: we free the physical pages used, and free any memory we previously allocated. We also remove the shared memory instance from the linked list.
 
 ## Interesting Applications
 
--- circular buffer to immitate a stream of data.
--- mention io_uring, how this approach allows for IPC with zero intervention from the kernel.
--- Hybrid designs with occasional signals being sent by kernel.
+Most applications will default to using message passing (in the form of a pipe) for their IPC, but shared memory is a very simple and powerful alternative. It's biggest advantage is that no intervention from the kernel is required during runtime: multiple processes can exchange data at their own pace, quite often faster than you could with message passing, as there are less context switches to the kernel.
+
+More commonly a hybrid approach is taken, where processes will write into shared memory, and if a receiving process doesn't check it for long enough, the sending process will invoke the kernel to send a message to the receiving process.
+
+## Access Protection
+
+It's important to keep in mind that we have no access protection in this example. Any process can view any shared memory if it knows the correct name. This is quite unsafe, especially if you're exechanging sensitive information this way. Commonly shared memory is presented to user processes through the virtual file system (we'll look at tihs more later), this has the benefit of being able to use the access controls of the VFS for protecting shared memory as well.
+
+If you choose not to use the VFS, you will want to implement your own access control. 
