@@ -15,7 +15,7 @@ The basic concept of a VFS layer is pretty simple, we can see it like a common w
 
 In this guide we will follow a unix approach. To better understand how does it works let's have a look at this picture: 
 
-![Vfs Example Tree](Images/vfs_tree_example.png)
+![Vfs Example Tree](/Images/vfs_tree_example.png)
 
 It shows a portion of a unix directory tree (starting from root), the gray circle represents actual file system, while the white ones are directories. 
 
