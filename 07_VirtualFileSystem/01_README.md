@@ -19,7 +19,7 @@ It will be divided into two main topics:
 
 Before proceeding is useful to recap some basic file system concepts.
 
-The main purpose of a file system is to store data and make it easily accessible on a human readable way. What a file system does is organize how the data is stored, how they are represented on the disk, and provide functionalities to access, create, update and delete them. More advanced FS can also provide some kind of recovery mechanism (aka `journaling`) but we are not going to cover it because it's out of the scope of this guide. 
+The main purpose of a file system is to store data and make it easily accessible on a human readable way. What a file system does is organize how the data is stored, how they are represented on the disk, and provide functionalities to access, create, update and delete them. More advanced FS can also provide some kind of recovery mechanism (aka `journaling`), permissions,  but we are not going to cover them because it's out of the scope of this guide. 
 
 Any operating system usually implements it's own FS version, and like many other OS topics, there are different types available that try to solve specific issues, or optimize certain type of operations. 
 
@@ -31,5 +31,5 @@ But how to make different file systems with different file representation, be se
 
 How the different drivers are presented to the user is a design decision, but the two most known (and probably common) way to do that are and of course they have their pros and cons:
 
-* Show them as separated entities, like windows does, where every file system is identified by a unique letter (called the `drive letter`). The pro of this design is that we can have for example same path on two different device with the only difference being the drive letter
+* Show them as separated entities, like windows does, where every file system is identified by a unique letter (called the `drive letter`). The pro of this design is that we can have for example same path on two different device with the only difference being the drive letter (this is called the *multi-root* approach, and Windows is the most famous os using it)
 * Show them under a single tree, where there is a unique root `/` and device is `mounted` in a subfolder of the root, and even the root is a filesystem mounted. So a folder can be either a just an fs folder or a mountpoint to another file system.  This is the way used by any unix inspired operating system. The pro of this design are that we have everything under the same tree, and the feeling of being using the same file system on our OS.

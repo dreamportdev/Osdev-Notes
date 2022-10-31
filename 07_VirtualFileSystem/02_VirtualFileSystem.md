@@ -11,13 +11,19 @@ To keep our design simple the features of our VFS driver will be:
 
 ## How does VFS works
 
-The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, how they are presented it depends on design decisions for example windows operating systems wants to keep different file systems logically separated using unit letters, while unix/linux systems represents them under the same tree, so a folder can be either on the same FS or on another one, but in both cases the idea is the same, we want to use the same functions to read/write files on them. 
+The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver.
+
+![Where the VFS sits in an OS](/Images/vfs_layer.png)
+
+[SHOULD I ADD SOMETHING MORE?]
+
+ How the different fs presented to the end user depends on design decisions for example windows operating systems wants to keep different file systems logically separated using unit letters, while unix/linux systems represents them under the same tree, so a folder can be either on the same FS or on another one, but in both cases the idea is the same, we want to use the same functions to read/write files on them. 
 
 In this guide we will follow a unix approach. To better understand how does it works let's have a look at this picture: 
 
 ![Vfs Example Tree](/Images/vs_tree_exmple.png)
 
-It shows a portion of a unix directory tree (starting from root), the gray circle represents actual file system, while the white ones are directories. 
+It shows a portion of a unix directory tree (starting from root), the gray circle represents actual file systems, while the white ones are directories. 
 
 So for example: 
 
@@ -26,10 +32,35 @@ So for example:
 
 When a file system is *mounted* in a folder it means that the folder is no longer a container of other files/directories for the same filesystem but is referring to another file systems somewhere else (it can be a network drive, external device, an image file, etc.) and the folder takes the name of *mountpoint*
 
-Every mountpoint, will contain the information to access the target file system, so the VFS every time it has to access a file, it does the following:
+Every mountpoint, will contain the information on how to access the target file system, so the VFS every time it has to access a file, it does the following:
 
 * Parse the file path to identify the mountpoint of the File System
-* Once identified, it get access to the data structure holding all information on how to access it, this structure usually contains the pointer to the functions to open, write files, create dir, etc. * It call the open function for that FS passing the path to the filename (in this case the path should be relative)
+* Once identified, it get access to the data structure holding all information on how to access it, this structure usually contains the pointer to the functions to open, write files, create dir, etc.
+* It call the open function for that FS passing the path to the filename (in this case the path should be relative)
+* From this point everything is handled by the File System Driver and once the file is accessed is returned back to the vfs layer
+
+The multi-root approach, even if it is different, it share the same behaviour, the biggest difference is that instead of having to parse the path searching for a mountpoint it has only to check the first item in the it to figure out which FS is attached to. 
+
+This is in a nutshell a very high level overview of how the Virtual File System wokrs, in the next paragraphs we will go in more in details and explain all the steps involved and see how to add mountpoints, how to open/close files, read them. 
+
+## The VFS in details
+
+### Loading a file system
+
+To be able to access the different file systems currently lodaed (*mounted*) by the operating system it needs to keep track of where they are loaded (wheter it is a drive letter or a directory), and how to access them (implementation functions), to do that we need two things: 
+
+* A data structure to store all the information related to the loaded File System
+* A list/tree/array of all the file system currently loaded by the os 
+
+As we anticipated earlier this chapter we are going to use an array to keep track of the mounted file systems, even if it has several limitations and probably a tree is the best choice, we want to focus on the implementation details of the VFS without having to write/explains tree-handling functions. 
+
+
+```c
+struct {
+
+} mountpoint_t
+```
+
 
 ### Next.
 
