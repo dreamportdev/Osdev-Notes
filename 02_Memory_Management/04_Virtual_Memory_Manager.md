@@ -1,4 +1,86 @@
 # Virtual Memory Manager
+
+## An Overview
+
+At first a virtual memory manager might not seem like a necessary component since we have paging, but the VMM serves as an abstraction over the hardware used for memory translation (the MMU - memory management unit, the piece of hardware that processes our page tables), as well as abstracting away other things like memory mapping files or even devices.
+
+As mentioned, if your kernel is simple your VMM may only interact with paging, but as your kernel grows more complex, your vmm will also grow too.
+
+### Virtual Memory
+
+What exactly does the virtual memory manager *manage*? The PMM manages the physical memory installed in a computer, so it would make sense that the VMM manages the virtual memory. What do we mean by virtual memory?
+
+Once paging is enabled, any memory we access is virtual memory. Meaning that anytime we access memory it must first be translated by the MMU (memory management unit, which contains the TLB that we interact with) from a virtual address to a physical address. This is what paging does, and should be nothing new. 
+To access physical memory like we did before, we have to first map it into the virtual address space, either via an identity map or at an offset somewhere else. If we do this we can now access physical memory like before, but it's accessed via virtual memory. It's a subtle difference, but a very important one.
+
+Now that we have a layer between how the kernel and other programs see memory, we can do some interesting things. Mapping physical memory into the virtual address space is the most common use (we'll need this to access the page tables, or for drivers to communicate with hardware), but we can also place things anywhere in virtual memory that we like. 
+For example, a higher half kernel is commonly placed at -2GB (0xFFFF'FFFF'8000'0000 in a 64-bit virtual address space) which would be near-impossible to do with physical memory. We can also arrange things in virtual memory to our liking: some kernels will have the heap start at a known address (0xFFFF'D555'5555'0000 for example) to help with debugging, since you can easily tell what a virtual address corresponds too.  
+
+Using virtual memory also allows us to protect parts of memory. Once we reach userspace we will still need the kernel loaded, in order to provide system calls and handle interrupts, but we don't want the user program to be able to arbitrarily access this memory. 
+
+We can also add more advanced features later on, like demand paging. Typically when a program (including the kernel) asks the VMM for memory, and the VMM can successfully allocate it, physical memory is mapped there right away. *Immediately backing* like this has advantages in that it's very simple to implement, and can be very fast. The major downside is that we trust the program to only allocate what it needs, and if it allocates more (which is very common) that extra physical memory is wasted. In contrast, *demand paging* does not back memory right away, instead relying on the program to cause a page fault when it accesses the virtual memory it just allocated. At this point the VMM now backs that virtual memory with some physical memory, usually a few pages at a time (to save overhead on page-faults). The benefits of demand-paging are that it can reduce physical memory usage, but it can slow down programs if not implemented carefully. It also requires a more complex VMM, and the ability to handle page faults properly.
+
+On the topic of advanced VMM features, you can also do other things like caching files in memory, and then mapping those files into the virtual address space somewhere (this is what the `mmap` system call does).
+
+A lot of these features are not needed in the beginning, but hopefully the uses of a VMM are clear. To answer the original question of what a VMM does: it's really a manager of the virtual address space.
+
+## Concepts
+
+As you might expect, there are many VMM designs out there. We're going to look at a simple one that should provide all the functionality needed for now.
+First we'll need to introduce a new concept: a virtual memory object. This is just a struct that represents part of the virtual address space, so it will need a base address and length, both of these are in bytes and will be page-aligned. We'll also want to store some flags that describe the memory the object represents: is it writable? is it user accessible?
+
+These flags seem like the flags we store in the page tables, so you could just store them there, but storing them as part of the object makes looking them up faster, since you don't need to manually traverse the paging structure. Later on we will add more flags.
+
+Here's what our example virtual memory object looks like:
+
+```c
+typedef struct {
+    uintptr_t base;
+    size_t length;
+    size_t flags;
+    vm_object* next;
+} vm_object;
+
+#define VM_FLAG_NONE 0
+#define VM_FLAG_WRITE (1 << 0)
+#define VM_FLAG_EXEC (1 << 1)
+#define VM_FLAG_USER (1 << 2)
+```
+
+The `flags` field is actually a bitfield, and we've defined some macros to use with it. These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to cpu architecture and most of the code won't need to change, we'll just a short function that converts the vm flags into page table flags. This is especially convinient for oddities like x86 and it's nx-bit, where all memory is executable by default, and you must specify if you *don't* want it to be executable. 
+
+Having it like this allows that to be abstracted away from the rest of our kernel. For x86_64 our translation function would look like the following:
+
+```c
+uint64_t convert_x86_64_vm_flags(size_t flags) {
+    uint64_t value = 0;
+    if (flags & VM_FLAG_WRITE)
+        value |= PT_FLAG_WRITE;
+    if (flags & VM_FLAG_USER)
+        value |= PT_FLAG_USER;
+    if ((flags & VM_FLAG_EXEC) == 0)
+        value |= PT_FLAG_NX;
+    return value;
+};
+```
+
+The `PT_xyz` macros are just setting the bits in the page table entry, for specifics see the paging chapter. Notice how we set the NX-bit if `VM_FLAG_EXEC` is not set because of a quirk on x86.
+
+We're going to store these vm objects as a linked list, which is the purpose of the `next` field.
+
+## Allocating Objects
+
+`void* vmm_alloc(size_t length, size_t flags)` for general allocations
+`void* vmm_map(uintptr_t phys_addr, size_t length, size_t flags)` for mmio or pre-allocated memory.
+
+## Freeing Objects
+
+`void vmm_free(void* addr)`
+
+## Workflow
+
+- unless you specifically need *physical memory*, you use `vmm_alloc`/`vmm_free` for stuff.
+
 ## Backing Virtual Memory with Physical Memory
 
 When does virtual memory become physical? Well it's up to you. There are two main ways this is done:
