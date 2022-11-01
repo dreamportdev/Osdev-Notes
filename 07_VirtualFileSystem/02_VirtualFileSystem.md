@@ -8,6 +8,7 @@ To keep our design simple the features of our VFS driver will be:
 * Fixed number of mountpoints using an array
 * Support only the following functions: `open, read, write, close, opendir, readdir, closedir, stat`
 * No extra features like permissions, uid and gid (although we are going to add those fields, they will not be used)
+* The path length will be limited
 
 ## How does VFS works
 
@@ -32,7 +33,7 @@ So for example:
 
 When a file system is *mounted* in a folder it means that the folder is no longer a container of other files/directories for the same filesystem but is referring to another file systems somewhere else (it can be a network drive, external device, an image file, etc.) and the folder takes the name of *mountpoint*
 
-Every mountpoint, will contain the information on how to access the target file system, so the VFS every time it has to access a file, it does the following:
+Every mountpoint, will contain the information on how to access the target file system, so the VFS every time it has to access a file (i.e. a `open` function is called), it does the following:
 
 * Parse the file path to identify the mountpoint of the File System
 * Once identified, it get access to the data structure holding all information on how to access it, this structure usually contains the pointer to the functions to open, write files, create dir, etc.
@@ -52,15 +53,38 @@ To be able to access the different file systems currently lodaed (*mounted*) by 
 * A data structure to store all the information related to the loaded File System
 * A list/tree/array of all the file system currently loaded by the os 
 
-As we anticipated earlier this chapter we are going to use an array to keep track of the mounted file systems, even if it has several limitations and probably a tree is the best choice, we want to focus on the implementation details of the VFS without having to write/explains tree-handling functions. 
+As we anticipated earlier this chapter we are going to use an array to keep track of the mounted file systems, even if it has several limitations and probably a tree is the best choice, we want to focus on the implementation details of the VFS without having to write/explain also the tree-handling functions. 
 
+We just said that we need a data structure to keep track of the information of a mounted file system, but what we need to keep track? Let's see what we need to store: 
 
+1. The type of the filesystem, the user/os sometimes needs to know what fs is used for a specified mountpoint
+2. The folder where it is mounted, this is how we are going to identify the correct mountpoint while accessing a file
+3. How to access the driver, this field can vary widely depending on how is going to be implemented, but the basic idea is to provide access to the functions to read/write files, directories, etc. We will implement them later in the chapter for now we will assume they are already available within a data type called `fs_operations_t` (it will be another data structure).
+
+Let's call this new structure `mountpoint_t`
 ```c
+#define VFS_TYPE_LENGTH 32
+#define VFS_PATH_LENGTH 64
 struct {
 
-} mountpoint_t
+    char type[VFS_TYPE_LENGTH];
+    char mountpoint[VFS_TYPE_LENGTH];
+
+    fs_operations_t operations;
+
+} mountpoint_t;
+
+typedef struct mountpoint_t mountpoint_t;
 ```
 
+The next thing is to declare an array with this new data structure, that is going to contain all the mounted filesystem, and will be the first place where we will look whenever we want to access a folder or a file: 
+
+```c
+#define MAX_MOUNTPOINTS 12
+mountpoint_t mountpoints[MAX_MOUNTPOINTS];
+```
+
+This is all that we need to keep track of the mountpoints
 
 ### Next.
 
