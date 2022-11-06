@@ -33,7 +33,7 @@ So for example:
 
 When a file system is *mounted* in a folder it means that the folder is no longer a container of other files/directories for the same filesystem but is referring to another file systems somewhere else (it can be a network drive, external device, an image file, etc.) and the folder takes the name of *mountpoint*
 
-Every mountpoint, will contain the information on how to access the target file system, so the VFS every time it has to access a file (i.e. a `open` function is called), it does the following:
+Every mountpoint, will contain the information on how to access the target file system, so the VFS every time it has to access a file or directory (i.e. a `open` function is called), it does the following:
 
 * Parse the file path to identify the mountpoint of the File System
 * Once identified, it get access to the data structure holding all information on how to access it, this structure usually contains the pointer to the functions to open, write files, create dir, etc.
@@ -45,6 +45,13 @@ The multi-root approach, even if it is different, it share the same behaviour, t
 This is in a nutshell a very high level overview of how the Virtual File System wokrs, in the next paragraphs we will go in more in details and explain all the steps involved and see how to add mountpoints, how to open/close files, read them. 
 
 ## The VFS in details
+
+Finally we are going to write our implementation of the virtual file system, followed by an example driver (**spoiler alert**: the tar archive format), in this section we will see how to: 
+
+* load and unload a file system (mount/umount) 
+* open and close a file
+* read/write it's content 
+* open, read and close a directory
 
 ### Loading a file system
 
@@ -61,7 +68,7 @@ We just said that we need a data structure to keep track of the information of a
 2. The folder where it is mounted, this is how we are going to identify the correct mountpoint while accessing a file
 3. How to access the driver, this field can vary widely depending on how is going to be implemented, but the basic idea is to provide access to the functions to read/write files, directories, etc. We will implement them later in the chapter for now we will assume they are already available within a data type called `fs_operations_t` (it will be another data structure).
 
-Let's call this new structure `mountpoint_t`
+Let's call this new structure `mountpoint_t` and start to fill in some fields: 
 
 ```c
 #define VFS_TYPE_LENGTH 32
@@ -98,7 +105,30 @@ Usually a mount operation requires a set of minimum three parameters:
 * A target folder (that is the folder where the file system will be accessible by the OS) 
 * The target device (in our simple scenario this parameter is going to be mostly ignored since the os will not support any i/o device)
 
-There can be other of course configuration parameters like access permission, driver configuration attributes, etc. For now we haven't implemented a file system yet (we will do soon), but let's assume that our os has a driver for the `USTAR` fs (the one we will implement later)
+There can be others of course configuration parameters like access permission, driver configuration attributes, etc. For now we haven't implemented a file system yet (we will do soon), but let's assume that our os has a driver for the `USTAR` fs (the one we will implement later), and that the following functions are already implemented: 
+
+```c
+int ustar_open(char *path, int flags);
+int ustar_close(int ustar_fd);
+void ustar_read(int ustar_fd, void *buffer, size_t count);
+int close(int ustar_fd)
+``` 
+
+#### A short diversion: the initialization
+
+When the kernel first boot up, of course there is no file system mounted, and all data structures are not allocated, if we decide to use a linked list for example, before the initialization the pointer will point to nothing (or better to garbage) so we will need to allocate the first item of the list to have the first fs accessible. 
+
+In our case since we are using an array we need just to clean all the items in it order to make sure the kernel will not be tricked into thinking that there is a FS loaded, and we need an index pointer to know what is the position of the first available file system.
+
+But where should be the first file system mounted? That again is depending on the project decisions:
+
+* Using a single root approach, the first file system will be mounted on the "/" folder, and this is what we are going to do, this means that all other file systems will be going to stay into subfolders of the root folder. 
+* Using a multi root approach, like windows os, we will have every fs that will have it's own root folder and it will be identified with a letter (A, B, C...)
+* Nothing prevent us to use different approaches, or a mix of them, we can have some file system to share the same root, while some other to have different root, this totally depends on design decision. 
+
+One last thing about the initialization, since our kernel is loaded fully in memory, we don't actually need to have a file system mounted for the kernel to run (even if probably in the future we will need one) so the initialization is just optional to be done during boot time, if the kernel already has a shell we can initialize it on the first mount when it will be called. 
+
+
 
 ### Next.
 
