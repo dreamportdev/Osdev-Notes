@@ -62,6 +62,7 @@ We just said that we need a data structure to keep track of the information of a
 3. How to access the driver, this field can vary widely depending on how is going to be implemented, but the basic idea is to provide access to the functions to read/write files, directories, etc. We will implement them later in the chapter for now we will assume they are already available within a data type called `fs_operations_t` (it will be another data structure).
 
 Let's call this new structure `mountpoint_t`
+
 ```c
 #define VFS_TYPE_LENGTH 32
 #define VFS_PATH_LENGTH 64
@@ -84,7 +85,20 @@ The next thing is to declare an array with this new data structure, that is goin
 mountpoint_t mountpoints[MAX_MOUNTPOINTS];
 ```
 
-This is all that we need to keep track of the mountpoints
+This is all that we need to keep track of the mountpoints.
+
+
+### Mounting and umounting
+
+Now that we have a representation of a mountpoint, is time to see how to mount a file system. By mounting we mean making a device/image/network storage able to be accessed by the operating system on a target folder (the `mountpoint`) loading the driver and the target device. 
+
+Usually a mount operation requires a set of minimum three parameters: 
+
+* A File System type
+* A target folder (that is the folder where the file system will be accessible by the OS) 
+* The target device (in our simple scenario this parameter is going to be mostly ignored since the os will not support any i/o device)
+
+There can be other of course configuration parameters like access permission, driver configuration attributes, etc. For now we haven't implemented a file system yet (we will do soon), but let's assume that our os has a driver for the `USTAR` fs (the one we will implement later)
 
 ### Next.
 
