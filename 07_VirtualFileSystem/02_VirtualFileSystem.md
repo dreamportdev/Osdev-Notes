@@ -101,7 +101,7 @@ Now that we have a representation of a mountpoint, is time to see how to mount a
 
 Usually a mount operation requires a set of minimum three parameters: 
 
-* A File System type
+* A File System type, it is needed to load the correct driver for accessing the file system on the target device.
 * A target folder (that is the folder where the file system will be accessible by the OS) 
 * The target device (in our simple scenario this parameter is going to be mostly ignored since the os will not support any i/o device)
 
@@ -113,6 +113,33 @@ int ustar_close(int ustar_fd);
 void ustar_read(int ustar_fd, void *buffer, size_t count);
 int close(int ustar_fd)
 ``` 
+
+For the mount and umount operation we will need two functions: 
+
+* The first one for mounting, let's call it for example `vfs_mount`, to work it will need at least the parameters explained above: 
+
+```c
+int vfs_mount(char *device, char *target, char *fs_type);
+```
+
+Once called it will simply add a new item in the mountpoint on the first available position, and will populate the data mountpoint data structure with the information provided, for example using the array approach, if a free spot is found at index `i` to add a new file sytem we will have something like: 
+
+```c
+mountpoints[i].device = device;
+mountpoints[i].tpye = type;
+mountpoints[i].mountpoint = target;
+mountpoints[i[.operations = NULL 
+```
+
+the last line will be populated soon, for now let's leave it to null. 
+
+* The second instruction is for umounting, in this case since we are just unloading the file device from the system, we don't need to know what type is it, so technically we need either the target device or the target folder, the function can actually accept both parameters, but use only one of them, let's call it `vfs_umount`: 
+
+```c
+int vfs_umount(char *device, char *targe);
+```
+
+In this case we need to find the item in the list that contains the required file system, and if found remove it from the list/tree. In our case since we are using an array we need to clear all the fields in the array at the position containing our fs. 
 
 #### A short diversion: the initialization
 
@@ -126,8 +153,7 @@ But where should be the first file system mounted? That again is depending on th
 * Using a multi root approach, like windows os, we will have every fs that will have it's own root folder and it will be identified with a letter (A, B, C...)
 * Nothing prevent us to use different approaches, or a mix of them, we can have some file system to share the same root, while some other to have different root, this totally depends on design decision. 
 
-One last thing about the initialization, since our kernel is loaded fully in memory, we don't actually need to have a file system mounted for the kernel to run (even if probably in the future we will need one) so the initialization is just optional to be done during boot time, if the kernel already has a shell we can initialize it on the first mount when it will be called. 
-
+One last thing about the initialization, since our kernel is loaded fully in memory, we don't actually need to have a file system mounted for the kernel to run (even if probably in the future we will need one) so the initialization is just optional to be done during boot time, if the the os already has a kind of shell we can initialize it on the first mount when it will be called. 
 
 
 ### Next.
