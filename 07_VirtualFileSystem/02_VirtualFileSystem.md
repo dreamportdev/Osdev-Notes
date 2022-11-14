@@ -164,7 +164,7 @@ Now that we know how to handle the mountpoints, we need to understand how given 
 * if we are using a single root approach we will have a path in the form of: `/path/to/folder/and/file`
 * if we are using a multi-root approach the the path will be similar to: `<device_id>/path/to/folder/and/file` (where device_id is what identify the file system to be used, and the device, what it is depend on the os, it can be a letter, a number, a mix, etc.)
 
-We will cover the single root approach, but eventually changing to a multi-root approach should be pretty easy. One last thing to keep in mind is that the path separator is another design decision, mostly every operating system use either "/" or "\" (the latter is mostly on windows os and derivatives), but in theory everything can be used as a path separator, we will stick with the unix-friendly "/". 
+We will cover the single root approach, but eventually changing to a multi-root approach should be pretty easy. One last thing to keep in mind is that the path separator is another design decision, mostly every operating system use either "/" or "\" (the latter is mostly on windows os and derivatives), but in theory everything can be used as a path separator, we will stick with the unix-friendly "/", just keep in mind if going for the "windows" way, the separator is the same as the escape character, so it can interfere with the escape sequences.
 
 For example let's assume that we have the following list of mountpoints: 
 
@@ -198,6 +198,19 @@ Implementing the function is left as exercise, below we just declare the header 
 ```c
 int get_mounpoint_id(char *path);
 ```
+### Absolute vs relative path
+
+Even though the concept of absolue and relative path, should be alresady known, it could be a good idea to understand how it works from a fs point of view. 
+
+An absolute path, is a path that starts from the root folder ("/") and contains all the path toward the file, in a multi-root scenario it will always start with a device_id. While when we talk about relative paths it means that they are relative to the current working directory ( usually denoted with a "."), and they are represented in two ways: 
+
+* with a leading dot: "./path/to/file"
+* without the leading dot, and without the leading "/": "path/to/file"
+
+So if for example the current working directory is: "/home/user/", the full path will become: "/home/user/path/to/file". Current Working Directory, depends on the process/thread/shell, but usually is the folder where the program is launched or the directory we are in a shell (that is a process) again. 
+
+Usually the VFS should worry only about absolute paths, and the relative path resolution should be done a layer above it.
+
 
 ### Next.
 
