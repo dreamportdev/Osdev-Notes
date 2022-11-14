@@ -52,4 +52,3 @@ What does this mean? That if we try to access *a* later, when the allocator has 
 
 Of course things could have been different if we assumed that the addressed returned by the allocator were at a page boundary (i.e. *a* was starting at 0x10985 and *b* at 0x10990, this would have caused to have *c* be outside the current page boundary, so it would have caused a page fault, but we will talk more about it later). 
 
-__Continue__

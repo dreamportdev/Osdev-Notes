@@ -35,7 +35,7 @@ One of the major differences between the two protocols is how info is passed bet
 - Multiboot 1 has a fixed size header within the kernel, that is read by the bootloader. This limits the number of options available, and wastes space if not all options are used.
 - Multiboot 2 uses a fixed sized header that includes a `size` field, which contains the number of bytes of the header + all of the following requests. Each request contains an `identifier` field and then some request specific fields. This has slightly more overhead, but is more flexible. The requests are terminated with a special 'null request' (see the specs on this).
 
-- Multiboot 1 returns info the kernel via a single large structure, with a bitmap indicating which sections of the structure are considered valid.
+- Multiboot 1 returns info to the kernel via a single large structure, with a bitmap indicating which sections of the structure are considered valid.
 - Multiboot 2 returns a pointer to a series of tags. Each tag has an `identifier` field, used to determine it's contents, and a size field that can be used to calculate the address of the next tag. This list is also terminated with a special null tag.
 
 One important note about multiboot 2: the memory map is essentially the map given by the bios/uefi. The areas used by bootloader memory (like the current gdt/idt), kernel and info structure given to the kernel are all allocated in *free* regions of memory. The specification does not say that these regions must then be marked as *used* before giving the memory map to the kernel. This is actually how grub handles this, so should definitely do a sanity check on the memory map.

@@ -1,7 +1,5 @@
 # Memory Management
 
-**_This file is in draft state and not completed yet, some information may not be accurate and/or complete. I'm working on it_**
-
 Welcome to one of the first big challenges of your osdev adventure. This is the first *complex* component that you'll have to implement. 
 
 The easiest way to define a memory manager is that it is a system that manages computer memory, and provide ways to dynamically allocate and free portions of it. 
@@ -49,7 +47,7 @@ Each of the layers has a dedicated section below, however we'll start with a hig
 - If using a higher half kernel, the upper half of every VMM will be identical, and contain the protected kernel code and data.
 
 ## Heap Allocator
-- At last one per process/running program. 
+- At least one per process/running program. 
 - Can be chained! Some designs are faster for specific tasks, and often will operate on top of each other.
 - Can exist in kernel or user space.
 - Can manage memory of any size, unlike the VMM which often operates in page-sized chunks (for simplicity). Often splitting the page-aligned chunks given by the VMM into whatever the program requests via `malloc(xyz)`.
