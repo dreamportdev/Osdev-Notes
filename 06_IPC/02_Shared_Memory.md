@@ -65,7 +65,7 @@ void* create_shared_memory(size_t length, const char* name) {
     shared_mem->name = malloc(name_length + 1);
     strcpy(shared_mem->name, name);
 
-    shared_mem->physical_base = pmm_alloc_pages(length / PAGE_SIZE);
+    shared_mem->physical_base = pmm_alloc(length / PAGE_SIZE);
 
     acquire(list_lock);
     ipc_shared_memory* tail = list;
@@ -111,20 +111,22 @@ At this point all that's left is to modify the virtual memory manager to support
 An example of how that might look:
 
 ```c
-#define VMM_FLAG_SHARED_MEMORY  (1 << 0)
+#define VM_FLAG_SHARED  (1 << 0)
 
 void* vmm_alloc(size_t length, size_t flags) {
     uintptr_t phys_base = 0;
-    if (flags & VMM_FLAG_SHARED_MEMORY)
+    if (flags & VM_FLAG_SHARED)
         phys_base = access_shared_memory("examplename")->physical_base;
     else
-        phys_base = pmm_alloc_pages(length / PAGE_SIZE);
+        phys_base = pmm_alloc(length / PAGE_SIZE);
     
     //the rest of the this function can look as per normal.
 }
 ```
 
 We've glossed over a lot of the implementation details here, like how you pass the name of the shared memory to the ipc manager. You could add an extra argument to `vmm_alloc`, or have a separate function entirely. The choice is yours. Traditionally functions like this accept a file descriptor, and the filename associated with that descriptor is used, but feel free to come up with your own solution.
+
+If you're following the VMM design explained in the memory management chapter, you can use the extra argument to pass this information. 
 
 ### Potential Issues
 
@@ -148,7 +150,7 @@ void vmm_free(void* addr) {
     if (flags & VMM_FLAG_SHARED_MEMORY)
         free_shared_memory(phys_addr);
     else
-        pmm_free_pages(phys_addr, length / PAGE_SIZE);
+        pmm_free(phys_addr, length / PAGE_SIZE);
 
     //do other vmm free stuff, like adjusting page tables.
 }
@@ -175,7 +177,7 @@ void free_shared_memory(void* phys_addr) {
 
     found->ref_count--;
     if (found->ref_count == 0) {
-        pmm_free_pages(found->physical_base, found->length / PAGE_SIZE);
+        pmm_free(found->physical_base, found->length / PAGE_SIZE);
         free(found->name);
         if (prev == NULL)
             list = found->next;
