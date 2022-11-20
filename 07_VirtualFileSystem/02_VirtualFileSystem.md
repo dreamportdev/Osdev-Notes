@@ -157,7 +157,7 @@ But where should be the first file system mounted? That again is depending on th
 
 One last thing about the initialization, since our kernel is loaded fully in memory, we don't actually need to have a file system mounted for the kernel to run (even if probably in the future we will need one) so the initialization is just optional to be done during boot time, if the the os already has a kind of shell we can initialize it on the first mount when it will be called. 
 
-### Finding the correct mountpoint
+#### Finding the correct mountpoint
 
 Now that we know how to handle the mountpoints, we need to understand how given a path find the correct route toward the right mountpoint. Depending on the approach how a path is defined can vary slightly: 
 
@@ -198,7 +198,7 @@ Implementing the function is left as exercise, below we just declare the header 
 ```c
 int get_mounpoint_id(char *path);
 ```
-### Absolute vs relative path
+#### Absolute vs relative path
 
 Even though the concept of absolue and relative path, should be alresady known, it could be a good idea to understand how it works from a fs point of view. 
 
@@ -211,6 +211,31 @@ So if for example the current working directory is: "/home/user/", the full path
 
 Usually the VFS should worry only about absolute paths, and the relative path resolution should be done a layer above it.
 
+### Opening a file
+
+After having implemented all the functions to load file systems and identify given a file path which mountpoint is containing it, we can now start to implement functions to opening and reading files. 
+
+Let's quickly recap on how we usually read a file in C:
+
+```C
+FILE *file_pointer;
+char ch;
+file_pointer = fopen("/path/to/file/to_open", "modes");
+
+do {
+    ch = fgetc(file_pointer);
+    printf("%c", ch);
+} while ( ch != EOF);
+fclose(file_pointer);
+```
+
+The code snipeet above is using the C stdlib file handling libraries, what the code above is doing is: 
+
+* Calling fopen to get a reference to a file on the FS, that is the described by the FILE* pointer. FILE is a data structure containing information about the status of the current opened file, i.e. flags used to pen it, buffer pointers (for read and write purpose), lock status, etc. 
+* If the file is found and the file_pointer is not null, than we can read it, in this example we used fgetc, but there are other functions too (i.e. fscanf), the read file function will use the FILE pointer struct to get the content from the file 
+* When we reach the end of file we can close the file (freeing the file_pointer memory)
+
+As you can see from the above code there are no instructions where we specify the file system type, or the driver to use this is all handled by the vfs layer. 
 
 ### Next.
 
