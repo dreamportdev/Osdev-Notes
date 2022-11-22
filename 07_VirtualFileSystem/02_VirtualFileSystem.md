@@ -235,7 +235,34 @@ The code snipeet above is using the C stdlib file handling libraries, what the c
 * If the file is found and the file_pointer is not null, than we can read it, in this example we used fgetc, but there are other functions too (i.e. fscanf), the read file function will use the FILE pointer struct to get the content from the file 
 * When we reach the end of file we can close the file (freeing the file_pointer memory)
 
-As you can see from the above code there are no instructions where we specify the file system type, or the driver to use this is all handled by the vfs layer. 
+As you can see from the above code there are no instructions where we specify the file system type, or the driver to use this is all handled by the vfs layer. The above functions will avail of the kernel system calls open/read/close, and those are the functions we are going to implement. (IS THAT CORRECT?)
+
+To open a file what we need to do is: 
+
+* Parse the path to get the correct mountpoint, as described in the previous paragraph
+* Get the mountpoint item and call it's FS open function
+* Return a file descriptor or an error if needed. 
+
+The function header for our open function will be: 
+
+```c 
+int vfs_open(const char *filename, int flags);
+```
+
+The `flags` parameter will tell how the file will be opened, there are many flags, and the three below should be mutually exclusive:
+
+* O_RDONLY it opens a file in read only mode
+* O_RDWR it opens a file for reading and writing
+* O_WRONLY it opens a file only for writing.
+
+The flags value is a bitwise operator, and there are other possible values to be used, but for our purpose we will just use the three above. 
+
+The return value of the function is the file descriptor id
+
+
+
+
+ 
 
 ### Next.
 
