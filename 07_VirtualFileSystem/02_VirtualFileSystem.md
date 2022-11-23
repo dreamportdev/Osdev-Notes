@@ -218,24 +218,24 @@ After having implemented all the functions to load file systems and identify giv
 Let's quickly recap on how we usually read a file in C:
 
 ```C
-FILE *file_pointer;
-char ch;
-file_pointer = fopen("/path/to/file/to_open", "modes");
-
-do {
-    ch = fgetc(file_pointer);
-    printf("%c", ch);
-} while ( ch != EOF);
-fclose(file_pointer);
+int fd;
+char *buffer = (char *) calloc(11, sizeof(char));
+file_pointer = open("/path/to/file/to_open", O_RDONLY);
+int sz = read(fd, buffer, 10) 
+buf[sz] = '\0';
+printf("%s", buffer);
+close(file_pointer);
 ```
 
-The code snipeet above is using the C stdlib file handling libraries, what the code above is doing is: 
+The code snippet above is using the C stdlib file handling libraries, what the code above is doing is: 
 
-* Calling fopen to get a reference to a file on the FS, that is the described by the FILE* pointer. FILE is a data structure containing information about the status of the current opened file, i.e. flags used to pen it, buffer pointers (for read and write purpose), lock status, etc. 
-* If the file is found and the file_pointer is not null, than we can read it, in this example we used fgetc, but there are other functions too (i.e. fscanf), the read file function will use the FILE pointer struct to get the content from the file 
-* When we reach the end of file we can close the file (freeing the file_pointer memory)
+* Calling open get file descriptor id that will contain information on how to access the file itself on the file system.  
+* If the file is found and the fd value is not -1, than we can read it
+* It ow read 10 bytes from the opened file (the read function will access it via the fd field), and store the output in the buffer. The read function returns the number of bytes read.
+* If we want to print the string read we need to append the EndOfLine symbol after the last byte read. 
+* Now we can close the file_pointer (destroying the file descriptor associated with the id if it is possible, otherwise -1 will be returned). 
 
-As you can see from the above code there are no instructions where we specify the file system type, or the driver to use this is all handled by the vfs layer. The above functions will avail of the kernel system calls open/read/close, and those are the functions we are going to implement. (IS THAT CORRECT?)
+As you can see from the above code there are no instructions where we specify the file system type, or the driver to use this is all handled by the vfs layer. The above functions will avail of kernel system calls open/read/close, and those are the functions we are going to implement. (IS THAT CORRECT?)
 
 To open a file what we need to do is: 
 
