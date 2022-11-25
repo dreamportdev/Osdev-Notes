@@ -211,7 +211,7 @@ So if for example the current working directory is: "/home/user/", the full path
 
 Usually the VFS should worry only about absolute paths, and the relative path resolution should be done a layer above it.
 
-### Opening a file
+### Accessing a file
 
 After having implemented all the functions to load file systems and identify given a file path which mountpoint is containing it, we can now start to implement functions to opening and reading files. 
 
@@ -235,7 +235,11 @@ The code snippet above is using the C stdlib file handling libraries, what the c
 * If we want to print the string read we need to append the EndOfLine symbol after the last byte read. 
 * Now we can close the file_pointer (destroying the file descriptor associated with the id if it is possible, otherwise -1 will be returned). 
 
-As you can see from the above code there are no instructions where we specify the file system type, or the driver to use this is all handled by the vfs layer. The above functions will avail of kernel system calls open/read/close, and those are the functions we are going to implement. (IS THAT CORRECT?)
+As you can see from the above code there are no instructions where we specify the file system type, or the driver to use this is all handled by the vfs layer. The above functions will avail of kernel system calls open/read/close, usually those function sits somewhere above the kernel VFS layer, and they use some system calls, but in our _naive_ implementation they are going to be our VFS layer, and also we are going to make a simpler version of them. 
+
+We can assume that any file system i/o operation consists of thre basic steps: opening the file, reading/writing from/to it and then closing it. 
+
+#### First step: opening a file
 
 To open a file what we need to do is: 
 
@@ -246,7 +250,7 @@ To open a file what we need to do is:
 The function header for our open function will be: 
 
 ```c 
-int vfs_open(const char *filename, int flags);
+int open(const char *filename, int flags);
 ```
 
 The `flags` parameter will tell how the file will be opened, there are many flags, and the three below should be mutually exclusive:
@@ -257,9 +261,14 @@ The `flags` parameter will tell how the file will be opened, there are many flag
 
 The flags value is a bitwise operator, and there are other possible values to be used, but for our purpose we will just use the three above. 
 
-The return value of the function is the file descriptor id
+The return value of the function is the file descriptor id. We have already seen how to parse a path and get the mountpoint id if it is available. But what about the file descriptor and it's id? What is it? File descriptors represents a file that has been opened by the VFS, and contain information on how to access it (i.e. mountpoint_id), the filename, the various pointers to keep track of current read/write positions, eventual locks, etc. So before proceed let's outline a very simple file descriptor struct: 
 
+```c
+struct {
 
+    int id;
+} file_descriptor_t
+```
 
 
  
