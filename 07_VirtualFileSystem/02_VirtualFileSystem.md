@@ -265,11 +265,18 @@ The return value of the function is the file descriptor id. We have already seen
 
 ```c
 struct {
-
-    int id;
+    int fs_file_id;
+    int mountpoint_id;
+    char *filename;
+    int buf_read_pos;
+    int buf_write_pos;
+    char *file_buffer;
 } file_descriptor_t
 ```
 
+Where the `mountpoint_id` fields is the id of the mounted file system that is contining the requeste file. The `fs_file_id` is the fs specific id of the fs opened file descriptor. `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations. 
+
+So once our open function has found the mountpoint for the requested file, a new file descriptor item will be created and filled, and an id value returned. This id is different from the ine in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
 
  
 
