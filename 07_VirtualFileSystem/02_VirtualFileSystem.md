@@ -111,7 +111,7 @@ There can be others of course configuration parameters like access permission, d
 int ustar_open(char *path, int flags);
 int ustar_close(int ustar_fd);
 void ustar_read(int ustar_fd, void *buffer, size_t count);
-int close(int ustar_fd)
+int ustar_close(int ustar_fd)
 ``` 
 
 For the mount and umount operation we will need two functions: 
@@ -198,6 +198,9 @@ Implementing the function is left as exercise, below we just declare the header 
 ```c
 int get_mounpoint_id(char *path);
 ```
+
+If the above function fail it should return a negative number (i.e. -1) to let the caller know that something didn't worked (it should always return at least 0 in a single root implementation). 
+
 #### Absolute vs relative path
 
 Even though the concept of absolue and relative path, should be alresady known, it could be a good idea to understand how it works from a fs point of view. 
@@ -276,9 +279,48 @@ struct {
 
 Where the `mountpoint_id` fields is the id of the mounted file system that is contining the requeste file. The `fs_file_id` is the fs specific id of the fs opened file descriptor. `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations. 
 
-So once our open function has found the mountpoint for the requested file, a new file descriptor item will be created and filled, and an id value returned. This id is different from the ine in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
+So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an id value returned. This id is different from the ine in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
 
- 
+Why "eventually" ? Having found the mountpoint id for the file doesn't mean that the file exists on that fs, the only thing that exist so far is the mountpoint, but after that the VFS can't really know if the file exists or not, it has to devolve this task to the fs driver, hence it will call the implementation of a function that open a file on that FS that will do the search and return the an error if the file doesn't exists.  
+
+But how to call the fs driver function? Earlier in this chapter when we outlined the `mountpoint_t` structure we added a field called `operations`, of type `fs_operations_t` and left it unimplemented. Now is the time to implement it, this field is going to contain the pointer to the driver functions that will be used by the vfs to open, read, write, and close files:
+
+```c
+struct fs_operations_t {
+	int (*open)(const char *path, int flags, ... );
+	int (*close)(int);
+	ssize_t (*read)(int, char*, size_t);
+	ssize_t (*write)(int,const void*, size_t);
+};
+
+typedef struct fs_operations_t fs_operations_t;
+```
+
+The basic idea is that once the mountpoint_id has been found (we declared `get_mountpoint_id` in the previous paragraph), the vfs will use the mountpoint item to call the fs driver implementation of the open function, the only thing we need to consider is that when calling the driver function, it doesn't care about the mountpoint part of the path, and if the whole path is passed, we will most likely get an error, since the fs root will start from within the mountpoint folder. What we need thean is a function that get the relative path from an absolute one, the idea and implementation should be pretty straightforward, and just involve few `strcpy` operations, so this is left as exercise, let's just assume that we have one with the following signature: 
+
+```c
+char *get_rel_path(char *mountpoint_part, char* full_path);
+```
+
+With that function we can outline some pseudo code for our vfs_open: 
+
+```c
+int open(const char *path, int flags){
+    mountpoint_id = get_mountpoint_id(pathname);
+    
+    if (mountpoint_id > -1) {
+        char *rel_path = get_rel_path(mountpoints[mountpoint_id], path);
+        int fs_specific_id = mountpoints[mountpoint_id].operations.open(rel_path, flags);
+        if (fs_specific_id != ERROR) {
+            /* IMPLEMENTATION LEFT AS EXERCISE */
+            // Get a new vfs descriptor id, and fill the file descriptor entry
+        }
+    }
+    return vfs_id
+}
+```
+
+The above pseudo code should give us an idea of what is the workflow of opening a file from a VFS point of view, as you can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
 
 ### Next.
 
