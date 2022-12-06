@@ -183,7 +183,7 @@ And we want to access the following paths:
 
 As we can see the first two paths have a common part, but belongs to different file system so we need to implement a function that given a path return the index of the file system it belongs to. 
 
-How to do it is pretty simple, we scan the array, and search for the "longest" mountpoint that is contained in the path, so for in the first example, we can see that there are two items in the array that are contained in the path: "/" (0), and "/home" (3), and the longest one is number 3, so this is what our function is going to return. 
+How to do it is pretty simple, we scan the array, and search for the "longest" mountpoint that is contained in the path, so in the first example, we can see that there are two items in the array that are contained in the path: "/" (0), and "/home" (3), and the longest one is number 3, so this is what our function is going to return. 
 
 The second path instead has three mountpoints contained into it: "/" (0), "/home/mount" (1), "/home", in this case we are going to return 1. 
 
@@ -277,9 +277,15 @@ struct {
 } file_descriptor_t
 ```
 
+We need to declare a variable that contains the opened file descriptors, as usual we are using a naive approach, and just use an array, this means that we will have a limited number of files that can be opened: 
+
+```c 
+struct file_descriptors_t vfS_opened_files[MAX_OPENED_FILES]
+```
+
 Where the `mountpoint_id` fields is the id of the mounted file system that is contining the requeste file. The `fs_file_id` is the fs specific id of the fs opened file descriptor. `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations. 
 
-So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an id value returned. This id is different from the ine in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
+So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an id value returned. This id is different from the ine in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled. 
 
 Why "eventually" ? Having found the mountpoint id for the file doesn't mean that the file exists on that fs, the only thing that exist so far is the mountpoint, but after that the VFS can't really know if the file exists or not, it has to devolve this task to the fs driver, hence it will call the implementation of a function that open a file on that FS that will do the search and return the an error if the file doesn't exists.  
 
@@ -313,7 +319,8 @@ int open(const char *path, int flags){
         int fs_specific_id = mountpoints[mountpoint_id].operations.open(rel_path, flags);
         if (fs_specific_id != ERROR) {
             /* IMPLEMENTATION LEFT AS EXERCISE */
-            // Get a new vfs descriptor id, and fill the file descriptor entry
+            // Get a new vfs descriptor id vfs_id
+            vfs_opened_files[vfs_id] = //fill the file descriptor entry at position 
         }
     }
     return vfs_id
@@ -321,6 +328,14 @@ int open(const char *path, int flags){
 ```
 
 The above pseudo code should give us an idea of what is the workflow of opening a file from a VFS point of view, as you can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
+
+The `close` with signature: 
+
+```c 
+int close(int fildes);
+```
+
+will take a vfs file descriptor as parameter, and will search for it in the opened files list (using an array it will be just file
 
 ### Next.
 
