@@ -126,7 +126,7 @@ Once called it will simply add a new item in the mountpoint on the first availab
 
 ```c
 mountpoints[i].device = device;
-mountpoints[i].tpye = type;
+mountpoints[i].type = type;
 mountpoints[i].mountpoint = target;
 mountpoints[i[.operations = NULL 
 ```
@@ -136,7 +136,7 @@ the last line will be populated soon, for now let's leave it to null.
 * The second instruction is for umounting, in this case since we are just unloading the file device from the system, we don't need to know what type is it, so technically we need either the target device or the target folder, the function can actually accept both parameters, but use only one of them, let's call it `vfs_umount`: 
 
 ```c
-int vfs_umount(char *device, char *targe);
+int vfs_umount(char *device, char *target);
 ```
 
 In this case we need to find the item in the list that contains the required file system, and if found remove it from the list/tree. In our case since we are using an array we need to clear all the fields in the array at the position containing our fs. 
@@ -145,7 +145,7 @@ One thing that we should keep in mind is that using an array, once we umount a f
 
 #### A short diversion: the initialization
 
-When the kernel first boot up, of course there is no file system mounted, and all data structures are not allocated, if we decide to use a linked list for example, before the initialization the pointer will point to nothing (or better to garbage) so we will need to allocate the first item of the list to have the first fs accessible. 
+When the kernel first boot up, of course there is no file system mounted, and not all data structures are allocated, if we decide to use a linked list for example, before the initialization the pointer will point to nothing (or better to garbage) so we will need to allocate the first item of the list to have the first fs accessible. 
 
 In our case since we are using an array we need just to clean all the items in it order to make sure the kernel will not be tricked into thinking that there is a FS loaded, and we need an index pointer to know what is the position of the first available file system.
 
@@ -199,7 +199,7 @@ Implementing the function is left as exercise, below we just declare the header 
 int get_mounpoint_id(char *path);
 ```
 
-If the above function fail it should return a negative number (i.e. -1) to let the caller know that something didn't worked (it should always return at least 0 in a single root implementation). 
+If the above function fail it should return a negative number (i.e. -1) to let the caller know that something didn't work (it should always return at least 0 in a single root implementation). 
 
 #### Absolute vs relative path
 
@@ -212,7 +212,11 @@ An absolute path, is a path that starts from the root folder ("/") and contains 
 
 So if for example the current working directory is: "/home/user/", the full path will become: "/home/user/path/to/file". Current Working Directory, depends on the process/thread/shell, but usually is the folder where the program is launched or the directory we are in a shell (that is a process) again. 
 
-Usually the VFS should worry only about absolute paths, and the relative path resolution should be done a layer above it.
+Usually the VFS should worry only about absolute paths, and the relative path resolution should be done when it comes for the VFS to call the driver function for the file operation requested. In that case the driver, doesn´t really care about the mountpoint part of the path, and it just cares only about what comes after the mountpoint. Obtaining a relative path should be pretty straightforward, if we have the full path and the mountpoint, we should just strip it from the full path. The implementation of this function is pretty straightforward, and is left as exercise, but in the next sections we will assume that it is implemented with the following signature: 
+
+```c
+char *get_rel_path(char *mountpoint_part, char* full_path);
+```
 
 ### Accessing a file
 
@@ -294,21 +298,16 @@ But how to call the fs driver function? Earlier in this chapter when we outlined
 ```c
 struct fs_operations_t {
 	int (*open)(const char *path, int flags, ... );
-	int (*close)(int);
-	ssize_t (*read)(int, char*, size_t);
-	ssize_t (*write)(int,const void*, size_t);
+	int (*close)(int file_descriptor);
+	ssize_t (*read)(int file_descriptor, char* read_buffer, size_t nbyte);
+	ssize_t (*write)(int file_descriptor, const void* write_buffer, size_t nbyte);
 };
 
 typedef struct fs_operations_t fs_operations_t;
 ```
 
-The basic idea is that once the mountpoint_id has been found (we declared `get_mountpoint_id` in the previous paragraph), the vfs will use the mountpoint item to call the fs driver implementation of the open function, the only thing we need to consider is that when calling the driver function, it doesn't care about the mountpoint part of the path, and if the whole path is passed, we will most likely get an error, since the fs root will start from within the mountpoint folder. What we need thean is a function that get the relative path from an absolute one, the idea and implementation should be pretty straightforward, and just involve few `strcpy` operations, so this is left as exercise, let's just assume that we have one with the following signature: 
+The basic idea is that once the mountpoint_id has been found (we declared `get_mountpoint_id` in the previous paragraph), the vfs will use the mountpoint item to call the fs driver implementation of the open function, but remember that when calling the driver function, it doesn't care about the full path, it only needs the relative path with mountpoint folder stripped, and if the whole path is passed, we will most likely get an error. Since the fs root will start from within the mountpoint folder we need to get the relative path, we will use the `get_rel_path` function defined earlier in this chapter, and the pseudocode for the open function should look similar to the following:
 
-```c
-char *get_rel_path(char *mountpoint_part, char* full_path);
-```
-
-With that function we can outline some pseudo code for our vfs_open: 
 
 ```c
 int open(const char *path, int flags){
@@ -327,7 +326,7 @@ int open(const char *path, int flags){
 }
 ```
 
-The above pseudo code should give us an idea of what is the workflow of opening a file from a VFS point of view, as you can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
+The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as you can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
 
 The `close` with signature: 
 
