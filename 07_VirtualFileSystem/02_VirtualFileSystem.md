@@ -116,7 +116,7 @@ int ustar_close(int ustar_fd)
 
 For the mount and umount operation we will need two functions: 
 
-* The first one for mounting, let's call it for example `vfs_mount`, to work it will need at least the parameters explained above: 
+The first one for mounting, let's call it for example `vfs_mount`, to work it will need at least the parameters explained above: 
 
 ```c
 int vfs_mount(char *device, char *target, char *fs_type);
@@ -133,7 +133,7 @@ mountpoints[i[.operations = NULL
 
 the last line will be populated soon, for now let's leave it to null. 
 
-* The second instruction is for umounting, in this case since we are just unloading the file device from the system, we don't need to know what type is it, so technically we need either the target device or the target folder, the function can actually accept both parameters, but use only one of them, let's call it `vfs_umount`: 
+The second instruction is for umounting, in this case since we are just unloading the file device from the system, we don't need to know what type is it, so technically we need either the target device or the target folder, the function can actually accept both parameters, but use only one of them, let's call it `vfs_umount`: 
 
 ```c
 int vfs_umount(char *device, char *target);
@@ -154,8 +154,6 @@ But where should be the first file system mounted? That again is depending on th
 * Using a single root approach, the first file system will be mounted on the "/" folder, and this is what we are going to do, this means that all other file systems will be going to stay into subfolders of the root folder. 
 * Using a multi root approach, like windows os, we will have every fs that will have it's own root folder and it will be identified with a letter (A, B, C...)
 * Nothing prevent us to use different approaches, or a mix of them, we can have some file system to share the same root, while some other to have different root, this totally depends on design decision. 
-
-One last thing about the initialization, since our kernel is loaded fully in memory, we don't actually need to have a file system mounted for the kernel to run (even if probably in the future we will need one) so the initialization is just optional to be done during boot time, if the the os already has a kind of shell we can initialize it on the first mount when it will be called. 
 
 #### Finding the correct mountpoint
 
@@ -334,8 +332,22 @@ The `close` with signature:
 int close(int fildes);
 ```
 
-will take a vfs file descriptor as parameter, and will search for it in the opened files list (using an array it will be just file
+will take a vfs file descriptor as parameter, and will search for it in the opened files list (using an array it will be found at `vfs_opened_files[fildes]`) and if found it should first call the fs driver function to close a file (if present), emptying all data structures associated to that file descriptor (i.e. if there are data on pipes or FIFO they should be discarded) and finally it can mark this position as available again. We have only one problem how to mark a file descriptor available using an array? One idea can be to use -1 as `fs_file_id` to identify a position that is marked as available (so we will need to set them to -1 when the vfs is initialized).
 
+In our case where we have no FIFO (++++ @DT: i think when the IPC chapter will be done we can spend few words on it here? ++++) or data-pipes, we can outline our close function as the following: 
+
+```c
+int close(int fildes) {
+    if (vfs_opened_files[fildes].fs_file_id != -1) {
+        mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
+        fs_file_id = vfs_opened_files[fildes].fs_file_id;
+        fs_close_result = mountpoints[mountpoint_id].close(fs_file_id);
+        if(fs_close_result == 0) {
+            vfs_opened_files[fildes].fs_file_id = -1;
+        }
+    }
+}
+```
 ### Next.
 
 Let's call it ArrayFS. 
