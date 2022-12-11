@@ -244,7 +244,7 @@ As you can see from the above code there are no instructions where we specify th
 
 We can assume that any file system i/o operation consists of thre basic steps: opening the file, reading/writing from/to it and then closing it. 
 
-#### First step: opening a file
+#### Opening (and closing) a file
 
 To open a file what we need to do is: 
 
@@ -258,7 +258,7 @@ The function header for our open function will be:
 int open(const char *filename, int flags);
 ```
 
-The `flags` parameter will tell how the file will be opened, there are many flags, and the three below should be mutually exclusive:
+The `flags` parameter will tell how the file will be opened, there are many flags, and the three below should be mutually exclusive (please note that our example header is simplified compared to the posix open, where there is the `...` parameter, but for our purposes not needed):
 
 * O_RDONLY it opens a file in read only mode
 * O_RDWR it opens a file for reading and writing
@@ -344,10 +344,26 @@ int close(int fildes) {
         fs_close_result = mountpoints[mountpoint_id].close(fs_file_id);
         if(fs_close_result == 0) {
             vfs_opened_files[fildes].fs_file_id = -1;
+            return 0;
         }
+        return -1;
     }
 }
 ```
+
+#### Reading from a file
+
+So now we have managed to access a file stored somewhere on a file system using our VFS, and now we need to read its content. The function used in the file read example at the beginning of this chapter is the C read include in unistd, with the following signature:
+
+```c
+ssize_t read(int fildes, void *buf, size_t nbyte);
+```
+
+Where the parameters are the opened file descriptor id `fildes`, we want to read, a pointer to a buffer `buf` that will be used to store the read data, and the number of bytes `nbyte` we want to read.
+
+It will return the number of bytes read, and in case of failure -1. Like all other vfs function, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file. 
+
+
 ### Next.
 
 Let's call it ArrayFS. 
