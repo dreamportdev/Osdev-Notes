@@ -225,9 +225,9 @@ Let's quickly recap on how we usually read a file in C:
 ```C
 int fd;
 char *buffer = (char *) calloc(11, sizeof(char));
-file_pointer = open("/path/to/file/to_open", O_RDONLY);
-int sz = read(fd, buffer, 10) 
-buf[sz] = '\0';
+int file_descriptor = open("/path/to/file/to_open", O_RDONLY);
+int sz = read(file_descriptor, buffer, 10) 
+buffer[sz] = '\0';
 printf("%s", buffer);
 close(file_pointer);
 ```
@@ -275,6 +275,7 @@ struct {
     char *filename;
     int buf_read_pos;
     int buf_write_pos;
+    int file_size;
     char *file_buffer;
 } file_descriptor_t
 ```
@@ -285,7 +286,7 @@ We need to declare a variable that contains the opened file descriptors, as usua
 struct file_descriptors_t vfS_opened_files[MAX_OPENED_FILES]
 ```
 
-Where the `mountpoint_id` fields is the id of the mounted file system that is contining the requeste file. The `fs_file_id` is the fs specific id of the fs opened file descriptor. `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations. 
+Where the `mountpoint_id` fields is the id of the mounted file system that is contining the requeste file. The `fs_file_id` is the fs specific id of the fs opened file descriptor. `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations and `file_size` is the the size of the opened file. 
 
 So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an id value returned. This id is different from the ine in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled. 
 
@@ -361,7 +362,45 @@ ssize_t read(int fildes, void *buf, size_t nbyte);
 
 Where the parameters are the opened file descriptor id `fildes`, we want to read, a pointer to a buffer `buf` that will be used to store the read data, and the number of bytes `nbyte` we want to read.
 
-It will return the number of bytes read, and in case of failure -1. Like all other vfs function, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file. 
+The read function will return the number of bytes read, and in case of failure -1. Like all other vfs function, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file and fill the `buf` buffer.  
+
+Every time the read is called, it starts from the last byte accessed previously,  so if for example we have a file with the following text: (++++@DT: help me to phrase this part better ++++)
+
+```
+Text example of a file...
+```
+
+And we have the following code: 
+
+```c
+char *buffer[5]
+int sz = read(file_descriptor, buffer, 5) 
+sz = read(file_descriptor, buffer, 5) 
+```
+
+The `buffer` content of the first read will be: `Text `, and the second one `examp`. This is the purpose  `buf_read_pos` variable in the file descriptor, so it basically needs to be incremented of nbytes, of course only if `buf_read_pos + nbytes < file_size` . 
+The pseudocode for this function is going to be similar to the open/close: 
+
+```c
+ssize_t read(int fildes, void *buf, size_t nbytes) {
+
+    if (vfs_opened_files[fildes].fs_fildes_id != -1) {
+        int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
+        int fs_file_id = vfs_opened_files[fildes].fs_file_id;
+        int bytes_read = mountpoints[mountpoint_d].read(fs_file_id, buf, nbytes)
+        if (opened_files[fildes].buf_read_pos + nbytes < opened_files[fildes].file_size) {
+            opened_files[fildes].buf_read_pos += nbytes;
+        } else {
+            opened_files[fildes].buf_read_pos = opened_files[fildes].file_size;
+        }
+        return bytes_read;
+    }
+
+    return -1;
+}
+```
+
+This is more or less all the code needed for the VFS level of the read function, it 
 
 
 ### Next.
