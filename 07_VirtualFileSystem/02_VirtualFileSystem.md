@@ -335,7 +335,7 @@ int close(int fildes);
 
 will take a vfs file descriptor as parameter, and will search for it in the opened files list (using an array it will be found at `vfs_opened_files[fildes]`) and if found it should first call the fs driver function to close a file (if present), emptying all data structures associated to that file descriptor (i.e. if there are data on pipes or FIFO they should be discarded) and finally it can mark this position as available again. We have only one problem how to mark a file descriptor available using an array? One idea can be to use -1 as `fs_file_id` to identify a position that is marked as available (so we will need to set them to -1 when the vfs is initialized).
 
-In our case where we have no FIFO (++++ @DT: i think when the IPC chapter will be done we can spend few words on it here? ++++) or data-pipes, we can outline our close function as the following: 
+In our case where we have no FIFO or data-pipes, we can outline our close function as the following: 
 
 ```c
 int close(int fildes) {
@@ -364,7 +364,9 @@ Where the parameters are the opened file descriptor id `fildes`, we want to read
 
 The read function will return the number of bytes read, and in case of failure -1. Like all other vfs function, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file and fill the `buf` buffer.  
 
-Every time the read is called, it starts from the last byte accessed previously,  so if for example we have a file with the following text: (++++@DT: help me to phrase this part better ++++)
+Internally the file descriptor keeps track of a 'read head' (or maybe 'read pointer', either one is fine I think) which points to the last byte that was read. The next read() call will start reading from this byte, before updating the pointer itself.
+
+For example let's imagine we have opened a text file with the following content: 
 
 ```
 Text example of a file...
