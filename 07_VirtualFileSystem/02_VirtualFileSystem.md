@@ -403,34 +403,32 @@ ssize_t read(int fildes, void *buf, size_t nbytes) {
 }
 ```
 
-This is more or less all the code needed for the VFS level of the read function, it 
+This is more or less all the code needed for the VFS level of the read function, from the moment the driver `read` function will be called the control will leave the VFS and will go one layer below, and in most cases it will involve similar steps for the VFS with few differences like: 
+
+* It will use the relative path (without the mountpoint part) to search for the file
+* It will use some internal data-structures to keep track of the files we are accessings (yes this can bring to some duplication of similar data stored in two different data structure)
+* It will read the content of the file if found in different ways: if it is a file system loaded in memory, it will read it accessing its location, instead if it is stored inside a device it will probably involve another layer to call the device driver and access the data stored on it, like reading from disk sectors, or from a tape. 
+
+The above differences are valid for all of the vfs calls. 
+
+Now that we have implemented the `read` funtion we should be able to code a simple version of the `write` function, the logic is more or less the same, and the two key differences are that we are saving data (so it will call the fs driver equivalente for write) and there probably be at least another addition to the file descriptor data structure, to keep track of the position we are writing in (yes better keep read and write pointers separated, even because files can be opened in R/W mode). This is left as an exercise. 
+
+### What about directories
+
+We have decided to not cover how to open and read directories, because the implementation will be still similar to the above cases, where we need to identify the mountpoint, call the filesystem driver equivalent of the vfs function called, and make it available to the caller, this means that most of its implementation will be a repetition of what has been done until now, but there are few extra things we need to be aware: 
+
+* A directory is a container of files and/or other directories 
+* There will be a function that will read through the items into a folder usually called `readdir` that will return the next item stored into the directory, and if it reach the end NULL will be reutrned. 
+* There will be a need for a new data structure to store the information about the items stored within a directory that will be returned by the `readdir` (or similar) function.
+* There are some special "directories" that should be known to everyone: "." and ".."
+
+Initially let's concentrate with the basic function for directory handling: `opendir`, `readdir` and `closedir`, then when we get a grasp on them we can implement other more sophisticated functions.
 
 
-### Next.
+### Conclusions and suggestions
 
-Let's call it ArrayFS. 
+In this chapter we tried to outline a naive `VFS` layer to access files on different file system, the features implemented are very basic, and we left some topics uncovered to keep it as simple as possible, but it if all the functions above are implemented, it will represent a good start for the kernel vfs, and then we can think to start to add extra features like permissions, more complex functions (like scandir, seekdir etc), implement the standardlib C function to access files (fopen, fread and friends) and start to think about a protection mechanism to handle concurrency (see the *Locks* chapter), use more sophisticated way to keep track of opened files, mounted file systems (like using lists, tree, etc.) .
 
-What we are going to cover in this chapter is: 
-
-* The basic functions of the FileSytstem and how to implement them
-* How to create an image file containing our fs
-* Create a tool to copy some files into the image.
-
-Differently from other chapters, in this case we need to write a program to copy the files for our host OS.
-
-## ArrayFS features and basic concepts
-
-As already mentioned in the overview the functionalities will be quite limited, and they are going to be implemented using an array, so the first thing we need to decide is how many files we want to store, i'll go for 256 elements (i don't think that we will store many files in it).
-
-The minimum information we need for storing a file are: 
-
-* The  name 
-* The file size
-* Where it is located (that can be an address an offset, it depends on the implementation)
-
-As you are probably aware there are many more information on a regular file like the creation and last modified date, author, attributes, but all these information are implementation dependent, and totally optional, so we will stick with the minimum required set. 
-
-
-
+In the next section  we will implement one of the most basic fs: the `USTAR` file system and finally see our os reading the content of a file from memory. 
 
 
