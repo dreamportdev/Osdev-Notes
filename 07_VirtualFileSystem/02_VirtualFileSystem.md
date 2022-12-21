@@ -16,8 +16,6 @@ The basic concept of a VFS layer is pretty simple, we can see it like a common w
 
 ![Where the VFS sits in an OS](/Images/vfs_layer.png)
 
-[SHOULD I ADD SOMETHING MORE?]
-
  How the different fs presented to the end user depends on design decisions for example windows operating systems wants to keep different file systems logically separated using unit letters, while unix/linux systems represents them under the same tree, so a folder can be either on the same FS or on another one, but in both cases the idea is the same, we want to use the same functions to read/write files on them. 
 
 In this guide we will follow a unix approach. To better understand how does it works let's have a look at this picture: 
