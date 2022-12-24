@@ -5,6 +5,7 @@ As we probably already know there are many different operating system available 
 * The main hard drive file system (it can be any of the supported fs like ext2, ext4, reiserfs, etc) 
 * The external drive file system (probably a vfat, exfat or ntfs file system)
 * The cdrom file system (usually iso9660)
+* The pseudo file-systems like: /proc and /dev in unix-like operating systems.
 
 But how can an operating system works with so many different file system, how can they coexist like in linux under the same directory tree? And most important of all: how are we going to implement it?
 
@@ -13,9 +14,9 @@ In this section we are going to understand how everything works, and how the OS 
 It will be divided into two main topics: 
 
 * The Virtual File System (VFS): is a layer that works as an abstraction for the different file systems supported by our os, in this way the application and the kernel use a unified interface of functions to interact with files and directories on different fs, it offers functions like `open, write, opendir`
-* In the File System section we will how they work within a VFS interface, and implement a very basic one to use within our OS,
+* In the file system section we will how they work within a VFS interface, and implement a very basic one to use within our OS,
 
-## A quick recap
+## A Quick Recap
 
 Before proceeding is useful to recap some basic file system concepts.
 
