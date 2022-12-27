@@ -39,6 +39,8 @@ Topics covered so far:
     * [Updated Interrupt Handling](05_Userspace/03_Handling_Interrupts.md)
     * [System Calls](05_Userspace/04_System_Calls.md)
     * [Example Syscall ABI](05_Userspace/05_Example_ABI.md)
+* [File System](07_VirtualFileSystem/01_README.md)
+    * [The Virtual File System](07_VirtualFileSystem/02_VirtualFileSystem.md)
 * [Extras](99_Appendices/0_README.md)
     * [General Troubleshooting](99_Appendices/A_Troubleshooting.md)
     * [Tips and Tricks](99_Appendices/B_Tips_And_Tricks.md)
