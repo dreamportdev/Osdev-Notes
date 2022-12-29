@@ -42,6 +42,8 @@ Topics covered so far:
 * [Inter-Process Communication](06_IPC/01_README.md)
     * [Shared Memory](06_IPC/02_Shared_Memory.md)
     * [Message Passing](06_IPC/03_Message_Passing.md)
+* [File System](07_VirtualFileSystem/01_README.md)
+    * [The Virtual File System](07_VirtualFileSystem/02_VirtualFileSystem.md)
 * [Extras](99_Appendices/0_README.md)
     * [General Troubleshooting](99_Appendices/A_Troubleshooting.md)
     * [Tips and Tricks](99_Appendices/B_Tips_And_Tricks.md)
