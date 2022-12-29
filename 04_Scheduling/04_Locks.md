@@ -155,9 +155,15 @@ bool __atomic_test_and_set(void* ptr, int memorder);
 void __atomic_release(void* ptr, int memorder);
 ```
 
-We'll also be using two constants (these are provided by the compiler as well): `__ATOMIC_ACQUIRE` and `__ATOMIC_RELEASE`. These are memory order constraints and tell the compiler what kind of operation we want to perform. These allow the compiler to still make certain optimizations, while respecting what we want to do. The names hint at what we might use them for.
+We'll also be using two constants (these are provided by the compiler as well): `__ATOMIC_ACQUIRE` and `__ATOMIC_RELEASE`. These are memory order constraints and are used to describe to the compiler what we want to accomplish. Let's look at the difference between these, and a third constraint, sequential consistency (`__ATOMIC_SEQ_CST`).
 
-Both of these functions take a pointer to either a `bool` or `char` that's used as the lock variable, and the memory order. The `__atomic_test_and_set` function returns the *previous* state of the lock. So if it returns true, the lock was already taken. A return of falses indicates we successfully took the lock.
+- `__ATOMIC_SEQ_CST`: An atomic operation with this constraint is a two-way barrier. Memory operations (reads and writes) that happen before this operation must complete before it, and operations that happen after it must also complete after it. This is actually what we expect to happen most of the time, and if you're not sure which constraint to use, this is an excellent default. However it's also the most restrictive, and implies the biggest performance penalty as a result.
+- `__ATOMIC_ACQUIRE`: Less restrictive, it communicates that operations after this point in the code cannot be reordered to happen before it. It allows the reverse though (writes that happened before this may complete after it).
+- `__ATOMIC_RELEASE`: This is the reverse of acquire, this constraint says that any memory operations before this must complete before this point in the code. Operations after this point may be reordered before this point however.
+
+Using these constraints we can be specific enough to achieve what we want while leaving room for the compiler and cpu to optimize for us. We won't use it here, but there is another ordering constraint to be aware of: `__ATOMIC_RELAXED`. Relaxed ordering is useful when you want a memory operation to be atomic, but not interact with the memory operations surrounding it. 
+
+Both of the previously mentioned atomic functions take a pointer to either a `bool` or `char` that's used as the lock variable, and the memory order. The `__atomic_test_and_set` function returns the *previous* state of the lock. So if it returns true, the lock was already taken. A return of falses indicates we successfully took the lock.
 
 Using our new compiler instrinsics, we can update the `acquire` and `release` functions to look like the following:
 
