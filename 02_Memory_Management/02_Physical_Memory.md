@@ -13,9 +13,9 @@ What the physical memory manager has to take care of as its bare minimum is:
 
 In this document we will explain the bitmap method, because is probably the simplest to understand for a beginner. 
 
-## The bitmap
+## The Bitmap
 
-Now let's starty with a simple example, imagine that we have a very tiny amount of ram like 256kb of ram, and we want to use 4kb pages, and assume that we have the kernel that takes the first 3 pages. As said above using the bitmap method assign 1 bit to every page, this means that every bytes can keep track of *8x4k=32kb* of memory, if the page is taken the bit is set to 1, if is free the bit is clear (=0)
+Now let's start with a simple example, imagine that we have a very tiny amount of ram like 256kb of ram, and we want to use 4kb pages, and assume that we have the kernel that takes the first 3 pages. As said above using the bitmap method assign 1 bit to every page, this means that every bytes can keep track of *8x4k=32kb* of memory, if the page is taken the bit is set to 1, if is free the bit is clear (=0)
 
 This means that a single *unsigned char* variable can hold the status of 32kb of ram, to keep track of 256kb of ram we then need 8bytes (They can stay in a single uint64_t variable, but for this example let's stick with the char type), this means that with an array of 8 elements of *unsigned char* we can represent the whole amount of memory, so we are going to have something like this: 
 
@@ -33,7 +33,7 @@ This means that a single *unsigned char* variable can hold the status of 32kb of
 
 So marking a memory location as free or used is just matter of setting clearing a bit in this bitmap. 
 
-### Returning an address
+### Returning An Address
 
 But how do we mark a page as taken or free? We need to translate row/column in an address, or the address in row/column. Let's assume that we asked fro a free page and we found the first available bit at row 0 and column 3, how we translate it to address, well for that we need few extra info: 
 
@@ -72,7 +72,7 @@ In this way we know the "page" index into an hypoteteical array of Pages. But we
 * The row is given by *bitmap_location / 8* 
 * The column is given by: *bitmap_location % 8*
 
-### Marking/Freeing a page
+### Freeing A Page
 
 So now knowing how the bitmap works, let's see how to update/test it. We need basically three very simple functions:
 

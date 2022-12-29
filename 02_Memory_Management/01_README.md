@@ -45,6 +45,7 @@ Each of the layers has a dedicated section below, however we'll start with a hig
    - Swapping: Can ask other VMMs to swap their in-use memory to storage, and handover any freed pages for us to use.
 - A simple implementaion often only involves paging.
 - If using a higher half kernel, the upper half of every VMM will be identical, and contain the protected kernel code and data.
+- Can present other resources via virtual memory to simplify their interface, like memory mapping a file or inter-process communication.
 
 ## Heap Allocator
 - At least one per process/running program. 
@@ -68,7 +69,7 @@ What happens under the hood?
 
 1. The alloc request asks the heap for pointer to an area of 5 bytes.
 2. The heap allocator searches for a region big enough for 5 bytes, if available in the current heap. If so, no need to dig down further, just return what was found. However if the current heap doesn't contain an area of 5 bytes that can be returned, it will need to expand. So it asks for more space from the VMM. Remember: the *addresses returned by the heap are all virtual*.
-3. The VMM will first ask the physical memory manager for a new physical page (if we are using paging, for this example we are). 
+3. The VMM will allocate a region of virtual memory big enough for the new heap expansion. It then asks the physical memory manager for a new physical page to map there.
 4. Lastly a new physical page from the PMM will be mapped to the VMM (using paging for example). Now the VMM will provide the heap with the extra space it needed, and the heap can return an address using this new space.
 
 The picture below identifies the various components of a basic memory management setup and show how they interact in this example scenario.
