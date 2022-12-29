@@ -16,10 +16,10 @@ I hope that someone will find them useful.
 Topics covered so far: 
 
 * [Building & Boot Protocols](01_Build_Process/01_README.md)
-    * [Bootloaders and Boot Protocols](01_Build_Process/02_Boot_Protocols.md)
-    * [Building a Kernel](01_Build_Process/03_Overview.md)
-    * [Linker Scripts](01_Build_Process/04_Linker_Scripts.md)
-    * [Makefiles](01_Build_Process/05_Ggnu_Makefiles.md)
+    * [Building a Kernel](01_Build_Process/02_Overview.md)
+    * [Bootloaders and Boot Protocols](01_Build_Process/03_Boot_Protocols.md)
+    * [Makefiles](01_Build_Process/04_Gnu_Makefiles.md)
+    * [Linker Scripts](01_Build_Process/05_Linker_Scripts.md)
     * [Generating a Bootable Iso](01_Build_Process/06_Generating_Iso.md)
 * [Memory Management](02_Memory_Management/01_README.md)
     * [Physical Memory](02_Memory_Management/02_Physical_Memory.md)
