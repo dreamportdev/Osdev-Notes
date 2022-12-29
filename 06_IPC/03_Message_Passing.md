@@ -140,7 +140,7 @@ After the lock on the endpoint is released, the sent has been sent! Now it's up 
 
 In theory this works, but we've overlooked one huge issue: what if there's already a message at the endpoint? You should handle this, and there's a couple of ways to go about it:
 
-- Allow for multiple messages to be queued.
+- Allow for multiple messages to be stored on an endpoint.
 - Fail to send the message, instead returning an error code from `ipc_send()`.
 
 The first option is recommended, as it's likely there will be some processes that handle a lot of messages. Implementing this is left as an exercise to the user, but a simple implemenation might use a struct to hold each message (the buffer address and length) and a next field. Yes, more linked lists!
@@ -149,14 +149,28 @@ Sending messages would now mean appending to the list instead of writing the buf
 
 ## Receiving
 
-We can send messages, next let's look at receiving them. This function is going to be a very basic example, and quite inefficient but it serves as a good introduction.
+We can send messages, next let's look at receiving them. We're going to use a basic (and inefficient) example, but it shows how it could be done. 
 
+The theory behind this is simple: when we're in the receiving process, we allocate a buffer to hold the message, and copy the messge data stored at the endpoint into our local buffer. Now we can set the endpoint's `msg_buffer` field to `NULL` to indicate that there is no longer a message to be received. Note that setting the buffer to `NULL` is specific to our example code, and your implementation may be different.
 
+As always, note the use of locks to prevent race conditions. The variable `endpoint` is assumed to be the endpoint we want to receive from.
 
-TODO: alloc local buffer, copy into it from kernel buffer and free it.
+```c
+ipc_endpoint* endpoint;
+
+acquire(&endpoint->lock);
+void* local_copy = malloc(endpoint->msg_length);
+memcpy(local_copy, endpoint->msg_data, endpoint->msg_length);
+
+endpoint->msg_data = NULL;
+endpoint->msg_length = 0;
+release(&endpoint->lock)'
+```
+
+At this point the endpoint is now ready to receive another message, and we've got a copy of the message in `local_copy`. You're successfully passed a message from one address space to another!
 
 ## Additional Notes
 
-- Single copy implementation, requires direct memory access.
-- Waiting on endpoint, scheduler assisted wait vs busy loop (current impl).
-- Send doesn't return a status code, L4 reasoning.
+- We've described a double-copy implementation here, but you might want to try a single-copy implemenation. Single-copy implementations *can* be faster, but they require extra logic. For example the kernel will need to access the recipient's address space from the sender's address space, how do you manage this? If you have all of physical memory mapped somewhere (like an identity map) you could use this, otherwise you will need some way to access this memory.
+- A processing waiting on an endpoint (to either send or receive a message) could be waiting quite a while in some circumstances. This is time the cpu could be doing work instead of blocking and spinning on a lock. A simple optimization would be to put the thread to sleep, and have it be woken up whenever the endpoint is updated: a new message is sent, or the current message is read.
+- In this example we've allowed for messages of any size to be sent to an endpoint, but you may want to set a maximum message size for each endpoint when creating it. This makes it easier to receive messages as you know the maximum possible size the message can be, and can allocate a buffer without checking the size of the message. This might seem silly, but when receiving a message from userspace the program has to make a system call each time it want's the kernel to do something. Having a maximum size allows for one-less system call. Enforcing a maximum size for messages also has security benefits.

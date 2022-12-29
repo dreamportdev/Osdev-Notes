@@ -132,7 +132,7 @@ If you're following the VMM design explained in the memory management chapter, y
 
 There's a few potential issues to be aware of with shared memory. The biggest one is to be careful when writing data that contains pointers. Since each process interacting with shared memory may see the shared physical memory at a different virtual address, any pointers you write here may not be valid.
 
-Best practice is to store data *relative to the base*, this way each process can read the pointer from the shared memory, and add it's own virtual offset.
+Best practice is to store data *relative to the base*, this way each process can read the pointer from the shared memory, and add it's own virtual offset. Alternatively it can be better to not use pointers inside of shared memory at all, and instead use opaque objects like resource handles or file descriptors.
 
 Another problem that may arise is your compile optimizing away reads and writes to the shared memory. This can happen because the compiler sees these memory accesses are having no effect on the rest of the program. This is the same issue you might have experienced with MMIO (memory mapped io) devices, and the solution is the same: make any reads or write `volatile`.
 
