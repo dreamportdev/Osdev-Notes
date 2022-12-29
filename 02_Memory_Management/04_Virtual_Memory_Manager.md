@@ -162,7 +162,7 @@ else
 latest->next = current;
 ```
 
-What happens next depends on your the design of your VMM. We're going to use immediate backing to keep things simple, meaning we will immedately map some physical memory to the virtual memory we've allocated.
+What happens next depends on the design of your VMM. We're going to use immediate backing to keep things simple, meaning we will immedately map some physical memory to the virtual memory we've allocated.
 
 ```c
     //immedate backing: map physical pages right away.
@@ -207,7 +207,7 @@ Now we have check for whether an object is MMIO or not. If it is, we don't alloc
 
 At this point our VMM can allocate any object types we'll need for now, and hopefully you can start to see the purpose of the VMM.
 
-As mentioned previously a more advanced design could allow for memory mapping files: by adding another another flag, and passing the file name (as a `char*`) in the extra argument, or perhaps a file descriptor (like `mmap` does).
+As mentioned previously a more advanced design could allow for memory mapping files: by adding another flag, and passing the file name (as a `char*`) in the extra argument, or perhaps a file descriptor (like `mmap` does).
 
 ## Freeing Objects
 

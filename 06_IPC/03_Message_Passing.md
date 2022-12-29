@@ -1,6 +1,6 @@
 # IPC via Message Passing
 
-Compared to shared memory, message passing is slightly more complex but does offer more features. It's comparable to networking where there is a receiver that must be ready for an incoming message, and a sender who creates the full message a head of time, ready to send all at once. 
+Compared to shared memory, message passing is slightly more complex but does offer more features. It's comparable to networking where there is a receiver that must be ready for an incoming message, and a sender who creates the full message ahead of time, ready to send all at once. 
 
 Unlike shared memory, which can have many processes all communicating with one initial process (or even many), message passing is usually one-to-one.
 
@@ -19,7 +19,7 @@ After the initial setup, the implementation of message passing is similar to a r
 - Process 1 wants to receive incoming messages on an endpoint, so it calls a function telling the kernel it's ready. This function will only return once a flag has been set on the endpoint that a message is ready, and otherwise blocks the thread. We'll call this function `ipc_receive()`.
 - Some time later process 2 wants to send a message, so it allocates a buffer and writes some data there.
 - Process 2 now calls a function to tell the kernel it wants to send this buffer as a message to an endpoint. We'll call this function `ipc_send()`.
-- Inside `ipc_send()` the buffer is copied into kernel memory. In our example we'll use the heap for this memory. We can then set a flag on the endpoint telling it that has a message has been received.
+- Inside `ipc_send()` the buffer is copied into kernel memory. In our example we'll use the heap for this memory. We can then set a flag on the endpoint telling it that a message has been received.
 - At this point `ipc_send()` can return, and process 2 can continue on as per normal.
 - The next time process 1 runs, `ipc_receive()` will see that the flag has been set, and copy the message from the kernel buffer into a buffer for the program.
 - The `ipc_receive()` function can also free the kernel buffer, before returning and letting process 1 continue as normal.
@@ -30,7 +30,7 @@ What we've described here is a double-copy implementation of message: because th
 
 As mentioned, there's some initial setup that goes into message passing: we need to create an endpoint. We're going to need a way to identify each endpoint, so we'll use a string. We'll also need a way to indicate when a message is available, the address of the buffer containing the message, and the length of the message buffer.
 
-Since the struct representing the endpoint is going to be accessed by multiple proceses, we'll want a lock to protect the data from race conditions. For we'll use the following struct to represent our endpoint:
+Since the struct representing the endpoint is going to be accessed by multiple proceses, we'll want a lock to protect the data from race conditions. We'll use the following struct to represent our endpoint:
 
 ```c
 struct ipc_endpoint {
@@ -44,7 +44,7 @@ struct ipc_endpoint {
 
 To save some space we'll use `NULL` as the message address to represent that there is no message available. 
 
-If you're wondering about the `next` field, that's because we're going to store these are a linked list. You'll want a variable to store the head of the list, and a lock to protect the list anytime it's modified.
+If you're wondering about the `next` field, that's because we're going to store these in a linked list. You'll want a variable to store the head of the list, and a lock to protect the list anytime it's modified.
 
 ```c
 ipc_endpoint* first_endpoint = NULL;
@@ -75,9 +75,9 @@ void create_endpoint(const char* name) {
 }
 ```
 
-As you can see creating a new endpoint is pretty simple, and most of the code in the exaple function is actually for managing the linked list.
+As you can see creating a new endpoint is pretty simple, and most of the code in the example function is actually for managing the linked list.
 
-Now our endpoint has been added ot the list! As always we omitted checking for errors, and we didn't check if an endpoint with this name already exists. In the real world you'll want to handle this things.
+Now our endpoint has been added to the list! As always we omitted checking for errors, and we didn't check if an endpoint with this name already exists. In the real world you'll want to handle this things.
 
 ### Removing An Endpoint
 Removing an endpoint is also an important function to have. As this is a simple operation, implementing this is left as an exercise to the reader, but there are a few important things to consider:
@@ -125,7 +125,7 @@ Why do we make a copy of the original message? Well if we dont, the sending proc
 
 If you're performing this IPC as part of a system call from userspace, the memory containing the original message is unlikely to be mapped in the receiver's address space anyway, so we have to copy it into the kernel's address space, which is mapped in both processes.
 
-All that's left is to tell the receiver it has a message is available by placing the buffer address on the endpoint. Again, notice the use of the lock to prevent race conditions while we mess with the internals of the endpoint.
+All that's left is to tell the receiver it has a message available by placing the buffer address on the endpoint. Again, notice the use of the lock to prevent race conditions while we mess with the internals of the endpoint.
 
 ```c
 acquire(&target->lock);
@@ -134,7 +134,7 @@ target->msg_length = length;
 release(&target->lock);
 ```
 
-After the lock on the endpoint is released, the sent has been sent! Now it's up to the receiving thread to check the endpoint and set the buffer to NULL again.
+After the lock on the endpoint is released, the message has been sent! Now it's up to the receiving thread to check the endpoint and set the buffer to NULL again.
 
 ### Multiple Messages
 
@@ -149,7 +149,7 @@ Sending messages would now mean appending to the list instead of writing the buf
 
 ## Receiving
 
-We can send messages, next let's look at receiving them. We're going to use a basic (and inefficient) example, but it shows how it could be done. 
+We have seen how to send messages, now let's take a look at how to receive them. We're going to use a basic (and inefficient) example, but it shows how it could be done. 
 
 The theory behind this is simple: when we're in the receiving process, we allocate a buffer to hold the message, and copy the messge data stored at the endpoint into our local buffer. Now we can set the endpoint's `msg_buffer` field to `NULL` to indicate that there is no longer a message to be received. Note that setting the buffer to `NULL` is specific to our example code, and your implementation may be different.
 
@@ -164,7 +164,7 @@ memcpy(local_copy, endpoint->msg_data, endpoint->msg_length);
 
 endpoint->msg_data = NULL;
 endpoint->msg_length = 0;
-release(&endpoint->lock)'
+release(&endpoint->lock);
 ```
 
 At this point the endpoint is now ready to receive another message, and we've got a copy of the message in `local_copy`. You're successfully passed a message from one address space to another!
@@ -172,5 +172,5 @@ At this point the endpoint is now ready to receive another message, and we've go
 ## Additional Notes
 
 - We've described a double-copy implementation here, but you might want to try a single-copy implemenation. Single-copy implementations *can* be faster, but they require extra logic. For example the kernel will need to access the recipient's address space from the sender's address space, how do you manage this? If you have all of physical memory mapped somewhere (like an identity map) you could use this, otherwise you will need some way to access this memory.
-- A processing waiting on an endpoint (to either send or receive a message) could be waiting quite a while in some circumstances. This is time the cpu could be doing work instead of blocking and spinning on a lock. A simple optimization would be to put the thread to sleep, and have it be woken up whenever the endpoint is updated: a new message is sent, or the current message is read.
-- In this example we've allowed for messages of any size to be sent to an endpoint, but you may want to set a maximum message size for each endpoint when creating it. This makes it easier to receive messages as you know the maximum possible size the message can be, and can allocate a buffer without checking the size of the message. This might seem silly, but when receiving a message from userspace the program has to make a system call each time it want's the kernel to do something. Having a maximum size allows for one-less system call. Enforcing a maximum size for messages also has security benefits.
+- A process waiting on an endpoint (to either send or receive a message) could be waiting quite a while in some circumstances. This is time the cpu could be doing work instead of blocking and spinning on a lock. A simple optimization would be to put the thread to sleep, and have it be woken up whenever the endpoint is updated: a new message is sent, or the current message is read.
+- In this example we've allowed for messages of any size to be sent to an endpoint, but you may want to set a maximum message size for each endpoint when creating it. This makes it easier to receive messages as you know the maximum possible size the message can be, and can allocate a buffer without checking the size of the message. This might seem silly, but when receiving a message from userspace the program has to make a system call each time it wants the kernel to do something. Having a maximum size allows for one-less system call. Enforcing a maximum size for messages also has security benefits.

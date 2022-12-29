@@ -12,7 +12,7 @@ Alternatively, you could have programs deal with the ipc subsystem directly, whi
 
 Your virtual memory manager will also need to keep track of whether it allocated the pages for a particular virtual memory range, or it borrowed them from the ipc subsytem. We need this distinction because of how shared memory works: if two VMMs map the same physical memory, and then one VMM exits and frees any physical memory it had mapped, it will free the physical memory used for the shared memory. This leaves the other VMM with physical memory that the physical memory manager thinks is *free*, but it's actually still in use.
 
-The solution we're going to use is *reference counting*. Everytime a VMM maps shared memory into it's page tables, we increase the count by 1. Whenever a VMM exits and goes to free physical memory, it will first check if it's shared memory or not. If it's not, it can be freed as normal, but if it's shared memory we simply decrease the reference count by 1. Whenever decrementing the reference count, we check if it's zero, and only then do we free the physical memory. The reference count can be thought of as a number that represents how many people are using a particular shared memory instance, with zero meaning no-one is using it. If no-one is using it, we can safely free it.
+The solution we're going to use is *reference counting*. Everytime a VMM maps shared memory into it's page tables, we increase the count by 1. Whenever a VMM exits and goes to free physical memory, it will first check if it's shared memory or not. If it's not, it can be freed as normal, but if it's shared memory we simply decrease the reference count by 1. Whenever decrementing the reference count, we check if it's zero, and only then we free the physical memory. The reference count can be thought of as a number that represents how many people are using a particular shared memory instance, with zero meaning no-one is using it. If no-one is using it, we can safely free it.
 
 ## IPC Manager
 
@@ -41,10 +41,10 @@ The `ref_count` field is how many processes are currently using this physical me
 Let's look at what could happen if a program wants to create some shared memory, in order to communicate with other programs:
 
 - The program asks the virtual memory manager to allocate some memory, and says it should be shared.
-- The VMM finds a suitible virtual address for this memory to appear at (where it'll be mapped).
+- The VMM finds a suitable virtual address for this memory to appear at (where it'll be mapped).
 - Instead of the VMM allocating physical memory to map at this virtual address, the VMM asks the ipc manager to create a new shared memory instance.
 - The ipc manager adds a new `ipc_shared_memory` entry to the list, gives it the name the program requested, and sets the `ref_count` to 1 (since there is one program accessing it).
-- The ipc manager asks the physical memory manager for enough physical memory to satify the original request, and stores the address and length.
+- The ipc manager asks the physical memory manager for enough physical memory to satisfy the original request, and stores the address and length.
 - The ipc manager returns the address of the physical memory it just allocated to the VMM.
 - The VMM maps this physical memory at the virtual address it selected earlier.
 - The VMM can now return this virtual address to the program, and the program can access the shared memory at this address.
@@ -81,7 +81,7 @@ void* create_shared_memory(size_t length, const char* name) {
 
 This code is the core to implementing shared memory, it allows us to create a new shared memory region and gives us it's physical address. The VMM can then map this physical address into the memory space of the process like it would do with any other memory.
 
-Notice the use of the lock functions (`acquire` and `release`) when we access the linked list. Since this single list is shared between all processes that use shared memory, we have to protect it so we accidentally corrupt it. This is discussed further in the chapter on scheduling.
+Notice the use of the lock functions (`acquire` and `release`) when we access the linked list. Since this single list is shared between all processes that use shared memory, we have to protect it so we dont accidentally corrupt it. This is discussed further in the chapter on scheduling.
 
 ### Accessing Shared Memory
 
@@ -199,6 +199,6 @@ More commonly a hybrid approach is taken, where processes will write into shared
 
 ## Access Protection
 
-It's important to keep in mind that we have no access protection in this example. Any process can view any shared memory if it knows the correct name. This is quite unsafe, especially if you're exchanging sensitive information this way. Commonly shared memory is presented to user processes through the virtual file system (we'll look at tihs more later), this has the benefit of being able to use the access controls of the VFS for protecting shared memory as well.
+It's important to keep in mind that we have no access protection in this example. Any process can view any shared memory if it knows the correct name. This is quite unsafe, especially if you're exchanging sensitive information this way. Commonly shared memory is presented to user processes through the virtual file system (we'll look at this more later), this has the benefit of being able to use the access controls of the VFS for protecting shared memory as well.
 
 If you choose not to use the VFS, you will want to implement your own access control. 

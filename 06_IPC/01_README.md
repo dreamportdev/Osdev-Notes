@@ -8,7 +8,7 @@ The answer to this is some form of IPC. This chapter will look at some basic imp
 
 All IPC can be broken down into two forms:
 
-- Shared Memory: In this case the kernel maps a set of physical pages into a processes address space, and then maps the same physical pages into another processes address space. Now the two processes can communicate by reading and writing to this shared memory.
+- Shared Memory: In this case the kernel maps a set of physical pages into a process's address space, and then maps the same physical pages into another processes address space. Now the two processes can communicate by reading and writing to this shared memory.
 - Message Passing: This works by writing the message you want to send into a buffer, and then giving that buffer to the kernel. The kernel will then pass that buffer to the destination process.
 
 ## Single-Copy vs Double-Copy
