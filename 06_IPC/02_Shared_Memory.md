@@ -18,7 +18,7 @@ The solution we're going to use is *reference counting*. Everytime a VMM maps sh
 
 We're going to implement an *IPC manager* to keep track of shared memory.
 
-At it's heart, our IPC manager is going to be a list of physical memory ranges, with a name attached to each range. When we say physical memory *range*, this just refers to a number of physical pages located one after the other (i.e. contiguous). Attaching a name to a range lets us identity it, and we can even give some of these names special meanings, like `/dev/stdout` for example. In reality this is not how stdout is usually implemented, but it serves to get the point across. 
+At it's heart, our IPC manager is going to be a list of physical memory ranges, with a name attached to each range. When we say physical memory *range*, this just refers to a number of physical pages located one after the other (i.e. contiguous). Attaching a name to a range lets us identify it, and we can even give some of these names special meanings, like `/dev/stdout` for example. In reality this is not how stdout is usually implemented, but it serves to get the point across. 
 
 We're going to use a struct to keep track of all the information we need for shared memory, and store them in a linked list so we can keep track of multiple shared memory instances.
 
@@ -134,7 +134,7 @@ There's a few potential issues to be aware of with shared memory. The biggest on
 
 Best practice is to store data *relative to the base*, this way each process can read the pointer from the shared memory, and add it's own virtual offset. Alternatively it can be better to not use pointers inside of shared memory at all, and instead use opaque objects like resource handles or file descriptors.
 
-Another problem that may arise is your compile optimizing away reads and writes to the shared memory. This can happen because the compiler sees these memory accesses are having no effect on the rest of the program. This is the same issue you might have experienced with MMIO (memory mapped io) devices, and the solution is the same: make any reads or write `volatile`.
+Another problem that may arise is your compiler optimizing away reads and writes to the shared memory. This can happen because the compiler sees these memory accesses are having no effect on the rest of the program. This is the same issue you might have experienced with MMIO (memory mapped io) devices, and the solution is the same: make any reads or write `volatile`.
 
 ### Cleaning Up
 
@@ -156,7 +156,7 @@ void vmm_free(void* addr) {
 }
 ```
 
-The `vmm_get_Flags` is a made up function, it just returns the flags used for a particular virtual memory allocation, we also use a function to manually walk the page tables and get the physical address mapped to this virtual address (`get_phys_addr`). For details on how to get the physical address mapped to a virtual one, see the section on paging.
+The `vmm_get_flags` is a made up function, it just returns the flags used for a particular virtual memory allocation, we also use a function to manually walk the page tables and get the physical address mapped to this virtual address (`get_phys_addr`). For details on how to get the physical address mapped to a virtual one, see the section on paging.
 
 That's the VMM modified, but what does `free_shared_memory` do? As mentioned before, it will decrement the reference count by 1, and if the count is set to 0, we free the physical pages.
 
@@ -189,7 +189,7 @@ void free_shared_memory(void* phys_addr) {
 }
 ```
 
-Again we're omitted error handling and checking for `NULL` to keep the examples concise, but you should handle these cases in your code. The first part of the function should look similar, it's the same code used in `access_shared_memory`. The interesting part happens when the reference count reaches zero: we free the physical pages used, and free any memory we previously allocated. We also remove the shared memory instance from the linked list.
+Again we've omitted error handling and checking for `NULL` to keep the examples concise, but you should handle these cases in your code. The first part of the function should look similar, it's the same code used in `access_shared_memory`. The interesting part happens when the reference count reaches zero: we free the physical pages used, and free any memory we previously allocated. We also remove the shared memory instance from the linked list.
 
 ## Interesting Applications
 
@@ -199,6 +199,6 @@ More commonly a hybrid approach is taken, where processes will write into shared
 
 ## Access Protection
 
-It's important to keep in mind that we have no access protection in this example. Any process can view any shared memory if it knows the correct name. This is quite unsafe, especially if you're exechanging sensitive information this way. Commonly shared memory is presented to user processes through the virtual file system (we'll look at tihs more later), this has the benefit of being able to use the access controls of the VFS for protecting shared memory as well.
+It's important to keep in mind that we have no access protection in this example. Any process can view any shared memory if it knows the correct name. This is quite unsafe, especially if you're exchanging sensitive information this way. Commonly shared memory is presented to user processes through the virtual file system (we'll look at tihs more later), this has the benefit of being able to use the access controls of the VFS for protecting shared memory as well.
 
 If you choose not to use the VFS, you will want to implement your own access control. 
