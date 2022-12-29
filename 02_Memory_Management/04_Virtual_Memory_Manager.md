@@ -33,9 +33,7 @@ A lot of these features are not needed in the beginning, but hopefully the uses 
 As you might expect, there are many VMM designs out there. We're going to look at a simple one that should provide all the functionality needed for now.
 First we'll need to introduce a new concept: a *virtual memory object*, sometimes called a *virtual memory range*. This is just a struct that represents part of the virtual address space, so it will need a base address and length, both of these are measured in bytes and will be page-aligned. This requirement to be page-aligned comes from the mechanism used to manage virtual memory: paging. On x86 the smallest page we can manage is 4K, meaning that all of our VM objects must be aligned to this.
 
-We'll also want to store some flags that describe the memory the object represents: is it writable? is it user accessible? is it an ipc buffer?
-
-These flags seem like the flags we store in the page tables, so you could just store them there, but storing them as part of the object makes looking them up faster, since you don't need to manually traverse the paging structure. Later on we will add more flags.
+These flags we store seem like the flags used in the page tables, so you could just store them there, but storing them as part of the object makes looking them up faster, since you don't need to manually traverse the paging structure. It also allows us to store flags that the are not relevant to paging.
 
 Here's what our example virtual memory object looks like:
 
@@ -209,13 +207,21 @@ Now we have check for whether an object is MMIO or not. If it is, we don't alloc
 
 At this point our VMM can allocate any object types we'll need for now, and hopefully you can start to see the purpose of the VMM.
 
-As mentioned previously a more advanced design could allow for memory mapping files: by adding another another flag, and passing the file name (as a `char*`) in the extra argument.
+As mentioned previously a more advanced design could allow for memory mapping files: by adding another another flag, and passing the file name (as a `char*`) in the extra argument, or perhaps a file descriptor (like `mmap` does).
 
 ## Freeing Objects
 
-Let's looking at how we would free a VM object, and what would happen.
+We've looked at allocating virtual memory, how about freeing it? This is quite simple! To start with, we'll need to find the VM object that represents the memory we want to free: this can be done by searching through the list of objects until we find the one we want.
 
-`void vmm_free(void* addr)`
+If we don't find a VM object with a matching base address, something has gone wrong and you may want to emit an error for debugging. Otherwise you can remove the VM object from the linked list.
+
+At this point you will need to inspect the object's flags to determine how to handle the physical addresses that are mapped. If the object represents MMIO, you will only need to remove the mappings from the page tables. If the object is working (anonymous) memory, which is indicated by the `VM_FLAG_MMIO` bit being cleared, the physical addresses in the page tables are page frames. You'll want to tell your physical memory manager that these frames are now free after removing the mappings.
+
+We're leaving the implementation of this function up to the reader, but it's prototype would like something like: 
+
+```c
+void vmm_free(void* addr);
+```
 
 ## Workflow
 
@@ -258,3 +264,11 @@ We've looked a basic VMM implementation, and discussed some advanced concepts to
 - A way to copy data between separate VMMs (with separate address spaces). There are a number of ways to do this, it can be an interesting problem to solve. We'll actually look at some roundabout ways of doing this later on when we look at IPC.
 - Cleaning up a VMM that is no longer in use. When a program exits, you'll want to destroy the VMM associated with it to reclaim some memory. It's very easy to run into issues here as you will want to free the pages used by the VMM management structures, and the page tables. How would you do this?
 - Adding upper and lower bounds to where `vmm_alloc` will search. This can be useful for debugging, or it want to a split higher half VMM/lower half VMM design like mentioned previously.
+
+## Final Notes
+
+As mentioned above all the memory you access is virtual memory at this point, so unless you have a specific reason to interact with the PMM it can be best to deal with the VMM instead. Then let the VMM manage the physical memory it may or may not need. 
+
+Of course there will be cases where this is not possible, and there are valid reasons to allocate physical memory directory (DMA buffers for device drivers, for example), but for the most part the VMM should be your interface to interact with memory.
+
+This VMM design that was explained here is based on a stripped-down version of the Solaris VMM. It's very well understood and there is plenty of more in depth material out there if you're interested in exploring further. The original authors have also published several papers on the topic.
