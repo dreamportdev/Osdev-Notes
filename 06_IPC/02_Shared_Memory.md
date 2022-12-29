@@ -81,7 +81,7 @@ void* create_shared_memory(size_t length, const char* name) {
 
 This code is the core to implementing shared memory, it allows us to create a new shared memory region and gives us it's physical address. The VMM can then map this physical address into the memory space of the process like it would do with any other memory.
 
-Notice the use of the lock functions (`acquire` and `release`) when we access the linked list. Since this single list is shared between all processes that use shared memory, we have to protect it so we dont accidentally corrupt it. This is discussed further in the chapter on scheduling.
+Notice the use of the lock functions (`acquire` and `release`) when we access the linked list. Since this single list is shared between all processes that use shared memory, we have to protect it so we don't accidentally corrupt it. This is discussed further in the chapter on scheduling.
 
 ### Accessing Shared Memory
 
