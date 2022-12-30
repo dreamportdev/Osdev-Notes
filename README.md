@@ -6,16 +6,17 @@
 </span>
 ![](https://tokei.rs/b1/github/dreamos82/osdev-notes)
 
-This repository is a collection of small documents, notes and articles about various osdev topics.
+This repository is a knowledge-base of experiences the authors have collected while writing (and re-writing) our own operating systems. The notes here are written in the format of a book, swith the intent of taking a reader through the various stages of building up a kernel from scratch.
 
-They are not meant to be exhaustive, just  personal notes. I will keep updating them while developing the OS.
+This book is currently a work-in-progress, but many chapters are functionally complete and available to read below. We'll keep updating old chapters and adding new ones over time so be sure to check back occasionally.
 
-They are divided by topic, and usually in addition to information widely available on internet. I also try to add information based on personal experience, advice received, or mistakes made. 
+We hope you enjoy, and find something interesting here!
 
-I hope that someone will find them useful. 
+## Current Chapters:
 
-Topics covered so far: 
-
+* [Chapter 0: Introduction](00_Introduction/01_README.md)
+    * [Assumed Knowledge](00_Introduction/02_AssumedKnowledge.md)
+    * [About The Authors](00_Introduction/03_AboutTheAuthors.md)
 * [Chapter 1: Building & Boot Protocols](01_Build_Process/01_README.md)
     * [Building a Kernel](01_Build_Process/02_Overview.md)
     * [Bootloaders and Boot Protocols](01_Build_Process/03_Boot_Protocols.md)
@@ -47,23 +48,27 @@ Topics covered so far:
 * [Chapter 7: File System](07_VirtualFileSystem/01_README.md)
     * [The Virtual File System](07_VirtualFileSystem/02_VirtualFileSystem.md)
 * [Extras: Hardware and Drivers](98_Drivers/01_README.md)
-    * [APIC](98_Drivers/APIC.md)
+    * [Local APIC and IO APIC](98_Drivers/APIC.md)
     * [Linear Framebuffer](98_Drivers/Framebuffer.md)
     * [Drawing Text](98_Drivers/DrawingTextOnFB.md)
-    * [ACPI Tables](98_Drivers/RSDP_and_RSDT.md)
-    * [Timers](98_Drivers/Timer.md)
+    * [ACPI Tables](98_Drivers/ACPITables.md)
+    * [Timers (x86)](98_Drivers/Timer.md)
+    * [PS/2 Keyboard](98_Drivers/PS2Keyboard.md)
 * [Extras: Appendices](99_Appendices/0_README.md)
     * [General Troubleshooting](99_Appendices/A_Troubleshooting.md)
     * [Tips and Tricks](99_Appendices/B_Tips_And_Tricks.md)
     * [C Language](99_Appendices/C_Language_Info.md)
     * [Working With NASM](99_Appendices/D_Nasm.md)
 
-## Useful links
+## Useful Links
 
-* [DreamOs64](https://github.com/dreamos82/Dreamos64) 64 bit Os written from scratch by [Dreamos82](https://github.com/dreamos82).
-* [Northport](https://github.com/DeanoBurrito/northport) Another 64 bit Os written from scratch with SMP! by [DeanoBurrito](https://github.com/DeanoBurrito/).
-* [DreamOs](https://github.com/dreamos82/Dreamos) 32 Bits Os written from scratch, the project is discontinued but I think it was worth mentioning. By [Dreamos82]([Dreamos82](https://github.com/dreamos82)).
+* [DreamOs64](https://github.com/dreamos82/Dreamos64): 64-bit OS written from scratch by [Ivan G](https://github.com/dreamos82).
+* [Northport](https://github.com/DeanoBurrito/northport): Another 64-bit OS with SMP, and riscv support! by [Dean T](https://github.com/DeanoBurrito/).
+* [DreamOs](https://github.com/dreamos82/Dreamos): 32-bit OS written from scratch. This project is discontinued, but it still worth mentioning. Also by [Ivan G](https://github.com/dreamos82).
 
 ## Authors
-* [Ivan G](https://github.com/dreamos82) - Main author and creator of these notes.
-* [Dean T](https://github.com/DeanoBurrito/) - Co-Author.
+* [Ivan G](https://github.com/dreamos82) (dreamos82) - Main author and creator of these notes.
+* [Dean T](https://github.com/DeanoBurrito/) (DeanoBurrito) - Co-Author.
+
+## License
+The contents (code, text and other assets) of this repository are licensed under ?????, see the [LICENSE](LICENSE) file for the specific conditions.
