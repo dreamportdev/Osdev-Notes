@@ -12,4 +12,56 @@ A *tar* archive consists of a series of file objects, and each one of them inclu
 
 ## Implementation
 
+To implement it we just need: 
+
+* The header structure that represent a record (each record is a file object item)
+* A function to lookup the file witin the archive
+* Implement a function to open a file and read it's content.
+
 ### The Header
+
+As anticipated above, the header structure is a fixed size struct of 512 bytes. It contains some information about the file, and they are placed just before the file start. The list below contains all the fields that are present in the structure: 
+
+| Offset | Size |  Field     |
+|--------|------|------------|
+| 0   | 100	| File name |
+| 100 | 8 	| File mode (octal) |
+| 108 | 8 	| Owner's numeric user ID (octal) |
+| 116 | 8 	| Group's numeric user ID (octal) |
+| 124 | 12 	| File size in bytes (octal) |
+| 136 | 12 	| Last modification time in numeric Unix time format (octal) |
+| 148 | 8 	| Checksum for header record |
+| 156 | 1 	| Type flag |
+| 157 | 100 | Name of linked file |
+| 57  | 6 	| UStar indicator, "ustar", then NULL |
+| 263 | 2 	| UStar version, "00" |
+| 265 |	32 	| Owner user name |
+| 297 |	32 	| Owner group name |
+| 329 |	8 	| Device major number |
+| 337 |	8 	| Device minor number |
+| 345 |	155 | Filename prefix |
+
+To ensure portability all the information on the header are encoded in `ASCII`, so we can use the `char` type to store the information into those fields. Every record has a `type` flag, that says what kind of resource it represent, the possible values depends on the type of tar we are supporting, for the `ustar` format the possible values are: 
+
+| Value | Meaning |
+|-------|---------|
+| '0'   | (ASCII Null)  Normal file |
+| '1'   | Hard link |
+| '2'   | Symbolic link | 
+| '3'   | Character Special Device |
+| '4'   | Block device |
+| '5'   | Directory |
+| '6'   | Named Pipe |
+
+The _name of linked file_ field refers to symbolic links in the unix world, when a file is a link to another file, that field containes the value of the target file of the link.
+
+The USTar indictator (containing the string `ustar` followed by NULL), and the version field are used to identify the format being used, and the version field value is "00". 
+
+The `flename prefix` field, present only in the `ustar`, this format allows for longer file names, but the it is splitted into two parts the `file name` field ( 100 byteS) and the `filename prefix` field (155 bytes)
+
+The other fields are either self-explanatory (like uid/gid) or can be left as 0 (TO BE CHECKED) the only one that needs more explanation is the `file size` field because it is expressed in octal format encoded in ASCII, so we need a function that converts an ascii octal into an decimal integer: 
+
+```c
+``` 
+
+
