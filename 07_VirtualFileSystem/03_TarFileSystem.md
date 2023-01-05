@@ -59,9 +59,28 @@ The USTar indictator (containing the string `ustar` followed by NULL), and the v
 
 The `flename prefix` field, present only in the `ustar`, this format allows for longer file names, but the it is splitted into two parts the `file name` field ( 100 byteS) and the `filename prefix` field (155 bytes)
 
-The other fields are either self-explanatory (like uid/gid) or can be left as 0 (TO BE CHECKED) the only one that needs more explanation is the `file size` field because it is expressed in octal format encoded in ASCII, so we need a function that converts an ascii octal into an decimal integer: 
+The other fields are either self-explanatory (like uid/gid) or can be left as 0 (TO BE CHECKED) the only one that needs more explanation is the `file size` field because it is expressed in octal format encoded in ASCII, so we need to convert an ascii octal into a decimal integer, an `octal` number is a number represetend in base 8, that means that we can use digits from 0 to 7 to represent number (is like binaries that use only 0 and 1 or hexadecimals that use from 0 to F). So for example:
+
+```
+octal 12 = hex A = bin 1010
+```
+
+In C an octal number is represented adding a `0` in front of the number, so for example 0123 is 83 in decimal.
+
+But that's not all, we also have that the number is represented as an `ascii` characters, so to get the decimal number we need to: 
+
+1. Convert each ansii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `´0'` ), to get the digit we need just to subrstract the `ascii` code for the 0 to the char supplied
+2.  To obtain the decimal number from an octal we need to multiply each digit per `8^i` where i is the digit position (rightmost digit is 0) and sum their results. For example 37 in octal is: 
 
 ```c
-``` 
+037 = 3 * 8^1 + 7 * 8^0 = 31
+```
+
+Remember we ignore the first 0 because it tells C that it is an octal number (and also it doesn't add any value to the final result!), since we are writing an os implementing this function should be pretty easy, so this will be left as exercise, we will just assume that we have the following function available to convert octal ascii to decimal: 
 
 
+```c
+int octascii_to_dec(char *number, int size);
+```
+
+The size parameter tells us how many bytes is the digit long, and in the case of a tar object record the size is fixed: 12 bytes.
