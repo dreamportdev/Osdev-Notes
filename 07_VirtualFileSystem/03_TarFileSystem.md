@@ -53,7 +53,7 @@ To ensure portability all the information on the header are encoded in `ASCII`, 
 | '5'   | Directory |
 | '6'   | Named Pipe |
 
-The _name of linked file_ field refers to symbolic links in the unix world, when a file is a link to another file, that field containes the value of the target file of the link.
+The _name of linked file_ field refers to symbolic links in the unix world, when a file is a link to another file, that field contains the value of the target file of the link.
 
 The USTar indictator (containing the string `ustar` followed by NULL), and the version field are used to identify the format being used, and the version field value is "00". 
 
@@ -84,3 +84,14 @@ int octascii_to_dec(char *number, int size);
 ```
 
 The size parameter tells us how many bytes is the digit long, and in the case of a tar object record the size is fixed: 12 bytes.
+
+### Searching for a file
+
+Since the tar format doesn't have any file table or linked lists, or similar to search for files, we need everytime to start from the first record and scan one after each other, if the recordi is found we will return the pointer to it, otherwise we will eventually reach the end of the archive (file system in our cose) meaning that the file searched is not present. 
+
+The picture below show how data is stored into a tar archive. 
+
+
+![Tar Archive](/Images/tar.png)
+
+
