@@ -1,6 +1,6 @@
 # The Tar File System
 
-In the previous chapter we have implemented the VFS layer. that will provide us with a common interface to access files and directories across different file systems on different devices. In this chapter we are going to implement our first file system and try to access it's content using the VFS function. As already anticipated we will implement the (US)TAR format.
+In the previous chapter we have implemented the VFS layer. That will provide us with a common interface to access files and directories across different file systems on different devices. In this chapter we are going to implement our first file system driver and try to access it's content using the VFS function. As already anticipated we will implement the (US)TAR format.
 
 ## Introduction
 
@@ -34,7 +34,7 @@ As anticipated above, the header structure is a fixed size struct of 512 bytes. 
 | 156 | 1 	| Type flag |
 | 157 | 100 | Name of linked file |
 | 57  | 6 	| UStar indicator, "ustar", then NULL |
-| 263 | 2 	| UStar version, "00" |
+| 263 | 2 	| UStar version, "00" (it is a string) |
 | 265 |	32 	| Owner user name |
 | 297 |	32 	| Owner group name |
 | 329 |	8 	| Device major number |
@@ -80,7 +80,7 @@ Remember we ignore the first 0 because it tells C that it is an octal number (an
 
 
 ```c
-int octascii_to_dec(char *number, int size);
+size_t octascii_to_dec(char *number, int size);
 ```
 
 The size parameter tells us how many bytes is the digit long, and in the case of a tar object record the size is fixed: 12 bytes. Since we just need to implement a data structure for the header, this is left as exercise. Let's assume just that a new type is defined with the name `tar_record`.
@@ -124,19 +124,19 @@ An easy solution is to check first the searched filename length, if it less than
 
 char tar_filename[256];
 int zero_counter = 0;
-//The starting address should be known somehow to the OS)
-tar_record current_record = tar_fs_start_address; 
+//The starting address should be known somehow to the OS
+tar_record *current_record = tar_fs_start_address; 
 while (zero_counter < 2) {
     if (is_zeroed(current_record) ) {
         zero_counter++;
         continue;
     }
     zero_counter = 0;
-    if ( tar_record.filename_prefix[0] != 0) {
+    if ( tar_record->filename_prefix[0] != 0) {
         // We need to merge the two strings;
-        sprintf(tar_filename, "%s%s", tar_record.file_prefix, tar_record.file_name);
+        sprintf(tar_filename, "%s%s", current_record->file_prefix, current_record->file_name);
     } else {
-        strcpy(tar_filename, tar_record.file_prefix);
+        strcpy(tar_filename, current_record->file_prefix);
     }
     if ( strcmp(tar_filename, searched_file) == 0) {
         // We have found the file, we can return wheter the beginning of data, or the record itself
