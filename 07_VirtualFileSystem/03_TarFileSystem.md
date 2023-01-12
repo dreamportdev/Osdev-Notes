@@ -132,12 +132,27 @@ while (zero_counter < 2) {
         continue;
     }
     zero_counter = 0;
-    if ( strlen(searched_file) > 100) {
+    if ( tar_record.filename_prefix[0] != 0) {
         // We need to merge the two strings;
         sprintf(tar_filename, "%s%s", tar_record.file_prefix, tar_record.file_name);
+    } else {
+        strcpy(tar_filename, tar_record.file_prefix);
+    }
+    if ( strcmp(tar_filename, searched_file) == 0) {
+        // We have found the file, we can return wheter the beginning of data, or the record itself
     }
     uint64_t file_size = octascii_to_dec(current_record.file_size, 12); 
     current_record = current_record + sizeof(tar_header) + file_size;
 }
+// If the while looop finish it means we have not found the file
 ```
+
+The above code outlines what are the steps required to lookup for a file, the `searched_file` variable is the file we are looking for. With the function above now we are able to tell the vfs that the file is present and it can be opened. How things are implemented depends on design decisions, for example there are many paths we can take while implementing functions for opening a file on a fs: 
+
+* We can just keep a list of opened files like the VFS
+* We can lookup the file and return the address of where it starts to the vfs, so the read will know where to look for it. 
+* We can map the file content somewhere in the memory
+
+These are just few examples, but there can be different options, or a mix of them.
+
 
