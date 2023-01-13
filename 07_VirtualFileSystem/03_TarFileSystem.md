@@ -185,9 +185,49 @@ There is another problem: how do we know when we have reached the end of the fil
 
 ### Closing a file
 
-In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done on the VFS layer. 
+In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done on the VFS layer. But in other scnearios, where we are handling opened filesi n the VFS, or keeping track of their status, it could be necessary to unmap/unload the file or the data structures associated to it.
 
 ## And now from a VFS Point Of View
 
+Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do we need to do two things: load the filesystem into memory and populate at least mountpoint_t item. Since techincally there are no fs loaded yet we can add it as the first item in our list/array. We have seent the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure: 
 
+* The file system name (it can be whatever we want).
+* The mountpoint (is the folder where we want to mount the filesystem), in our case since we have not mountpoints loaded, a good idea will be to mount it at "/".
+* The file_operations field, that will contain the pointer to the fs functions to open/read/close/write files, in this field we are going to place the fs driver function we just created..
 
+The file_operation field will be loaded as follows (this is according to our current implemeentation): 
+
+* The open function will be the ustar_open function.
+* The read function will be the ustar_read function.
+* We don't need a close function since we can handle it directly in the VFS, so we will set it to NULL.
+* As well as we don't need a write function since our fs will be read only, so it can be set to NULL.
+
+Loading the fs in memory instead will depend on the booting method we have chosen, since every boot manager/loader has it's different approach this will be left to the boot manager used documentation. 
+
+// MAYBE ADD AN EXAMPLE? @DT
+
+## Where To Go From Here
+
+In this chapter we have tried to outline the implementation of an example file system to be used with our vfs layer. A lot of things were left unimplemented, or very basic, and also the implementation is very trivial and not optimized at all. 
+
+For example: every time we lookup for a file we need to scan the list first until we find the file (if it exists), and for every item we need to compute the next file address, convert the size from ascii octal to decimal, lookup for the end file system (checking for two consecutive zeroes record) in case the file doesn't exist. This can be improved by populating a list with all the files present in the file system, keeping track of the informations needed for lookup/read purposes. We can add a simple struct like the following: 
+
+```c
+struct tar_list_item {
+    char filename[256];
+    void *tar_record_pointer;
+    size_t file_size
+    int type;
+    struct tar_list_item* next;
+};
+```
+
+And using the new datatype initalize the list accordingly. 
+
+Now when the file system is accessed for the first time we can initalize this list, and use it to search for the files, saving a lot of time and reasources, and it can makes things easier to for the lookup and read function. 
+
+Another limitation of our driver is that it expects for the file system to be fully loaded into memory, while we know that probably file system will be stored into an external device, so a good idea is to make the driver aware of all possible scenarios. 
+
+And of course we can implement more file systems from here.
+
+There is no write function too, it can be implemented, but since it has many limitations it is not really a good idea (you can check the standard).
