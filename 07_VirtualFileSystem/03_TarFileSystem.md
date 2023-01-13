@@ -59,7 +59,7 @@ The USTar indictator (containing the string `ustar` followed by NULL), and the v
 
 The `filename prefix` field, present only in the `ustar`, this format allows for longer file names, but it is splitted into two parts the `file name` field ( 100 bytes) and the `filename prefix` field (155 bytes)
 
-The other fields are either self-explanatory (like uid/gid) or can be left as 0 (TO BE CHECKED) the only one that needs more explanation is the `file size` field because it is expressed  as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer. Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it (is like binaries that use only 0 and 1 or hexadecimals that use from 0 to F). So for example:
+The other fields are either self-explanatory (like uid/gid) or can be left as 0 (TO BE CHECKED) the only one that needs more explanation is the `file size` field because it is expressed  as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer. Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it, similar to how binary (base 2) only have 0 and 1, and hexadecimal (base 16) has 0 to F. So for example:
 
 ```
 octal 12 = hex A = bin 1010
@@ -93,7 +93,7 @@ Since the tar format doesn't have any file table or linked lists, or similar to 
 The picture below show how data is stored into a tar archive. 
 
 
-![Tar Archive](Images/tar.png)
+![Tar Archive](/Images/tar.png)
 
 To move from the first header to the next we simply need to use the following formula:
 
