@@ -121,30 +121,31 @@ The `is_zeroed` function is a helper function that we should implement, as the n
 An easy solution is to check first the searched filename length, if it less than 100 characters, so we can use just the `file_name` field, otherwise we can merge the two fields and compare than with the searched filename. The updated loop pseudo-code should look similar to this: , 
 
 ```c
-
-char tar_filename[256];
-int zero_counter = 0;
-//The starting address should be known somehow to the OS
-tar_record *current_record = tar_fs_start_address; 
-while (zero_counter < 2) {
-    if (is_zeroed(current_record) ) {
-        zero_counter++;
-        continue;
+uint64_t tar_file_lookup(char *filename) {
+    char tar_filename[256];
+    int zero_counter = 0;
+    //The starting address should be known somehow to the OS
+    tar_record *current_record = tar_fs_start_address; 
+    while (zero_counter < 2) {
+        if (is_zeroed(current_record) ) {
+            zero_counter++;
+            continue;
+        }
+        zero_counter = 0;
+        if ( tar_record->filename_prefix[0] != 0) {
+            // We need to merge the two strings;
+            sprintf(tar_filename, "%s%s", current_record->file_prefix, current_record->file_name);
+        } else {
+            strcpy(tar_filename, current_record->file_prefix);
+        }
+        if ( strcmp(tar_filename, searched_file) == 0) {
+            // We have found the file, we can return wheter the beginning of data, or the record itself
+        }
+        uint64_t file_size = octascii_to_dec(current_record.file_size, 12); 
+        current_record = current_record + sizeof(tar_header) + file_size;
     }
-    zero_counter = 0;
-    if ( tar_record->filename_prefix[0] != 0) {
-        // We need to merge the two strings;
-        sprintf(tar_filename, "%s%s", current_record->file_prefix, current_record->file_name);
-    } else {
-        strcpy(tar_filename, current_record->file_prefix);
-    }
-    if ( strcmp(tar_filename, searched_file) == 0) {
-        // We have found the file, we can return wheter the beginning of data, or the record itself
-    }
-    uint64_t file_size = octascii_to_dec(current_record.file_size, 12); 
-    current_record = current_record + sizeof(tar_header) + file_size;
+    // If the while looop finish it means we have not found the file
 }
-// If the while looop finish it means we have not found the file
 ```
 
 The above code outlines what are the steps required to lookup for a file, the `searched_file` variable is the file we are looking for. With the function above now we are able to tell the vfs that the file is present and it can be opened. How things are implemented depends on design decisions, for example there are many paths we can take while implementing functions for opening a file on a fs: 
@@ -153,6 +154,40 @@ The above code outlines what are the steps required to lookup for a file, the `s
 * We can lookup the file and return the address of where it starts to the vfs, so the read will know where to look for it. 
 * We can map the file content somewhere in the memory
 
-These are just few examples, but there can be different options, or a mix of them.
+These are just few examples, but there can be different options. In this guide we are going to simply return the location address of starting position of the file to the VFS layer, the driver will not keep track of opened files, and also we assume that the tar fs is fully loaded into memory  (but in the real world we probably will need a more complex way to handle stuff, because file systems will be stored on different devices, and will unlikely be fully loaded into memory). 
+
+With the assumptions above, we already have all that we need for opening the file, from a file system point of view, it could be useful just to create a open function to eventually handle the extra parameters passed by the vfs:
+
+```c
+uint64_t ustar_open(const char* filename, int flags);
+```
+
+The implementation is left as exercise, since it just calling the `tar_lookup` and returning it's value. Of course this function can be improved, and we can avoid creating a wrapper function, and use the lookup directly, but the purpose here was just to show how to search for a file and make it available to the vfs.
+
+### Reading from a file 
+
+Reading from a file depends again on many implementation choices, in our scenario things are very easy, since we decided to return the address of the tar record containing the file, So what we need to access the file content are at least: 
+
+* A handle to access the content of the file
+* How many bytes we want to read
+
+In our case the handler is the pointer to the file, so to read it we just need to copy the number of bytes we want into the buffer passed as parameter to the vfs read function, So our `ustar_read` will need three parameters: a pointer, the number of bytes and the buffer where we want the data placed. 
+
+```c
+ssize_t ustar_read(uint64_t file_handle, const char *buffer, size_t nbytes);
+```
+
+The function should be easy to write, we just need to convert the file handle to a pointer, and copy nbytes of it into the buffer, we can use just a strncpy or similar for it (if we have implemented it). 
+
+There is only one problem, since we have the pointer to the start of the file, every time the function is called will return the first n-bytes of it, and this is not what we want since read keeps track of the previously read data, and alway start from the first byte not accessed yet. This can be easily solved in the VFS layer since it keeps track of the last byte read, in this case we just need to add the number of bytes read to the file start address. 
+
+There is another problem: how do we know when we have reached the end of the file. This can be handled by the vfs, since in our case the list of opened files contains both information: current read position and the file size, so if `buf_read_pos + nbytes > filesize` we need to adjust the nbytes variable to `filesize - buf_read_pos` (filesize and buf_read_pos are the field of field_descriptor_t data structure). 
+
+### Closing a file
+
+In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done on the VFS layer. 
+
+## And now from a VFS Point Of View
+
 
 
