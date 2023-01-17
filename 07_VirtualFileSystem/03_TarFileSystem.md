@@ -203,9 +203,42 @@ The file_operation field will be loaded as follows (this is according to our cur
 * As well as we don't need a write function since our fs will be read only, so it can be set to NULL.
 
 Loading the fs in memory instead will depend on the booting method we have chosen, since every boot manager/loader has it's different approach this will be left to the boot manager used documentation. 
+#### Example loading a ramfs using multiboot2
 
-// MAYBE ADD AN EXAMPLE? @DT
+Just as an example let's see how to load a tar archive into memory, to make it available to our kernel. The first thing of course will be creating the tar archive with the files/folder we want to add to it, for example let's assume we want to add two files: `README.md` and `example.txt`: 
 
+```
+tar cvf examplefs.tar README.md example.txt
+```
+
+Then if we are going to create an ISO using grub-mkrescue, we must make sure that this file will be copied into the image. Once done, we need to update the grub menu entry configuration, adding the tar file as a module using the `module2` keyword: (refer to the _Boot Protocols_ paragraph for more information on the boot process):
+
+```
+menuentry "My Os" {
+    multiboot2 /boot/kernel.bin                  // Path to the loader executable
+    module2 /examplefs.tar
+    boot
+     // More modules may be added here in the form 'module <path> "<cmdline>"'
+}
+```
+
+The module path is the where the file is placed in the iso. Make sure that the `module2` commands is after the `multiboot2` line. Now when the kernel is loaded, we should have a new boot information item passed to the kernel (like the framebuffer, and acpi), the tag structure is: 
+
+```
+        +-------------------+
+u32     | type = 3          |
+u32     | size              |
+u32     | mod_start         |
+u32     | mod_end           |
+u8[n]   | string            |   
+        +-------------------+
+```
+
+The type is just a numeric id to identify the tag, the size is the file size. `mod_start` and `mod_end` are the phsyical address of the start and end of the module. The string is an arbitrary string associated with the module. How to parse the multioot information tags is explained in the _Boot Protocols_ chapter. 
+
+Once parsed the tag above, we now need to map the memory range from `mod_start` to `mod_end` into our virtual memory, and then the archive is ready to be accessed by the driver at the virtual address specified.
+
+Now after parsing the information above 
 ## Where To Go From Here
 
 In this chapter we have tried to outline the implementation of an example file system to be used with our vfs layer. We have left many things unimplemented, or with a naive implementation. 
