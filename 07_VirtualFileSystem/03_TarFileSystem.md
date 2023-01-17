@@ -86,7 +86,7 @@ size_t octascii_to_dec(char *number, int size);
 The size parameter tells us how many bytes is the digit long, and in the case of a tar object record the size is fixed: 12 bytes. Since we just need to implement a data structure for the header, this is left as exercise. Let's assume just that a new type is defined with the name `tar_record`.
 
 
-### Searching for a file
+### Searching For A File
 
 Since the tar format doesn't have any file table or linked lists, or similar to search for files, we need everytime to start from the first record and scan one after each other, if the record is found we will return the pointer to it, otherwise we will eventually reach the end of the archive (file system in our case) meaning that the file searched is not present. 
 
@@ -99,7 +99,7 @@ To move from the first header to the next we simply need to use the following fo
 
 $$ next\_header = header\_ptr + header\_size + file\_size $$
 
-The lookup function then will be in the form of a loop.  But how to tell if we have reached the end of the archive? As mentioned above, if there are two or more zero-filled records, it indicated the end. So while searching, we need to make sure that we keep track of the number of zeroed records. The main lookup loop should be similar to the following pseudo-code:
+The lookup function then will be in the form of a loop. The first thing we'll need to know is when we've reached the end of the archive. As mentioned above, if there are two or more zero-filled records, it indicated the end. So while searching, we need to make sure that we keep track of the number of zeroed records. The main lookup loop should be similar to the following pseudo-code:
 
 ```c 
 int zero_counter = 0;
@@ -121,7 +121,7 @@ The `is_zeroed` function is a helper function that we should implement, as the n
 An easy solution is to check first the searched filename length, if it less than 100 characters, so we can use just the `file_name` field, otherwise we can merge the two fields and compare than with the searched filename. The updated loop pseudo-code should look similar to this: , 
 
 ```c
-uint64_t tar_file_lookup(char *filename) {
+uint64_t tar_file_lookup(const char *filename) {
     char tar_filename[256];
     int zero_counter = 0;
     //The starting address should be known somehow to the OS
@@ -154,7 +154,7 @@ The above code outlines what are the steps required to lookup for a file, the `s
 * We can lookup the file and return the address of where it starts to the vfs, so the read will know where to look for it. 
 * We can map the file content somewhere in the memory
 
-These are just few examples, but there can be different options. In this guide we are going to simply return the location address of starting position of the file to the VFS layer, the driver will not keep track of opened files, and also we assume that the tar fs is fully loaded into memory  (but in the real world we probably will need a more complex way to handle stuff, because file systems will be stored on different devices, and will unlikely be fully loaded into memory). 
+These are just few examples, but there can be different options. In this guide we are going to simply return the location address of starting position of the file to the VFS layer, the driver will not keep track of opened files, and also we assume that the tar fs is fully loaded into memory. In the real world we probably will need a more complex way to handle stuff, because file systems will be stored on different devices, and will unlikely be fully loaded into memory. 
 
 With the assumptions above, we already have all that we need for opening the file, from a file system point of view, it could be useful just to create a open function to eventually handle the extra parameters passed by the vfs:
 
@@ -164,7 +164,7 @@ uint64_t ustar_open(const char* filename, int flags);
 
 The implementation is left as exercise, since it just calling the `tar_lookup` and returning it's value. Of course this function can be improved, and we can avoid creating a wrapper function, and use the lookup directly, but the purpose here was just to show how to search for a file and make it available to the vfs.
 
-### Reading from a file 
+### Reading From A File 
 
 Reading from a file depends again on many implementation choices, in our scenario things are very easy, since we decided to return the address of the tar record containing the file, So what we need to access the file content are at least: 
 
@@ -183,13 +183,13 @@ There is only one problem, since we have the pointer to the start of the file, e
 
 There is another problem: how do we know when we have reached the end of the file. This can be handled by the vfs, since in our case the list of opened files contains both information: current read position and the file size, so if `buf_read_pos + nbytes > filesize` we need to adjust the nbytes variable to `filesize - buf_read_pos` (filesize and buf_read_pos are the field of field_descriptor_t data structure). 
 
-### Closing a file
+### Closing A File
 
 In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done on the VFS layer. But in other scnearios, where we are handling opened filesi n the VFS, or keeping track of their status, it could be necessary to unmap/unload the file or the data structures associated to it.
 
-## And now from a VFS Point Of View
+## And Now from A VFS Point Of View
 
-Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do we need to do two things: load the filesystem into memory and populate at least mountpoint_t item. Since techincally there are no fs loaded yet we can add it as the first item in our list/array. We have seent the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure: 
+Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do we need to do two things: load the filesystem into memory and populate at least one mountpoint_t item. Since techincally there are no fs loaded yet we can add it as the first item in our list/array. We have seent the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure: 
 
 * The file system name (it can be whatever we want).
 * The mountpoint (is the folder where we want to mount the filesystem), in our case since we have not mountpoints loaded, a good idea will be to mount it at "/".
@@ -208,7 +208,7 @@ Loading the fs in memory instead will depend on the booting method we have chose
 
 ## Where To Go From Here
 
-In this chapter we have tried to outline the implementation of an example file system to be used with our vfs layer. A lot of things were left unimplemented, or very basic, and also the implementation is very trivial and not optimized at all. 
+In this chapter we have tried to outline the implementation of an example file system to be used with our vfs layer. We have left many things unimplemented, or with a naive implementation. 
 
 For example: every time we lookup for a file we need to scan the list first until we find the file (if it exists), and for every item we need to compute the next file address, convert the size from ascii octal to decimal, lookup for the end file system (checking for two consecutive zeroes record) in case the file doesn't exist. This can be improved by populating a list with all the files present in the file system, keeping track of the informations needed for lookup/read purposes. We can add a simple struct like the following: 
 
@@ -226,7 +226,7 @@ And using the new datatype initalize the list accordingly.
 
 Now when the file system is accessed for the first time we can initalize this list, and use it to search for the files, saving a lot of time and reasources, and it can makes things easier to for the lookup and read function. 
 
-Another limitation of our driver is that it expects for the file system to be fully loaded into memory, while we know that probably file system will be stored into an external device, so a good idea is to make the driver aware of all possible scenarios. 
+Another limitation of our driver is that it expects for the tar to be fully loaded into memory, while we know that probably file system will be stored into an external device, so a good idea is to make the driver aware of all possible scenarios. 
 
 And of course we can implement more file systems from here.
 

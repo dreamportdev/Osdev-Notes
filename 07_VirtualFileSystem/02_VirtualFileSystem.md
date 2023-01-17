@@ -268,7 +268,7 @@ The return value of the function is the file descriptor id. We have already seen
 
 ```c
 struct {
-    uint64 fs_file_id;
+    uint64_t fs_file_id;
     int mountpoint_id;
     char *filename;
     int buf_read_pos;
