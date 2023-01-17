@@ -239,6 +239,7 @@ The type is just a numeric id to identify the tag, the size is the file size. `m
 Once parsed the tag above, we now need to map the memory range from `mod_start` to `mod_end` into our virtual memory, and then the archive is ready to be accessed by the driver at the virtual address specified.
 
 Now after parsing the information above 
+
 ## Where To Go From Here
 
 In this chapter we have tried to outline the implementation of an example file system to be used with our vfs layer. We have left many things unimplemented, or with a naive implementation. 

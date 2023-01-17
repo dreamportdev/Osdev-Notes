@@ -1,0 +1,28 @@
+\documentclass{book}
+\title{Sections and Chapters}
+\author{Overleaf}
+\date{\today}
+\begin{document}
+\maketitle
+\tableofcontents
+\part{History of Lua\TeX}
+
+\chapter{An Introduction to Lua\TeX}
+
+\section{What is it—and what makes it so different?}
+Lua\TeX{} is a \textit{toolkit}—it contains sophisticated software tools and components with which you can construct (typeset) a wide range of documents. The sub-title of this article also poses two questions about Lua\TeX: What is it—and what makes it so different? The answer to “What is it?” may seem obvious: “It’s a \TeX{} typesetting engine!” Indeed it is, but a broader view, and one to which this author subscribes, is that Lua\TeX{} is an extremely versatile \TeX-based document construction and engineering system.
+
+\subsection{Explaining Lua\TeX: Where to start?}
+The goal of this first article on Lua\TeX{} is to offer a context for understanding what this TeX engine provides and why/how its design enables users to build/design/create a wide range of solutions to complex typesetting and design problems—perhaps also offering some degree of “future proofing” 
+
+\chapter{Lua\TeX: Background and history}
+\section{Introduction}
+Lua\TeX{} is, in \TeX{} terms, “the new kid on the block” despite having been in active development for over 10 years.
+
+\subsection{Lua\TeX: Opening up \TeX’s “black box”}
+Knuth’s original \TeX{} program is the common ancestor of all modern \TeX{} engines in use today and Lua\TeX{} is, in effect, the latest evolutionary step: derived from the pdf\TeX{} program but with the addition of some powerful software components which bring a great deal of extra functionality.
+
+\subsubsection{How Lua\TeX{} processes \texttt{\string\directlua}: A first look}
+The ⟨code⟩ provided to \verb|\directlua{<code>}| is first converted to tokens using the processes and calculations discussed above; that sequence of tokens is stored in a token list.
+\end{document}
+
