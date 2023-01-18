@@ -14,13 +14,13 @@ To keep our design simple, the features of our VFS driver will be:
 
 The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver.
 
-![Where the VFS sits in an OS](/Images/vfs_layer.png)
+![Where the VFS sits in an OS](Images/vfs_layer.png)
 
  How the different file systens are presented to the-end user depends on design decision. For example windows operating systems wants to keep different file systems logically separated using unit letters, while unix/linux systems represents them under the same tree, so a folder can be either on the same FS or on another one, but in both cases the idea is the same, we want to use the same functions to read/write files on them. 
 
 In this guide we will follow a unix approach. To better understand how does it works let's have a look at this picture: 
 
-![Vfs Example Tree](/Images/vfs_tree_example.png)
+![Vfs Example Tree](Images/vfs_tree_example.png)
 
 It shows a portion of a unix directory tree (starting from root), the gray circle represents actual file systems, while the white ones are directories. 
 
@@ -268,7 +268,7 @@ The return value of the function is the file descriptor id. We have already seen
 
 ```c
 struct {
-    int fs_file_id;
+    uint64_t fs_file_id;
     int mountpoint_id;
     char *filename;
     int buf_read_pos;
