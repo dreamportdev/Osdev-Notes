@@ -6,9 +6,9 @@
 </span>
 ![](https://tokei.rs/b1/github/dreamos82/osdev-notes)
 
-This repository is a knowledge-base of experiences the authors have collected while writing (and re-writing) our own operating systems. The notes here are written in the format of a book, swith the intent of taking a reader through the various stages of building up a kernel from scratch.
+This repository is a collection of notes about operating systems development. Written by the authors while writing (and re-writing) our own operating systems. The notes are organised like a book, with the intent of guiding the reader through the various stages of building an operating system kernel from scratch.
 
-This book is currently a work-in-progress, but many chapters are functionally complete and available to read below. We'll keep updating old chapters and adding new ones over time so be sure to check back occasionally.
+Currently these notes are a work in progress, but many chapters are functionally complete and available to read below. We'll keep updating old chapters and adding new ones over time so be sure to check back occasionally.
 
 We hope you enjoy, and find something interesting here!
 
@@ -52,7 +52,7 @@ We hope you enjoy, and find something interesting here!
     * [Linear Framebuffer](98_Drivers/Framebuffer.md)
     * [Drawing Text](98_Drivers/DrawingTextOnFB.md)
     * [ACPI Tables](98_Drivers/ACPITables.md)
-    * [Timers (x86)](98_Drivers/Timer.md)
+    * [Timers](98_Drivers/Timer.md)
     * [PS/2 Keyboard](98_Drivers/PS2Keyboard.md)
 * [Extras: Appendices](99_Appendices/0_README.md)
     * [General Troubleshooting](99_Appendices/A_Troubleshooting.md)
@@ -67,8 +67,22 @@ We hope you enjoy, and find something interesting here!
 * [DreamOs](https://github.com/dreamos82/Dreamos): 32-bit OS written from scratch. This project is discontinued, but it still worth mentioning. Also by [Ivan G](https://github.com/dreamos82).
 
 ## Authors
+
 * [Ivan G](https://github.com/dreamos82) (dreamos82) - Main author and creator of these notes.
 * [Dean T](https://github.com/DeanoBurrito/) (DeanoBurrito) - Co-Author.
 
 ## License
-The contents (code, text and other assets) of this repository are licensed under ?????, see the [LICENSE](LICENSE) file for the specific conditions.
+
+The contents (code, text and other assets) of this repository are licensed under the Creative Commons Attribution-NonCommercial 4.0 Public License, see the [LICENSE](LICENSE.md) file for the full text.
+
+While not legal advice, this license can be summed up as:
+- You are free to share (copy and redistribute) this material in any medium or format.
+- Adapt (remix, transform and build upon) the material.
+
+Under the following restrictions:
+- You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+- You cannot use the material for commercial uses.
+
+Note that no warranties of any kind are provided.
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a>
