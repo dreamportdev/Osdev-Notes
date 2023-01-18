@@ -93,7 +93,7 @@ Since the tar format doesn't have any file table or linked lists, or similar to 
 The picture below show how data is stored into a tar archive. 
 
 
-![Tar Archive](/Images/tar.png)
+![Tar Archive](Images/tar.png)
 
 To move from the first header to the next we simply need to use the following formula:
 
@@ -203,6 +203,7 @@ The file_operation field will be loaded as follows (this is according to our cur
 * As well as we don't need a write function since our fs will be read only, so it can be set to NULL.
 
 Loading the fs in memory instead will depend on the booting method we have chosen, since every boot manager/loader has it's different approach this will be left to the boot manager used documentation. 
+
 #### Example loading a ramfs using multiboot2
 
 Just as an example let's see how to load a tar archive into memory, to make it available to our kernel. The first thing of course will be creating the tar archive with the files/folder we want to add to it, for example let's assume we want to add two files: `README.md` and `example.txt`: 
