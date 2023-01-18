@@ -123,6 +123,7 @@ symbol-file path/to/kernel.bin
 * you can show also the content of pointer stored into a register: *x/h ($rax)* shows the content of memory address pointed by rax
 
 ### Navigation
+
 * `c/continue` can be used to continue the program until the next breakpoint is reached.
 * `fin/finish` will run until the end of the current function.
 * `s/step` will run the next line of code, and if the next line is a function call, it will 'step into' it. This will leave you on the first line on the new function.
@@ -130,6 +131,7 @@ symbol-file path/to/kernel.bin
 * `si/ni` step instruction/next instruction. These are like step and next, but work on instructions, rather than lines of code.
 
 ### Print and Examine memory
+
 `p/print symbol` can be used to used to print almost anything that makes sense in your program.
 Lets say you have an integer variable i, `p i` will disable what i currently is. This takes a c-like syntax, 
 so if you print a pointer, gdb will simply tell you its address. To view it's contents you would need to use `p *i`, like in c.
@@ -144,6 +146,9 @@ The format specifier can be prefixed with a number of repeats. For example if yo
 
 
 ### How did I get here?
+
+Here a collection of useful command to keep track of the call stack.
+
 * `bt/backtrace/info stack` will show you the current call stack, with lower numbers meaning deeper (current breakpoint is stack frame 0).
 * `up/down` can be used to move up and down the callstack.
 * `frame x` will jump directly to frame number x (view frame numbers with `bt`)
@@ -152,7 +157,9 @@ so you may need to `si` a few times when entering a function for this to return 
 * `info locals` diplays local variables (on the stack). Any variables that have no yet been declared in the source code will have junk values (keep this in mind!).
 
 ### Breakpoints
+
 A breakpoint can be set in a variety of ways! The command is `b/break symbol`, where symbol can be a number of things:
+
 * a function entry: `break init` or `break init()` will break at *any* function named init.
 * a file/line number: `break main.c:42` will break just before the first instruction of line 42 (in main.c) is executed.
 * an address in memory: `break 0x1234` will break whenever the cpu's next instruction is at address 0x1234. 
@@ -175,9 +182,11 @@ Best to do serious debugging without kvm, and only use hardware debugging when a
 
 ### TUI - Text User Interface
 This area of gdb is hilariously undocumented, but still really useful. It can be entered in a number of ways:
+
 * `layout xyz`, will drop into a 1 window tui with the specified data in the main window. This can be 'src' for the source code, 'regs' for registers, or 'asm' for assembly.
 * Control-X + 1 will enter a 1 window tui, Control-X 2 will enter a 2 window tui. Pressing these will cycle window layouts. Trying is easier than explaining here!
 * `tui enable` will do the same the first option, but defaults to asm layout. 
+
 Tui layouts can be switched at any time, or you can return to your regular shell at any time using `tui disable`, or exiting gdb.
 
 The layouts offer little interaction besides the usual terminal in/out, but can useful for quickly referencing things, or examining exactly what instructions are running.

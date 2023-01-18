@@ -16,6 +16,7 @@ This term when used in a memory management/osdev environment has a different mea
 ## A Quick Recap: Allocating Memory
 
 There are many kinds of memory allocators in the osdev world (physical, virtual, and others) with various subtypes (page frame, bitmap, etc ...). For the following section we assume you have the following:
+
 - a physical memory allocator.
 - a virtual memory allocator (using paging).
 
@@ -89,7 +90,7 @@ What we have so far is already an allocation algorithm, that's easy to implement
 Its implementation is very simple: 
 
 ```c 
-uint8_t *cur_heap_position = 0; //This is just pseudocode in real word this will be a memory location 
+uint8_t *cur_heap_position = 0; //This is just pseudocode in real world this will be a memory location 
 void *first_alloc(size_t size) {
   uint8_t *addr_to_return = cur_heap_position;
   cur_heap_position= cur_heap_position + size;
