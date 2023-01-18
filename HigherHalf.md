@@ -25,7 +25,8 @@ Let's assume we are in 64 bit mode. The address is 0xffffffff80000000, if we are
 | 1   ...  1 | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0  0  ...  0 |
 |  Sgn. ext  |    PML4   |      PDPR           |   Page dir |    Offset    |
 
-the address is composed as follows:   
+the address is composed as follows:
+
 * Sgn ext: bits from 63 to 48 can be ignored
 * PML4: (bits 47..39) is 511
 * PDPR: (bits 38..30) is 510

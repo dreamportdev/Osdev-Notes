@@ -44,7 +44,7 @@ void thead_two() {
 
 What would we expect to see on the serial output? We dont know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more like they will get in the way of each other.
 
-![Tasks execution sequence](Images/taskssequence.png)
+![Tasks execution sequence](/Images/taskssequence.png)
 
 One example of what we could see is `Iwh aI ammi  lethe secfionrsd t stristngring`. This contains all the right characters but it's completely unreadable. The image below shows what could happen:
 
