@@ -221,8 +221,10 @@ void idle_main(void* arg) {
 
 The idle task is scheduled a little differently: it should only run when there is nothing else to run. You wouldn't want it to run when there is real work to do, because it's essentially throwing away a full quantum that could be used by another thread.
 
-## Troubleshooting
-### Interrupts stop after context switch
+### Troubleshooting
+
+#### Interrupts stop after context switch
+
 Make sure to check the value of the flags register (rflags/eflags).  
 You might've set it to a value where the interrupt bit is cleared, causing the computer to disable hardware interrupts.
 
