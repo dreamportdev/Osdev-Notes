@@ -103,29 +103,32 @@ The IO APIC ID field is mostly fluff, as you'll be accessing the io apic by it's
 The Global System Interrupt Base is the first interrupt number that the I/O Apic handles. In the case of most systems, with only a single IO APIC, this will be 0. 
 
 To check the number of inputs an IO APIC supports:
+
 ```c
 uint32_t ioapicver = read_io_apic_register(IOAPICVER);
 size_t number_of_inputs = ((ioapicver >> 16) & 0xFF) + 1;
 ```
+
 The number of inputs is encoded as bits 23:16 of the IOAPICVER register, minus one. 
 
 
 ### IO-APIC Registers
+
 The IO-APIC has 2 memory mapped registers for accessing the other IO-APIC registers: 
 
 | Memory Address | Mnemonic Name | Register Name      | Description                                  |
 |----------------|---------------|--------------------|----------------------------------------------|
 |   FEC0 0000h   | IOREGSEL      | I/O Register Select| Is used to select the I/O Register to access |
-|   FEC0 0010h   | IOWIN         | I/O Window (data)  | USed to access data selected by IOREGSEL     |
+|   FEC0 0010h   | IOWIN         | I/O Window (data)  | Used to access data selected by IOREGSEL     |
 
 And then there are 4 I/O Registers that can be accessed using the two above: 
 
-| Name      | Offset   | Description                                              | Attribute | 
-|-----------|----------|----------------------------------------------------------|-----------|
-| IOAPICID  | 00h      | Identification register for the IOAPIC                   |  R/W      |
-| IOAPICVER | 01h      | IO APIC Version                                          |  RO       |
-| IOAPICARB | 02h      | It contains the BUS arbitration priority for the IOAPIC  |  RO       |
-| IOREDTBL  | 03h-3fh  | The redirection tables (see the IOREDTBL paragraph)      |  RW       |
+| Name      | Offset   | Description                                            | Attribute | 
+|:------------:|----------|--------------------------------------------------------|-----------|
+| IOAPICID  | 00h      | Identification register for the IOAPIC                 |  R/W      |
+| IOAPICVER | 01h      | IO APIC Version                                        |  RO       |
+| IOAPICARB | 02h      | It contains the BUS arbitration priority for the IOAPIC|  RO       |
+| IOREDTBL  | 03h-3fh  | The redirection tables (see the IOREDTBL paragraph)    |  RW       |
 
 
 ### Reading data from IO-APIC
