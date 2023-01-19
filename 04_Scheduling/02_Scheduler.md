@@ -141,7 +141,7 @@ In order for this to happen, we need to modify our `schedule()` function a littl
 
 ```c
 cpu_status_t* schedule(cpu_status_t* context) {
-    processes_list[current_process_idx]->context = context;
+    processes_list[current_process_idx]->context = *context;
 
     do {
         current_process_idx = (current_process_idx++) % MAX_PROCESSES;
@@ -179,7 +179,7 @@ We'll modify our selection algorithm to take these new states into account:
 
 ```c
 cpu_status_t* schedule(cpu_status_t* context) {
-    processes_list[current_process_idx]->context = context;
+    processes_list[current_process_idx]->context = *context;
     processes_list[current_process_idx]->status = READY;
 
     do {
