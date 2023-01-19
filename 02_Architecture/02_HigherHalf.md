@@ -1,105 +1,19 @@
-# Higher Half
+# Higher Half Kernel
 
-Loading a kernel in higher half it means that  the addres space of the kernel is in the higher-half. 
-For example for a 32 bit kernel the kernel can start from 0xC0000000 (3Gb) or for a 64bit it can start at 0xffffffff80000000. 
+Commonly kernels will place themselves in the higher half of the address space, as this allows the lower half to be used for userspace. It greatly simplifies writing new programs and porting existing ones. Of course this does make it slightly more complex for the kernel, but not by much!
 
-It doesn't mean that the kernel will be phyisically placed there, in fact most probably it is placed somewhere around 0x100000 (2mb), but it means that after having enabled virtual memory (see the Paging chapter), the virtuall addresses of the kernel are at 0xC0000000 (or 0xffffffff80000000 for 64 bit example). 	
+Most architectures that support virtual addressing use an MMU (memory management unit), and for x86 it's built into the CPU. Virtual memory (and paging - which is how the x86 MMU is programmed) is discussed more in the chapter on paging, but for now think of it as allowing us to *map* what the code running on the CPU sees to a different location in physical memory. This allows us to put things anywhere we want in memory and at any address.
 
-The steps to move the kernel in the higher half are: 
+With a higher half kernel we take advantage of this, and place our kernel at a very high address, so that is it out of the way of any user programs that might be running. Commonly we typically claim the entire *higher half* of the virtual address space for use by the kernel, and leave the entire lower half alone for userspace.
 
-* Update the linker script to instruct it about the new addressing layout
-* Prepare paging dir/tables, map the kernel initially in both the lower half and higher half
-* Enable paging
-* Enable PAE 
-* Jump into 64 bit mode
-* Load gdt 
-* Far jump in the higher half
+## A Very Large Address
 
-For example: we want to map it starting from address: 0xffffffff80000000 (even if it is physically a 0x100000), let's assume that the paging mode used is 2mb pages (it is the same with 4kb pages, but just one table more), the kernel starting address is then composed by
+The address that the kernel is loaded at depends on the size of the address space. For example if it's a 32-bit address space you might load the kernel at 0xC0000000 (3GiB), or -1GiB (because it is 1GiB below the top of the address space). For a 64-bit address space this is typically 0xffffffff80000000 or -2GiB.
 
+This doesn't mean the kernel will be physically loaded here, in fact it can be loaded anywhere. If you're using multiboot it will probably be around 1-2MiB, but with virtual memory we don't have to care about it's physical address.
 
-Let's assume we are in 64 bit mode. The address is 0xffffffff80000000, if we are using 2Mb pages: 
+## Loading a Higher Half Kernel
 
-| 63 .... 48 | 47 ... 39 | 38   ... 32  31  30 | 29  ..  21 | 20 19 ...  0 |
-|------------|-----------|---------------------|------------|--------------|
-| 1   ...  1 | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0  0  ...  0 |
-|  Sgn. ext  |    PML4   |      PDPR           |   Page dir |    Offset    |
+Depending on your boot protocol you may already be running in the higher half. If you've booted via multiboot 2 you will need to enter long mode and set up paging yourself. The steps to do this are outlined in the boot protocols chapter.
 
-the address is composed as follows:   
-* Sgn ext: bits from 63 to 48 can be ignored
-* PML4: (bits 47..39) is 511
-* PDPR: (bits 38..30) is 510
-* PD: (bits 29..21) is 0
-* Offset is the offset within the page dir base address. That means that it will be within the 0th page of the Page dir.
-
-So to map the kernel we need to create a PDPR for 511th entry of PML4, and then the 510th entry of the PDPR has to be linked to a pagedir, where we will map the kernel there as it is.
-
-Before proceeding with updating the code, first important thing to be done is to update our linker script, we want to inform it where there resources have to be loaded. What we are going to changes are the address references.
-
-
-```
-ENTRY(start)
-
-SECTIONS {
-    . = 1M;
-
-    _kernel_start =.;
-    _kern_virtual_offset = 0xffffffff80000000;
-    .multiboot_header :
-    {
-        /* Be sure that multiboot header is at the beginning */
-        *(.multiboot_header)
-    }
-
-    .multiboot.text :
-    {
-        *(.multiboot.text)
-    }
-
-    . += _kern_virtual_offset;
-	/* Add a symbol that indicates the start address of the kernel. */
-	.text ALIGN (4K) : AT (ADDR (.text) - _kern_virtual_offset)
-	{
-		*(.text)
-	}
-	.rodata ALIGN (4K) : AT (ADDR (.rodata) - _kern_virtual_offset)
-	{
-		*(.rodata)
-	}
-	.data ALIGN (4K) : AT (ADDR (.data) - _kern_virtual_offset)
-	{
-		*(.data)
-	}
-	.bss ALIGN (4K) : AT (ADDR (.bss) - _kern_virtual_offset)
-	{
-		*(.bss)
-	}
-
-    _kernel_end = .;
-}
-```
-
-
-As you can see we specified a new variable in the script, called *_kern_virtual_offset* and just before declaring the sections *.text .rodata .data .bss* we instruct the linker that the starting address is going to be *1M + 0xffffffff80000000*, and with the AT keyword in every section we are just telling the linker what the real address of the section is. 
-For example the following section: 
-
-```
-	.text ALIGN (4K) : AT (ADDR (.text) - _kern_virtual_offset)
-	{
-		*(.text)
-	}
-```
-
-Since it is after the instruction * .+=_kern_virtual_offset*  without the AT ( ... ) part it means that it will be placed at an address that starts somewhere above _kern_virtual_offset. But of course this probably is not going to exist physically, so with the AT part we are just telling that the real address is the current minus the _kern_virtual_offset, that is somewhere above 1MB.
-
-So if you arrived that far, you already have you 64 bit kernel loaded, and the paging is already enabled, that means also that you have your kernel already mapped in the page dir, with it being somewhere around 1MB. 
-
-What we are going to do now: 
-
-* Map the kernel also in the new address
-* Update all the references to memory location to reflect the new memory layout
- 
-
-
-
-To compile the kernel in the higher half, you need to add the *-mcmodel=large* to the C Compilation flags.
+It's worth noting that when you compile and link code for the higher half you will need to use `-mcmodel=large` for the large code model, or better yet `-mcmodel=kernel` if your kernel is in the upper 2GiB of the address space, like we looked at earlier.

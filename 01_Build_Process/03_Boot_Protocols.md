@@ -69,16 +69,20 @@ We'll need to modify our linker script a little since we boot up in protected mo
 ```
 SECTIONS
 {
-    KERNEL_VIRT_BASE = 0xffffffff8000000;
     . = 1M;
+
+    KERNEL_START = .;
+    KERNEL_VIRT_BASE = 0xffffffff8000000;
 
     .mb2_hdr : 
     {
+        /* Be sure that the multiboot2 header is at the beginning */
         KEEP(*(.mb2_hdr))
     }
 
     .mb2_text :
     {
+        /* Space for the assembly stub to get us into long mode */
         .mb2_text
     }
 
@@ -100,6 +104,7 @@ SECTIONS
         *(.data)
         *(.bss)
     }
+    KERNEL_END = .;
 }
 ```
 
