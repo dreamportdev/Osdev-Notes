@@ -93,7 +93,7 @@ Since the tar format doesn't have any file table or linked lists, or similar to 
 The picture below show how data is stored into a tar archive. 
 
 
-![Tar Archive](Images/tar.png)
+![Tar Archive](/Images/tar.png)
 
 To move from the first header to the next we simply need to use the following formula:
 
