@@ -94,5 +94,5 @@ Where framebuffer_XXX_field_position is the starting bit of the color XXX, and t
 ### Plotting a pixel
 
 
-### USeful resources
+### U~eful resources
 * https://jmnl.xyz/window-manager/
