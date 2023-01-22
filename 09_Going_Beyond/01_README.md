@@ -18,7 +18,7 @@ To implement a we need at least the following parts of the kernel implemented:
 
 * A video output (either using framebuffer, or legacy vga driver)
 * Keyboard driver implemented with at least one layout working
-* From a library point of view string input functions and string comparisons functions are needed. 
+* From a library point of view string input, comparisons and manipulating functions are needed. 
 
 If you want to run executables files too, and not only builtin commands then you need also:
 
@@ -26,9 +26,15 @@ If you want to run executables files too, and not only builtin commands then you
 * At least a file system supported (if you have followed this guide so far, you should have the USTar format implemented)
 * Support for at least one type of executable files
 
+Ideally when most of the commands are executed by the shell should spawn a new process/thread to be executed, so it could  be useful to have a fork/exec (or equivalent) mechanism implemented.
+
 ### Implementing a cli
 
-The basic idea of a command line is pretty simple, it takes a string in imput, parse it and execute it. 
+The basic idea of a command line is pretty simple, it takes a string in input, parse it and execute it if possible. Usually the workflow involves three steps: 
+
+* Splitting the string, to separate the command from the arguments (the command is always the first word on the line
+* Check if the string is builtin, if yes it executes the function associated
+* If not it search it in the FS, usually a shell will have a list of places to search for executables (i.e. the PATH variable in unix environment) and if an executable with the command name is found executes it, otherwise an error is returned (most likely: `command not found`)
 
 ## Graphical User Interface
 
