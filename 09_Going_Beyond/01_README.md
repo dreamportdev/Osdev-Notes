@@ -32,9 +32,11 @@ Ideally when most of the commands are executed by the shell should spawn a new p
 
 The basic idea of a command line is pretty simple, it takes a string in input, parse it and execute it if possible. Usually the workflow involves three steps: 
 
-* Splitting the string, to separate the command from the arguments (the command is always the first word on the line
-* Check if the string is builtin, if yes it executes the function associated
-* If not it search it in the FS, usually a shell will have a list of places to search for executables (i.e. the PATH variable in unix environment) and if an executable with the command name is found executes it, otherwise an error is returned (most likely: `command not found`)
+* The first one is splitting the string, to separate the command from the arguments (the command is always the first word on the line
+* Then check if the string is builtin, if yes it executes the function associated
+* Otherwise search it in the FS, usually a shell will have a list of places to search for executables (i.e. the PATH variable in unix environment) and if an executable with the command name is found executes it, otherwise an error is returned (most likely: `command not found`)
+
+Now probably our cli will have several builtin-command, so they should be stored somewhere, depending on the number of them we can simply use an array and search it looking for the command, otherwise another idea could be implementing a hashmap in this way we don't need to search the entire array for every command entered. Implementing a hashmap is beyond the scope of this book, but if you are not familiar with this kind of structure, the idea is that every command will be converte into a number using a custom hash function, and the number will indicate the index into an array.
 
 ## Graphical User Interface
 
