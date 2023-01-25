@@ -10,7 +10,7 @@ But at this point of development any feature can be added, and it is up to you w
 
 One of the way to interact with users is through a CLI (Command Line Interface), that is usually presented by a blinking underscore symbol, waiting for some user input (usually via keyboard). 
 
-The user provide a command, and the CLI executes it, providing output if necessary. Exampleis of CLI are \*nix Bash, zsh, Windows command line prompt, etc. A command line basically receives input in the form of line/s of text, the commands usually are either builtin within the cli (this means functions in the code), or executable files that are somewhere in a file system. 
+The user provide a command, and the CLI executes it, providing output if necessary. Examples of CLI are \*nix Bash, zsh, Windows command line prompt, etc. A command line basically receives input in the form of line/s of text, the commands usually are either builtin within the cli (this means functions in the code), or executable files that are somewhere in a file system. 
 
 ### Prerequisites
 
@@ -52,6 +52,26 @@ NAME_OF_VARIABLE=value
 an example is the output of the `env` command in linux. 
 
 ## Graphical User Interface
+
+The Graphical User Interface (aka GUI) is probably one of the most eye catching features of an os, not strictly part of an OS, but probably one of the moste desirable feature by many amateur osdevers. The brutal truth is that a GUI is another huge task and it can be easily a project of it's own as complex as the kernel,  and if you think that things are that bad, they are even worse, in fact while a basic kernel doesn't need many drivers to work, but a ui on the other is using a graphic card, and there are many available on the market, every one of them requires its own driver and not all the chipset have open specs, or are easy to implement.
+
+But there is a good news at least, there are few ways we can have graphical user interface without to have to implement different device drivers. The two most common ways are: 
+
+* Using the Vesa feataures from the 16bit mode enabling the real mode emultaion with all its limitations. 
+* Using the framebuffer (that we already covered in this book) this offer a decent compromise, and even if it will not support highest resolution it will let us achieve more than decent results
+
+### Prerequisites
+
+In this paragraph we are going to assume that we are going to use the framebuffer, so most of the prerequisites should be met by following the Framebuffer chapters of this book. 
+
+To implement a GUI our kernel requires: 
+
+* To have a working graphic mode enabled. The `framebuffer` in our case (usually it is implemented by the bootloader)
+* To have functions to plot at least pixels, and probably basic shapes.
+* We should also have at least a font loaded and parsed, in order to be able to print some messages, and of course we need functions to print them. 
+* We need probably to have support for either keyboard or mouse (most probably we want to have a mouse driver)
+
+### Implementing the GUI
 
 ## Libc
 
