@@ -43,13 +43,13 @@ So if the command is found, we can just call the function associated with it, bu
 * The input command is an absolute path, so we just need to search for the file on the given path, and execute it (returning an error if the file is not present)
 * It is just a command, with no path, so in this case we can decide wheter to return an error or, like many other shells do, search for it in the current directory first, and then into one or more folders where the shell expects to find them, and only if it is not found in any of them return an error. 
 
-For the second point we can decide to have the paths builtin in the code, or a good idea is to add a support for some environment variables mechanism. Environment variables are just named variables used to store some information useful to the process or the shell, they are not mandatory to be implemented, and usually they are external to the shell (they are implemented normally in the process/threads). The form of env variables is similar to: 
+For the second point we can decide to have the paths hardcoded in the code, or a good idea is to add a support for some environment variables mechanism. Environment variables are just named variables used to store some information useful to the process or the shell, they are not mandatory to be implemented, and usually they are external to the shell (they are implemented normally in the process/threads). The form of env variables is similar to: 
 
 ```
 NAME_OF_VARIABLE=value
 ```
 
-an example is the output of the `env` command in linux.
+an example is the output of the `env` command in linux. 
 
 ## Graphical User Interface
 
