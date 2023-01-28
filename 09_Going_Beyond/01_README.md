@@ -53,7 +53,7 @@ an example is the output of the `env` command in linux.
 
 ## Graphical User Interface
 
-The Graphical User Interface (aka GUI) is probably one of the most eye catching features of an os, not strictly part of an OS, but probably one of the moste desirable feature by many amateur osdevers. The brutal truth is that a GUI is another huge task and it can be easily a project of it's own as complex as the kernel,  and if you think that things are that bad, they are even worse, in fact while a basic kernel doesn't need many drivers to work, but a ui on the other is using a graphic card, and there are many available on the market, every one of them requires its own driver and not all the chipset have open specs, or are easy to implement.
+The Graphical User Interface (aka GUI) is probably one of the most eye catching features of an os, not strictly part of an OS, but probably one of the moste desirable feature by many amateur osdevers. The brutal truth is that a GUI is another huge task and it can be easily a project of it's own as complex as the kernel,  if you think that things are already that bad, they are even worse, in fact while a basic kernel doesn't need many drivers to work, a ui on the other is using a graphic card, and there are many available on the market, every one of them requires its own driver and not all the chipset have open specs, or are easy to implement.
 
 But there is a good news at least, there are few ways we can have graphical user interface without to have to implement different device drivers. The two most common ways are: 
 
@@ -69,9 +69,34 @@ To implement a GUI our kernel requires:
 * To have a working graphic mode enabled. The `framebuffer` in our case (usually it is implemented by the bootloader)
 * To have functions to plot at least pixels, and probably basic shapes.
 * We should also have at least a font loaded and parsed, in order to be able to print some messages, and of course we need functions to print them. 
-* We need probably to have support for either keyboard or mouse (most probably we want to have a mouse driver)
+* We need probably to have support for either keyboard or mouse (most probably we want to have a mouse driver), and for the mouse is advisable to have a cursor pointer symbol loaded somewhere in memory. 
 
 ### Implementing the GUI
+
+As mentioned above the User Interface is not technically part of a kernel, and should be treated as a separated entity (sometime a whole separate project). Usually it should run as much as it can in user level, so having implemented user space is advisable, but not strictly necessary. 
+
+There are several ways to implemnt a user interface, but usually there are at least two parts the we need to implements:
+
+* A set of primitive functions to create and draw windows, buttons, textboxes, labels, rendering texts. 
+* A protocol that will handle all the hardware events (i.e. mouse click, keypress), and decide what are the correct actions to take
+
+#### The primitives
+
+As mentioned above they will take care of handling the basic graphic objects needed for our ui, like Buttons, Windows, Labels, etc. These functions should usually need at least the coordinates of where we want to draw them a size, and at least a name to identify it (and sometime a text can be needed in case of buttons or windows for example). Usually the function will return a pointer to a data structure containing all information about it. 
+
+Usually creation of a button object and its drawing are two separate steps, that can be done separately (for example: what if we already have crated a Label and we just want to update it?)
+
+So a good idea is to have a separate rendering function for each ui object. Usually the rendering function is the one that will work with primitive shapes, and font rendering functions to make it visible to the user, so for example to render a button we will have something like: 
+
+```c
+void *renderButton(Button* button) {
+    drawRectangle(button->posx, button->posy, button->sizex, button->sizey);
+    fillRectangle(cbutton->olor);
+    drawText(button->posx, button->posy, texttorender);
+}
+```
+
+This function can either be called withine a `createButton` function, or not, this totally depends on how the protocol is organized. And even the rendering could not mean that the object is rendered on the screen yet, but this will be more clear soon, when we will explain the protocol. 
 
 ## Libc
 
