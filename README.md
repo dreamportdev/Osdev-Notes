@@ -44,6 +44,7 @@ Topics covered so far:
     * [Message Passing](06_IPC/03_Message_Passing.md)
 * [File System](07_VirtualFileSystem/01_README.md)
     * [The Virtual File System](07_VirtualFileSystem/02_VirtualFileSystem.md)
+    * [The Tar File System](07_VirtualFileSystem/03_TarFileSystem.md)
 * [Extras](99_Appendices/0_README.md)
     * [General Troubleshooting](99_Appendices/A_Troubleshooting.md)
     * [Tips and Tricks](99_Appendices/B_Tips_And_Tricks.md)
