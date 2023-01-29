@@ -60,6 +60,8 @@ But there is a good news at least, there are few ways we can have graphical user
 * Using the Vesa feataures from the 16bit mode enabling the real mode emultaion with all its limitations. 
 * Using the framebuffer (that we already covered in this book) this offer a decent compromise, and even if it will not support highest resolution it will let us achieve more than decent results
 
+In this section the method chosen for implementing a gui is the framebuffer, since we already explained it in the earlier chapters, and let us achieve good results with decent resolutions.
+
 ### Prerequisites
 
 In this paragraph we are going to assume that we are going to use the framebuffer, so most of the prerequisites should be met by following the Framebuffer chapters of this book. 
@@ -80,6 +82,7 @@ There are several ways to implemnt a user interface, but usually there are at le
 * A set of primitive functions to create and draw windows, buttons, textboxes, labels, rendering texts. 
 * A protocol that will handle all the hardware events (i.e. mouse click, keypress), and decide what are the correct actions to take
 
+
 #### The primitives
 
 As mentioned above they will take care of handling the basic graphic objects needed for our ui, like Buttons, Windows, Labels, etc. These functions should usually need at least the coordinates of where we want to draw them a size, and at least a name to identify it (and sometime a text can be needed in case of buttons or windows for example). Usually the function will return a pointer to a data structure containing all information about it. 
@@ -96,7 +99,23 @@ void *renderButton(Button* button) {
 }
 ```
 
-This function can either be called withine a `createButton` function, or not, this totally depends on how the protocol is organized. And even the rendering could not mean that the object is rendered on the screen yet, but this will be more clear soon, when we will explain the protocol. 
+This function can either be called within a `createButton` function, or not, this totally depends on how the protocol is organized. And even the rendering could not mean that the object is rendered on the screen yet, but this will be more clear soon, when we will explain the protocol. 
+
+Another thing that every type of object should 
+
+This step should not be particularly hard to implement once we have decided what type of graphics object we want to display (windows, labels, buttons, etc) we need basically to draft a data structure to contain the definition of the ui object and the functions 
+
+#### The Protocol
+
+Once we have primitives to create gui components and render it, we can start to implement our protocol, here there are no standard, and probably there are many different ways to implement it, for example linux usually use either X or Wayling for it's graphic environment, windows has it's own, QNX has it's own protocol, etc. 
+
+Technically nothing forbid us to create a full ui within the kernel and have all the UI calls made in supervisor mode, but this is not advisable for few reasons: 
+
+* The UI component will have access to the whole hardware, even what it doesn't need. 
+* A bug in the UI can panic the kernel
+* Is not safe from a security point of view. 
+
+Usually 
 
 ## Libc
 
