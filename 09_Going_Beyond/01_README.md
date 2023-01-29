@@ -72,6 +72,8 @@ To implement a GUI our kernel requires:
 * To have functions to plot at least pixels, and probably basic shapes.
 * We should also have at least a font loaded and parsed, in order to be able to print some messages, and of course we need functions to print them. 
 * We need probably to have support for either keyboard or mouse (most probably we want to have a mouse driver), and for the mouse is advisable to have a cursor pointer symbol loaded somewhere in memory. 
+* Having syscalls and user mode is strongly suggested unless we want to have the ui work fully in supervisor mode (that is not advisable), in the explanation below we will assume that they are implemented.
+* IPC should be implemented, even if technically not really necessary, they are useful for handling ui changes across programs. 
 
 ### Implementing the GUI
 
@@ -115,7 +117,9 @@ Technically nothing forbid us to create a full ui within the kernel and have all
 * A bug in the UI can panic the kernel
 * Is not safe from a security point of view. 
 
-Usually 
+For the reasons above the UI should be implemented as a separate program that will run in user mode, and will avail of syscalls only to make changes to the framebuffer. 
+
+Now what is the protocol going to handle? It is responsible of handling all the hardware events and decide wether or not they are going to make changes to the ui, for example a mouse move will most likely update the cursor position, a keyboard press can sometime trigger a program or ui component to be displayed. It is also responsible of making the actual UI updates whenever they are needed, and also can use IPC to communicate with other UI processes. 
 
 ## Libc
 
