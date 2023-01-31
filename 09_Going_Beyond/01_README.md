@@ -70,8 +70,8 @@ To implement a GUI our kernel requires:
 
 * To have a working graphic mode enabled. The `framebuffer` in our case (usually it is implemented by the bootloader)
 * To have functions to plot at least pixels, and probably basic shapes.
-* We should also have at least a font loaded and parsed, in order to be able to print some messages, and of course we need functions to print them. 
-* We need probably to have support for either keyboard or mouse (most probably we want to have a mouse driver), and for the mouse is advisable to have a cursor pointer symbol loaded somewhere in memory. 
+* We must  have at least a font loaded and parsed, in order to be able to print some messages, and of course we need functions to print them. 
+* We need to have support for either keyboard or mouse (most probably we want to have a mouse driver), and for the mouse is advisable to have a cursor pointer symbol loaded somewhere in memory. 
 * Having syscalls and user mode is strongly suggested unless we want to have the ui work fully in supervisor mode (that is not advisable), in the explanation below we will assume that they are implemented.
 * IPC should be implemented, even if technically not really necessary, they are useful for handling ui changes across programs. 
 
@@ -109,7 +109,7 @@ This step should not be particularly hard to implement once we have decided what
 
 #### The Protocol
 
-Once we have primitives to create gui components and render it, we can start to implement our protocol, here there are no standard, and probably there are many different ways to implement it, for example linux usually use either X or Wayling for it's graphic environment, windows has it's own, QNX has it's own protocol, etc. 
+Once we have primitives to create gui components and render it, we can start to implement our protocol, here there are no standard, and probably there are many different ways to implement it, for example linux usually use either X or Wayland for it's graphic environment, windows has it's own (WinUI), QNX has the photon microGUI, etc. 
 
 Technically nothing forbid us to create a full ui within the kernel and have all the UI calls made in supervisor mode, but this is not advisable for few reasons: 
 
@@ -119,7 +119,38 @@ Technically nothing forbid us to create a full ui within the kernel and have all
 
 For the reasons above the UI should be implemented as a separate program that will run in user mode, and will avail of syscalls only to make changes to the framebuffer. 
 
-Now what is the protocol going to handle? It is responsible of handling all the hardware events and decide wether or not they are going to make changes to the ui, for example a mouse move will most likely update the cursor position, a keyboard press can sometime trigger a program or ui component to be displayed. It is also responsible of making the actual UI updates whenever they are needed, and also can use IPC to communicate with other UI processes. 
+What is the protocol going to handle? 
+
+* It is responsible of handling all the hardware events and decide wheter or not they are going to make changes to the ui, for example a mouse move will most likely update the cursor position, a keyboard press can sometime trigger a program or ui component to be displayed.
+* It is also responsible of making the actual UI updates whenever they are needed, and also can use IPC to communicate with other UI processes. 
+* It is keeping track of the various windows state, and routing all messages/action through the correct window
+* The protocol is the only one that has access to the framebuffer. While the windows will have their own copy of it.
+
+Usually this is implemented using a Client/Server arhcitecture. The clients are the program windows, that communicate with the server, the server is the one doing all the above stuff. 
+
+So the server needs to keep track of the windows opened (Client windows), to do this it will need to store them into a List-like structure, where every item will be an istance of a `Window` object, since we are using C probably is going to be a `Window` type, that is declared in the Primitives section. 
+
+As already said, the windows should not have access to the framebuffer directly and the only one doing it is the server, so a solution can be to have a copy of the framebuffer for every window, and when a window change something it will inform the server of the changes, and the server will decide when it is time to do them. 
+
+When an hardware event is triggered, for example after  a mouse click the server will do the following: 
+
+* Grab click coordinats
+* Search for the list of windows for the window that is at those coordinates 
+* If there is no window this means that it was probably directed to the desktop, and in this case it will act according to the server design decision (i.e. right  click on the desktop usually triggers a menu with access to some quick settings/shortcuts)
+* If there is a window now we have two cases: one case is the window is not the active one, so we want probably to activate it, if it is the active window, we need to perform the action associated within the window object 
+* There is also another case when we have overlapping windows: there are more than one window at the same coordinate, in this case we first search for an active window, if there is we just perform the action like the step above, but if there isn't we will activate one of the windows that are below the cursor, if there are multiple non active windows a mechanism to select the top one is expected to be implemented. 
+
+Sometime some events can ask the window to change it's state, this is still managed by the server, and usually done exchanging messages (i.e. window minimizing, resuming, or maybe just a text change somewhere etc), this means we need implement a communication protocolo between client windows and the server, this is done usually through IPC. 
+
+And finally only the Server is accessing the framebuffer, this means it is the only one able to actually make graphical changes, so whenever a window change its aspect the Server will be notified of the update, and it will reflect it on the screen.
+
+### In conclusion...
+
+Making a GUI as already said few times can be a project of it's own, and it require a lot of kernel part already implemented and working (if you have followed these notes you should have everything needed for it). Once we created the primitives to handle, create and render windows and basic shapes we need to design the protocol, with lot of decision to be made like what structure to use to keep the list of windows, what set of messages, how to handle windows updates. 
+
+And also we will probably need a framework of functions to draw all ui components, and render them on our system, handling actions (if multiple actions are supposed), function to create Buttons, Menu, Radio Buttons, Label, etc. 
+
+But it is definetely one of the most eye catching feature to have! 
 
 ## Libc
 
