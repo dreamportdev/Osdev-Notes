@@ -53,104 +53,130 @@ an example is the output of the `env` command in linux.
 
 ## Graphical User Interface
 
-The Graphical User Interface (aka GUI) is probably one of the most eye catching features of an os, not strictly part of an OS, but probably one of the moste desirable feature by many amateur osdevers. The brutal truth is that a GUI is another huge task and it can be easily a project of it's own as complex as the kernel,  if you think that things are already that bad, they are even worse, in fact while a basic kernel doesn't need many drivers to work, a ui on the other is using a graphic card, and there are many available on the market, every one of them requires its own driver and not all the chipset have open specs, or are easy to implement.
+A graphical user interface (aka GUI) is probably one of the most eye catching features of an os. While not required for an operating system, it's possibly one of the most desirable features for amateur osdevers.
 
-But there is a good news at least, there are few ways we can have graphical user interface without to have to implement different device drivers. The two most common ways are: 
+The brutal truth is that a GUI is one of the most complex parts of modern operating systems! A good graphical shell can turn into a project as large and complex as a kernel, if not more so. However your first pass doesn't need to be this complex, and with proper design a simple GUI can be implemented and expanded over time.
 
-* Using the Vesa feataures from the 16bit mode enabling the real mode emultaion with all its limitations. 
-* Using the framebuffer (that we already covered in this book) this offer a decent compromise, and even if it will not support highest resolution it will let us achieve more than decent results
+While not strictly necessary, it's best to run your graphical shell in userspace, and we'll be making use of multiple programs, so you'll need at least userspace and IPC implemented. Ideally you would also have a few hardware drivers in order to have a framebuffer, keyboard and mouse support. These hardware devices should exported to userspace programs through an abstract API so that the underlying drivers are irrelevent to the GUI. This all implies that you also have system calls set up and working too.
 
-In this section the method chosen for implementing a gui is the framebuffer, since we already explained it in the earlier chapters, and let us achieve good results with decent resolutions.
+In this section we'll assume you have all these things, and if you don't they can be easily achieved. Your bootloader should provide you with a framebuffer, and we've already taken a look at how to add support for a PS/2 keyboard. All that remains is a mouse, and a PS/2 mouse is a fine place to start. If you're on a platform without PS/2 peripherals there are always the virtio devices, at least inside of an emulator.
 
-### Prerequisites
+### Implementing A GUI
 
-In this paragraph we are going to assume that we are going to use the framebuffer, so most of the prerequisites should be met by following the Framebuffer chapters of this book. 
+As mentioned above a graphical shell is not usually part of the kernel. You certainly can implement it that way, but this is an excellent way to test your userspace and system calls. The GUI should be treated as a separate entity (you may wish to organise this into a separate project, or directory), separate from the kernel.
 
-To implement a GUI our kernel requires: 
+Of course there are many ways you could architect a GUI, but the approach followed by most developers these days consists of a protocol, client and a server:
 
-* To have a working graphic mode enabled. The `framebuffer` in our case (usually it is implemented by the bootloader)
-* To have functions to plot at least pixels, and probably basic shapes.
-* We must  have at least a font loaded and parsed, in order to be able to print some messages, and of course we need functions to print them. 
-* We need to have support for either keyboard or mouse (most probably we want to have a mouse driver), and for the mouse is advisable to have a cursor pointer symbol loaded somewhere in memory. 
-* Having syscalls and user mode is strongly suggested unless we want to have the ui work fully in supervisor mode (that is not advisable), in the explanation below we will assume that they are implemented.
-* IPC should be implemented, even if technically not really necessary, they are useful for handling ui changes across programs. 
+- A client is any application that wants to perform operations on the graphical shell, like creating/destroying a window. In this case the client uses the method described in the protocol to send a request to the server, and receives a response. The client can then perform any operations it likes in this manner and now we have a working system! 
+- A protocol. Think of the X window protocol (or wayland), this is how other applications can interact with the shell and perform operations. Things like asking the shell for a new window (with it's own framebuffer), minimizing/maximizing the window, or perhaps receiving input into a window from the shell. This is similar to an ABI (like your system calls use) and should be documented as such. The protocol defines how the clients and server communicate.
+- The server is where the bulk of the work happens. The server is what we've been referring to as the GUI or graphical shell, as it's the program responsible for ultimately drawing to the screen or passing input along to the focused window. The server may is usually also responsible for drawing window decorations and any UI elements that aren't part of a specific window like the task bar and the start menu. Although this can also be exposed via the protocol and a separate program can handle those.
 
-### Implementing the GUI
+Ok it's a little more complex than that, but those are the key parts! You'll likely want to provide a static (or dynamic, if you support that yet) library for your client programs that contains code for communicating with the server. You could wrap the IPC calls and shuffling data in and out of buffers into nice functions that are easier to work with.
 
-As mentioned above the User Interface is not technically part of a kernel, and should be treated as a separated entity (sometime a whole separate project). Usually it should run as much as it can in user level, so having implemented user space is advisable, but not strictly necessary. 
+### Private Framebuffers
 
-There are several ways to implemnt a user interface, but usually there are at least two parts the we need to implements:
+When it comes to rendering, we expect each client window to be able to render to a framebuffer specific to that window, and not access any other framebuffers it's not meant. This means we can't simply pass around the real framebuffer provided by the kernel. 
 
-* A set of primitive functions to create and draw windows, buttons, textboxes, labels, rendering texts. 
-* A protocol that will handle all the hardware events (i.e. mouse click, keypress), and decide what are the correct actions to take
+Instead it's recommended to create a new framebuffer for each window. If you don't have hardware acceleration for your GPU (which is okay!) this can just be a buffer in memory big enough to hold the pixels. This buffer should be created by the server program but shared with the client program. The idea here is that the client can write as much data as it wants into the framebuffer, and then send a single IPC message to the server to tell it the window framebuffer has been updated. At this point the server would copy the updated region of the window's framebuffer onto the real framebuffer, taking into account the window's position and size (maybe part of the window is offsreen, so not visible).
 
+This is much more efficient than sending the entire framebuffer over an IPC message and fits very naturally with how you might expect to use a framebuffer, only now you will need the additional step of flushing the framebuffer (by sending an IPC message to the server). 
 
-#### The primitives
+Another efficiency you might see used is the idea of 'damage rectangles'. This is simply tracking *where* on the framebuffer something has changed, and often when flushing a framebuffer you can pass this information along with the call. For example say we have a mouse cursor that is 10x10 pixels, and we move the cursor 1 pixel to the right. In total we have only modified 11x10 pixels, so there is no need to copy *the entire window framebuffer*. Hopefully you can see how this information is useful for performance.
 
-As mentioned above they will take care of handling the basic graphic objects needed for our ui, like Buttons, Windows, Labels, etc. These functions should usually need at least the coordinates of where we want to draw them a size, and at least a name to identify it (and sometime a text can be needed in case of buttons or windows for example). Usually the function will return a pointer to a data structure containing all information about it. 
+Another useful tool for rendering is called a quad-tree. We won't delve into too much detail here, but it can greatly increase rendering speed if used correctly, very beneficial for software rendering.
 
-Usually creation of a button object and its drawing are two separate steps, that can be done separately (for example: what if we already have crated a Label and we just want to update it?)
+#### Client and Client Library
 
-So a good idea is to have a separate rendering function for each ui object. Usually the rendering function is the one that will work with primitive shapes, and font rendering functions to make it visible to the user, so for example to render a button we will have something like: 
+As mentioned above it can be useful to provide a library for client programs to link against. It can also be nice to include a framework for managing and rendering various UI elements in this library. This makes it easy for programs to use them and gives your shell a consistent look and feel by default. Of course programs can (and do, in the real world) choose to ignore this and render their own elements.
+
+These UI elements are often built with inheritence. If you're programming in a language that doesn't natively support this don't worry, you can achieve the same effect with function pointers and by linking structures together. Typically you have a 'base element' that has no functionality by itself but contains data and functions that all other elements use.
+
+For example you might have the following base struct:
 
 ```c
-void *renderButton(Button* button) {
-    drawRectangle(button->posx, button->posy, button->sizex, button->sizey);
-    fillRectangle(cbutton->olor);
-    drawText(button->posx, button->posy, texttorender);
+enum ui_element_type {
+    button,
+    textbox,
+    ...
+};
+
+typedef struct {
+    struct { size_t x, size_t y } position;
+    struct { size_t w, size_t h } size;
+    
+    bool render; //visible to user
+    bool active; //responds to key/mouse events
+    ui_element_type type;
+    void* type_data;
+
+    void (*render)(framebuffer_t* fb, ui_element_base* elem);
+    void (*handle_click)(ui_element_base* base);
+    void (*handle_key)(key_t key, keypress_data data)
+} ui_element_base;
+```
+
+This isn't comprehensive of course, like you should pass the click position and button clicked to `handle_click`. Next up we let's look at how we'd extend this to implement a button:
+
+```c
+typedef struct {
+    bool clicked;
+    bool toggle;
+} ui_element_button;
+
+void render_button(framebuffer_t* fb, ui_element_base* elem) {
+    ui_element_button* btn_data = (ui_element_button*)elem->type_data;
+
+    //made-up rendering functions, include your own.
+    if (btn_data->clicked)
+        draw_rect(elem->position, elem.size, green);
+    else
+        draw_rect(elem->position, elem.size, red);
+}
+
+void handle_click_button(ui_element_base* base) {
+    ui_element_button* btn = (ui_element_button*)btn->type_data;
+    btn->pressed = !btn->pressed;
+}
+
+ui_element_base* create_button(bool is_toggle) {
+    ui_element_base* base = malloc();
+    base->type = button;
+    base->render = render_button;
+    base->handle_click = handle_click_button;
+    base->handle_key = NULL; //dont handle keypresses
+
+    ui_element_button* btn = malloc();
+    btn->toggle = is_toggle;
+    btn->pressed = false;
+    btn->type_data = btn;
+
+    return base;
 }
 ```
 
-This function can either be called within a `createButton` function, or not, this totally depends on how the protocol is organized. And even the rendering could not mean that the object is rendered on the screen yet, but this will be more clear soon, when we will explain the protocol. 
+You can see in `create_button()` how we can create a button element and populate the functions pointers we care about. 
 
-Another thing that every type of object should 
+All that remains is a core loop that calls the various functions on each element as needed. This means calling `elem->render()` when you want to render an element to the framebuffer! Now you can combine these calls however you like, but the core concept is that the framework is flexible to allow adding custom elements of any kind, and they just work with the rest of them!
 
-This step should not be particularly hard to implement once we have decided what type of graphics object we want to display (windows, labels, buttons, etc) we need basically to draft a data structure to contain the definition of the ui object and the functions 
+Don't forget to flush the window's framebuffer once you are done rendering.
+
+#### The Server
+
+The server is where most of the code will live. This is where you would handle windows being moved, managing the memory behind the framebuffers and deal with passing input to the currently focused window. The server also usually draws window decorations like the window frame/border and titlebar decoations (buttons and text).
+
+The server is also responsible for dealing with the devices exposed by the kernel. For example say a new monitor is connected to the system, the server is responsible for handling that and making the screen space available to client applications.
 
 #### The Protocol
 
-Once we have primitives to create gui components and render it, we can start to implement our protocol, here there are no standard, and probably there are many different ways to implement it, for example linux usually use either X or Wayland for it's graphic environment, windows has it's own (WinUI), QNX has the photon microGUI, etc. 
+Now we have the client and server programs, but how do they communicate? Well this is where your protocol comes in.
 
-Technically nothing forbid us to create a full ui within the kernel and have all the UI calls made in supervisor mode, but this is not advisable for few reasons: 
+While you could just write the code and say "thats the protocol, go read it" that's error prone and not practical if working with multiple developers or on a complex project. The protocol specifies how certain operations are performed, like sending data to the server and how you receive responses. It should also specify what data you can send, how to send a command like `flush` and how to format the damage rectangle into what bytes.
 
-* The UI component will have access to the whole hardware, even what it doesn't need. 
-* A bug in the UI can panic the kernel
-* Is not safe from a security point of view. 
+Other things the protocol should cover are how clients are notified of a framebuffer resize (like the window being resized) or other hardware events like keypresses. What happens if there is no focused window, what do the key presses or clicks do then (right clicking on the desktop). It might also expose ways for clients to add things to context menus, or the start menu if you add these things to your design.
 
-For the reasons above the UI should be implemented as a separate program that will run in user mode, and will avail of syscalls only to make changes to the framebuffer. 
+### In Conclusion...
 
-What is the protocol going to handle? 
-
-* It is responsible of handling all the hardware events and decide wheter or not they are going to make changes to the ui, for example a mouse move will most likely update the cursor position, a keyboard press can sometime trigger a program or ui component to be displayed.
-* It is also responsible of making the actual UI updates whenever they are needed, and also can use IPC to communicate with other UI processes. 
-* It is keeping track of the various windows state, and routing all messages/action through the correct window
-* The protocol is the only one that has access to the framebuffer. While the windows will have their own copy of it.
-
-Usually this is implemented using a Client/Server arhcitecture. The clients are the program windows, that communicate with the server, the server is the one doing all the above stuff. 
-
-So the server needs to keep track of the windows opened (Client windows), to do this it will need to store them into a List-like structure, where every item will be an istance of a `Window` object, since we are using C probably is going to be a `Window` type, that is declared in the Primitives section. 
-
-As already said, the windows should not have access to the framebuffer directly and the only one doing it is the server, so a solution can be to have a copy of the framebuffer for every window, and when a window change something it will inform the server of the changes, and the server will decide when it is time to do them. 
-
-When an hardware event is triggered, for example after  a mouse click the server will do the following: 
-
-* Grab click coordinats
-* Search for the list of windows for the window that is at those coordinates 
-* If there is no window this means that it was probably directed to the desktop, and in this case it will act according to the server design decision (i.e. right  click on the desktop usually triggers a menu with access to some quick settings/shortcuts)
-* If there is a window now we have two cases: one case is the window is not the active one, so we want probably to activate it, if it is the active window, we need to perform the action associated within the window object 
-* There is also another case when we have overlapping windows: there are more than one window at the same coordinate, in this case we first search for an active window, if there is we just perform the action like the step above, but if there isn't we will activate one of the windows that are below the cursor, if there are multiple non active windows a mechanism to select the top one is expected to be implemented. 
-
-Sometime some events can ask the window to change it's state, this is still managed by the server, and usually done exchanging messages (i.e. window minimizing, resuming, or maybe just a text change somewhere etc), this means we need implement a communication protocolo between client windows and the server, this is done usually through IPC. 
-
-And finally only the Server is accessing the framebuffer, this means it is the only one able to actually make graphical changes, so whenever a window change its aspect the Server will be notified of the update, and it will reflect it on the screen.
-
-### In conclusion...
-
-Making a GUI as already said few times can be a project of it's own, and it require a lot of kernel part already implemented and working (if you have followed these notes you should have everything needed for it). Once we created the primitives to handle, create and render windows and basic shapes we need to design the protocol, with lot of decision to be made like what structure to use to keep the list of windows, what set of messages, how to handle windows updates. 
-
-And also we will probably need a framework of functions to draw all ui components, and render them on our system, handling actions (if multiple actions are supposed), function to create Buttons, Menu, Radio Buttons, Label, etc. 
-
-But it is definetely one of the most eye catching feature to have! 
+Like we've said this is no small task, and requires a fairly complete kernel. However it can be a good project for testing lots of parts of the kernel all working together. It's also worth considering that if your shell server is designed carefully you can write it to run under an existing operating system. This allows you to test your server, protocol, and clients in an easily debuggable environment. Later on you can then just port the system calls used by your existing server.
 
 ## Libc
 
