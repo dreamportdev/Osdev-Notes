@@ -13,15 +13,105 @@ Within the ELF specification section headers and program headers are often abbre
 
 ## Section Headers
 
-We won't be dealing with a lot of section headers, as the program loader is mainly interested in program headers. However there are some core SHDRs you should be aware of.
+We won't be dealing with a lot of section headers, as the program loader is mainly interested in program headers. Having said that, there are some special section headers you should be aware of:
 
-- special shdrs
-- how to parse a shdr, 
+- `.strtab`: This header contains a number of null-terminated strings, with the first string simply being a null-terminator. When a string is referenced in an ELF, it's stored as an offset 
+- `.symtab`: This section contains information on symbols (variables and functions) within the ELF. This is where to look for extracting debug information.
+
+TODO: how to parse SHDRs (shdrstridx or whatever it's called)
 
 ## Program Headers
 
+While section headers contain a more granular description of our ELF binary, program headers contain just enough information to load the program. Program headers are design to be simple, and by extension allow the program loader to be simple.
+
+The layout of a `PHDR` is as follows:
+
+```c
+typedef struct {
+    Elf64_Word p_type;
+    Elf64_Word p_flags;
+    Elf64_Off p_offset;
+    Elf64_Addr p_vaddr;
+    Elf64_Addr p_paddr;
+    Elf64_Xword p_filesz;
+    Elf64_Xword p_memsz;
+    Elf64_Xword p_align;
+} Elf64_Phdr;
+```
+
+This is the layout of a program header in memory. Locating a phdr is similar to locating an shdr. The first header is located `elf_header->phoff` bytes from the start of the ELF file. It's that easy! 
+
+Like section headers, each program header is tighly packed against the next one. This means you can treat the program headers as an array. As an example you could loop through the phdrs as follows:
+
+```c
+void loop_phdrs(Elf64_Hdr* ehdr) {
+    Elf64_Phdr* phdrs = *(Elf64_Phdr*)((uintptr_t)ehdr + ehdr->e_phoff);
+
+    for (size_t i = 0; i < ehdr->e_phnum; i++)
+    {
+        Elf64_Phdr* program_header = phdrs[i];
+        //do something with program_header here.
+    }
+}
+```
+
+Unlike section headers, program headers don't have names. Instead we use the type field (`p_type`) to determine what to do with the contents of the phdr.
+
 ## Loading Theory
 
-- validate header
-- find all PT_LOAD headers, copy those in
-- you're good!
+For now we're only interested in one type of phdr: `PT_LOAD`. This constant is defined in the elf64 spec as `1`.
+
+This type means that we are expected to load the contents of this program header at a specified address before running the program. Often there will be a few headers with this type, with different permissions (to map to different parts of our program: `.rodata`, `.data`, `.text` for example).
+
+To load our simple, statically-linked, program the process is as follows:
+
+- Load the ELF file in memory somewhere.
+- Validate the ELF header by checking the machine type matches what we expect (is this an x86_64 program?).
+- Find all program headers with the `PT_LOAD` type.
+- Load each program header: we'll cover this shortly.
+- Jump to the start address defined in the ELF header.
+
+Do note that these are just the steps for loading the ELF, there are actually other things we'll need like a stack for the program to use. Of course this is likely covered when we create a new thread for the program to run.
+
+### Loading A Program Header
+
+Loading a program header is essentially a memcpy. The program header describes where we copy data from (via `p_offset` and `p_filesz`), and where we copy it to (via `p_vaddr` and `p_memsz`). 
+
+Like the program headers are located `e_phoff` bytes into the ELF, it's the same with `p_offset`. We can copy from `p_offset` bytes from the base of the ELF file. From that address we'll copy `p_filesz` bytes to the address contained in `p_vaddr` (virtual address). There's an important detail that's easy to miss with the copy: we are expected to make `p_memsz` bytes available at `p_vaddr`, even if `p_memsz` is bigger than `p_filesz`. The spec says that this extra space (`p_memsz` - `p_filesz`) should be zeroed.
+
+This is actually how the `.bss` section is allocated, and any pre-zeroed parts of an ELF executable are created this way. 
+
+Before looking at some example code your VMM will need a new function that tries to allocate memory at a *specific* virtual address, instead of whatever is the best fit. For our example we're going to assume you have the following implemented, but adjust to your own design:
+
+```c
+void* vmm_alloc_at(uintptr_t addr, size_t length, size_t flags);
+```
+
+Alternatively you could make use of the extra argument in `vmm_alloc`, and add a new flag like `VM_FLAG_AT_ADDR` that indicates the VMM should use the extra arg as the virtual address.
+
+The reason we need to use a specific address is that the code and data contained in the ELF are compiled and linked assuming that they're at that address. There might be code that jumps to a fixed address or data that is expected to be at a certain address. If we don't copy the program header where it expects to be, the program may break.
+
+*Authors Note: Relocations are another way of dealing with the problem of not being to use the requested virtual address, but these are more advanced. They're not hard to implement, certainly easier than dynamic linking, but still beyond the scope of this section.*
+
+Now that we have that, lets look at the example code (without error handling, as always):
+
+```c
+void load_phdr(Elf64_EHdr* ehdr, Elf64_Phdr* phdr) {
+    if (phdr->p_type != PT_LOAD)
+        return;
+    
+    void* dest = vmm_alloc_at(phdr->p_vaddr, phdr->p_memsz, VM_FLAG_WRITE);
+    memcpy(dest, (void*)ehdr + phdr->p_offset, phdr->p_filesz);
+
+    const zero_count = phdr->p_memsz - phdr->p_filesz;
+    memset(dest + phdr->p_filesz, 0, zero_count);
+}
+```
+
+### Program Header Flags
+
+At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guarenteed to be code), we'll fault.
+
+Fortunately the solution is quite straight forward, the read/write/execute permissions required for a phdr are encoded in the `p_flags` field. This field is actually a bitfield, with bit 0 representing execute, bit 1 representing write and bit 2 representing read. You can ignore the read permission as most platform's dont allow for write-only memory anyway, but you'll want to be sensitive to the write and execute permissions.
+
+You'll want to adjust these permission *after copying the program header content*, because you'll need the memory to be writable for that. Then you can modify the flags of the mapped memory to what the program header requests.
