@@ -180,7 +180,28 @@ Like we've said this is no small task, and requires a fairly complete kernel. Ho
 
 ## Libc
 
-## Network
+TBD - by @DT
+
+## Networking
+
+Networking is another inportant feature for modern operating systems, that lets our project no longer to be confined into our emulator/machine and talks to other computers, not only the local network but the internet. 
+
+Once implemented we can write some simple clients like an irc client, or a Discord client and use it to chat and show how cool we are chatting from a client written by us on an os written by us too..
+
+But like the GUI this is another big task, and the networking is not made of only one protocol, there are many, and most of the time with different layers that needs o be implemented, for example the TCP/IP is composed by 7 layers. 
+
+What we need already implemented for the networking are: 
+
+* Memory management: we are going to do a lot of malloc/free call 
+* Inter Process communication: processes need to be informed if there is some data they have received from the network
+* Hardware IRQ: the network cards use IRQ to communicate with the operating system
+
+In this case we don't have a framebuffer like way to access the network cards, so we need to actually implement drivers for chipsets we are going to use, even if there are many chipsets available, usually implementing driver for add support of many cards that are using that chipset. 
+
+A good advice is to start with the Intel IE1000 driver since is the card supported by many emulators. The osdev wiki has documentatio for several different chipset that can be implemented. 
+
+Once the driver is in place this means we are able to send and receive data through a network, at this point we need to decide what protocol we want to support, and start 
+
 
 ## Any other thing we can add?
 
