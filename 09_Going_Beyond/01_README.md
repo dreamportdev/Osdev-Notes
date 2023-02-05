@@ -186,7 +186,7 @@ TBD - by @DT
 
 Networking is another inportant feature for modern operating systems, that lets our project no longer to be confined into our emulator/machine and talks to other computers, not only the local network but the internet. 
 
-Once implemented we can write some simple clients like an irc client, or a Discord client and use it to chat and show how cool we are chatting from a client written by us on an os written by us too..
+Once implemented we can write some simple clients like an irc  or email client, and use them how cool we are, chatting from a client written by us on an os written by us too..
 
 But like the GUI this is another big task, and the networking is not made of only one protocol, there are many, and most of the time with different layers that needs o be implemented, for example the TCP/IP is composed by 7 layers. 
 
@@ -200,8 +200,18 @@ In this case we don't have a framebuffer like way to access the network cards, s
 
 A good advice is to start with the Intel IE1000 driver since is the card supported by many emulators. The osdev wiki has documentatio for several different chipset that can be implemented. 
 
-Once the driver is in place this means we are able to send and receive data through a network, at this point we need to decide what protocol we want to support, and start 
+Once the driver is in place this means we are able to send and receive data through a network, we can start implementing a communication protocol, although there are different protocols available nowadays, we most likely want to implement the TCP/IP one, since it is basically used by every internet service. 
 
+The TCP/IP protocol is composed by 7 levels divided into 4 different layers:
+
+1. Network Interface layer - The lower one, usually it is the one responsible of communicating the data through the network (usually part of the implementation done within the network interface driver)
+2. Internet - It move packets from source to destination over the network
+3. Transport - This provide a reliable message delivery between processes in the system 
+4. Application -  It allow the access to network resources. 
+
+As mentioned above each layer is comprised of one or more levels. Implementing a TCP/IP stack is beyond our scope and also require a good knowledge of it. Btw a general suggestion is to start from the lower layer and go up to the higher one. 
+
+Usually the Network levels should be pretty easy to implement, since it reflect the hardware part of the network. Every layer/level is built on top of the previous, so a packet that is received by a host in the network will climb down the stack and at every level some of the information it contains will be read, stripped from it and the result passed to the level below. The same is true also for sending a packet.
 
 ## Any other thing we can add?
 
