@@ -223,9 +223,24 @@ When we want to send data, we start from the topmost layer (the application) and
 
 On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application layer it will be the information we are looking for (you can just look  at the previous picture from bottom to top.
 
-![TCP/IP Layers](/Images/tcpip.png)  
+![TCP/IP Layers](Images/tcpip.png)  
 
+Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivial, since networking is composed by many different components, but the biggest difference is that most of what we need to implement is very well standardized, and we just need to follow the documentation and the implementation part should be less difficult.
 
 ## Few final words
+
+Well now we have reached nearly the end of our kernel development notes, we tried to cover all the topics to have a bare minimum but complete enough kernel. We had an overview on all the core compnents of an operating system explaining how they should be implemented, and what are the key concepts to be understood. We tried to stay focused on the implementation part of the development, using theory only when it was strictly necessary. We provided lot of code examples to explain the trickiest part of the kernel, but in the same time the purpose was not to provide some ready-to-use code, what we wanted to achieve (and we hope we did) was give the readers enough knowledge (both theorical and  practical) to implement it by themselves. 
+
+The solution proposed are not optimal, and there is a lot of room for improvement, our bias was always the simplest implementation, just to show how things works, finding better solutions will be part of your kernel development journey.
+
+Well if you have arrived here and now are wondering: "what now?" well now it's up to you, if you have implemented all the previous chapter, you can decide to start to work one of the topics suggested in this chapter, otherwise it's up to you really. A small advice is that probably the most useful features to implement from the ideas presented in this chapter are the CLI (that give us certain interaction with the kernel and finally porting libc probably is one of the features that let our kernel be able to port programs written for other platforms. 
+
+Well that's all for now what is left now are the Appendixes with some extra infos (hopefully useful) and thanks for the attention! We hope you found our notes useful. 
+
+Please if you find any error/horror/issue with the notes feel free to: open a PR in the project page if you want to fix it,  or just create an issue.
+
+Thanks again!
+
+Ivan G. and Dean T.
 
 
