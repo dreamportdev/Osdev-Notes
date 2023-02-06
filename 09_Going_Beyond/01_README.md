@@ -204,16 +204,27 @@ Once the driver is in place this means we are able to send and receive data thro
 
 The TCP/IP protocol is composed by 7 levels divided into 4 different layers:
 
-1. Network Interface layer - The lower one, usually it is the one responsible of communicating the data through the network (usually part of the implementation done within the network interface driver)
+1. The Link layer - The lower one, usually it is the one responsible of communicating the data through the network (usually part of the implementation done within the network interface driver)
 2. Internet - It move packets from source to destination over the network
 3. Transport - This provide a reliable message delivery between processes in the system 
 4. Application -  It allow the access to network resources. 
 
-As mentioned above each layer is comprised of one or more levels. Implementing a TCP/IP stack is beyond our scope and also require a good knowledge of it. Btw a general suggestion is to start from the lower layer and go up to the higher one. 
+As mentioned above each layer is comprised of one or more levels. Implementing a TCP/IP stack is beyond our scope and also require a good knowledge of it. This paragraph is just a general overview of what are the layers and what we should expect to implement. 
 
 Usually the Network levels should be pretty easy to implement, since it reflect the hardware part of the network. Every layer/level is built on top of the previous, so a packet that is received by a host in the network will climb down the stack and at every level some of the information it contains will be read, stripped from it and the result passed to the level below. The same is true also for sending a packet.
 
-## Any other thing we can add?
+The internet layer is responsible of moving datagrams (packets) in the network, it provides a uniform networking interface that hides the actual topology of the network, or the network connections. This is the layer that estabilishes the `inter-networking` and defines the addressing of the netwrok (IP), at this layer we have implemented ICMP and IGMP protocols.
+
+At the Transport layer we have the host to host communication this is where the TCP and UDP protocol are implemented, and those are responsible of the routing of our packets.
+
+The Application layer instead are usually the protocols we want to implement, so for example FTP, HTTP, POP, DNS are all application level protocols. 
+
+When we want to send data, we start from the topmost layer (the application) and go down the whole stack until the network layer adding some extra information on each level. The extra information is the layer header and footer (if needed), so when the data has reached the last level it will have all the tehcnical information for each level. This is described in the picture below.
+
+On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application layer it will be the information we are looking for (you can just look  at the previous picture from bottom to top.
+
+![TCP/IP Layers](/Images/tcpip.png)  
+
 
 ## Few final words
 
