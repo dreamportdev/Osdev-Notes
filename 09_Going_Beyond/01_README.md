@@ -192,13 +192,14 @@ But like the GUI this is another big task, and the networking is not made of onl
 
 What we need already implemented for the networking are: 
 
-* Memory management: we are going to do a lot of malloc/free call 
-* Inter Process communication: processes need to be informed if there is some data they have received from the network
-* Hardware IRQ: the network cards use IRQ to communicate with the operating system
+* Memory management: we are going to do a lot of malloc/free call.
+* Inter Process communication: processes need to be informed if there is some data they have received from the network.
+* Hardware IRQ: the network cards use IRQ to communicate with the operating system.
+* PCI support: the network card, because the network devices are accessed through it.
 
 In this case we don't have a framebuffer like way to access the network cards, so we need to actually implement drivers for chipsets we are going to use, even if there are many chipsets available, usually implementing driver for add support of many cards that are using that chipset. 
 
-A good advice is to start with the Intel IE1000 driver since is the card supported by many emulators. The osdev wiki has documentatio for several different chipset that can be implemented. 
+A good advice is to start with the Intel IE1000 driver (aka e1000/e1000e) since is the card supported by many emulators and the chipse is used by many hardware network cards. The osdev wiki has documentation for several different chipset that can be implemented. 
 
 Once the driver is in place this means we are able to send and receive data through a network, we can start implementing a communication protocol, although there are different protocols available nowadays, we most likely want to implement the TCP/IP one, since it is basically used by every internet service. 
 
@@ -207,7 +208,7 @@ The TCP/IP protocol is composed by 7 levels divided into 4 different layers:
 1. The Link layer - The lower one, usually it is the one responsible of communicating the data through the network (usually part of the implementation done within the network interface driver)
 2. Internet - It move packets from source to destination over the network
 3. Transport - This provide a reliable message delivery between processes in the system 
-4. Application -  It allow the access to network resources. 
+4. Application -  It is at the top, and is the one used by processes to communicate with the network, all major internet communication protocols are at this layer of the stack (i.e. ftp, http, etc.)
 
 As mentioned above each layer is comprised of one or more levels. Implementing a TCP/IP stack is beyond our scope and also require a good knowledge of it. This paragraph is just a general overview of what are the layers and what we should expect to implement. 
 
@@ -223,7 +224,7 @@ When we want to send data, we start from the topmost layer (the application) and
 
 On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application layer it will be the information we are looking for (you can just look  at the previous picture from bottom to top.
 
-![TCP/IP Layers](Images/tcpip.png)  
+![TCP/IP Layers](/Images/tcpip.png)  
 
 Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivial, since networking is composed by many different components, but the biggest difference is that most of what we need to implement is very well standardized, and we just need to follow the documentation and the implementation part should be less difficult.
 
