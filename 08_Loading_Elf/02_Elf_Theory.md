@@ -4,10 +4,10 @@ The executable and linker format (ELF) is a multi-purpose format: it can be used
 
 The format has four main sections:
 
-- The ELF header. This contains the magic number used to identify it as an ELF, as well as information about the architecture the ELF was compiled for, the target operating system and other useful info.
-- The data blob. The bulk of the file is made up of this blob. This is a big binary blob containing code, all kinds of data, some string tables and sometimes debugging information. All program data lives here.
-- Section headers. Each header has a name and some metadata associated with it, and describes a region of the data blob. Section names usually begin with a dot (`.`), like `.strtab` which refers to the string table. Section headers are for other software to parse the ELF and understand it's structure and contents.
-- Program headers. These are for the program loader (what we're going to write). Each program header has a type that tells the loader how to interpret it, as well as specifying a range within the data blob. These ranges in the data blob can overlap (or often cover the same area as some section header ranges) ranges described by section headers.
+- *The ELF header*: This contains the magic number used to identify it as an ELF, as well as information about the architecture the ELF was compiled for, the target operating system and other useful info.
+- *The data blob*: The bulk of the file is made up of this blob. This is a big binary blob containing code, all kinds of data, some string tables and sometimes debugging information. All program data lives here.
+- *Section headers*: Each header has a name and some metadata associated with it, and describes a region of the data blob. Section names usually begin with a dot (`.`), like `.strtab` which refers to the string table. Section headers are for other software to parse the ELF and understand it's structure and contents.
+- *Program headers*: These are for the program loader (what we're going to write). Each program header has a type that tells the loader how to interpret it, as well as specifying a range within the data blob. These ranges in the data blob can overlap (or often cover the same area as some section header ranges) ranges described by section headers.
 
 Within the ELF specification section headers and program headers are often abbreviated to SHDRs and PHDRs. In a real file the data blob is actually located after the section and program headers.
 
@@ -65,11 +65,11 @@ This type means that we are expected to load the contents of this program header
 
 To load our simple, statically-linked, program the process is as follows:
 
-- Load the ELF file in memory somewhere.
-- Validate the ELF header by checking the machine type matches what we expect (is this an x86_64 program?).
-- Find all program headers with the `PT_LOAD` type.
-- Load each program header: we'll cover this shortly.
-- Jump to the start address defined in the ELF header.
+1) Load the ELF file in memory somewhere.
+2) Validate the ELF header by checking the machine type matches what we expect (is this an x86_64 program?).
+3) Find all program headers with the `PT_LOAD` type.
+4) Load each program header: we'll cover this shortly.
+5) Jump to the start address defined in the ELF header.
 
 Do note that these are just the steps for loading the ELF, there are actually other things we'll need like a stack for the program to use. Of course this is likely covered when we create a new thread for the program to run.
 
@@ -91,7 +91,7 @@ Alternatively you could make use of the extra argument in `vmm_alloc`, and add a
 
 The reason we need to use a specific address is that the code and data contained in the ELF are compiled and linked assuming that they're at that address. There might be code that jumps to a fixed address or data that is expected to be at a certain address. If we don't copy the program header where it expects to be, the program may break.
 
-*Authors Note: Relocations are another way of dealing with the problem of not being to use the requested virtual address, but these are more advanced. They're not hard to implement, certainly easier than dynamic linking, but still beyond the scope of this section.*
+*Authors Note: Relocations are another way of dealing with the problem of not being able to use the requested virtual address, but these are more advanced. They're not hard to implement, certainly easier than dynamic linking, but still beyond the scope of this section.*
 
 Now that we have that, lets look at the example code (without error handling, as always):
 
@@ -112,6 +112,10 @@ void load_phdr(Elf64_EHdr* ehdr, Elf64_Phdr* phdr) {
 
 At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guarenteed to be code), we'll fault.
 
-Fortunately the solution is quite straight forward, the read/write/execute permissions required for a phdr are encoded in the `p_flags` field. This field is actually a bitfield, with bit 0 representing execute, bit 1 representing write and bit 2 representing read. You can ignore the read permission as most platform's dont allow for write-only memory anyway, but you'll want to be sensitive to the write and execute permissions.
+Fortunately the solution is quite straightforward, the read/write/execute permissions required for a phdr are encoded in the `p_flags` field. This field is actually a bitfield, with the following definition:
+
+- `bit 0`: Represents whether a phdr should be executable. Remember that the executable flag is backwards on x86: all memory can be executed by default, unless you set the NX bit. Ideally this should be hidden behind your VMM interface though.
+- `bit 1`: Indicates a region should be writable, the region is read-only if this bit is clear.
+- `bit 2`: Indicates  a region should be readable. This bit should always be set, as exec-only or write-only memory is not very useful, and some hardware platforms will consider these states as an error.
 
 You'll want to adjust these permission *after copying the program header content*, because you'll need the memory to be writable for that. Then you can modify the flags of the mapped memory to what the program header requests.
