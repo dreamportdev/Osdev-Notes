@@ -180,7 +180,21 @@ Like we've said this is no small task, and requires a fairly complete kernel. Ho
 
 ## Libc
 
-TBD - by @DT
+While you can write your kernel (or any program) any language of your choice, C is the *lingua franca* of systems programming. A lot of common programs you may want to port (like bash) are written in C, and require the C standard library.
+
+At some point you'll want to provide a libc for your own operating system, whether its for porting these programs or just to say you've done it!
+
+There are a few options when it comes, let's quickly look at the common ones:
+
+- *Write your own*: This route is not recommended for beginners as a standard library is heavily stressed code (more so than the kernel at times), and it's easy to introduce subtle bugs. A standard library is again an entirely separate project that rival the size of your kernel. However if you do go this route, you have an excellent reference: the C programming standard! This document (or collection of them) describes what is and isn't legal in C, as well as defines what functionality the standard library needs to be provide. Most standard libraries assume your kernel provides a POSIX-like interface to userspace, if your kernel does not then this may be your best option.
+- *Glibc*: The GNU libc is arguably one of the most feature complete (as is the LLVM equivalent) C standard libraries out there. It also boasts a broad range of compatability across multiple architectures. However all this comes at the cost of complexity, and that includes the requirements of the kernel hosting it. Porting Glibc requires a nearly complete POSIX-like kernel, often with linux systems in some places. This is a better option than writing your own, but it does require a bit of work. Porting glibc or llvm-libc does provide the most compatability.
+- *Mlibc*: This libc is written and maintained by the team behind the managarm kernel. It was also built with hobby operating systems in mind and designed to be quite modular. As a result it is quite easy to port and several projects have done so and had their changes merged upstream. This makes porting it to other systems even easier as you can see what other developers have done for their projects. The caveat is that mlibc is quite new and there are occasional compatbility issues with particular library calls. Most software is fine, but more esoteric code can break, especially code that takes advantage of bugs in existing standard libraries that have become semi-standard.
+
+### Hosted Cross Compiler
+
+After porting a standard library to your OS, you'll also want to build *another* cross compiler, but this time instead of targetting bare-metal you target your operating system. 
+
+Similar to how linux targets are built with the target triplet of something like `x86_64-linux-elf` you would build a toolchain that targets `x86_64-your_us_here-elf`. This is actually very exciting as it means you can use this compiler for any program that can be built just using the standard library! 
 
 ## Networking
 
