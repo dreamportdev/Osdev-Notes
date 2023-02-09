@@ -1,4 +1,4 @@
-# About The Authors
+## About The Authors
 
 @dreamos82 Feel free to put something about yourself here :D
 

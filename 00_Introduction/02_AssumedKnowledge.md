@@ -1,4 +1,4 @@
-# Assumed Knowledge
+## Assumed Knowledge
 
 This book is written for beginners in operating system development, but some prior experience with programming is recommended. It is not intended to teach you C, or how to use a compiler or linker.
 
@@ -6,7 +6,7 @@ Code can have bugs and freestanding code can be hard (or impossible) to debug in
 
 As such, below is a list of the recommended prior experience before continuing with this book:
 
-- Intermediate understanding of the C programming language. Mastery is not required, but you should be very familiar with the ins and outs of the language.
+- Intermediate understanding of the C programming language. Mastery is not required, but you should be very familiar with the ins and outs of the language especially pointers and pointer arithmetic.
 - You should be comfortable compiling and debugging code in userspace. GDB is recommended as several emulators provide a GDB server you can use to step through your kernel.
 - Knowledge of common data structures, including how to implement and use them: arrays, linked lists.
 
