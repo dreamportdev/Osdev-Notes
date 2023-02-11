@@ -21,12 +21,7 @@ typedef uint8_t Elf64_UnsignedChar;
 
 All structs in the base ELF spec are defined using these types, and so we will use them too. Note that their exact definitions *will* change depending on your target platform.
 
-## Restrictions
+In this chapter we're going to look at the following topics:
 
-To simplify our program loader we're going to put a few restrictions in place for now. Later on you can expand the loader yourself as you come across features you might want to support.
-
-For a program to be compatible with our loader:
-
-- It cannot contain any relocations. We don't care if it's statically linked or uses PIC (position independent code) however.
-- All libraries must be statically linked, we won't support dynamic linking for now. This feature can be implemented over a weekend, but greatly increases the complexity of your loader.
-- The program must be freestanding, since we haven't ported (or written) a libc we can't use any standard functions. Porting a libc is worthwhile, but it's outside the scope of this chapter.
+- [General ELF Theory](02_Elf_Theory.md)
+- [Loading A Program](03_Loading_And_Running.md)
