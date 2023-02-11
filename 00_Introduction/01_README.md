@@ -4,7 +4,7 @@ Wheter you are reading the noes online or as a book this is a collection of note
 
 We hope you enjoy, and find something interesting here!
 
-# Structure Of The Book
+## Structure Of The Book
 
 Each numbered chapter adds a new layer to the kernel, expanding it's capabilities. It's not strictly necessary to read them in order, but it is encouraged as some later chapters may reference earlier ones. 
 
