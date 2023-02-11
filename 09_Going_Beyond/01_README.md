@@ -190,6 +190,17 @@ There are a few options when it comes, let's quickly look at the common ones:
 - *Glibc*: The GNU libc is arguably one of the most feature complete (as is the LLVM equivalent) C standard libraries out there. It also boasts a broad range of compatability across multiple architectures. However all this comes at the cost of complexity, and that includes the requirements of the kernel hosting it. Porting Glibc requires a nearly complete POSIX-like kernel, often with linux systems in some places. This is a better option than writing your own, but it does require a bit of work. Porting glibc or llvm-libc does provide the most compatability.
 - *Mlibc*: This libc is written and maintained by the team behind the managarm kernel. It was also built with hobby operating systems in mind and designed to be quite modular. As a result it is quite easy to port and several projects have done so and had their changes merged upstream. This makes porting it to other systems even easier as you can see what other developers have done for their projects. The caveat is that mlibc is quite new and there are occasional compatbility issues with particular library calls. Most software is fine, but more esoteric code can break, especially code that takes advantage of bugs in existing standard libraries that have become semi-standard.
 
+There are also other options for porting a libc that deserve a mention, like newlib and musl.
+
+### Porting A LibC
+
+The exact process depends on the library you've chosen to port. The best instructions will always the ones coming from the library's vendor, but for a general overview you'll want to take roughly the following steps:
+
+- Get a copy of the source code, integrate building the libc into your project's build system.
+- Once you have it attempting to build, see what dependencies are required. Larger libraries like Glibc will require much more, but there are often options to disable extra functionality to lower the number of dependencies.
+- When you can build your libc, try write a simple program that links against it. Load this program from your kernel and see what system calls the libc tries to perform. This will give you an indication of what you need to support.
+- Now begins the process of implementing these syscalls. Hopefully most of these are things you have support for, but if you dont you may need to add extra functionality to your kernel.
+
 ### Hosted Cross Compiler
 
 After porting a standard library to your OS, you'll also want to build *another* cross compiler, but this time instead of targetting bare-metal you target your operating system. 
