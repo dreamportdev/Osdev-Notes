@@ -60,7 +60,7 @@ Where:
 
 Depending on the framebuffer_type value you have different values for color_info field.
 
-* If frambuffer_type is 0 this means indexed colors, this means that the color-info field has the following values:
+* If frambuffer_type is 0 this means indexed colors, and that the color-info field has the following values:
 
 | Size    | Description                    |
 |---------|--------------------------------|
@@ -128,5 +128,39 @@ This address is the location where we are going to write a colour value and it w
 
 **Please be aware that the framebuffer base_address is an absolute phisical address, and on the early stages of our OS is totally fine, but remember that when/if we are going to enable virtual memory, the framebuffer address will need to be mapped somewhere. And the base_address could change, depending on design decisions, this will be explained later**
 
+### Drawing an image
+
+Now that we have a plot pixel function is time to draw something nice on the screen. Usually to do this we should have a file system supported, and at least an image format implemented. But some graphic tools, like *The Gimp* provide an option to save an image into `C source code header`, or `C source code`. 
+
+If we save the image as C source header code, we get a `.h` file with a variable `static char* header_data`, and few extra attribute variables that contains the width and height of the image, and also a helper function called `HEADER_PIXEL` that extract the pixel and move to the next at every call: 
+
+The helper function is called in the following way: 
+
+```c
+HEADER_PIXEL(logo_data, pixel)
+```
+
+where `logo_data` is a pointer to the image content and `pixel` is an array of 4 chars, that will contain the pixel values.
+
+Now since each pixel is identified by 3 colors and we have 4 elements into an array, we know that the last element (`pixel[3]`) is always zero. The color is encoded in RGB format with Blue being the least significant byte, and to plot that pixel we need to fill a 32 bit address, so the array need to be converted into a `uint32_t` variable, this can easily be done with some bitwise operatory: 
+
+```c
+char *pixel[4];
+HEADER_PIXEL(logo_data, pixel)
+pixel[3] = 0;
+uint32_t num = (uint32_t) pixel[0] << 24 |
+    (uint32_t)pixel[1] << 16 |
+    (uint32_t)pixel[2] << 8  |
+    (uint32_t)pixel[3];
+
+```
+
+as you can see we are making sure that the value of `pixel[3] is zero, since the `HEADER_PIXEL` function is not touching it. Now the value of `num` will be the colour of the pixel to be plotted. 
+
+With this value we can call the function we have created to plot the pixel with the color indicated by `num`. 
+
+Using width and height given by the gimp header, and a given staring position x, y to draw an image we just need to iterate through the pixels using a nested for loop, to iterate through rows (x) and columns (y) using height and width as limits.
+
 ### Useful resources
+
 * https://jmnl.xyz/window-manager/
