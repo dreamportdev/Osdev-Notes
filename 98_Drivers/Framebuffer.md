@@ -75,7 +75,7 @@ The framebuffer_palette_num_colors is the number of colors available in the pale
 | u8      | green_val                      |
 | u8      | blue_val                       |
 
-
+    
 * If it is 1 it means direct RGB color, then the color_type is defined as follows: 	
 
 Size   | Description					  |
@@ -93,6 +93,40 @@ Where framebuffer_XXX_field_position is the starting bit of the color XXX, and t
 
 ### Plotting a pixel
 
+Everything that we see on the screen with the framebuffer enabled will be done by the function that plot pixels. 
 
-### U~eful resources
+Plotting a pixel is pretty easy, we just need to fill the value of a specific address with the colour we want for that pixel. What we need for drawing pixel then is: 
+
+* Position in the screen (x and y coordinates)
+* Colour we want to use (we can pass the color code or just get the rgb value and compose it)
+* The framebuffer base address
+
+The first thing we need to do when we want to plot a pixel is to compute the address of the pixel at row y and column x is how many bytes are in one row, and how many bytes are in one pixel. These information are present in the multiboot framebuffer info tag: 
+
+* The field *framebuffer_pitch*, that is number of bytes in each row
+* The field *bpp* is the number of bits on a pixel
+
+If we want to know the actual row offset we need then to: 
+
+```math
+row = y * framebuffer_pitch
+```
+
+and similarly for the column we need to: 
+
+```math
+column = x * bpp
+```
+
+Now we have the offset in byte for both the row and column byte, to compute the absolute address of our pixel we need just need to add row and column to the base address: 
+
+```math
+pixel_position = base_address + column + row
+```
+
+This address is the location where we are going to write a colour value and it will be displayed on our screen. 
+
+**Please be aware that the framebuffer base_address is an absolute phisical address, and on the early stages of our OS is totally fine, but remember that when/if we are going to enable virtual memory, the framebuffer address will need to be mapped somewhere. And the base_address could change, depending on design decisions, this will be explained later**
+
+### Useful resources
 * https://jmnl.xyz/window-manager/
