@@ -1,11 +1,23 @@
-# Framebuffer
+# Video Output and Framebuffer
 
-One way to enable framebuffer is asking grub to do it. 
+One of the first thing we want to do is make our Operating System capable of producing some kind of screen output, even if not strictly necessary (there can be different ways to debug our OS behaviour while developing), it can be useful sometime to visualize something in real time, and probably especially if at the beginning of our project, is probably very motivating having our os print a nice logo, or write some fancy text.
 
-## Setting framebuffer using grub
+As per many other parts there are different way to produce output on the screen, in this book we are covering only the framebuffer, but below is a short list of some of the available modes
 
-To enable framebuffer using grub, you need to add the relevant tag in the multiboot2 header. 
-So in the tag section you need to add: 
+* If you are in real mode (16 bits) there is an interrupt that can be used print characters/strings, and you have the possibility to use other interrupts to draw pixels and ui on the screen.
+* The legacy VGA driver, if your os is targeting old hardware (ie x86-32) and don't care to have a gui, this is probably the simplest and easiest approach. It's very easy to implement, the VGA memory starts at 0xb800, and the screen is composed by 80 columns and 25 rows, each cell contains one character. Each characters is represented by two bytes, one for the ascii code of the character, and the other for the color.
+* On many systems (old and modern)  the framebuffer can be used, that is covered by this chapter
+* If the operating system is using UEFI, the GOP mode can be used.
+
+In this guide we cover the Framebuffer, since it is probably the one most widely supported on systems that are at least 32bits.
+
+
+## Setting framebuffer (using grub)
+
+One way to enable framebuffer is asking grub to do it (this can be done also using uefi but it is not covered in this chapter). 
+
+To enable it, you need to add the relevant tag in the multiboot2 header. 
+Simply we just need to add in the tag section a new item, like the one below, to request to grub to enable the framebuffer if avaiable, with the requested configuration:
 
 ```assembly
 framebuffer_tag_start:
@@ -22,7 +34,7 @@ The comments are self explanatory.
 
 ## Accessing the framebuffer from the kernel
 
-Once the framebuffer is set in the multiboot header, when grub loads the kernel it should add  a new tag: the framebuffer info tag. As explained in the Multiboot paragraph, if you are 
+Once the framebuffer is set in the multiboot header, when grub loads the kernel it should add  a new tag: the `framebuffer_info` tag. As explained in the Multiboot paragraph, if you are 
 using the header provided in the documentation, you should already have a *struct multiboot_tag_framebuffer*, otherwise you should create your own.  
 
 The basic structure of the framebuffer info tag is: 
@@ -76,7 +88,7 @@ The framebuffer_palette_num_colors is the number of colors available in the pale
 | u8      | blue_val                       |
 
     
-* If it is 1 it means direct RGB color, then the color_type is defined as follows: 	
+* If it is 1 it means direct RGB color, then the `color_type` is defined as follows: 	
 
 Size   | Description					  |
 -------|----------------------------------|
@@ -91,7 +103,7 @@ Where framebuffer_XXX_field_position is the starting bit of the color XXX, and t
 
 * If it is 2, it means EGA text, so the width and height are specified in characters and not pixels, framebuffer-bpp = 16 and framebuffer_pitch is expressed in byte text per line.
 
-### Plotting a pixel
+## Plotting a pixel
 
 Everything that we see on the screen with the framebuffer enabled will be done by the function that plot pixels. 
 
