@@ -26,7 +26,7 @@ The steps involved are:
 ## Find a Font and add it to the kernel (1 and 2)
 
 
-As already said the best place to look for a font if you are running on linux is to look into the folder `/usr/share/kbd/consolefonts`, to know the psf version i  suggest to use the tool *gbdfed*, import the font with it (use the File->Import->console font menu), and tghen go to *View->Messages*, the should be a message simila to the following: 
+As already said the best place to look for a font if you are running on linux is to look into the folder `/usr/share/kbd/consolefonts`, to know the psf version the tool *gbdfed* can be used, just import the font with it (use the File->Import->console font menu), and then go to *View->Messages*, there should be a message similar to the following: 
 
 ```
 Font converted from PSF1 to BDF.
@@ -34,7 +34,7 @@ Font converted from PSF1 to BDF.
 
 Once you got your the font, it needs first to be converted into a ELF binary file that can be linked to our kernel. 
 
-To do that is possible to use the following command: 
+That can be done using the command objcopy: 
 
 ```bash
 objcopy -O elf64-x86-64 -B i386 -I binary font.psf font.o
@@ -46,7 +46,7 @@ The parameters used in the example above are:
 * -B is the binary architecture 
 * -I the inpurt target
 
-Once converted into binary elf, it can be linked to the kernel like any other compiled file, to do that just add the output file to the linker command: 
+Once converted into binary elf, it can be linked to the kernel like any other compiled file, in this case we just need to add the output file to the linker command: 
 
 ```bash
 ld -n -o build/kernel.bin -T src/linker.ld <other_kernel_files> font.o -Map build/kernel.map
@@ -65,11 +65,11 @@ Symbol table '.symtab' contains 5 entries:
      3: 0000000000008020     0 NOTYPE  GLOBAL DEFAULT    1 _binary_font_psf_end
      4: 0000000000008020     0 NOTYPE  GLOBAL DEFAULT  ABS _binary_font_psf_size
 ```
-(the variable name depends on the font name). 
+(the variable name depends on the font file name). 
 
 ## Identify version and parse the PSF
 
-Currently there are two different version of PSF fonts available, they are identified with v1, and v2, to know what is the version of the font we need to check the magic number first: 
+Since there are two different version of PSF fonts available, identified with v1, and v2, to know what is the version of the font loaded we need to check the magic number first: 
 
 * If the version is 1 the magic number is two bytes:
 
@@ -86,13 +86,13 @@ Currently there are two different version of PSF fonts available, they are ident
 #define PSF2_MAGIC3     0x86
 ```
 
-The magic number are stored from the least significative (0) to the more significative (2 or 4 depending on the version)
+The magic number is stored from the least significant byte (0) to the more significant (2 or 4 depending on the version)
 
 ### PSF v1 Structure
 
 For version 1 of the psf, the data structure is pretty simple and contains only three fields: 
 
-* *magic* number: the value as already seen above is 0x0436 
+* *magic* number: the value as already seen above, that is 0x0436 
 * *mode*: they are flags. If the value is 0x01 it means that the font will have 512 characters (there are few other values that can be checked here https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html)
 * *charsize* The character size in bytes
 
@@ -190,7 +190,7 @@ We already saw above how to get the selected glyph, but now how we compute the p
 
 For the vertical coordinate: 
 
-* The number of bytes in each line, or: how many pixelxs we need to go down exactly one pixel, expressed in bytes
+* The number of bytes in each line, or: how many pixels we need to go down exactly one pixel, expressed in bytes
 * How many pixels is the glyph height
 
 For the horizontal coordinate: 
@@ -198,8 +198,10 @@ For the horizontal coordinate:
 * The width of the character 
 * How many bytes are in a pixel
 
-For the number of bytes in each line, assuming that you are using grub and you configured the framebuffer via the multiboot header, is in the *multiboot_tag_framebuffer*, the *framebuffer_pitch* value. 
+The number of bytes in each line, assuming that you are using grub and you configured the framebuffer via the multiboot header, is available in the *multiboot_tag_framebuffer* structure, the field is *framebuffer_pitch*. 
 
+Implementing the function above should be pretty simple and is left as exercise.
+ 
 ## Useful resources
 
 * https://wiki.osdev.org/PC_Screen_Font
