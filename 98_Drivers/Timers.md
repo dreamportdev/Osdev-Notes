@@ -1,14 +1,23 @@
 # Timer
 
+Timers are mainly useful if we want to develop a multitasking kernel, the timers are used to keep track of the time a task has been running and decided wheter it has to give space to another task in the queue, or not. 
+
+In this chapter we are going to see how to enable and configure a timer, using the one provided by the APIC, and having an IRQ generated everytime the timer expires. 
+ 
 ## Types 
 
-There are different sources when talking about timers on modern computer, this document will be focused on the PIT and the Apic Timer. 
+There are different sources when talking about timers on modern computer, it depends on the architecture, and the hardware, in this this document we are going to set-up the Apic Timer, but to calibrate it properly we are going to use another timer the PIT.
 
-Mostly in the second, it will use the first just for calibration purposes.
+The Programmable Interrupt Timer (aka PIT) is a legacy hardware present in x86-* architectures (in more modern architecture is not really present but it is emulated) that was once used to generate an irq everytime a counter reaches zero. And the irq were sent to another hardware that was responsible of handling the hardware interrupt requests (IRQs) the PIC8259. 
+
+On more modern hardware the PIC processor was replaced by the APIC, and this one came with it's own timer. 
+
+But here the catch: one of the easiest way to calibrate properly the Apic timer is still to use the legacy PIT. 
+
 
 ## Few words about the PIT
 
-Even if we are going to use the PIT timer only for calibrating the APIC timer, is worth spending few words on it. Especially to understand why we are going to use certain values. 
+Even if we are going to use the PIT only to set-up correctly the APIC timer, is worth spending few words on it. Especially to understand why we are going to use certain values.
 
 First the PIT has basically 4 communication ports: 
 
@@ -151,6 +160,6 @@ This is the last step of the calibration, we can start the apic timer immediatel
 
 ## Useful links
 
-* [Ehtereality osdev Notes - Apic/Timing/Context Switching](https://ethv.net/workshops/osdev/notes/notes-4.html)
+* [Ehtereality osdev Notes - Apic/Timing/Context Switching](https//ethv.net/workshops/osdev/notes/notes-4.html)
 * [OSdev Wiki - Pit page](https://wiki.osdev.org/Programmable_Interval_Timer)
 * [Brokern Thron Osdev Series](http://www.brokenthorn.com/Resources/OSDev16.html)
