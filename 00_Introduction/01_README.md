@@ -1,6 +1,6 @@
 # Welcome
 
-Wheter you are reading the noes online or as a book this is a collection of notes about operating systems development. They were by the authors while writing (and re-writing) their own operating systems. The notes are written with the intent of guiding the reader through the various stages of building an operating system kernel from scratch.
+Wheter you are reading the notes online or as a book this is a collection of notes about operating systems development. They were written by the authors while writing (and re-writing) their own operating systems. The notes are written with the intent of guiding the reader through the various stages of building an operating system kernel from scratch. Trying to focus more on the concepts behind and how things works than on the code.
 
 We hope you enjoy, and find something interesting here!
 

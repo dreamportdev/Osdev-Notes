@@ -1,5 +1,9 @@
 # RSDP and RSDT/XSDT
 
+ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like amount of power on each device, thermal zones, fan control, IRQs, battery levels etc. 
+
+Many of the information are organized and accessible through different data structures, but since the ACPI specs are quite big, and cover so many different components, we focus only on what we just need to get the informations we need about the APIC.
+
 ## RSDP
 
 The RSDP is the pointer to the RSDT (Root System Descriptor Table) the full structure is depending if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
