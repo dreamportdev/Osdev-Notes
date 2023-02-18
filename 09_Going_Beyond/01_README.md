@@ -2,48 +2,50 @@
 
 ## Introduction
 
-If you have reached that far in this guide this means that your kernel should have all the basic components to start to add new features to it, and probably to make it more interactive with the users. In this chapter we are going to explore some features that can be added to our operating system (not only the kernel). It is going to be just a very high level overview explaining what are the prerequisites and a short explanation of the process involved for developing it.
+If you have reached this far in the book, your kernel should have all the basic components needed to start adding some of the more exciting features. This means turning your project from a kernel and into an *operating system*: i.e. making it more useful and interactive. In this chapter we are going to explore some features that can be added to our operating system. This will be a high level overview, and not as in-depth as the previous parts.
 
-But at this point of development any feature can be added, and it is up to you what direction your kernel should take, so what you find here are just ideas, but then it's up to you. 
+At this point in development any feature can be added, and it's up to you what direction your kernel goes. While we're going to list a few suggestions of where you might want to explore next, they are merely that: suggestions. 
 
-## CLI
+## Command Line Interface
 
-One of the way to interact with users is through a CLI (Command Line Interface), that is usually presented by a blinking underscore symbol, waiting for some user input (usually via keyboard). 
+One of the way to interact with users is through a CLI (command line interface). This is usually presented by a blinking cursor (usually in the shape of an underscore) and waiting for some user input (usually via keyboard). 
 
-The user provide a command, and the CLI executes it, providing output if necessary. Examples of CLI are \*nix Bash, zsh, Windows command line prompt, etc. A command line basically receives input in the form of line/s of text, the commands usually are either builtin within the cli (this means functions in the code), or executable files that are somewhere in a file system. 
+The user inputs a command and the CLI executes it, providing output if necessary. Examples of CLI are \*nix Bash, zsh, Windows command line prompt, etc. A command line basically receives input in the form of line/s of text. The commands are either built into the CLI itself, or extern programs located somewhere in a filesystem.
 
 ### Prerequisites
 
 To implement a shell we need at least the following parts of the kernel implemented:
 
-* A video output (either using framebuffer, or legacy vga driver)
-* Keyboard driver implemented with at least one layout working
-* From a library point of view string input, comparisons and manipulating functions are needed. 
+* A video output (either using framebuffer, or legacy vga driver).
+* A keyboard driver implemented with at least one layout working.
+* Functions for working with strings: the common comparison and manipulation ones.
 
-If you want to run executables files too, and not only builtin commands then you need also:
+In order to run external programs, you will also need:
 
-* The VFS layer implemented
-* At least a file system supported (if you have followed this guide so far, you should have the USTar format implemented)
-* Support for at least one type of executable files and functions to execute them.
+* The VFS layer implemented.
+* At least one file system supported. If you've been following along you'll have a tempfs that uses USTar which provides everything you need.
+* A program loader capable of loading executable files and running them.
 
-Ideally when most of the commands are executed by the shell should spawn a new process/thread to be executed, so it could  be useful to have a fork/exec (or equivalent) mechanism implemented.
+Ideally when most of the commands are executed by the shell should spawn a new process/thread to be executed, so fork/exec (or equivalent) is useful to have implemented.
 
-### Implementing a cli
+### Implementing a CLI
 
 The basic idea of a command line is pretty simple, it takes a string in input, parse it and execute it if possible. Usually the workflow involves three steps: 
 
 * The first one is splitting the string, to separate the command from the arguments (the command is always the first word on the line
-* Then check if the string is builtin, if yes it executes the function associated
-* Otherwise search it in the FS, usually a shell will have a list of places to search for executables (i.e. the PATH variable in unix environment) and if an executable with the command name is found executes it, otherwise an error is returned (most likely: `command not found`)
+* Then check if the string is builtin, and execute the internal function if it is.
+* Otherwise search for it as a program within the VFS. Usually a shell will have a list of places to search for executables (i.e. the PATH variable in unix environment) and if an executable with the command name is found executes it, otherwise an error is returned (most likely: `command not found`).
 
-Now probably our cli will have several builtin-command, so they should be stored somewhere, depending on the number of them we can simply use an array and search it looking for the command, otherwise another idea could be implementing a hashmap in this way we don't need to search the entire array for every command entered. Implementing a hashmap is beyond the scope of this book, but if you are not familiar with this kind of structure, the idea is that every command will be converted into a number using a custom hash function, and the number will indicate the index into an array. A good idea to represent a command is to use a simple data structure that contains at least two informations: the command name, and the function it points to. 
+Now our cli will probably have several builtin commands, so these should be stored somewhere. Depending on the number of them we can simply use an array, but a more advanced solution would be to use a hashmap for more consistent lookup times. Implementing a hashmap is beyond the scope of this book, but if you are not familiar with this kind of structure the idea is that every command will be converted into a hash (a special number) using a custom hash function. This number can then be used as an index into an array. A good idea to represent a command is to use a simple data structure that contains at least two pieces of information: the command name, and the function it points to.
 
-So if the command is found, we can just call the function associated with it, but if not now we need to search for it on the file system. Now in this case there are two scenarios: 
+If the command is found we can just call the function associated with it. If it's not found, then we have to search the filesystem. In this case there are two scenarios: 
 
-* The input command is an absolute path, so we just need to search for the file on the given path, and execute it (returning an error if the file is not present)
+* The input command is an absolute path, so we just need to search for the file on the given path, and execute it (returning an error if the file is not present).
 * It is just a command, with no path, so in this case we can decide wheter to return an error or, like many other shells do, search for it in the current directory first, and then into one or more folders where the shell expects to find them, and only if it is not found in any of them return an error. 
 
-For the second point we can decide to have the paths hardcoded in the code, or a good idea is to add a support for some environment variables mechanism. Environment variables are just named variables used to store some information useful to the process or the shell, they are not mandatory to be implemented, and usually they are external to the shell (they are implemented normally in the process/threads). The form of env variables is similar to: 
+For the second point we can decide to have the paths hardcoded in the code, or a good idea is to add a support for a mechanism that allows the user to set these paths: environment variables. 
+
+Environment variables are just named bits of data used to store some information useful to the current process. They are not mandatory to be implemented, and usually they are external to the shell (they are implemented normally in the process/threads). The form of env variables is similar to: 
 
 ```
 NAME_OF_VARIABLE=value
@@ -178,7 +180,7 @@ Other things the protocol should cover are how clients are notified of a framebu
 
 Like we've said this is no small task, and requires a fairly complete kernel. However it can be a good project for testing lots of parts of the kernel all working together. It's also worth considering that if your shell server is designed carefully you can write it to run under an existing operating system. This allows you to test your server, protocol, and clients in an easily debuggable environment. Later on you can then just port the system calls used by your existing server.
 
-## Libc
+## Libc (A Standard Library)
 
 While you can write your kernel (or any program) any language of your choice, C is the *lingua franca* of systems programming. A lot of common programs you may want to port (like bash) are written in C, and require the C standard library.
 
@@ -192,7 +194,7 @@ There are a few options when it comes, let's quickly look at the common ones:
 
 There are also other options for porting a libc that deserve a mention, like newlib and musl.
 
-### Porting A LibC
+### Porting A Libc
 
 The exact process depends on the library you've chosen to port. The best instructions will always be the ones coming from the library's vendor, but for a general overview you'll want to take roughly the following steps:
 
@@ -209,24 +211,26 @@ Similar to how linux targets are built with the target triplet of something like
 
 ## Networking
 
-Networking is another inportant feature for modern operating systems, that lets our project no longer to be confined into our emulator/machine and talks to other computers, not only the local network but the internet. 
+Networking is another inportant feature for modern operating systems, it lets our project no longer to be confined into our emulator/machine and talk to other computers. Not only computers on our local network, but also servers on the internet. 
 
-Once implemented we can write some simple clients like an irc  or email client, and use them how cool we are, chatting from a client written by us on an os written by us too..
+Once implemented we can write some simple clients like an irc or email client, and use them to show how cool we are; chatting from a client written by us, on an os written by us.
 
-But like the GUI this is another big task, and the networking is not made of only one protocol, there are many, and most of the time with different layers that needs o be implemented, for example the TCP/IP is composed by 7 layers. 
+Like a graphical shell this is another big task with many moving parts. Network is not just one protocol, it requires a whole stack of various protocols, layered on top of each other. The (in)famous TCP/IP is often described as requiring 7 layers.
+
+### Prerequisites
 
 What we need already implemented for the networking are: 
 
-* Memory management: we are going to do a lot of malloc/free call.
-* Inter Process communication: processes need to be informed if there is some data they have received from the network.
-* Hardware IRQ: the network cards use IRQ to communicate with the operating system.
-* PCI support: the network card, because the network devices are accessed through it.
+* Memory management: we'll need the usual dynamic memory management (malloc and free), but also a capable VMM for writing networking drivers.
+* Inter process communication: processes need to be informed if there is some data they have received from the network.
+* Interrupt infrastructure: we'll need to be able to handle interrupts from network cards.
+* PCI support: any reasonable network interface card is managed through PCI.
 
-In this case we don't have a framebuffer like way to access the network cards, so we need to actually implement drivers for chipsets we are going to use, even if there are many chipsets available, usually implementing driver for add support of many cards that are using that chipset. 
+Unlike a framebuffer which is often provided to us by the bootloader, we'll need to write drivers for each network card we want to support. Fortunately a lot of network cards use the same chipset, which means we can use the same driver for more than just a single card.
 
-A good advice is to start with the Intel IE1000 driver (aka e1000/e1000e) since is the card supported by many emulators and the chipse is used by many hardware network cards. The osdev wiki has documentation for several different chipset that can be implemented. 
+A good place to start is with the Intel e1000 driver (or the e1000e extended version). This card is supported by most emulators and is used as the basis for almost all intel networking chipsets. Even some non-intel chipsets are compatible with it! The osdev wiki has documentation for several different chipsets that can be implemented. 
 
-Once the driver is in place this means we are able to send and receive data through a network, we can start implementing a communication protocol, although there are different protocols available nowadays, we most likely want to implement the TCP/IP one, since it is basically used by every internet service. 
+Once the driver is in place this means we are able to send and receive data through a network, we can start implementing a communication protocol. Although there are different protocols available nowadays, we most likely want to implement the TCP/IP one, since it is basically used by every internet service. 
 
 The TCP/IP protocol is composed by 7 levels divided into 4 different layers:
 
@@ -237,7 +241,7 @@ The TCP/IP protocol is composed by 7 levels divided into 4 different layers:
 
 As mentioned above each layer is comprised of one or more levels. Implementing a TCP/IP stack is beyond our scope and also require a good knowledge of it. This paragraph is just a general overview of what are the layers and what we should expect to implement. 
 
-Usually the Network levels should be pretty easy to implement, since it reflect the hardware part of the network. Every layer/level is built on top of the previous, so a packet that is received by a host in the network will climb down the stack and at every level some of the information it contains will be read, stripped from it and the result passed to the level below. The same is true also for sending a packet.
+Usually the network levels should be pretty easy to implement, since it reflect the hardware part of the network. Every layer/level is built on top of the previous, so a packet that is received by a host in the network will climb down the stack and at every level some of the information it contains will be read, stripped from it and the result passed to the level below. The same is true also for sending a packet.
 
 The internet layer is responsible of moving datagrams (packets) in the network, it provides a uniform networking interface that hides the actual topology of the network, or the network connections. This is the layer that estabilishes the `inter-networking` and defines the addressing of the netwrok (IP), at this layer we have implemented ICMP and IGMP protocols.
 
@@ -255,15 +259,15 @@ Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivia
 
 ## Few final words
 
-Now we have reached nearly the end of our kernel development notes, we tried to cover all the topics to have a bare minimum but complete enough kernel. We had an overview on all the core components of an operating system explaining how they should be implemented, and what are the key concepts to be understood. We tried to stay focused on the implementation part of the development, using theory only when it was strictly necessary. We provided lot of code examples to explain the trickiest part of the kernel, but in the same time the purpose was not to provide some ready-to-use code, what we wanted to achieve (and we hope we did) was give the readers enough knowledge (both theorical and  practical) to implement it by themselves. 
+Now we're nearly at the end of our kernel development notes. We tried to cover all the topics to so that you can have a bare but complete-enough kernel. We had an overview on all the core components of an operating system explaining how they should be implemented, and what are the key concepts to be understood. We tried to stay focused on the implementation part of the development, using theory only when it was strictly necessary. We provided lot of code examples to help explain some of the trcikier parts of the kernel. At the same time the purpose was not to provide some ready-to-use code, our intention was to give the readers enough knowledge to get started implementing it themselves.
 
-The solutions proposed are not optimal, and there is a lot of room for improvement, our bias was always the simplest implementation, just to show how things works, finding better solutions will be part of your kernel development journey.
+The solutions proposed are optimized for the simplicity of the explanation. You will likely find ways to improve the code in your implementation! Finding better (or perhaps more interesing) solutions is all a part of your kernel development journey.
 
-If you have arrived here and now are wondering: "what now?" the answer is:  now it's up to you, if you have implemented all the previous chapters, you can decide to start to work one of the topics suggested here, otherwise it's up to you really. A small advice is that probably the most useful features to implement from the ideas presented in this chapter are the CLI (that give us certain interaction with the kernel and finally porting libc probably is one of the features that let our kernel be able to port programs written for other platforms. 
+If you're still reading and are wondering what's next, it's up to you. If you've followed all the previous chapters you may wish to take a look at some of the topics mention above, implement some more device drivers (for more hardware compatibility) or rewrite a core system with renewed understanding. A CLI and then libC will greatly boost what you can do with your kernel, making it less of a toy and more of a tool.
 
-And not that's really all for now, what is left are the Appendixes with some extra infos (hopefully useful) and thanks for the attention! We hope you found our notes useful and enjoyed reading them. 
+We've also provided some appendices with some extra information that you might find useful. These are things we wanted to include that didn't fit elsewhere. We hope you found our notes useful and enjoyed reading them.
 
-Please if you find any error/horror/issue with the notes feel free to: open a PR in the project page if you want to fix it,  or just create an issue.
+If you find any errors/issues (or horrors) with the ntes please feel free to open a PR to fix them, or create an issue and let us fix it.
 
 Thanks again!
 
