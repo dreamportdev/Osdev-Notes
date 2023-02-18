@@ -194,7 +194,7 @@ There are also other options for porting a libc that deserve a mention, like new
 
 ### Porting A LibC
 
-The exact process depends on the library you've chosen to port. The best instructions will always the ones coming from the library's vendor, but for a general overview you'll want to take roughly the following steps:
+The exact process depends on the library you've chosen to port. The best instructions will always be the ones coming from the library's vendor, but for a general overview you'll want to take roughly the following steps:
 
 - Get a copy of the source code, integrate building the libc into your project's build system.
 - Once you have it attempting to build, see what dependencies are required. Larger libraries like Glibc will require much more, but there are often options to disable extra functionality to lower the number of dependencies.
