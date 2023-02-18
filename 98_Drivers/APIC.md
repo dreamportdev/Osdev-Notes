@@ -2,20 +2,53 @@
 
 ## What is APIC
 
-APIC stands for *Advanced Programmable Interrupt Controller*, and it is used to handle interrupt received from the processor, it is a replacement of the old PIC8259 (that remains still available btw), but it offers more functionalities, especially when dealing with SMP, in fact one of the limitation of the PIC was that it was able to deal with only one cpu at time, and this is also the main reason why the APIC was firstly introduced. 
+APIC stands for *Advanced Programmable Interrupt Controller*, and it is used to handles interrupt received from the processor, it is a replacement of the old PIC8259 (that remains still available), but it offers more functionalities, especially when dealing with SMP, in fact one of the limitations of the PIC was that it was able to deal with only one cpu at time, and this is also the main reason why the APIC was firstly introduced. 
 
-Every core has it's own LAPIC, while usually there is a single IOAPIC.
+Every core has it's own LAPIC (Local APIC), while usually there is a single IOAPIC.
 
 ## Types of APIC
 
 There are mainly two types of APIC:
 
-* Local APIC
-* IO/APIC
-
+* _Local APIC_: it is present in every cpu/core, it is responsible of handling cpu specific interrupts, and is also responsible for handling the IPI (Inter Processor Interrupt) in multicore systems. It can also generate some interrutps, by itself, controlled by the Local Vectore Table, one of the interesting one is the Timer interrupt (we will see in another chapter). 
+* _IO/APIC_: Usually there is only one IO/Apic, and it is responsible of routing hardware interrupts to cpus. 
 
 ## Local APIC
- 
+
+When a system boots up, for "legacy" reasons the cpu starts in PIC8259A emulation mode, this simply means that instead of having the LAPIC/IO-APIC up and running, we have them working to emulate the old interrupt controller, so before we can use them properly  we should to disable the PIC8259 emulator.
+
+### Disabling the pic8259
+
+This part should be pretty straightforward, and we will not go deep into explaining the meaning of all command sent to it, the sequence of commands is: 
+
+```c
+void disable_pic() {
+    outportb(PIC_COMMAND_MASTER, ICW_1);
+    outportb(PIC_COMMAND_SLAVE, ICW_1);
+    outportb(PIC_DATA_MASTER, ICW_2_M);
+    outportb(PIC_DATA_SLAVE, ICW_2_S);
+    outportb(PIC_DATA_MASTER, ICW_3_M);
+    outportb(PIC_DATA_SLAVE, ICW_3_S);
+    outportb(PIC_DATA_MASTER, ICW_4);
+    outportb(PIC_DATA_SLAVE, ICW_4);
+    outportb(PIC_DATA_MASTER, 0xFF);
+    outportb(PIC_DATA_SLAVE, 0xFF);
+}
+```
+
+The old x86 architecture had two PIC processor, and they were called "master" and "slave", and each of them has it's own data port and command port:
+
+* Master PIC command port: 0x20 and data port: 0x21
+* Slave PIC command port: 0xA0 and data port 0xA1
+
+The ICW values are initialization commands (ICW stands for Initialization Command Words), every command word is one byte, and their meaning is: 
+
+* ICW_1 (value 0x11) is a word that indicates a start of inizialization sequence, it is the same for both the master and slave pic. 
+* ICW_2 (value 0x20 for master, and 0x28 for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
+* ICW_3 (value 0x2 for master, 0x4 for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be it's id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
+* ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode. 
+* Finally 0xFF is masking all interrupts for the pic.
+
 ### Getting local apic information
 
 You need to read the IA32_APIC_BASE MSR register, using the __rdmsr__ command. The value for this register is 1Bh. 

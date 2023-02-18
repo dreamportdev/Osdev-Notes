@@ -129,7 +129,7 @@ In this step we need first to configure the timer registers:
 
 In this step we just need to make an active waiting, basically something like: 
 
-```C
+```c
 while(pitTicks < TIME_WE_WANT_TO_WAIT) {
     // Do nothing...
 }
@@ -143,14 +143,14 @@ That step is pretty easy, we need to read the APIC current count register (offse
 
 This register will tell us how many ticks are left before the register reaches 0. So to geth the number of ticks done so far we need to:
 
-```
+```c
 apic_ticks_done = initial_count_reg_value - current_count_reg_value
 ````
 
 this number tells us how many apic ticks were done in the `TIME_WE_WANT_TO_WAIT`. Now if we do the following division:
 
-```
-apic_ticks_done / TIME_WE_WANT_TO_WAIT
+```c
+apic_ticks_done / TIME_WE_WANT_TO_WAIT;
 ```
 
 we will get the ticks done in unit of time. This value can be used for the initial count register as it is (or in multiple depending on what frequency we want the timer interrupt to be fired)
