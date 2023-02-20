@@ -4,13 +4,31 @@ ACPI (Advanced Configuration and Power Interface) is a Power Management and conf
 
 Many of the information are organized and accessible through different data structures, but since the ACPI specs are quite big, and cover so many different components, we focus only on what we just need to get the informations we need about the APIC.
 
+Before proceeding let's keep in mind that all address described below are physical, so if we will enable paging, keep in mind that we need to ensure they are properly mapped in the virtual memory spacea. 
+
 ## RSDP
 
-The RSDP is the pointer to the RSDT (Root System Descriptor Table) the full structure is depending if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
-The newer version is backward compatible with the older
+The RSDP (Root System Description Pointer) used in the ACPI programming interface  is the pointer to the RSDT (Root System Descriptor Table) the full structure is depending if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
+
+The newer version is backward compatible with the older.
+
+### Accessing the RSDP
+
+Accessing the RSDP register depends on the boot system used, if we are using grub, we get a copy of the RSDT/XSDT in one of the multiboot2 header tags. The specs contains two possible tags for the RSDP value, which one is used depend on the version: 
+
+* For the version 1 the MULTIBOOT_TAG_TYPE_ACPI_OLD is used (type 14)
+* For the version 2 the MULTIBOOT_TAG_TYPE_ACPI_NEW is used (type 15)
+
+Bot header are identical, with the only difference being in the type value, they are compoosed of just two fields: 
+
+* The type field that can be 14 or 15 depending on the version
+* The size of the RSDP
+
+And is followed by the RSDP itself. 
 
 ### RSDP Structure
-Basic data structure for RSDP v1 is: 
+
+As already mentioned there are two different version of RSDP, basic data structure for RSDP v1 is: 
 
 ```c
 struct RSDPDescriptor {
@@ -30,7 +48,8 @@ Where the fields are:
 * *Revision*: Is the revision number
 * *RSDTAddress*: The address of the RSDT Table
 
-For v2 the structure is similar to above:
+The structure for the v2 header is an extension of the previous one, so the fields above are still valid, but in addition it has also the following extra-fields: 
+
 ```c
 struct RSDP2Descriptor
 {
@@ -70,11 +89,12 @@ In the XSDT since it has more fields, the previous checksum field wont offset th
 
 ## RSDT Data structure and fields
 
-RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers many different table descriptors.
+RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers to many different table descriptor (SDTs). Explaining all the tables is beyond of the scope of these notes, and for our purpose we are going to need only one of those table (the APIC table that we will enocunter later).
 
-The Rsdt is the root of other many different Descriptor tables (SDT), all of them may be splitted in two parts: 
+Since every SDT table contains different type of information, they are all different from each other, we can define an RSDT table by the composition of two parts:
 
 * the first part is the header, common between all the SDTs with the following structure:
+
 ```c
 struct ACPISDTHeader {
   char Signature[4];
@@ -90,7 +110,7 @@ struct ACPISDTHeader {
 ```
 * The second part is the table itself, every SDT has it's own table
 
-## RSDT vs XSDT
+### RSDT vs XSDT
 
 These 2 tables have the same purpose and are mutually exclusive. If the latter exists, the former is to be ignored, otherwise use the former.
 
@@ -119,6 +139,7 @@ ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[*n*] : (u
 
 *  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if you try to print it, you will most likely end up in printing garbage in the best case scenario.
 *  The RSDT Data is an array of uint32_t addresses while the XSDT data is an array of uint64_t addresses. The number of items in the RSDT and XSDT can be computed in the following way:
+
 ```c
 //for the RSDT
 size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
