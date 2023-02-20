@@ -26,7 +26,7 @@ In order to run external programs, you will also need:
 * At least one file system supported. If you've been following along you'll have a tempfs that uses USTar which provides everything you need.
 * A program loader capable of loading executable files and running them.
 
-Ideally when most of the commands are executed by the shell should spawn a new process/thread to be executed, so fork/exec (or equivalent) is useful to have implemented.
+Typically when a command is executed by the shell it will run in a newly spawned process, so it can be useful to have fork and exec (or something equivalent) implemented.
 
 ### Implementing a CLI
 
@@ -263,11 +263,11 @@ Now we're nearly at the end of our kernel development notes. We tried to cover a
 
 The solutions proposed are optimized for the simplicity of the explanation. You will likely find ways to improve the code in your implementation! Finding better (or perhaps more interesing) solutions is all a part of your kernel development journey.
 
-If you're still reading and are wondering what's next, it's up to you. If you've followed all the previous chapters you may wish to take a look at some of the topics mention above, implement some more device drivers (for more hardware compatibility) or rewrite a core system with renewed understanding. A CLI and then libC will greatly boost what you can do with your kernel, making it less of a toy and more of a tool.
+If you're still reading and are wondering what's next, it's up to you. If you've followed all the previous chapters you may wish to take a look at some of the topics mentioned above, implement some more device drivers (for more hardware compatibility) or rewrite a core system with renewed understanding. A CLI and then libC will greatly boost what you can do with your kernel, making it less of a toy and more of a tool.
 
 We've also provided some appendices with some extra information that you might find useful. These are things we wanted to include that didn't fit elsewhere. We hope you found our notes useful and enjoyed reading them.
 
-If you find any errors/issues (or horrors) with the ntes please feel free to open a PR to fix them, or create an issue and let us fix it.
+If you find any errors/issues (or horrors) with the notes please feel free to open a PR to fix them, or create an issue and let us fix it.
 
 Thanks again!
 
