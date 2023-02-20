@@ -121,7 +121,7 @@ Every entry of the LVT has the following information:
 | Bit      |  Description                                                                                 |
 |----------|----------------------------------------------------------------------------------------------|
 | 0:7      |  Interrupt Vector. This is the IDT entry containing the information for this interrupt       |
-| 8:10     |  Delivery mode (for more information about the modes available check the paragraph below)    |
+| 8:10     |  Delivery mode                                                                               |
 | 11       |  Desitnation Mode It can be either Physical or Logic                                         |
 | 12       |  Delivery Status **(Read Only)** It is the current status of the delivery for this Interrupt |       
 | 13       |  Interrupt input polarity pin: 0 is high active, 1 is low active                             |
@@ -132,8 +132,11 @@ Every entry of the LVT has the following information:
 With some exceptions, listed below: 
 
 * Bits from 13 to 15 on an LVT entry are only available for LINT0 and LINT1, and are reserved for all other entries.
-* The bits 8 to 10 (Delivery mode) are Reserved for the Timer, and the Error entries.
+* The bits 8 to 10 (Delivery mode) are Reserved for the Timer, and the Error entries. They specifies the type of interrupt to be sent to the processor, there are five different types of delivery modes, Fixed (000), SMI (010), NMI (100), INIT (101) ExtInt (111), we will use the Fixed one that delivers the interrupt specified in the vector field. For the explanation for the other modes can be found on the Intel Software Developer Manual at the APIC chapter. 
 * The Timer entry use an extra bit, number 17, to specify the timer mode: if is 0 it means is one shot, than when the timer has signaled an interrupt stops there until resetted, if instead is set to 1 it means Periodic, so everytime the interrupt is signaled the internal counter reset and it starts a new countdown, this means that it will keep generating interrupts until manually stopped.
+* Bit 13 is used only for LVT items LINT0 and LINT1.
+* Bit 12 delivery status: if is 0 it means is idle, if 1 there is an interrupt pending.
+
 
 For now we need just to worry about the APIC Timer interrupt item. 
 
@@ -265,23 +268,20 @@ Flags are defined as follows:
 
 ### IO Redirection Table (IOREDTBL)
 
-TODO **DRAFT**
-
 They can be accessed vie memory mapped registers. Each entry is composed of 2 registers (starting from offset 10h). So for example the first entry will be composed by registers 10h and 11h.
 
 The content of each entry is:
 
-* The lower double word is basically an LVT entry, so for their definition check the LVT entry definition
+* The lower double word is basically an LVT entry, for their definition check the LVT entry definition
 * The upper double word contains:
-    - Bits 17 to 55 are Reserved
-    - Bits 56 to 63 are the Destitnation Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the IO-APIC datasheet.
+    - Bits 17 to 55: are Reserved
+    - Bits 56 to 63: are the Destitnation Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the IO-APIC datasheet.
 
 The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
 
-
 #### Delivery modes
 
- TBD
+ Do we need it?
 
 ## Useful Resources
 
