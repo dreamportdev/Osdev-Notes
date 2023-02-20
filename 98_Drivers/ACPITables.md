@@ -130,9 +130,13 @@ struct XSDT
   ACPISDTHeader sdtHeader; //signature "XSDT"
   uint64_t sdtAddresses[];
 };
+```
 
-//to get the sdt header at *n* index
-ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[*n*] : (uint64_t)rsdt->sdtAddresses[*n*]);
+This means that if we want to get the n-th SDT table we just need to acces the corresponding item in the *SDT array: 
+
+```c
+//to get the sdt header at n index
+ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[n] : (uint64_t)rsdt->sdtAddresses[n]);
 ```
 
 ## Some useful infos
