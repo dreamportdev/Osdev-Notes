@@ -47,6 +47,7 @@ We hope you enjoy, and find something interesting here!
     * [Message Passing](06_IPC/03_Message_Passing.md)
 * [Chapter 7: File System](07_VirtualFileSystem/01_README.md)
     * [The Virtual File System](07_VirtualFileSystem/02_VirtualFileSystem.md)
+* [Chapter 9: Going Beyond](09_Going_Beyond/01_README.md)
 * [Extras: Hardware and Drivers](98_Drivers/01_README.md)
     * [Local APIC and IO APIC](98_Drivers/APIC.md)
     * [Linear Framebuffer](98_Drivers/Framebuffer.md)
