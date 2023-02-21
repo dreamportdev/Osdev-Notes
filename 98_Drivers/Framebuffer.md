@@ -137,7 +137,7 @@ pixel_position = base_address + column + row
 
 This address is the location where we are going to write a colour value and it will be displayed on our screen. 
 
-**Please be aware that the framebuffer base_address is an absolute phisical address, and on the early stages of our OS is totally fine, but remember that when/if we are going to enable virtual memory, the framebuffer address will need to be mapped somewhere. And the base_address could change, depending on design decisions, this will be explained later**
+**Please be aware that the framebuffer base_address is an absolute physical address, and on the early stages of our OS is totally fine, but remember that when/if we are going to enable virtual memory, the framebuffer address will need to be mapped somewhere. And the base_address could change, depending on design decisions, this will be explained later**
 
 ### Drawing an image
 
