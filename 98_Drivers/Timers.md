@@ -1,10 +1,34 @@
 # Timer
 
-Timers are mainly useful if we want to develop a multitasking kernel, the timers are used to keep track of the time a task has been running and decided wheter it has to give space to another task in the queue, or not. 
+Timers are useful for all sorts of things, from keeping track of real-world time to forcing entry into the kernel to allow for pre-emptive multitasking. There are many timers available, some standard and some not.
 
-In this chapter we are going to see how to enable and configure a timer, using the one provided by the APIC, and having an IRQ generated everytime the timer expires. 
- 
-## Types 
+In this chapter we're going to take a look at the main timers used on x86 and what they're useful for.
+
+## Types and Characteristics
+
+At a high level, there a few things we might want from a timer: 
+
+- Can it generate interrupts? And does it support a periodic mode?
+- Can we poll it to determine how much time has passed?
+- Does the main clock count up or down?
+- What kind of accuracy, precision and latency does it have?
+
+At first most of these questions might seem unnecessary, as all we really need is a periodic timer to generate interrupts for the scheduler right? Well that can certainly work, but as you do more things with the timer you may want to accurately determine the length of time between two points of execution. This is hard to do with interrupts, and it's easier to do with polling. A periodic mode is also not always available, and sometimes you are stuck with a one-shot timer.
+
+For x86, the common timers are:
+
+- The PIT: it can generate interrupts (both periodic and one-shot) and is pollable. When active it counts down from a reload value to 0. It has a fixed frequency and is very useful for calibrating other timers we don't know the frequency of. However it does come with some latency due to operating over port IO, and it's frequency is low compared to the other timers available.
+- The local APIC timer: it is also capable of generating interrupts (periodic and oneshot) and is pollable. It operates in a similar manner to the PIT where it counts down from a reload value towards 0. It's often low latency due to operating over MMIO and comes with the benefit of being per-core. This means each core can have it's own private timer, and more cores means more timers.
+- The HPET: capable of polling with a massive 64-bit main counter, and can generate interrupts with a number of comparators. These comparators always support one-shot operation and may optionally support a periodic mode. It's main clock is count-up, and it is often cited as being high-latency. It's frequency can be determined by parsing an ACPI table, and thus it serves as a more accurate alternative to the PIT for calibrating other timers.
+- The TSC: the timestamp-counter is tied to the core clock of the cpu, and increments once per cycle. It can be polled and has a count-up timer. It can also be used with the local APIC to generate interrupts, but only one-shot mode is available. It is often the most precise and accurate timer out of the above options.
+
+We're going to focus on setting up the local APIC timer, and calibrating it with either the PIT or HPET. We'll also have a look at a how you could also use the TSC with the local APIC to generate interrupts.
+
+TODO: PIT, what is it how to program it, what modes we care about.
+TODO: HPET, discovery and use. 7loc setup
+TODO: LAPIC timer, calibration using the above
+TODO: TSC how to, calibration
+//--- PREV CONTENT BELOW ---
 
 There are different sources when talking about timers on modern computer, it depends on the architecture, and the hardware, in this this document we are going to set-up the Apic Timer, but to calibrate it properly we are going to use another timer the PIT.
 
@@ -47,8 +71,6 @@ The table below shows theocnfiguration byte:
 
 | Bits   | Description                                                                                                          |
 |--------|----------------------------------------------------------------------------------------------------------------------|
-|  0     | It describe how the channel will operate if in Binary mode or BCD Mode, for our purpose we will use Binary mode.     |
-| 1 - 3  | Operating Mode there are basically 5 operating modes, we are going to use the "rate generator", identified by 010    |
 | 4 - 5  | Access mode it tells how the channel how to read/write the counter register. It can be: low/high/low first then high |
 | 6 - 7  | Select the channel we want to use, consider that channel 1 is unavailable. We are going to use channel 0             |
 
