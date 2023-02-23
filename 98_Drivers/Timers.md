@@ -24,71 +24,120 @@ For x86, the common timers are:
 
 We're going to focus on setting up the local APIC timer, and calibrating it with either the PIT or HPET. We'll also have a look at a how you could also use the TSC with the local APIC to generate interrupts.
 
-TODO: PIT, what is it how to program it, what modes we care about.
-TODO: HPET, discovery and use. 7loc setup
-TODO: LAPIC timer, calibration using the above
-TODO: TSC how to, calibration
-//--- PREV CONTENT BELOW ---
+## Programmable Interval Timer (PIT)
 
-There are different sources when talking about timers on modern computer, it depends on the architecture, and the hardware, in this this document we are going to set-up the Apic Timer, but to calibrate it properly we are going to use another timer the PIT.
+- legacy hardware, orginal PC timer. Is often emulated by newer hardware (the HPET) on newer platforms.
+- Still useful because we know it's frequency ahead of timer.
 
-The Programmable Interrupt Timer (aka PIT) is a legacy hardware present in x86-* architectures (in more modern architecture is not really present but it is emulated) that was once used to generate an irq everytime a counter reaches zero. And the irq were sent to another hardware that was responsible of handling the hardware interrupt requests (IRQs) the PIC8259. 
+The PIT is actually from the original IBM PC, and has remained as a standard device all these years. Of course these days we don't have a real PIT in our computers, rather the device is emulated by newer hardware that pretends to be the PIT until configured otherwise. Often this hardware is the HPET (see below).
 
-On more modern hardware the PIC processor was replaced by the APIC, and this one came with it's own timer. 
+On the original PC the PIT also had other uses, like providing the clock for the RAM and the oscillator for the speaker. Each of these functions is provided by a 'channel', with channel 0 being the timer (channels 1 and 2 are the other functions). On modern PITs it's likely that only channel 0 exists, so the other channels are best left untouched.
 
-But here the catch: one of the easiest way to calibrate properly the Apic timer is still to use the legacy PIT. 
+Despite it being so old the PIT is still useful because it provides several useful modes and a known frequency. This means we can use it to calibrate the other timers in our system, which we dont always know the frequency of.
 
+The PIT itself provides several modes of operation, although we only really care about a few of them:
 
-## Few words about the PIT
+- Mode 0: provides a one-shot timer.
+- Mode 2: provides a periodic timer.
 
-Even if we are going to use the PIT only to set-up correctly the APIC timer, is worth spending few words on it. Especially to understand why we are going to use certain values.
-
-First the PIT has basically 4 communication ports: 
+To access we PIT we use a handful of IO ports:
 
 | I/O Port | Description          |
 |----------|----------------------|
 |  0x40    | Channel 0 data Port  |
 |  0x41    | Channel 1 data Port  |
 |  0x42    | Channel 2 data Port  |
-|  0x43    | Mode/Command register| 
+|  0x43    | Mode/Command register|
 
-The PIT 8253/4 Chips has a strange clock rate, that is 1,193,180 Hz that is more or less 1,19Mhz, the reason behind it is again some legacy from the past, you can read it on the OSDEV Wiki page about the PIT (See the useful links section). Reminder: 1 Hz is number of cycles per second. 
+### Theory Of Operation
 
-The pit counter is 16bits, this means it can't count up to 1 second, because the clock rate is more than 16 bits. So we must count to fractions of it.
+As mentioned the PIT runs at a fixed frequency of 1.19318MHz. This is an awkward number but it makes sense in the context of the original PC. The PIT contains a pair of registers per channel: the count and reload count. When the PIT is started the count register is set to value of the reload count, and then every time the main clock ticks (at 1.19318MHz) the count is decremented by 1. When the count register reaches 0 the PIT sends an interrupt. Depending on the mode the PIT may then set the count register to the reload register again (in mode 2 - periodic operation), or simple stay idle (mode 0 - one shot operation).
 
-Everytime the the counter reaches 0, an irq is generated. So let's say for example we want to create an interrupt every millisecond (1/1000 of second) to know how many cycles are needed we need to divide the clock rate by the duration we want (1ms): 
+The PIT's counters are only 16-bits, this means that the PIT can't count up to 1 second. If you wish to have timers with a long duration like that, you will need some software assistance by chaining time-outs together.
+
+### Example
+
+As an example let's say we want the PIT to trigger an interrupt every 1ms (1ms = 1/1000 of a second). To figure out what to set the reload register to (how many cycles of the PIT's clock) we divide the clock rate by the duration we want:
 
 ```
-1,193180 (clock rate) / 1000 (1ms) = 1193.18 (cycles in 1ms)
+1,193,180 (clock frequency) / 1000 (duration wanted) = 1193.18 (Hz for duration)
 ```
 
-Now one problem is that we can't use decimal number so we need to round up to the closer integer, that is in this case 1193. 
-but that means that we lose accuracy... Yeah, and there is not much that can be done about it.
+One problem is that we can't use floating point numbers for these counters so we truncate the result to 1193. This does introduce some error, and you can correct for this over a long time if you want. However for our purposes it's small enough to ignore, for now.
 
-The programming of the PIT is pretty straightforward, there is only one configuration byte, and basically just one command to send. For more information about programming the PIT please refer to the useful links section, here i will give a very short explain of the configuration byte, and what we values are we going to set for our calibration purpose.
+To actually program the PIT with this value is pretty straightfoward, we first send a configuration byte to the command port (0x43) and then the reload value to the channel port (0x40).
 
-The table below shows theocnfiguration byte: 
+The configuration byte is actually a bitfield with the following layout:
 
 | Bits   | Description                                                                                                          |
 |--------|----------------------------------------------------------------------------------------------------------------------|
-| 4 - 5  | Access mode it tells how the channel how to read/write the counter register. It can be: low/high/low first then high |
-| 6 - 7  | Select the channel we want to use, consider that channel 1 is unavailable. We are going to use channel 0             |
+| 0      | Selects BCD/binary coded decimal (1) or binary (0) encoding. If you're unsure, leave this as zero. |
+| 1 - 3  | Selects the mode to use for this channel. |
+| 4 - 5  | Select the access mode for the channel: generally you want 0b11 which means we send the low byte, then the high byte of the 16-bit register. |
+| 6 - 7  | Select the channel we want to use, we always want channel 0. |
 
-In our case we want: 
+For our example we're going to use binary encoding, mode 2 and channel 0 with the low byte/high byte access mode. This results in the following config byte: `0b00110100`.
 
-* Binary Mode (0)
-* Operating mode 2: (010)
-* Access mode: Low first then high (11)
-* channel 0: (00)
+Now it's a matter of sending the config byte and reload value to the PIT over the IO ports, like so:
 
-That translates into byte:  00110100. 
+```c
+void set_pit_periodic(uint16_t count) {
+    outb(0x43, 0b00110100);
+    outb(0x40, count & 0xFF); //low-byte
+    outb(0x40, count >> 8); //high-byte
+}
+```
 
-With that byte now we must: 
+Now we should be getting an interrupt from the PIT every millisecond! By default the PIT appears on irq0, which may be remapped to irq2 on modern (UEFI-based) systems. Also be aware that the PIT is system-wide device, and if you're using the APIC you will need to program the IO APIC to route the interrupt to one of the LAPICs.
 
-* Write it into the pit using Mode command register  the port (0x43)
-* Send two consecutive writes to the channel 0 data port (0x40), with the two bytes for the counter (low first then high), the value of the counter depends on how much time you want between IRQs, for example if we want 1ms of delay between each IRQ then we need to write the value 1193, in hexadecimal: 0x4A9, so we will send the lower byte First 0xA9 followed by the higher byte: 0x04.
+## High Precision Event Timer (HPET)
 
-And remember: we need to set an IRQ handler for the PIT Irqs, for how to do this please refer to the [APIC](APIC.md) chapter 
+The HPET was meant to be the successor to the PIT as a system-wide timer, with more options however it's design has been plagued with latency issues and occasional glitches. With all that said it's still a much more accurate and precise timer than the PIT, and provides more features. It's also worth noting the HPET is not available on every system, and can sometimes be disabled via firmware.
+
+### Discovery
+
+To determine if the HPET is available you'll need access to the ACPI tables. Handling these is covered in a separate chapter, but we're after one particular SDT with the signature of 'HPET'. If you're not familiar with ACPI tables yet, feel free to come back to the HPET later.
+
+This SDT has the standard header, followed by the following fields:
+
+```c
+struct HpetSdt {
+    ACPISDTHeader header;
+    uint32_t event_timer_block_id;
+    uint32_t reserved;
+    uint64_t address;
+    uint8_t id;
+    uint16_t min_ticks;
+    uint8_t page_protection;
+}__attribute__((packed));
+```
+
+We're mainly interested in the `address` field which gives us the physical address of the HPET registers. The other fields are explained in the HPET specification but are not needed for our purposes right now.
+
+As with any MMIO you will need to map this physical address into the virtual address space so we can access the registers with paging enabled.
+
+### Theory Of Operation
+
+The HPET consists of a single main counter (that counts up) with some global configuration, and a number of comparators that can trigger interrupts when certain conditions are met in relation to the main counter. The HPET will always have at least 3 comparators, but may have up to 32.
+
+The HPET is similar to the PIT in that we are told the frequency of it's clock. Unlike the PIT, the HPET spec does not give us the frequency directly, we have to read it from the HPET registers. 
+
+Each register is accessed by adding an offset to the base address we obtained before. The main registers we're interested in are:
+
+- General capabilities: offset 0x0.
+- General configuration: offset 0x10.
+- Main counter value: 0xF0.
+
+## Local APIC Timer
+TODO: LAPIC timer, calibration using the above
+
+## Timestamp Counter (TSC)
+TODO: TSC how to, calibration
+
+## Useful Timer Functions
+TODO: polled_sleep()
+TODO: arm_interrupt_timer()
+//--- PREV CONTENT BELOW ---
 
 ## Why we need the calibration?
 
