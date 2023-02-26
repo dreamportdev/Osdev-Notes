@@ -189,7 +189,7 @@ This area of gdb is hilariously undocumented, but still really useful. It can be
 
 Tui layouts can be switched at any time, or you can return to your regular shell at any time using `tui disable`, or exiting gdb.
 
-The layouts offer little interaction besides the usual terminal in/out, but can useful for quickly referencing things, or examining exactly what instructions are running.
+The layouts offer little interaction besides the usual terminal in/out, but can be useful for quickly referencing things, or examining exactly what instructions are running.
 
 If you are using debian, you most-likely need to install the *gdb* package, because by default *gdb-minimal* is being installed, which doesn't contain the TUI.
 
