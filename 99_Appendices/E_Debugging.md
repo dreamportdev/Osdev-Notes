@@ -154,7 +154,9 @@ Here a collection of useful command to keep track of the call stack.
 * `frame x` will jump directly to frame number x (view frame numbers with `bt`)
 * `info args` will display the arguments passed into the function. It's worth nothing that the first few instructions of a function set up the stack frame, 
 so you may need to `si` a few times when entering a function for this to return correct values.
-* `info locals` diplays local variables (on the stack). Any variables that have no yet been declared in the source code will have junk values (keep this in mind!).
+* `info locals` displays local variables (on the stack). Any variables that have no yet been declared in the source code will have junk values (keep this in mind!).
+* `info variables` is similar to info global and static variables
+* `info args` list the arguments of the current stack frame, name and values.
 
 ### Breakpoints
 
@@ -265,6 +267,9 @@ From here you can send commands directly to the emulator, below a list of useful
 
 * **help** Well this is the first command to get some help on how to use the monitor
 * **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic
+* **x/cf address** where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address
+* **xp/cf address** same as above, but for physical memory
+
 
 ### Debugcon
 Qemu (and several other emulators - bochs for example) support something called debugcon.
