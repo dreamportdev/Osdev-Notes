@@ -165,7 +165,7 @@ latest->next = current;
 What happens next depends on the design of your VMM. We're going to use immediate backing to keep things simple, meaning we will immedately map some physical memory to the virtual memory we've allocated.
 
 ```c
-    //immedate backing: map physical pages right away.
+    //immediate backing: map physical pages right away.
     void* pages = pmm_alloc(length / PAGE_SIZE);
     map_memory(vmm_pt_root, pages, (void*)obj->base, convert_x86_64_vm_flags(flags));
     
