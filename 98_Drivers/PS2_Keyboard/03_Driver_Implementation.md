@@ -259,7 +259,7 @@ A lookup table would work the same as it did above. If you want the scancode wit
 
 ```c
 char lower_chars[] = {
-    'a, 'b, 'c', 'd', 'e', 'f', [ ... ]
+    'a', 'b', 'c', 'd', 'e', 'f', [ ... ]
 };
 
 char shifted_chars[] = {
