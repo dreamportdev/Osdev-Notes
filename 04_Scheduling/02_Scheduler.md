@@ -45,7 +45,7 @@ We'll delve into what exactly a process might need to contain in a separate chap
 ```c
 typedef struct {
     status_t process_status;
-    cpu_status_t context;
+    cpu_status_t* context;
 } process_t;
 ```
 
@@ -141,7 +141,7 @@ In order for this to happen, we need to modify our `schedule()` function a littl
 
 ```c
 cpu_status_t* schedule(cpu_status_t* context) {
-    processes_list[current_process_idx]->context = *context;
+    processes_list[current_process_idx]->context = context;
 
     do {
         current_process_idx = (current_process_idx++) % MAX_PROCESSES;
@@ -179,7 +179,7 @@ We'll modify our selection algorithm to take these new states into account:
 
 ```c
 cpu_status_t* schedule(cpu_status_t* context) {
-    processes_list[current_process_idx]->context = *context;
+    processes_list[current_process_idx]->context = context;
     processes_list[current_process_idx]->status = READY;
 
     do {
@@ -223,7 +223,7 @@ The idle task is scheduled a little differently: it should only run when there i
 
 ### Troubleshooting
 
-#### Interrupts stop after context switch
+#### Interrupts Stop After Context Switch
 
 Make sure to check the value of the flags register (rflags/eflags).  
 You might've set it to a value where the interrupt bit is cleared, causing the computer to disable hardware interrupts.
