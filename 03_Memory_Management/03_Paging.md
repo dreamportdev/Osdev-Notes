@@ -42,14 +42,14 @@ Using logical address and paging, we can introduce a new address space that can 
 
 For example: 
 
-```
-phys#0x123456 = virt#0xffff2345235
+```math
+phys(0x123456) = virt(0xffff2345235)
 ```
 
 In x86 this mapping is achieved through the usage of several hierarchical tables, with  each item in one level pointing to the next level table. 
 A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address assuming address translation used in the picture above:
 
-```
+```math
 virtaddress = 0x2f880120
 ```
 
@@ -208,7 +208,7 @@ If we are using 4kB pages this is how the address will be handled by the paging 
 * Offset in the page table.
 
 Same as above: 
-Every table has 512 elements, so we have an address space of 2^512 * 2^512 * 2^512 * 2^512 * 0x1000 (that is the page size)
+Every table has 512 elements, so we have an address space of: $2^512 * 2^512 * 2^512 * 2^512 * 0x1000$ (that is the page size)
 
 ## Page Fault
 
