@@ -92,6 +92,8 @@ Sometime could be needed to avoid the emulator restart on triple fault, in this 
 qemu -d int -no-reboot
 ```
 
+While debugging with gdb, we may want to keep qemu hanging after a triple fault (when the cpu should reset), to do some more investigation, in this case we need to add also `-no-shutdown` (along with) `-no-reboot`
+
 ### Start Qemu for remote Debugging
 
 To start Qemu to accepts connections from gdb, you need to add *-s* and *-S*  flags to the command, where: 
@@ -116,6 +118,8 @@ symbol-file path/to/kernel.bin
 ```
 
 ### Useful commands
+
+Below a list of some useful gdb commands 
 
 * Show register content: *info register reg* where reg is the register we need
 * Set breakpoint to specific address: *break 0xaddress*
@@ -272,6 +276,7 @@ From here you can send commands directly to the emulator, below a list of useful
 
 
 ### Debugcon
+
 Qemu (and several other emulators - bochs for example) support something called debugcon.
 It's an extremely simple protocol, similar to serial - but with no config, where anything written to port 0xE9 in the VM will appear byte-for-byte at where you tell qemu to put it.
 Same is true with input (although this is quite buggy, best to use serial for this).
