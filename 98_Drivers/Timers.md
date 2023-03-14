@@ -112,6 +112,8 @@ struct HpetSdt {
 }__attribute__((packed));
 ```
 
+*Authors note: the reserved field before the address field is actually some type information describing the address space where the HPET registers are located. In the ACPI table this reserved field is the first part of a 'generic address structure', however we can safely ignore this info because the HPET spec requires the registers to be memory mapped (thus in memory space).*
+
 We're mainly interested in the `address` field which gives us the physical address of the HPET registers. The other fields are explained in the HPET specification but are not needed for our purposes right now.
 
 As with any MMIO you will need to map this physical address into the virtual address space so we can access the registers with paging enabled.
@@ -127,6 +129,34 @@ Each register is accessed by adding an offset to the base address we obtained be
 - General capabilities: offset 0x0.
 - General configuration: offset 0x10.
 - Main counter value: 0xF0.
+
+We can read the main counter at any time, which is measured in in timer ticks. We can convert these ticks into realtime by multiplying them with the timer period in the general capabilities register. Bits 63:32 of the general capabilities register contain the number of femtoseconds for each tick. A nanosecond is 1000 femtoseconds, and 1 second is 1'000'000'000 femtoseconds.
+
+We can also write to the main counter, usually you would write a 0 here when initializing the HPET in order to be able to determine uptime, but this is not really necessary.
+
+The general capabilities register contains some other useful information, like whether the main counter is 32 or 64 bits wide, and the number of comparators (which are used to generate interrupts). These are all detailed in the public spec, and you can explore these at your leisure.
+
+In order for the main counter to actually begin counting, we need to enable it. This is done by setting bit 0 of the general configuration register. Once this bit is set, the main counter will increment by one every time it's internal clock ticks. The period of this clock is what's specified in the general capabilities register (bits 63:32).
+
+### Comparators
+
+The main counter is only suitable for polling the time, but it cannot generate interrupts. For that we have to use one of the comparators. The HPET will always have at least three comparators, but may have up to 32. In reality most vendors use the stock intel chip which comes with 3 comparators, although some older and more exotic hardware may provide more.
+
+By default the first two comparators are set up to mimic the PIT and RTC clocks, but they can be configured like the others.
+
+It's worth noting that all comparators support one-shot mode, but periodic mode is optional. Testing if a comparator supports periodic mode can be done by checking if bit 4 is set in the capabilities register for that comparator.
+
+Speaking of which: each comparator has it's own set of registers to control it. These registers are accessed as an offset from the HPET base. There are two registers we're interested in: the comparator config and capability registger (accessed at offset 0x100 + N * 0x20), and the comparator value register (at offset 0x108 + N * 0x20). In those equations `N` is the comparator number you want. As an example to access the config and capability register for comparator 2, we would determine it's location as: `0x100 + 2 * 0x20 = 0x140`. Meaning we would access the register at offset `0x140` from the HPET mmio base address.
+
+The config and capabilities register for a comparator also contains some other useful fields to be aware of:
+
+- Bits 63:32: This is a bitfield indicating which interrupts this comparator can trigger. If a bit is set, the comparator can trigger that interrupt. This maps directly to GSIs, which are the inputs to the IO APIC. If there is only a single IO APIC in the system, then these interrupt numbers map directly to the IO APIC input pins. For example if bits 2/3/4 are set, then we could trigger the IO APIC pins 2/3/4 from this comparator.
+- Bits 13:9: Write the integer value of the interrupt you want this comparator to trigger here. It's recommended to read this register back after writing to verify the comparator accepted the interrupt number you wrote.
+- Bits 3 and 4: Bit 4 is set if the comparator supports periodic mode. Bit 3 is used to select periodic mode if it's supported. If either bit is cleared, the comparator operates as a one-shot.
+- Bit 2: Enables the comparator to generate interrupts. Even if this is cleared the comparator will still operate, and set the interrupt pending bit, but no interrupt will be sent to the IO APIC. This bit acts in reverse to how a mask bit would: if this bit is set, interrupts are generated.
+
+### Example
+TODO: HPET example
 
 ## Local APIC Timer
 TODO: LAPIC timer, calibration using the above
