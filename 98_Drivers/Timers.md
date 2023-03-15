@@ -24,10 +24,24 @@ For x86, the common timers are:
 
 We're going to focus on setting up the local APIC timer, and calibrating it with either the PIT or HPET. We'll also have a look at a how you could also use the TSC with the local APIC to generate interrupts.
 
-## Programmable Interval Timer (PIT)
+### Calibrating Timers
 
-- legacy hardware, orginal PC timer. Is often emulated by newer hardware (the HPET) on newer platforms.
-- Still useful because we know it's frequency ahead of timer.
+There are some timers that we arent told the frequency of, and must determine this ourselves. The local APIC timer and TSC (up until recently) are examples of this. In order to use these, we have to know how fast each 'tick' is in real-world time, and the easiest way to do this is with another time that we do know the frequency of.
+
+This is where timers like the PIT can still be useful: even though it's very simple and not very flexible, it can used to calibrate more advanced timers like the local APIC timer. Commonly the HPET is also used for calibration purposes if it's available, since we can know it's frequency without calibration.
+
+Actually calibrating a timer is straightforward. We'll refer to the timer we know the frequency of as the reference timer and the one we're calibrating as the target timer. This isn't common terminology, it's just useful for the following description.
+
+- Ensure both timers are stopped.
+- If the target timer is counts down, set it the maximum allowed value. If it counts up, set it to zero.
+- Choose how long you want to calibrate for. This should be long enougn to allow a good number of ticks to pass on the reference timer, because more ticks passing will mean a more accurate calibration. This time shouldn't be too long however, because if one of the timer counters rolls over then we'll trouble determining the results. A good starting place is 5-10ms.
+- Start both timers, and poll the reference timer until the calibration time has passed.
+- Stop both timers, and we look at how many ticks has passed for the target timer. If it's a count-down timer, we can determine this by subtracting the current value from the maximum value for the counter.
+- Now we know that a certain amount of time (the calibration time) is equal to a certain number of ticks for our target timer.
+
+Sometimes running your kernel in a virtual machine, or on less-stable hardware can give varying results, so it can be useful to calibrate a timer multiple times and compare the results. If some results are odd, dont use them. It can also be helpful to continuously calibrate timers while you're using them, which will help correct small errors over time.
+
+## Programmable Interval Timer (PIT)
 
 The PIT is actually from the original IBM PC, and has remained as a standard device all these years. Of course these days we don't have a real PIT in our computers, rather the device is emulated by newer hardware that pretends to be the PIT until configured otherwise. Often this hardware is the HPET (see below).
 
@@ -156,10 +170,81 @@ The config and capabilities register for a comparator also contains some other u
 - Bit 2: Enables the comparator to generate interrupts. Even if this is cleared the comparator will still operate, and set the interrupt pending bit, but no interrupt will be sent to the IO APIC. This bit acts in reverse to how a mask bit would: if this bit is set, interrupts are generated.
 
 ### Example
-TODO: HPET example
+
+Let's look at two examples of using the HPET timer: polling the main counter and setting up a one-shot timer. If you want a periodic timer you'll have to do a bit more work, and check that a comparator supports periodic mode.
+
+We're going to assume you have the HPET registers mapped into virtual memory, and that address is stored in a variable `void* hpet_regs`.
+
+Polling the main counter is very straightforward:
+
+```c
+uint64_t poll_hpet() {
+    volatile uint64_t* caps_reg = hpet_regs;
+    uint32_t period = *caps_reg >> 32;
+    
+    volatile uint64_t* counter_reg = hpet_regs + 0xF0;
+    return *counter_reg * period;
+}
+```
+
+This function returns the main counter of the hpet as a number of femtoseconds since it was last reset. You may want to convert this to a more management unit like nano or even microseconds.
+
+Next let's look at setting up an interrupt timer. This requires the use of a comparator, and a bit of logic. You'll also need the IO APIC set up, and we're going to use some dummy functions to show what you'd need to do. We're going to use comparator 0, but this could be any comparator.
+
+```c
+#define COMPARATOR_0_REGS 0x100
+
+void arm_hpet_interrupt_timer(size_t femtos) {
+    volatile uint64_t* config_reg = hpet_regs + COMPARATOR_0_REGS;
+
+    //first determine allowed IO APIC routing
+    uint32_t allowed_routes = *config_reg >> 32;
+    size_t used_route = 0;
+    while ((allowed_routes & 1) == 0) {
+        used_route++;
+        allowed_routes >>= 1;
+    }
+
+    //set route and enable interrupts
+    *config_reg &= ~(0xFul << 9);
+    *config_reg |= used_route << 9;
+    *config_reg |= 1ul << 2;
+    //you should configure the io apic routing here.
+    //this interrupt will appear on the pin `used_route`.
+
+    volatile uint64_t* counter_reg = hpet_regs + 0xF0;
+    uint64_t target = *counter_reg + (femtos / hpet_period);
+    volatile uint64_t* compare_reg = hpet_regs + COMPARATOR_0_REGS + 8;
+    *compare_reg = target;
+}
+```
 
 ## Local APIC Timer
-TODO: LAPIC timer, calibration using the above
+
+The next timer on our list is the local APIC timer. This timer is a bit special as a processor can only access it's local timer, and each core gets a dedicated timer. Very cool! Historically these timers have been quite good, as they're built as part of the CPU, meaning they get the same treatment as the rest of that silicon.
+
+However not all local APIC timers are created equal! There are a few feature flags to check for before using them:
+
+- ARAT/Always Running APIC Timer: cpuid leaf 6, eax bit 2. If the cpu hasn't set this bit the APIC timer may stop in lower power states. This is okay for a hobby OS, but if you do begin managing system power states later on, it's good to be aware of this.
+
+The timer is managed by registers within the local APIC MMIO area. The base address for this can be obtained from the lapic MSR (MSR 0x1B). See the APIC chapter for more info on this. We're interested in three registers for the timer: the divisor (offset 0x3E0), initial count (offset 0x380) and timer entry in the LVT (offset 0x320). There is also a current count register, but we don't need ot access that right now.
+
+Unfortunately we're not told the frequency of this timer (except for some very new cpus which include this in cpuid), so we'll need to calibrate this timer against one we already know the speed of. Other than this, using the local APIC is very simple: simply set the mode you want in the LVT entry, set the divisor and initial count and it should work.
+
+### Example
+
+Calibrating a timer is explained above, so we're going to assume you have a function called `lapic_ms_to_ticks` that converts a number of milliseconds into the number of local APIC timer ticks. You may not need this function yourself, but it serves for the example.
+
+It's also important to note that the lapic timer waits for the initial count to be written after we change the mode of the timer.
+
+```c
+void arm_lapic_interrupt_timer(size_t millis) {
+    volatile uint32_t* lvt_reg = lapic_regs + 0x320;
+    TODO:
+
+    uint32_t ticks = lapic_ms_to_ticks(millis);
+}
+```
 
 ## Timestamp Counter (TSC)
 TODO: TSC how to, calibration
@@ -168,46 +253,6 @@ TODO: TSC how to, calibration
 TODO: polled_sleep()
 TODO: arm_interrupt_timer()
 //--- PREV CONTENT BELOW ---
-
-## Why we need the calibration?
-
-Because according to the intel ia32 documentation the APIC frequency is the same of the bus frequency or the core crystal frequency (divided by the chosen frequecny divider) so this basically depend on the hardware we are running. 
-
-There are different ways to calibrate the apic timer, the one explained here is the most used and easier to understand. 
-
-## IRQ 
-
-The PIT timer is connected to the old PIC8259 IRQ0 pin, now if we are using the APIC, this line is connected to the Redirection Table entry number #2 (offset: 14h and 15h).
-
-While the APIC timer irq is always using  the lapic LVT entry 0. 
-
-
-## Steps for calibration
-
-These are at a high level the steps that we need to do to calibrate the APIC timer: 
-
-1. Configure the PIT Timer
-2. Configure the APIC timer 
-3. Reset the APIC counter
-4. Wait some time that is measured using another timing source (in our case the PIT)
-5. Compute the number of ticks from the APIC counter
-6. Adjust it to the desired measure
-7. Divide it by the divider chosen, use this value to raise an interrupt every x ticks
-8. Mask the PIT Timer IRQ
-
-### Configure the PIT Timer (1)
-
-Refer to the paragraph above, what we want to achieve on this step is configure the Pit timer to generate an interrupt with a specific interval (in our example 1ms), and configure an IRQ handler for it. 
-
-#### Configure the PIT Timer: IRQ Handling
-
-The irq handling will be pretty easy, we just need to increment a global counter variable, that will count how many ms passed (the "how many" will depend on how you configured the pit), just keep in mind that this variable must be declared as volatile. The irq handling function will be as simple as it seems: 
-
-```C
-void irq_handler() {
-    pit_ticks++;
-}
-```
 
 ### Configure the APIC Timer (2)
 
