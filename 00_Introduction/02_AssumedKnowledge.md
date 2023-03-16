@@ -6,8 +6,8 @@ Code can have bugs and freestanding code can be hard (or impossible) to debug in
 
 As such, below is a list of the recommended prior experience before continuing with this book:
 
-- Intermediate understanding of the C programming language. Mastery is not required, but you should be very familiar with the ins and outs of the language especially pointers and pointer arithmetic.
+- Intermediate understanding of the C programming language. Mastery is not required, but you should be very familiar with the ins and outs of the language, especially pointers and pointer arithmetic.
 - You should be comfortable compiling and debugging code in userspace. GDB is recommended as several emulators provide a GDB server you can use to step through your kernel.
-- Knowledge of common data structures, including how to implement and use them: arrays, linked lists.
+- Knowledge and experience using common data structures like intrusive linked lists.
 
 If you feel confident in your knowledge of the above, please read on! If not, don't be discouraged. There are plenty of resources available for learning, and you can always come back later.
