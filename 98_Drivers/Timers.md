@@ -233,76 +233,49 @@ Unfortunately we're not told the frequency of this timer (except for some very n
 
 ### Example
 
-Calibrating a timer is explained above, so we're going to assume you have a function called `lapic_ms_to_ticks` that converts a number of milliseconds into the number of local APIC timer ticks. You may not need this function yourself, but it serves for the example.
+Calibrating a timer is explained above, so we're going to assume you have a function called `lapic_ms_to_ticks` that converts a number of milliseconds into the number of local APIC timer ticks. You may not need this function yourself, but it serves for the example. We're also going to assume that you've set the divisor register to what you want. If you're not sure what this does, its divides the incoming clock pulses, reducing the rate the timer ticks. This is useful if you want longer clock durations. Starting with a value of 2 or 4 is recommended.
 
-It's also important to note that the lapic timer waits for the initial count to be written after we change the mode of the timer.
+Other than setting the initial count, we also have to set up the timer LVT entry. There's a few fields here, but we're mostly interested in the following:
+
+- Bits 7:0: this is interrupt vector the timer will trigger when it expires. It will only trigger that vector on the core the LAPIC is attached to.
+- Bit 16: Acts as a mask bit, if set the timer won't generate an interrupt when expiring.
+- Bits 18:17: The mode field. Set this to 0b00 for one-shot operation, and 0b01 for periodic.
+
+The intel and AMD manuals contain the full description if you want to explore the other functionality offered.
 
 ```c
-void arm_lapic_interrupt_timer(size_t millis) {
+void arm_lapic_interrupt_timer(size_t millis, uint8_t vector) {
     volatile uint32_t* lvt_reg = lapic_regs + 0x320;
-    TODO:
+    //note this clears bits 16 (mask) and 18:17 (mode)
+    *lvt_reg = vector;
 
     uint32_t ticks = lapic_ms_to_ticks(millis);
+    volatile uint32_t* init_reg = lapic_regs + 0x380;
+    *init_reg = ticks;
 }
 ```
 
 ## Timestamp Counter (TSC)
-TODO: TSC how to, calibration
 
-## Useful Timer Functions
-TODO: polled_sleep()
-TODO: arm_interrupt_timer()
-//--- PREV CONTENT BELOW ---
+The TSC is a bit more modern than the LAPIC timer, but still pre-dates most long mode processors, so this is another timer that should always be present. Having said that, it can be checked for using cpuid leaf 1, edx bit 4. 
 
-### Configure the APIC Timer (2)
+The TSC is probably the simplest timer we've covered so far: it's simply a 64-bit counter that increments every time the base clock of the processor pulses. To read this counter we can use the `rdtsc` instruction which places the low 33-bits in eax and high 32-bits in edx. Similar to how the MSR instructions work.
 
-This step is just an initialization step for the apic, before proceeding make sure that the timer is stopped, to do that just write 0 to the Initial Count Register. 
+There are some issues with this version of the TSC however: modern processors will change their base speed depending on power/performance requirements, which means that the rate the TSC ticks at will change dynamically! This makes it pretty useless as a timer, and a newer version was quickly implemented, called the invariant TSC.
 
-The APIC Timer has 3 main register: 
+The I-TSC ticks at the base speed the processor is supposed to run at, not what it's actually running at, meaning the tick-rate is constant. Most processors support the I-TSC nowdays, and most emulators also do, even if they dont advertise it through cpuid (qemu has invariant TSC, but doesn't set the bit). To test if the TSC is invariant can be done via cpuid once again: leaf 7, edx bit 8.
 
-* The Initial Count Register at Address 0xFEEO 0380 (this has to be loaded with the initial value of the timer counter, every time time the counter it reaches 0 it will generate an Interrupt
-* The current Count Register at Address 0xFEE0 0390 (current value of the counter)
-* The Divide Configuration register at 0xFEE0 03E0 The Timer divider.
+How about generating interrupts with the TSC? This is also an option feature (that's almost always supported) called TSC deadline. We can test for it's existence via cpuid leaf 1, ecx, bit 24. To use TSC deadline we write the absolute time (in TSC ticks) of when we want the interrupt to a special MSR, called IA_32_TSC_DEADLINE (MSR 0x6E0).
 
+When the TSC passes the tick value in this MSR, it tells the local APIC, and if TSC deadline mode is selected in the timer LVT an interrupt is generated. Selecting TSC deadline mode can be done by using mode 0b10 instead of 0b00/0b01 in the timer LVT register.
 
-In this step we need first to configure the timer registers: 
+## Useful Abstractions
 
-* The Initial Count register should start from the highest value possible. Since all the apic registers are 32 bit, the maximum value possible is: (0xFFFFFFFF)
-* The Current Count register doesn't need to be set, it is set automatically when we initialize the initial count. This register basically is a countdown register.
-* The divider configuration register it's up to us (i used 2)
+As we've seen there are lots of timers with varying capabilities. Some of these have analogies on other platforms, while some don't. If you intend to support all of these timers, or go cross-platform it can be worth implementing an abstract timer API, and then hiding the implementation of these timers behind it. You'll want to start with an API that at least provides the following:
 
-### Wait some time (4)
-
-In this step we just need to make an active waiting, basically something like: 
-
-```c
-while(pitTicks < TIME_WE_WANT_TO_WAIT) {
-    // Do nothing...
-}
-```
-
-pitTicks is a global variable set to be increased every time an IRQ from the PIT has been fired, and that depends on how the PIT is configured. So if we configured it to generate an IRQ every 1ms, and we want for example 15ms, will need the vlaue for `TIME_WE_WANT_TO_WAIT` will be 15. 
-
-### Compute the number of ticks from the APIC Counter and obtain the calibrated value  (5,6,7)
-
-That step is pretty easy, we need to read the APIC current count register (offset: 390). 
-
-This register will tell us how many ticks are left before the register reaches 0. So to geth the number of ticks done so far we need to:
-
-```c
-apic_ticks_done = initial_count_reg_value - current_count_reg_value
-````
-
-this number tells us how many apic ticks were done in the `TIME_WE_WANT_TO_WAIT`. Now if we do the following division:
-
-```c
-apic_ticks_done / TIME_WE_WANT_TO_WAIT;
-```
-
-we will get the ticks done in unit of time. This value can be used for the initial count register as it is (or in multiple depending on what frequency we want the timer interrupt to be fired)
-
-This is the last step of the calibration, we can start the apic timer immediately with the new calibrated value for the initial count, or do something else before. But at this point the PIT can be disabled, and no longer used. 
-
+- polled_sleep(): this functions spins until the requested time has passed.
+- poll_timer(): gets an absolute value of a timer, useful for timing short sections of code. Also useful for keeping track of time when an interrupt timer is not armed.
+- arm_interrupt_timer(): sets a timer to trigger an interrupt at a point in the future, immediately returns control to the calling function. Arguably the most of these functions, and what you'll use to impement scheduling or other clock-based functions.
 
 ## Useful links
 
