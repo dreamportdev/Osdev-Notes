@@ -34,7 +34,7 @@ A virtual address is what a running program sees. Thats any program: a driver, u
 
 A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
 
-![address_translation drawio](https://user-images.githubusercontent.com/59960116/157250312-1175dbd1-87ca-47d7-b7cf-6b07394af4ce.png)
+![address_translation drawio](/Images/addrtranslation.png)
 
 
 Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
@@ -61,6 +61,7 @@ Now we know that the bits:
 * 21 to 31 are the page directory level 2 entry.
 
 We can translate the abbove address to: 
+
 * Offset:  0x20 bytes into page.
 * Page Table entry: number 0x4 (it points to the memory page).
 * Page Dir 1 entry: 0x20 (it points to a page table).
@@ -130,6 +131,7 @@ PML4 and PDPR entry structure are identical, while the PD one has few difference
 Where **Table base address** is a PDPR table base address if the table is PML4 or the PD base address if the table is the PDPR.
 
 Now the page directory has few differences: 
+
 * Bits 39 to 12 are the page table's base address when using 4k pages, or 2mb area of physical memory if the PS bit is set.
 * Bits 6 and 8 must be 0.
 * Bit 7 (the PS) must be 1.
