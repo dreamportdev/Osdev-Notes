@@ -1,5 +1,5 @@
 # Osdev Notes
-
+## Test
 [![Discord Chat](https://img.shields.io/discord/578193015433330698.svg?style=flat)](https://discordapp.com/channels/578193015433330698/578193713340219392)
 <span class="badge-buymeacoffee">
 <a href="https://buymeacoffee.com/dreamos82" title="Donate to this project using Buy Me A Coffee"><img src="https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg" alt="Buy Me A Coffee donate button" /></a>
@@ -69,8 +69,8 @@ We hope you enjoy, and find something interesting here!
 
 ## Authors
 
-* [Ivan G](https://github.com/dreamos82) (dreamos82) - Main author and creator of these notes.
-* [Dean T](https://github.com/DeanoBurrito/) (DeanoBurrito) - Co-Author.
+* [Ivan G](https://github.com/dreamos82) (dreamos82) - Author and creator of these notes.
+* [Dean T](https://github.com/DeanoBurrito/) (DeanoBurrito) - Author.
 
 ## License
 
