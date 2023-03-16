@@ -42,12 +42,16 @@ Using logical address and paging, we can introduce a new address space that can 
 
 For example: 
 
-$$ phys(0x123456) = virt(0xffff2345235) $$
+```c
+phys(0x123456) = virt(0xffff2345235)
+```
 
 In x86 this mapping is achieved through the usage of several hierarchical tables, with  each item in one level pointing to the next level table. 
 A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address assuming address translation used in the picture above:
 
-$$virtaddress = 0x2f880120$$
+```c
+virtaddress = 0x2f880120
+```
 
 Now we know that the bits: 
 

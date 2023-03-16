@@ -56,7 +56,7 @@ It just represent the offset in bit from `&bitmap` (the starting address of the 
 In our example with *row=0 column=3* (and page size of 4k) we get:
 
 * bit_number = (0 * 8) + 3 = 3
-* address = bit_number * 4k = 3 * 4096 = 3 * 0x1000 = 0x3000$
+* address = bit_number * 4k = 3 * 4096 = 3 * 0x1000 = 0x3000
 
 Another example: *row = 1 column = 4* we will get: 
 
