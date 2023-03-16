@@ -73,9 +73,8 @@ The PIT's counters are only 16-bits, this means that the PIT can't count up to 1
 
 As an example let's say we want the PIT to trigger an interrupt every 1ms (1ms = 1/1000 of a second). To figure out what to set the reload register to (how many cycles of the PIT's clock) we divide the clock rate by the duration we want:
 
-```
-1,193,180 (clock frequency) / 1000 (duration wanted) = 1193.18 (Hz for duration)
-```
+$$\frac{1,193,180 (clock frequency)}{1000 (duration wanted)} = 1193.18 (Hz for duration)$$
+
 
 One problem is that we can't use floating point numbers for these counters so we truncate the result to 1193. This does introduce some error, and you can correct for this over a long time if you want. However for our purposes it's small enough to ignore, for now.
 
