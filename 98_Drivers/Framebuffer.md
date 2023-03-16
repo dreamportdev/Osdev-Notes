@@ -119,7 +119,7 @@ The first thing we need to do when we want to plot a pixel is to compute the add
 
 If we want to know the actual row offset we need then to: 
 
-$$row = y * framebuffer\_pitch$$
+$$row = y * framebuffer\_{pitch}$$
 
 and similarly for the column we need to: 
 
@@ -127,7 +127,7 @@ $$column = x * bpp$$
 
 Now we have the offset in byte for both the row and column byte, to compute the absolute address of our pixel we need just need to add row and column to the base address: 
 
-$$pixel\_position = base\_address + column + row$$
+$$pixel_{position} = base_{address} + column + row$$
 
 This address is the location where we are going to write a colour value and it will be displayed on our screen. 
 
