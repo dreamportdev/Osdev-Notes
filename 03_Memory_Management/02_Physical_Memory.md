@@ -42,8 +42,8 @@ But how do we mark a page as taken or free? We need to translate row/column in a
 
 To get the address we just need to do: 
 
-* $bit\_number = (row * BITS\_PER\_ROW) + column$
-* $address = bit\_number * PAGE\_SIZE$
+* bit_number = (row * BITS_PER_ROW) + column
+* address = bit_number * PAGE_SIZE
 
 Let's pause for a second, and have a look at bit_number, what it represent? Maybe it is not straightforward what it is, but consider that the memory is just a linear space of consecutive addresses (just like a long tape of bits grouped in bytes), so when we declare an array we just reserve *NxSizeof(chosendatatype)* contiguous address of this space, so the reality is that our array is just something like: 
 
@@ -55,22 +55,22 @@ It just represent the offset in bit from `&bitmap` (the starting address of the 
 
 In our example with *row=0 column=3* (and page size of 4k) we get:
 
-* $bit\_number = (0 * 8) + 3 = 3$
-* $address = bit\_number * 4k = 3 * 4096 = 3 * 0x1000 = 0x3000$
+* bit_number = (0 * 8) + 3 = 3
+* address = bit_number * 4k = 3 * 4096 = 3 * 0x1000 = 0x3000$
 
 Another example: *row = 1 column = 4* we will get: 
 
-* $bit\_number = (1 * 8) + 4 = 12$
-* $address = bit\_number * 4k = 0xC000$
+* bit_number = (1 * 8) + 4 = 12$
+* address = bit_number * 4k = 0xC000
 
 But what about the opposite way? Given an address compute the bitmap location? Still pretty easy: 
 
-$$bitmap\_location=\frac{address}{4096}$$
+$$bitmaplocation=\frac{address}{4096}$$
 
 In this way we know the "page" index into an hypoteteical array of Pages. But we need row and columns, how do we compute them? That depends on the variable size used for the bitmap, let's stick to 8 bits, in this case:
 
-* The row is given by $bitmap\_location / 8$ 
-* The column is given by: $bitmap\_location % 8$
+* The row is given by bitmaplocation / 8
+* The column is given by: bitmaplocation % 8
 
 ### Freeing A Page
 
