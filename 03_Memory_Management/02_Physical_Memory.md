@@ -69,8 +69,8 @@ $$bitmaplocation=\frac{address}{4096}$$
 
 In this way we know the "page" index into an hypoteteical array of Pages. But we need row and columns, how do we compute them? That depends on the variable size used for the bitmap, let's stick to 8 bits, in this case:
 
-* The row is given by bitmaplocation / 8
-* The column is given by: bitmaplocation % 8
+* The row is given by `bitmaplocation / 8`
+* The column is given by: `bitmaplocation % 8`
 
 ### Freeing A Page
 
