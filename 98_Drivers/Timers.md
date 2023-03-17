@@ -78,7 +78,7 @@ $$\frac{1,193,180 (clock frequency)}{1000 (duration wanted)} = 1193.18 (Hz for d
 
 One problem is that we can't use floating point numbers for these counters so we truncate the result to 1193. This does introduce some error, and you can correct for this over a long time if you want. However for our purposes it's small enough to ignore, for now.
 
-To actually program the PIT with this value is pretty straightfoward, we first send a configuration byte to the command port (0x43) and then the reload value to the channel port (0x40).
+To actually program the PIT with this value is pretty straightfoward, we first send a configuration byte to the command port (`0x43`) and then the reload value to the channel port (`0x40`).
 
 The configuration byte is actually a bitfield with the following layout:
 
@@ -139,17 +139,26 @@ The HPET is similar to the PIT in that we are told the frequency of it's clock. 
 
 Each register is accessed by adding an offset to the base address we obtained before. The main registers we're interested in are:
 
-- General capabilities: offset 0x0.
-- General configuration: offset 0x10.
-- Main counter value: 0xF0.
+- General capabilities: offset `0x0`.
+- General configuration: offset `0x10`.
+- Main counter value: `0xF0`.
 
 We can read the main counter at any time, which is measured in in timer ticks. We can convert these ticks into realtime by multiplying them with the timer period in the general capabilities register. Bits 63:32 of the general capabilities register contain the number of femtoseconds for each tick. A nanosecond is 1000 femtoseconds, and 1 second is 1'000'000'000 femtoseconds.
 
 We can also write to the main counter, usually you would write a 0 here when initializing the HPET in order to be able to determine uptime, but this is not really necessary.
 
-The general capabilities register contains some other useful information, like whether the main counter is 32 or 64 bits wide, and the number of comparators (which are used to generate interrupts). These are all detailed in the public spec, and you can explore these at your leisure.
+The general capabilities register contains some other useful information, briefly summarized below. If you're after more detail, all of this is available in the public specification.
+
+- *Bits 63:32*: This number of femtoseconds for each tick of the main clock.
+- *Bits 31:16*: This field contains the PCI vendor ID of the HPET manufacturer, not needed for operation.
+- *Bit 15*: Legacy routing support, if set indicates this HPET can emulate the PIT and RTC timers present in older PCs.
+- *Bit 13*: If 1 indicates the main counter is 64-bits wide, otherwise it's 32-bits.
+- *Bits 12:8*: Encodes the number of timers supported. This is the id of the last timer; a value of 2 means there are three timers (0, 1, 2).
+- *Bits 7:0*: Hardware revision id.
 
 In order for the main counter to actually begin counting, we need to enable it. This is done by setting bit 0 of the general configuration register. Once this bit is set, the main counter will increment by one every time it's internal clock ticks. The period of this clock is what's specified in the general capabilities register (bits 63:32).
+
+The general configuration register also contains one other interesting setting: bit 1. If this bit is set the HPET is in legacy replacement mode, where it pretends to be the PIT and RTC timer. This is the default setting, and if you intend to use the HPET as described above this bit should be cleared.
 
 ### Comparators
 
@@ -159,14 +168,14 @@ By default the first two comparators are set up to mimic the PIT and RTC clocks,
 
 It's worth noting that all comparators support one-shot mode, but periodic mode is optional. Testing if a comparator supports periodic mode can be done by checking if bit 4 is set in the capabilities register for that comparator.
 
-Speaking of which: each comparator has it's own set of registers to control it. These registers are accessed as an offset from the HPET base. There are two registers we're interested in: the comparator config and capability registger (accessed at offset 0x100 + N * 0x20), and the comparator value register (at offset 0x108 + N * 0x20). In those equations `N` is the comparator number you want. As an example to access the config and capability register for comparator 2, we would determine it's location as: `0x100 + 2 * 0x20 = 0x140`. Meaning we would access the register at offset `0x140` from the HPET mmio base address.
+Speaking of which: each comparator has it's own set of registers to control it. These registers are accessed as an offset from the HPET base. There are two registers we're interested in: the comparator config and capability registger (accessed at offset `0x100 + N * 0x20`), and the comparator value register (at offset `0x108 + N * 0x20`). In those equations `N` is the comparator number you want. As an example to access the config and capability register for comparator 2, we would determine it's location as: `0x100 + 2 * 0x20 = 0x140`. Meaning we would access the register at offset `0x140` from the HPET mmio base address.
 
 The config and capabilities register for a comparator also contains some other useful fields to be aware of:
 
-- Bits 63:32: This is a bitfield indicating which interrupts this comparator can trigger. If a bit is set, the comparator can trigger that interrupt. This maps directly to GSIs, which are the inputs to the IO APIC. If there is only a single IO APIC in the system, then these interrupt numbers map directly to the IO APIC input pins. For example if bits 2/3/4 are set, then we could trigger the IO APIC pins 2/3/4 from this comparator.
-- Bits 13:9: Write the integer value of the interrupt you want this comparator to trigger here. It's recommended to read this register back after writing to verify the comparator accepted the interrupt number you wrote.
-- Bits 3 and 4: Bit 4 is set if the comparator supports periodic mode. Bit 3 is used to select periodic mode if it's supported. If either bit is cleared, the comparator operates as a one-shot.
-- Bit 2: Enables the comparator to generate interrupts. Even if this is cleared the comparator will still operate, and set the interrupt pending bit, but no interrupt will be sent to the IO APIC. This bit acts in reverse to how a mask bit would: if this bit is set, interrupts are generated.
+- *Bits 63:32*: This is a bitfield indicating which interrupts this comparator can trigger. If a bit is set, the comparator can trigger that interrupt. This maps directly to GSIs, which are the inputs to the IO APIC. If there is only a single IO APIC in the system, then these interrupt numbers map directly to the IO APIC input pins. For example if bits 2/3/4 are set, then we could trigger the IO APIC pins 2/3/4 from this comparator.
+- *Bits 13:9*: Write the integer value of the interrupt you want this comparator to trigger here. It's recommended to read this register back after writing to verify the comparator accepted the interrupt number you wrote.
+- *Bits 4:3*: Bit 4 is set if the comparator supports periodic mode. Bit 3 is used to select periodic mode if it's supported. If either bit is cleared, the comparator operates as a one-shot.
+- *Bit 2*: Enables the comparator to generate interrupts. Even if this is cleared the comparator will still operate, and set the interrupt pending bit, but no interrupt will be sent to the IO APIC. This bit acts in reverse to how a mask bit would: if this bit is set, interrupts are generated.
 
 ### Example
 
@@ -186,7 +195,7 @@ uint64_t poll_hpet() {
 }
 ```
 
-This function returns the main counter of the hpet as a number of femtoseconds since it was last reset. You may want to convert this to a more management unit like nano or even microseconds.
+This function returns the main counter of the hpet as a number of femtoseconds since it was last reset. You may want to convert this to a more managemable unit like nano or even microseconds.
 
 Next let's look at setting up an interrupt timer. This requires the use of a comparator, and a bit of logic. You'll also need the IO APIC set up, and we're going to use some dummy functions to show what you'd need to do. We're going to use comparator 0, but this could be any comparator.
 
@@ -209,7 +218,7 @@ void arm_hpet_interrupt_timer(size_t femtos) {
     *config_reg |= used_route << 9;
     *config_reg |= 1ul << 2;
     //you should configure the io apic routing here.
-    //this interrupt will appear on the pin `used_route`.
+    //this interrupt will appear on the pin 'used_route'.
 
     volatile uint64_t* counter_reg = hpet_regs + 0xF0;
     uint64_t target = *counter_reg + (femtos / hpet_period);
@@ -226,7 +235,7 @@ However not all local APIC timers are created equal! There are a few feature fla
 
 - ARAT/Always Running APIC Timer: cpuid leaf 6, eax bit 2. If the cpu hasn't set this bit the APIC timer may stop in lower power states. This is okay for a hobby OS, but if you do begin managing system power states later on, it's good to be aware of this.
 
-The timer is managed by registers within the local APIC MMIO area. The base address for this can be obtained from the lapic MSR (MSR 0x1B). See the APIC chapter for more info on this. We're interested in three registers for the timer: the divisor (offset 0x3E0), initial count (offset 0x380) and timer entry in the LVT (offset 0x320). There is also a current count register, but we don't need ot access that right now.
+The timer is managed by registers within the local APIC MMIO area. The base address for this can be obtained from the lapic MSR (MSR `0x1B`). See the APIC chapter for more info on this. We're interested in three registers for the timer: the divisor (offset `0x3E0`), initial count (offset `0x380`) and timer entry in the LVT (offset `0x320`). There is also a current count register, but we don't need ot access that right now.
 
 Unfortunately we're not told the frequency of this timer (except for some very new cpus which include this in cpuid), so we'll need to calibrate this timer against one we already know the speed of. Other than this, using the local APIC is very simple: simply set the mode you want in the LVT entry, set the divisor and initial count and it should work.
 
@@ -236,9 +245,9 @@ Calibrating a timer is explained above, so we're going to assume you have a func
 
 Other than setting the initial count, we also have to set up the timer LVT entry. There's a few fields here, but we're mostly interested in the following:
 
-- Bits 7:0: this is interrupt vector the timer will trigger when it expires. It will only trigger that vector on the core the LAPIC is attached to.
-- Bit 16: Acts as a mask bit, if set the timer won't generate an interrupt when expiring.
-- Bits 18:17: The mode field. Set this to 0b00 for one-shot operation, and 0b01 for periodic.
+- *Bits 7:0*: this is interrupt vector the timer will trigger when it expires. It will only trigger that vector on the core the LAPIC is attached to.
+- *Bit 16*: Acts as a mask bit, if set the timer won't generate an interrupt when expiring.
+- *Bits 18:17*: The mode field. Set this to *0b00* for one-shot operation, and *0b01* for periodic.
 
 The intel and AMD manuals contain the full description if you want to explore the other functionality offered.
 
@@ -264,9 +273,9 @@ There are some issues with this version of the TSC however: modern processors wi
 
 The I-TSC ticks at the base speed the processor is supposed to run at, not what it's actually running at, meaning the tick-rate is constant. Most processors support the I-TSC nowdays, and most emulators also do, even if they dont advertise it through cpuid (qemu has invariant TSC, but doesn't set the bit). To test if the TSC is invariant can be done via cpuid once again: leaf 7, edx bit 8.
 
-How about generating interrupts with the TSC? This is also an option feature (that's almost always supported) called TSC deadline. We can test for it's existence via cpuid leaf 1, ecx, bit 24. To use TSC deadline we write the absolute time (in TSC ticks) of when we want the interrupt to a special MSR, called IA_32_TSC_DEADLINE (MSR 0x6E0).
+How about generating interrupts with the TSC? This is also an option feature (that's almost always supported) called TSC deadline. We can test for it's existence via cpuid leaf 1, ecx, bit 24. To use TSC deadline we write the absolute time (in TSC ticks) of when we want the interrupt to a special MSR, called IA_32_TSC_DEADLINE (MSR `0x6E0`).
 
-When the TSC passes the tick value in this MSR, it tells the local APIC, and if TSC deadline mode is selected in the timer LVT an interrupt is generated. Selecting TSC deadline mode can be done by using mode 0b10 instead of 0b00/0b01 in the timer LVT register.
+When the TSC passes the tick value in this MSR, it tells the local APIC, and if TSC deadline mode is selected in the timer LVT an interrupt is generated. Selecting TSC deadline mode can be done by using mode `0b10` instead of `0b00`/`0b01` in the timer LVT register.
 
 ## Useful Abstractions
 

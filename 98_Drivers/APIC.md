@@ -40,22 +40,22 @@ void disable_pic() {
 
 The old x86 architecture had two PIC processor, and they were called "master" and "slave", and each of them has it's own data port and command port:
 
-* Master PIC command port: 0x20 and data port: 0x21
-* Slave PIC command port: 0xA0 and data port 0xA1
+* Master PIC command port: `0x20` and data port: `0x21`.
+* Slave PIC command port: `0xA0` and data port `0xA1`.
 
 The ICW values are initialization commands (ICW stands for Initialization Command Words), every command word is one byte, and their meaning is: 
 
-* ICW_1 (value 0x11) is a word that indicates a start of inizialization sequence, it is the same for both the master and slave pic. 
-* ICW_2 (value 0x20 for master, and 0x28 for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
-* ICW_3 (value 0x2 for master, 0x4 for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be it's id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
+* ICW_1 (value `0x11`) is a word that indicates a start of inizialization sequence, it is the same for both the master and slave pic. 
+* ICW_2 (value `0x20` for master, and `0x28` for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
+* ICW_3 (value `0x2` for master, `0x4` for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be it's id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
 * ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode. 
-* Finally 0xFF is used to mask all interrupts for the pic.
+* Finally `0xFF` is used to mask all interrupts for the pic.
 
 ### Discovering the Local APIC
 
 The first step needed to configure the LAPIC is getting access to it. The APIC registers are memory mapped, and to get their location we need to read the MSR (*model specific register*) that contains its base address, using the __rdmsr__ instruction. This instruction reads the content of the MSR specified in `ecx`, the result is placed in `eax` and `edx` (with `eax` containing the lower 32-bits, and `edx` container the upper 32-bits).
 
-In our case the MSR that we need to read is called IA32_APIC_BASE and its value is 0x1B.
+In our case the MSR that we need to read is called IA32_APIC_BASE and its value is `0x1B`.
 
 This register contains the following information: 
 
@@ -66,14 +66,14 @@ This register contains the following information:
 * Bits 12:31: Contains the base address of the local APIC for this processor core.
 * Bits 32:63: reserved.
 
-Note that the registers are given as a *physical address*, so to access these you will need to map them somewhere in the virtual address space. This is true for the addresses of any IO APICs you obtain as well. When the system boots, the base address is usually `0xfee0000` and often this is the value we read from `rdmsr`. 
+Note that the registers are given as a *physical address*, so to access these you will need to map them somewhere in the virtual address space. This is true for the addresses of any IO APICs you obtain as well. When the system boots, the base address is usually `0xFEE0000` and often this is the value we read from `rdmsr`. 
 
 A complete list of local APIC registers is available in the Intel/AMD software development manuals, but the important ones for now are:
 
-- Spurious Interrupt Vector: offset 0xF0.
-- EOI (end of interrupt): offset 0xB0.
-- Timer LVT: offset 0x320.
-- Local APIC ID: offset 0x20.
+- Spurious Interrupt Vector: offset `0xF0`.
+- EOI (end of interrupt): offset `0xB0`.
+- Timer LVT: offset `0x320`.
+- Local APIC ID: offset `0x20`.
 
 ### Enabling the Local APIC, and The Spurious Vector
 
@@ -92,7 +92,7 @@ The functions of the fields in the registers are as follows:
 * Bit 8: This bit acts a software toggle for enabling the local APIC, if set the local APIC is enabled.
 * Bit 9: This is an optional feature not available on processors, but if set it indicates that some interrupts can be routed according to a list of priorities. This is an advanced topic and this bit can be safely left clear and ignored.
 
-The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the lapic we need to set bit 8, and set-up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between 0xF0 and 0xFF. For compatibility it's best to place your spurious vector in that change. Of course we need to set-up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
+The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the lapic we need to set bit 8, and set-up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between `0xF0` and `0xFF`. For compatibility it's best to place your spurious vector in that change. Of course we need to set-up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
 
 ### Reading APIC Id and Version
 
@@ -103,14 +103,14 @@ The version register contains some useful (if not really needed) information. Ex
 ### Local Vector Table
 
 The local vector table allows the software to specify how the local interrupts are delivered. 
-There are 6 items in the LVT starting from offset 0x320 to 0x370:
+There are 6 items in the LVT starting from offset `0x320` to `0x370`:
 
-* *Timer*: used for controlling the local APIC timer. Offset: 0x320.
-* *Thermal Monitor*: used for configuring interrupts when certain thermal conditions are met. Offset: 0x330.
-* *Performance Counter*: allows an interrupt to be generated when a performance counter overflows. Offset: 0x340.
-* *LINT0*: Specifies the interrupt delivery when an interrupt is signaled on LINT0 pin. Offset: 0x350.
-* *LINT1*: Specifies the interrupt delivery when an interrupt is signaled on LINT1 pin. Offset: 0x360.
-* *Error*: configures how the local APIC should report an internal error, Offset 0x370.
+* *Timer*: used for controlling the local APIC timer. Offset: `0x320`.
+* *Thermal Monitor*: used for configuring interrupts when certain thermal conditions are met. Offset: `0x330`.
+* *Performance Counter*: allows an interrupt to be generated when a performance counter overflows. Offset: `0x340`.
+* *LINT0*: Specifies the interrupt delivery when an interrupt is signaled on LINT0 pin. Offset: `0x350`.
+* *LINT1*: Specifies the interrupt delivery when an interrupt is signaled on LINT1 pin. Offset: `0x360`.
+* *Error*: configures how the local APIC should report an internal error, Offset `0x370`.
 
 The `LINT0` and `LINT1` pins are mostly used for emulating the legacy PIC, but they may also be used as NMI sources. These are best left untouched until you have parsed the MADT, which will tell you how you should program the LVT for these pins.
 
@@ -137,9 +137,9 @@ Checking whether the current processor supports the X2APIC or not can be done vi
 
 Enabling the X2APIC is done by setting bit 10 in the IA32_APIC_BASE MSR. It's important to note that once this bit is set, you cannot clear it to transition back to the regular APIC operation without resetting the system.
 
-Once enabled, the local APIC registers are no longer memory mapped (trying to access them there is now an error) and can instead be accessed as a range of MSRs starting at 0x800. Since each MSR is 64-bits wide, the offset used to access an APIC register is shifted right by 4 bits.
+Once enabled, the local APIC registers are no longer memory mapped (trying to access them there is now an error) and can instead be accessed as a range of MSRs starting at `0x800`. Since each MSR is 64-bits wide, the offset used to access an APIC register is shifted right by 4 bits.
 
-As an example, the spurious interrupt register is offset 0xF0. To access the MSR version of this register we would shift it right by 4 (`0xF0 >> 4` = 0xF) and then add the base offset (0x800) to get the MSR we want. That means the spurious interrupt register is MSR 0x80F.
+As an example, the spurious interrupt register is offset `0xF0`. To access the MSR version of this register we would shift it right by 4 (`0xF0 >> 4` = 0xF) and then add the base offset (`0x800`) to get the MSR we want. That means the spurious interrupt register is MSR `0x80F`.
 
 Since MSRs are 64-bits, the upper 32 bits are zero on reads and ignored on writes. As always there is an exception to this, which is the ICR register (used for sending IPIs to other cores) which is now a single 64-bit register.
 

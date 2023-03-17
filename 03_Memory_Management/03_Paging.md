@@ -43,14 +43,14 @@ Using logical address and paging, we can introduce a new address space that can 
 For example: 
 
 ```c
-phys(0x123456) = virt(0xffff2345235)
+phys(0x12'3456) = virt(0xFFF'F234'5235)
 ```
 
 In x86 this mapping is achieved through the usage of several hierarchical tables, with  each item in one level pointing to the next level table. 
 A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address assuming address translation used in the picture above:
 
 ```c
-virtaddress = 0x2f880120
+virtaddress = 0x2F88'0120
 ```
 
 Now we know that the bits: 
@@ -245,7 +245,7 @@ There are few things to take in account when trying to access paging structures 
 
 A few examples of recursive addresses: 
 
-* PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: 0xffffffff80000000.
+* PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: `0xFFFF'FFFF'8000'0000`.
 * Let's assume we mapped PML4 into itself at entry 510, 
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: PML4: 510, PDPR: 510, PD: 510, PT: 510, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT wit page number equals to 510, and we obtain access to the PML4 page itself.
     - Now using a similar approach we can get acces to other tables, for example the following values: PML4: 510, PDPR:510, PD: 1, PT: 256, will give access at the Page Directory PD at  entry number 256 in PDPR that is  contained in the first PML4 entry .

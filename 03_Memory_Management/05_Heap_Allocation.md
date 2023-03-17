@@ -481,7 +481,7 @@ Now the question is, how do we choose the starting address? This really is arbit
 * Some memory is used by the kernel, we don't want to overwrite anything with our heap, so let's keep sure that the area we are going is free.
 * Usually when paging is enabled, in many case the kernel is moved to one half of the memory space (usually referred as to HIGHER_HALF and LOWER_HALF) so when deciding the initial address we should place it in the correct half, so if the kernel is placed in the HIGHER and we are implementing the kernel heap it should go on the HIGHER Half and if it is for the user space heap it will goes on the LOWER half.
 
-For the kernel heap, a good place for it to start is immediately following the kernel binary in memory. If your kernel is loaded at 0xffff'ffff'8000'0000 as is common for higher half kernels, and your kernel is 0x4321 bytes long. You can round up to the nearest page and then add another page (0x4321 gets rounded to -> 0x5000, add 0x1000 now we're at 0x6000). Therefore our kernel heap would start at 0xffff'ffff'8000'6000. 
+For the kernel heap, a good place for it to start is immediately following the kernel binary in memory. If your kernel is loaded at 0xFFFF'FFFF'8000'0000 as is common for higher half kernels, and your kernel is 0x4321 bytes long. You can round up to the nearest page and then add another page (0x4321 gets rounded to -> 0x5000, add 0x1000 now we're at 0x6000). Therefore our kernel heap would start at 0xFFFF'FFFF'8000'6000. 
 
 The reason for the empty page is that you can leave it unmapped, and then any buggy code that attempts to access memory *before* the heap will likely cause a page fault, rather then returning bits of the kernel.
 
