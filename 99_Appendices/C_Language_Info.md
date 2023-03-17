@@ -13,9 +13,9 @@ For example let's say that we have a variable **ptr** that points to an **uint32
 uint32_t *ptr;
 ```
 
-Now for our example let's assume that the base address of ptr is 0x2000.
+Now for our example let's assume that the base address of ptr is `0x2000`.
 
-This means that we have a 32 bit integer, which is 4 bytes, stored at the address 0x2000.
+This means that we have a 32 bit integer, which is 4 bytes, stored at the address `0x2000`.
 
 Let's see now how does the arithmetic operations above works: 
 

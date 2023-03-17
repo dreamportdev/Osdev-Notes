@@ -69,7 +69,7 @@ In C an octal number is represented adding a `0` in front of the number, so for 
 
 But that's not all, we also have that the number is represented as an `ascii` characters, so to get the decimal number we need to: 
 
-1. Convert each ansii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `´0'` ), to get the digit we need just to subrstract the `ascii` code for the 0 to the char supplied
+1. Convert each ascii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `´0'` ), to get the digit we need just to subrstract the `ascii` code for the 0 to the char supplied
 2.  To obtain the decimal number from an octal we need to multiply each digit per `8^i` where i is the digit position (rightmost digit is 0) and sum their results. For example 37 in octal is: 
 
 ```c

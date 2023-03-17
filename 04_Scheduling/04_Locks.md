@@ -6,9 +6,9 @@ Now that we have a scheduler, we can run multiple threads at the same time. This
 
 Imagine we have a shared resource that can be accessed at a specific address. This resource could be anything from MMIO, a buffer or some variable, the important part is that multiple threads *can* access it at the same time. 
 
-For our example we're going to say this resouce is a NS16550 uart at address `0xDEADBEEF`. If you're not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms. 
+For our example we're going to say this resouce is a NS16550 uart at address `0xDEAD'BEEF`. If you're not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms. 
 
-The key things to know are that if you write a byte at that address, it will be sent over the serial port to whatever is on the other end. So if you want to send a message, you must send it one character at a time, at the address specified (`0xDEADBEEF`).
+The key things to know are that if you write a byte at that address, it will be sent over the serial port to whatever is on the other end. So if you want to send a message, you must send it one character at a time, at the address specified (`0xDEAD'BEEF`).
 
 ## The Problem
 
@@ -16,7 +16,7 @@ Let's say we use this serial port to for log messages, with a function like the 
 
 ```c
 void serial_log(const char* msg) {
-    volatile char* resource = (char*)0xDEADBEEF;
+    volatile char* resource = (char*)0xDEAD'BEEF;
     for (size_t i = 0; msg[i] != 0; i++)
         *resource = msg[i];
 }

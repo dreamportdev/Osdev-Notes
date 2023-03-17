@@ -2,14 +2,15 @@
 
 One of the first thing we want to do is make our Operating System capable of producing some kind of screen output, even if not strictly necessary (there can be different ways to debug our OS behaviour while developing), it can be useful sometime to visualize something in real time, and probably especially if at the beginning of our project, is probably very motivating having our os print a nice logo, or write some fancy text.
 
-As per many other parts there are different way to produce output on the screen, in this book we are covering only the framebuffer, but below is a short list of some of the available modes
+As per many other parts there are different way to produce output on the screen, in this book we are covering only the framebuffer, but below is a short list of some of the available modes.
 
-* If you are in real mode (16 bits) there is an interrupt that can be used print characters/strings, and you have the possibility to use other interrupts to draw pixels and ui on the screen.
-* The legacy VGA driver, if your os is targeting old hardware (ie x86-32) and don't care to have a gui, this is probably the simplest and easiest approach. It's very easy to implement, the VGA memory starts at 0xb800, and the screen is composed by 80 columns and 25 rows, each cell contains one character. Each characters is represented by two bytes, one for the ascii code of the character, and the other for the color.
-* On many systems (old and modern)  the framebuffer can be used, that is covered by this chapter
-* If the operating system is using UEFI, the GOP mode can be used.
+There's a few ways we can get output on the screen. We're going to use a linear framebuffer (linear meaning all it's pixels are arranged directly after each other in memory), but historically there have been other ways to display output:
 
-In this guide we cover the Framebuffer, since it is probably the one most widely supported on systems that are at least 32bits.
+* In real mode there were BIOS routines that could be called to print to the display. There were sometimes other extensions for hardware accelerated drawing of shapes or sprites too. This is not not implemented in modern systems, and even then it's only available to real mode software.
+* In legacy systems some display controllers supported something called 'text mode', where the screen was an array of characters like a terminal, rather than an array of pixels. This is long deprecated, and UEFI actually requires all displays to operate as pixel-based framebuffers. Often the text mode buffer lived around the 0xB800 address, if you see code accessing there, now you know why. This buffer is comprised of pairs of bytes, the first being the ascii character to display, and the second encodes the foreground and background colour.
+* Modern systems provide some kind of linear framebuffer these days. Often this is obtained through BIOS routines on older systems, or by the Graphics Output Protocol (GOP) from UEFI. Most boot protocols will present these framebuffers in a uniform way to our kernel.
+
+In these chapters we're going to assume you're using a linear framebuffer, since it's the only framebuffer type reliably available to us on x86_64.
 
 ## Setting framebuffer (using grub)
 

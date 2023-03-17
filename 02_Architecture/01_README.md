@@ -1,8 +1,8 @@
 # Architecture
 
-Before going beyond a basic hello world and implementing the first real parts of our kernel, there are some key concepts about how the CPU operates that we have to understand. What is an interrupt, and how do we handle it? What does it mean to mask them? What is the GDT and what is it's purpose?
+Before going beyond a basic "hello world" and implementing the first real parts of our kernel, there are some key concepts about how the CPU operates that we have to understand. What is an interrupt, and how do we handle it? What does it mean to mask them? What is the GDT and what is it's purpose?
 
-It's worth noting that we're going to focus exclusively on x86 here, and some concepts are specific to this platform (the GDT, for example), while some concepts are transferable across most platforms (like a higher half kernels). Some concepts, like interrupts and interrupt handlers, are partially transferable to other platforms.
+It's worth noting that we're going to focus exclusively on x86_64 here, and some concepts are specific to this platform (the GDT, for example), while some concepts are transferable across most platforms (like a higher half kernels). Some concepts, like interrupts and interrupt handlers, are partially transferable to other platforms.
 
 ## Address Spaces
 
@@ -12,7 +12,7 @@ This brings up the idea that an address is only useful in a particular address s
 
 These are not the same, as we'll see later on we can convert virtual addresses to physical addresses (usually the cpu will do this for us), but they are actually separate things.
 
-There are also other addresses spaces you may encounter in osdev, like:
+There are also other address spaces you may encounter in osdev, like:
 
 - Port I/O: Some older devices on x86 are wired up to 'ports' on the cpu, with each port being given an address. These addresses are not virtual or physical memory addresses, so we can't access them like pointers. Instead special cpu instructions are used to move in and out of this address space.
 - PCI Config Space: PCI has an entirely separate address that for configuring devices. This address space has a few different ways to access it.
