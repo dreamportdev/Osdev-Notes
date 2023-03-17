@@ -164,7 +164,7 @@ PHDRS
 SECTIONS
 {
     /* start linking at the -2GB address. */
-    . = 0xffffffff80000000;
+    . = 0xFFFFFFFF80000000;
     
     /* text output section, to go in 'text' phdr */
     .text :
@@ -205,6 +205,6 @@ SECTIONS
     } :data
 
     /* we can use the '.' to determine how large the kernel is. */
-    KERNEL_SIZE = . - 0xffffffff80000000;
+    KERNEL_SIZE = . - 0xFFFFFFFF80000000;
 }
 ```

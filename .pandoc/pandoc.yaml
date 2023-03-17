@@ -1,0 +1,11 @@
+---
+title: 'Osdev Notes'
+author:
+  - Ivan G.
+  - Dean T.
+header-includes:
+ - \usepackage{fvextra}
+ - \usepackage{appendix}
+ - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+book: true
+---

@@ -13,9 +13,9 @@ For example let's say that we have a variable **ptr** that points to an **uint32
 uint32_t *ptr;
 ```
 
-Now for our example let's assume that the base address of ptr is 0x2000.
+Now for our example let's assume that the base address of ptr is `0x2000`.
 
-This means that we have a 32 bit integer, which is 4 bytes, stored at the address 0x2000.
+This means that we have a 32 bit integer, which is 4 bytes, stored at the address `0x2000`.
 
 Let's see now how does the arithmetic operations above works: 
 
@@ -115,7 +115,7 @@ The caller is expected to save eax, ecx and edx if they have values stored there
 For x86_64 (64 bit), function calling is a little more complicated. 
 64 bit arguments (or smaller, signed extended values) are passed using `rdi, rsi, rdx, rcx, r8, r9` in that order (left to right).
 Floating point or sse sized arguments have their own registers they get passed in, see the sys x x86_64 spec for that.
-Any arguments that dont fit in the above registers are passed on the stack, right to left - like in 32 bit x86.
+Any arguments that don't fit in the above registers are passed on the stack, right to left - like in 32 bit x86.
 
 Like in x86, functions are expected to run by using the `call` instruction, which pushes the return instruction pointer onto the stack, so the callee can use `ret` to return.  The callee usually forms a stack frame here as well, however the spec also allows a 128 byte space known as the 'red zone'.
 This area is reserved by the compiler for *stuff*. What it does here is unspecified, but its usually for efficiency purposes: i.e running smaller functions in this space without the need for a new stack frame. However this is best disabled in the compiler (using `-mno-red-zone`) as the cpu is unaware of this, and will run interrupt handlers inside of the red zone by accident.

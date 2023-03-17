@@ -64,7 +64,7 @@ If you're using clang be sure to remember to pass `--target=xyz` with each comma
 
 ### Building C Source Files
 Now that we have a toolchain setup we can test it all works by compiling a C file.
-Create a C source file, it's contents dont matter here as we wont be running it, just telling it compiles.
+Create a C source file, it's contents don't matter here as we wont be running it, just telling it compiles.
 
 Run the following to compile the file into an object file, and then to link that into the final executable.
 
@@ -87,6 +87,7 @@ Telling the compiler to not use these features can be done by passing some extra
 - `-mno-mmx`: Disables using the FPU registers for 64-bit integer calculations.
 - `-mno-3dnow`: Disables 3dnow! extensions, similar to MMX.
 - `-mno-sse -mno-sse2`: Disables SSE and SSE2, which use the 128-bit xmm registers, and require setup before use.
+- `-mcmodel=kernel`: The compiler uses 'code models' to help optimize code generation depending on where in memory the code might run. The `medium` cmodel runs in the lower 2GiB, while the `large` runs anywhere in the 64-bit address space. You could use `large` for your kernel, but if you are loading your kernel in the top-most 2GiB you can use `kernel` which allows similar optimizations to `medium`.
 
 There are also a few other compiler flags that are useful, but not necessary:
 
@@ -100,7 +101,7 @@ This section should be seen as an extension to the section above on compiling C 
 When compiling C++ for a freestanding environment, there are a few extra flags that are required:
 
 - `-fno-rtti`: Tells the compiler not to generate **R**un**t**ime **t**ype **i**nformation. This requires runtime support from the compiler libaries, and the os. Neither of which we have in a freestanding environment.
-- `-fno-exceptions`: Requires the compiler libraries to work, again which we dont have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) still require you to declare them `noexcept` so the correct symbols are generated.
+- `-fno-exceptions`: Requires the compiler libraries to work, again which we don't have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) still require you to declare them `noexcept` so the correct symbols are generated.
 
 And a few flags that are not required, but can be nice to have:
 
