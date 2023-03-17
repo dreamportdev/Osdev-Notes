@@ -41,7 +41,7 @@ A heap allocator exposes two main functions:
 * `void *alloc(size_t size);` To request memory of size bytes.
 * `void free(void *ptr);` To free previously allocated memory.
 
-In user space these are the well known `malloc()/free()` functions. However the kernel will also need it's own heap (we dont want to put data where user programs can access it!). The kernel heap usually exposes functions called `kmalloc()/kfree()`. Functionally these heaps can be the same.
+In user space these are the well known `malloc()/free()` functions. However the kernel will also need it's own heap (we don't want to put data where user programs can access it!). The kernel heap usually exposes functions called `kmalloc()/kfree()`. Functionally these heaps can be the same.
 
 So let's get started with describing the allocation algorithm. 
 
@@ -402,7 +402,7 @@ if (prev_node != NULL && prev_node->status == FREE) {
 ```
 What we're describing here is the left node being "swallowed" by the right one, and growing in size. The memory that the left node owns and is responsible for is now part of the right oneTo make it easier to understand, consider the portion of a hypothetical heap in the picture below: 
 
-![heap_example_start](https://user-images.githubusercontent.com/59960116/161861475-67df25a7-17ea-491b-8dc5-45cac8ffb614.png)
+![heap_example_start](/Images/heapexample.png)
 
 
 Basically the heap starts from address 0, the first node is marked as free and the next two nodes are both used. Now imagine that `free()` is called on the second address (for this exammple we consider size of the heap node structure to be just of 2 bytes): 
@@ -414,7 +414,7 @@ free(0x27); //Remember the overhead
 
 This means that the allocator (before marking this location as free and returning) will check if it is possible to merge first to the left (YES) and then to the right (NO since the next node is still in use) and then will proceed with a merge only on the left side. The final result will be: 
 
-![heap_example_after_merge](https://user-images.githubusercontent.com/59960116/161862191-1a1dd91c-6677-4f48-8025-74c529fbf08b.png)
+![heap_example_after_merge](/Images/heap_example_after_merge.png)
 
 The fields in bold are the fields that are changed. The exact implementation of this code is left to the reader.
 
@@ -481,7 +481,7 @@ Now the question is, how do we choose the starting address? This really is arbit
 * Some memory is used by the kernel, we don't want to overwrite anything with our heap, so let's keep sure that the area we are going is free.
 * Usually when paging is enabled, in many case the kernel is moved to one half of the memory space (usually referred as to HIGHER_HALF and LOWER_HALF) so when deciding the initial address we should place it in the correct half, so if the kernel is placed in the HIGHER and we are implementing the kernel heap it should go on the HIGHER Half and if it is for the user space heap it will goes on the LOWER half.
 
-For the kernel heap, a good place for it to start is immediately following the kernel binary in memory. If your kernel is loaded at 0xffff'ffff'8000'0000 as is common for higher half kernels, and your kernel is 0x4321 bytes long. You can round up to the nearest page and then add another page (0x4321 gets rounded to -> 0x5000, add 0x1000 now we're at 0x6000). Therefore our kernel heap would start at 0xffff'ffff'8000'6000. 
+For the kernel heap, a good place for it to start is immediately following the kernel binary in memory. If your kernel is loaded at 0xFFFF'FFFF'8000'0000 as is common for higher half kernels, and your kernel is 0x4321 bytes long. You can round up to the nearest page and then add another page (0x4321 gets rounded to -> 0x5000, add 0x1000 now we're at 0x6000). Therefore our kernel heap would start at 0xFFFF'FFFF'8000'6000. 
 
 The reason for the empty page is that you can leave it unmapped, and then any buggy code that attempts to access memory *before* the heap will likely cause a page fault, rather then returning bits of the kernel.
 

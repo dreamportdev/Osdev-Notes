@@ -127,7 +127,7 @@ void my_c_function(unsigned int my_value){
 }
 ```
 
-First thing is to let the compiler know that we want to reference an external function using, and then just before calling the function, add the instruction cld. 
+First thing is to let the compiler know that we want to reference an external function using `extern`, and then just before calling the function, add the instruction cld. 
 
 Here an example:  
 
@@ -141,7 +141,7 @@ call my_c_function
 ; other magic asm stuff that we don't care of...
 ```
 
-As mentioned in the multiboot document, argument passing from asm to C in 64 bits is little bit different from 32 bits, so the first parameter of a C function is taken from *rdi* (followed by: rsi, rdx, rcx, r8, r9, then the stack), so the *mov rdi, 42* is setting the value of *my_value* parameter to 42.
+As mentioned in the multiboot section, argument passing from asm to C in 64 bits is little bit different from 32 bits, so the first parameter of a C function is taken from *rdi* (followed by: rsi, rdx, rcx, r8, r9, then the stack), so the *mov rdi, 42* is setting the value of *my_value* parameter to 42.
 
 The output of the printf will be then: 
 
@@ -149,22 +149,14 @@ The output of the printf will be then:
 My shiny function called from nasm worth: 42
 ```
 
-## Struct declaration
-Although there is no data structure types in asm, nasm provide a similar mechanism using macros. You can define a data structure in the following way:
-
-```nasm
-struc my_struct
-	.firstfield:	resb1
-	.secondfield:	resb2
-endstruc
-```
-
 ## About sizes
 
 Variable sizes are alway important while programming, but while programming in asm even more important to understand how they works in assembly, and since there is no real type you can't rely on the variable type. 
 
 The important things to know when dealing with assembly code: 
+
 * when moving from memory to register, using the wrong register size will cause wrong value being loaded into the registry. Example: 
+
 ```nasm
 mov rax, [memory_location_label]
 ```
@@ -286,7 +278,7 @@ struc task
 endstruc
 ```
 
-Now we can access the fields inside our struct in a familiar way: struct_name.field_name. What's really happening here is the assembler will add the offset of field_name to the base address of struct_name to give us the real address of this variable.
+Now we can access the fields inside our struct in a familiar way: `struct_name.field_name`. What's really happening here is the assembler will add the offset of field_name to the base address of struct_name to give us the real address of this variable.
 
 Now if we have a memory location or register that contains our structure, for example let's say that we have the pointer to our structure stored in the register rax and we want to copy the id field in the register rbx:
 
@@ -295,7 +287,7 @@ mov rbx, dword [(rax + task.id)]
 ```
 
 This is how to access a struct, besically we add the label representing an offset to its base address.
-but what if we want to create an instance of it? Well in this case we can use the macros `istruc` and `iend`, and using `at` to access the fields. For example if we want create an instance of task with the values 1 for the id field and "test" for the name field, we can use the following syntax: 
+but what if we want to create an instance of it? Well in this case we can use the macros `istruc` and `iend`, and using `at` to access the fields. For example if we want create an instance of task with the values 1 for the id field and "hello123" for the name field, we can use the following syntax: 
 
 ```asm
 istruc task

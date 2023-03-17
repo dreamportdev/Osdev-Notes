@@ -32,7 +32,7 @@ Once these features are known to be supported, they can be enabled like so:
 
 Unlike the previous features which are simple feature flags, this is a more advanced solution. It's really focused on detecting buffer overruns: when too much data is written to a buffer, and the data ends up writing into the next area of memory. This section assumes you're comfortable writing your own allocators, and familiar with how virtual memory works. It's definitely an intermediate topic, one worth being aware of though!
 
-Now while this technique is useful for tracking down a rogue memcpy or memset, it does waste quite a lot of physical memory and virtual address space, as you'll see below. Because of this it's useful to be able to swap this with a more traditional allocator for when you dont need the debugging features.
+Now while this technique is useful for tracking down a rogue memcpy or memset, it does waste quite a lot of physical memory and virtual address space, as you'll see below. Because of this it's useful to be able to swap this with a more traditional allocator for when you don't need the debugging features.
 
 A page heap (named after the original Microsoft tool), is a heap where each allocator is rounded up to the nearest page. This entire memory region is dedicated to this allocation, and the two pages either side of the allocation are unmapped. The memory region is padded at the beginning, so that the last byte of the allocated buffer is the last byte of the last mapped page.
 
@@ -64,7 +64,7 @@ void* page_heap_alloc(size_t size, bool detect_overrun)
     vmm_ensure_unmapped(next_alloc_address + pages_required);
     vmm_map(next_alloc_address, pages);
 
-    //if we dont want to detect overruns, detect underruns instead.
+    //if we don't want to detect overruns, detect underruns instead.
     if (!detect_overrun)
         return pages;
     

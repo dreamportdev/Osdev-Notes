@@ -30,7 +30,7 @@ While this is functional, there's a few problems:
 - They can't be easily identified, how do we know the difference between procesess.
 - All processes currently share the same address space, and as a byproduct, the same virtual memory allocator. 
 - We can't keep track of any resources they might be using, like file handles or network sockets.
-- We can't prioritize them, as we dont know which ones are more important.
+- We can't prioritize them, as we don't know which ones are more important.
 
 We're not going to look at how to solve all of these, but we'll cover the important ones.
 
@@ -272,7 +272,7 @@ That's it! Our scheduler now supports multiple threads and processes. As always 
 
 ### Exiting A Thread
 
-After the thread has finished its execution, we'll need a way for it to exit gracefully. If we dont, and the thread is scheduled again after running the last of its code, we'll try to run whatever comes after the code: likely junk, resulting in a #UD of #GP.
+After the thread has finished its execution, we'll need a way for it to exit gracefully. If we don't, and the thread is scheduled again after running the last of its code, we'll try to run whatever comes after the code: likely junk, resulting in a #UD of #GP.
 
 This also places a requirement on the programmer when creating threads: they must call `thread_exit` before the main function used for the thread returns, otherwise we will crash.
 

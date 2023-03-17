@@ -1,12 +1,38 @@
-# RSDP and RSDT/XSDT
+# Acpi Tables
 
-## RSDP
+ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like amount of power on each device, thermal zones, fan control, IRQs, battery levels etc. 
 
-The RSDP is the pointer to the RSDT (Root System Descriptor Table) the full structure is depending if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
-The newer version is backward compatible with the older
+We need to access the ACPI Tables in order to read the IO-Apic information, used to receive hardware interrupts (it will be explained later)
 
-### RSDP Structure
-Basic data structure for RSDP v1 is: 
+## RSDP and RSDT/XSDT
+
+Many of the information are organized and accessible through different data structures, but since the ACPI specs are quite big, and cover so many different components, we focus only on what we just need to get the informations we need about the APIC.
+
+Before proceeding let's keep in mind that all address described below are physical, so if we will enable paging, keep in mind that we need to ensure they are properly mapped in the virtual memory spacea. 
+
+### RSDP
+
+The RSDP (Root System Description Pointer) used in the ACPI programming interface  is the pointer to the RSDT (Root System Descriptor Table) the full structure is depending if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
+
+The newer version is backward compatible with the older.
+
+#### Accessing the RSDP
+
+Accessing the RSDP register depends on the boot system used, if we are using grub, we get a copy of the RSDT/XSDT in one of the multiboot2 header tags. The specs contains two possible tags for the RSDP value, which one is used depend on the version: 
+
+* For the version 1 the MULTIBOOT_TAG_TYPE_ACPI_OLD is used (type 14)
+* For the version 2 the MULTIBOOT_TAG_TYPE_ACPI_NEW is used (type 15)
+
+Both headers are identical, with the only difference being in the type value, they are compoosed of just two fields: 
+
+* The type field that can be 14 or 15 depending on the version
+* The size of the RSDP
+
+And is followed by the RSDP itself. 
+
+#### RSDP Structure
+
+As already mentioned there are two different version of RSDP, basic data structure for RSDP v1 is: 
 
 ```c
 struct RSDPDescriptor {
@@ -26,7 +52,8 @@ Where the fields are:
 * *Revision*: Is the revision number
 * *RSDTAddress*: The address of the RSDT Table
 
-For v2 the structure is similar to above:
+The structure for the v2 header is an extension of the previous one, so the fields above are still valid, but in addition it has also the following extra-fields: 
+
 ```c
 struct RSDP2Descriptor
 {
@@ -42,7 +69,7 @@ struct RSDP2Descriptor
 * *XSDTAddress*: Address of the XSDT table. If this is non-zero, the RSDT address **must** be ignored and the XSDT is to be used instead.
 * *ExtendedChecksum*: Same as the previous checksum, just includes the new fields.
 
-### RSDP Validation
+#### RSDP Validation
 
 Before proceeding let's explain little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just mutter of cycling a byte array. Here the example code: 
 
@@ -59,18 +86,19 @@ bool validate_RSDP(char *byte_array, size_t size) {
 Having last byte means that `result mod 0x100` is 0. Now there are two ways to test it:
 
 * Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored
-* Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with 0XFF value (0xFF is equivalent to the 0b11111111 byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
+* Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with `0xFF` value (`0xFF` is equivalent to the 0b11111111 byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
 
 The function above works perfectly with both versions of descriptors. 
 In the XSDT since it has more fields, the previous checksum field wont offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
 
-## RSDT Data structure and fields
+### RSDT Data structure and fields
 
-RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers many different table descriptors.
+RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers to many different table descriptor (SDTs). Explaining all the tables is beyond of the scope of these notes, and for our purpose we are going to need only one of those table (the APIC table that we will enocunter later).
 
-The Rsdt is the root of other many different Descriptor tables (SDT), all of them may be splitted in two parts: 
+Since every SDT table contains different type of information, they are all different from each other, we can define an RSDT table by the composition of two parts:
 
 * the first part is the header, common between all the SDTs with the following structure:
+
 ```c
 struct ACPISDTHeader {
   char Signature[4];
@@ -86,7 +114,7 @@ struct ACPISDTHeader {
 ```
 * The second part is the table itself, every SDT has it's own table
 
-## RSDT vs XSDT
+#### RSDT vs XSDT
 
 These 2 tables have the same purpose and are mutually exclusive. If the latter exists, the former is to be ignored, otherwise use the former.
 
@@ -106,15 +134,20 @@ struct XSDT
   ACPISDTHeader sdtHeader; //signature "XSDT"
   uint64_t sdtAddresses[];
 };
-
-//to get the sdt header at *n* index
-ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[*n*] : (uint64_t)rsdt->sdtAddresses[*n*]);
 ```
 
-## Some useful infos
+This means that if we want to get the n-th SDT table we just need to acces the corresponding item in the *SDT array: 
+
+```c
+//to get the sdt header at n index
+ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[n] : (uint64_t)rsdt->sdtAddresses[n]);
+```
+
+### Some useful infos
 
 *  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if you try to print it, you will most likely end up in printing garbage in the best case scenario.
 *  The RSDT Data is an array of uint32_t addresses while the XSDT data is an array of uint64_t addresses. The number of items in the RSDT and XSDT can be computed in the following way:
+
 ```c
 //for the RSDT
 size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
@@ -122,7 +155,7 @@ size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
 size_t number_of_items = (xsdt->sdtHeader.Length - sizeof(ACPISDTHeader)) / 8;
 ```
 
-### Useful links
+## Useful links
 
 * Osdev wiki page for RSDP: https://wiki.osdev.org/RSDP
 * Osdev wiki page for RSDT: https://wiki.osdev.org/RSDT

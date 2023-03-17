@@ -43,7 +43,7 @@ One important note about multiboot 2: the memory map is essentially the map give
 ### Creating a Boot Shim
 The major caveat of multiboot when first getting started is that it drops you into 32-bit protected mode, meaning that you must set up long mode yourself. This also means you'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
 
-Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard address used for higher half kernels: 0xffff'ffff'8000'0000. This address is sometimes referred to as the -2GB region(yes that's a minus), as a catch-all term for the upper-most 2GB of any address space. Since the exact address will be different depending on the number of bits used for the address space (32-bit vs 64-bit for example), referring to it as an underflow value is more portable.
+Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard address used for higher half kernels: `0xFFFF'FFFF'8000'0000`. This address is sometimes referred to as the -2GB region(yes that's a minus), as a catch-all term for the upper-most 2GB of any address space. Since the exact address will be different depending on the number of bits used for the address space (32-bit vs 64-bit for example), referring to it as an underflow value is more portable.
 
 If you're curious as to why it's referred to as *minus* 2GB, it's a catch-all term for the upper-most 2GB of the address space, regardless of how big the address space may be (the upper 2GB of 32-bit and 64-bit addresses spaces are different addresses!).
 
@@ -69,16 +69,20 @@ We'll need to modify our linker script a little since we boot up in protected mo
 ```
 SECTIONS
 {
-    KERNEL_VIRT_BASE = 0xffffffff8000000;
     . = 1M;
+
+    KERNEL_START = .;
+    KERNEL_VIRT_BASE = 0xFFFFFFFF8000000;
 
     .mb2_hdr : 
     {
+        /* Be sure that the multiboot2 header is at the beginning */
         KEEP(*(.mb2_hdr))
     }
 
     .mb2_text :
     {
+        /* Space for the assembly stub to get us into long mode */
         .mb2_text
     }
 
@@ -100,10 +104,11 @@ SECTIONS
         *(.data)
         *(.bss)
     }
+    KERNEL_END = .;
 }
 ```
 
-This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xffff'ffff'8000'0000` lower than it's virtual address. 
+This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xFFFF'FFFF'8000'0000` lower than it's virtual address. 
 
 However the first two sections are both loaded and linked at lower memory addresses. The first is our multiboot header, this is just static data, it dosnt really matter where it's loaded, as long as it's in the final file somewhere. The second section contains our protected mode boot shim: a small bit of code that sets up paging, and boots into long mode.
 
@@ -114,10 +119,10 @@ The next thing is to create our multiboot2 header and boot shim. Multiboot2 head
 
 # multiboot2 header: magic number, mode, length, checksum
 mb2_hdr_begin:
-.long 0xE85250d6
+.long 0xE85250D6
 .long 0
 .long (mb2_hdr_end - mb2_hdr_begin)
-.long -(0xE85250d6 + (mb2_hdr_end - mb2_hdr_begin))
+.long -(0xE85250D6 + (mb2_hdr_end - mb2_hdr_begin))
 
 # framebuffer tag: type = 5
 mb2_framebuffer_req:
@@ -125,7 +130,7 @@ mb2_framebuffer_req:
     .short 1
     .long (mb2_framebuffer_end - mb2_framebuffer_req)
     # preferred width, height, bpp.
-    # leave as zero to indicate "dont care"
+    # leave as zero to indicate "don't care"
     .long 0
     .long 0
     .long 0

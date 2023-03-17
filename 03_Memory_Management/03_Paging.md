@@ -34,7 +34,7 @@ A virtual address is what a running program sees. Thats any program: a driver, u
 
 A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
 
-![address_translation drawio](https://user-images.githubusercontent.com/59960116/157250312-1175dbd1-87ca-47d7-b7cf-6b07394af4ce.png)
+![address_translation drawio](/Images/addrtranslation.png)
 
 
 Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
@@ -42,15 +42,15 @@ Using logical address and paging, we can introduce a new address space that can 
 
 For example: 
 
-```
-phys#0x123456 = virt#0xffff2345235
+```c
+phys(0x12'3456) = virt(0xFFF'F234'5235)
 ```
 
 In x86 this mapping is achieved through the usage of several hierarchical tables, with  each item in one level pointing to the next level table. 
 A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address assuming address translation used in the picture above:
 
-```
-virtaddress = 0x2f880120
+```c
+virtaddress = 0x2F88'0120
 ```
 
 Now we know that the bits: 
@@ -61,6 +61,7 @@ Now we know that the bits:
 * 21 to 31 are the page directory level 2 entry.
 
 We can translate the abbove address to: 
+
 * Offset:  0x20 bytes into page.
 * Page Table entry: number 0x4 (it points to the memory page).
 * Page Dir 1 entry: 0x20 (it points to a page table).
@@ -116,7 +117,7 @@ Let's have a look at the common parts between all of the entries in these tables
 
 ### PML4 & PDPR & PD
 
-PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's start seeing the structure of the first two types: 
+PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's begin by looking at the structure of the first two types: 
 
 |63     | 62        | 51 ... 40            | 39 ... 12              | 11  ...  9 |
 |-------|-----------|----------------------|------------------------|------------|
@@ -130,12 +131,14 @@ PML4 and PDPR entry structure are identical, while the PD one has few difference
 Where **Table base address** is a PDPR table base address if the table is PML4 or the PD base address if the table is the PDPR.
 
 Now the page directory has few differences: 
+
 * Bits 39 to 12 are the page table's base address when using 4k pages, or 2mb area of physical memory if the PS bit is set.
 * Bits 6 and 8 must be 0.
 * Bit 7 (the PS) must be 1.
 * If we are using 2mb pages bit 12 to 20 are reserved and must be 0. If not, accessing address within this range will cause a #PF.
 
-### Page Table 
+### Page Table
+
 A page table entry structure is still similar to the one above, but it contains few more bits that can be set: 
 
 |63     | 62    | 51 ... 40  | 39 ... 12             | 11  ... 9 |
@@ -188,7 +191,7 @@ If we are using 2MB pages this is how the address will be handled by the paging 
 * Bits 29 ... 21 are the PD entry.
 * Offset in the page directory.
 
-Every table has 512 elements, so we have an address space of 2^512 * 2^512 * 2^512 * 0x200000 (that is the page size)
+Every table has 512 elements, so we have an address space of $2^{512} * 2^{512} * 2^{512} * 0x200000$ (that is the page size)
 
 ### Address translation Using 4KB Pages
    
@@ -208,7 +211,7 @@ If we are using 4kB pages this is how the address will be handled by the paging 
 * Offset in the page table.
 
 Same as above: 
-Every table has 512 elements, so we have an address space of 2^512 * 2^512 * 2^512 * 2^512 * 0x1000 (that is the page size)
+Every table has 512 elements, so we have an address space of: $2^{512} * 2^{512} * 2^{512} * 2^{512} * 0x1000$ (that is the page size)
 
 ## Page Fault
 
@@ -243,7 +246,7 @@ There are few things to take in account when trying to access paging structures 
 
 A few examples of recursive addresses: 
 
-* PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: 0xffffffff80000000.
+* PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: `0xFFFF'FFFF'8000'0000`.
 * Let's assume we mapped PML4 into itself at entry 510, 
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: PML4: 510, PDPR: 510, PD: 510, PT: 510, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT wit page number equals to 510, and we obtain access to the PML4 page itself.
     - Now using a similar approach we can get acces to other tables, for example the following values: PML4: 510, PDPR:510, PD: 1, PT: 256, will give access at the Page Directory PD at  entry number 256 in PDPR that is  contained in the first PML4 entry .

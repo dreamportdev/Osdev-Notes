@@ -6,9 +6,9 @@ Now that we have a scheduler, we can run multiple threads at the same time. This
 
 Imagine we have a shared resource that can be accessed at a specific address. This resource could be anything from MMIO, a buffer or some variable, the important part is that multiple threads *can* access it at the same time. 
 
-For our example we're going to say this resouce is a NS16550 uart at address `0xDEADBEEF`. If you're not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms. 
+For our example we're going to say this resouce is a NS16550 uart at address `0xDEAD'BEEF`. If you're not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms. 
 
-The key things to know are that if you write a byte at that address, it will be sent over the serial port to whatever is on the other end. So if you want to send a message, you must send it one character at a time, at the address specified (`0xDEADBEEF`).
+The key things to know are that if you write a byte at that address, it will be sent over the serial port to whatever is on the other end. So if you want to send a message, you must send it one character at a time, at the address specified (`0xDEAD'BEEF`).
 
 ## The Problem
 
@@ -16,7 +16,7 @@ Let's say we use this serial port to for log messages, with a function like the 
 
 ```c
 void serial_log(const char* msg) {
-    volatile char* resource = (char*)0xDEADBEEF;
+    volatile char* resource = (char*)0xDEAD'BEEF;
     for (size_t i = 0; msg[i] != 0; i++)
         *resource = msg[i];
 }
@@ -42,7 +42,7 @@ void thead_two() {
 }
 ```
 
-What would we expect to see on the serial output? We dont know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more like they will get in the way of each other.
+What would we expect to see on the serial output? We don't know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more like they will get in the way of each other.
 
 ![Tasks execution sequence](/Images/taskssequence.png)
 
@@ -199,7 +199,7 @@ There is no decisive solution to this, and instead care must be taken when using
 
 In this chapter we've implemented a simple spinlock that allows us to protect shared resources. As you can imagine there are other types of locks you could implement, each with various pros and cons. For example the spinlock shown here has the following problems:
 
-- It doesn't guarentee the order of processes accessing it. If we have threads A, B and C wanting access to a resource, threads A and B may keep acquiring the lock before C can, resulting in thread C stalling. One possible solution to this is called the ticket lock: it's a very simple next step to take from a basic spinlock.
+- It doesn't guaren'tee the order of processes accessing it. If we have threads A, B and C wanting access to a resource, threads A and B may keep acquiring the lock before C can, resulting in thread C stalling. One possible solution to this is called the ticket lock: it's a very simple next step to take from a basic spinlock.
 - It also doesn't prevent a *deadlock* scenario. For example lets say thread A takes lock X, and then needs to take lock Y, but lock Y is held by another thread. Thread B might be holding lock Y, but needs to take lock X. In this scenario neither thread can progress and both are effectively stalled.
 
 Preventing a deadlock is big topic that can be condensed to be: be careful what locks are held when taking another lock. Best practice is to never hold more than a single lock if you can avoid it.

@@ -13,7 +13,7 @@ To keep the examples below simple, we'll assume only a single IOAPIC is present 
 redtbl_offset = 0x10 + (entry_number * 2)
 ```
 
-In this case then we have the offset for our entry at: 0x12 and 0x13 (called IOREDTBL1 in the spec), where 0x12 is the lower 32-bits of the table entry. 
+In this case then we have the offset for our entry at: `0x12` and `0x13` (called IOREDTBL1 in the spec), where `0x12` is the lower 32-bits of the table entry. 
 
 Before unmasking the keyboard interrupt, we need an entry in the IDT, and a function (we can leave it empty for now) for the IDT entry to call. For this section we will call the function `keyboard_irq_handler`:
 
@@ -37,12 +37,12 @@ The ps2 keyboard uses two IO ports for communication:
 |  0x64   | R/W         | On read: status register. On Write: command register            | 
 
 * Since there are three different scancode sets, it's a good idea to check what set the keyboard is currently using.
-* Usually the PS/2 controller (the device that the OS is actually talking to on ports 0x60 and 0x64) converts set 2 scancodes into set 1 (for legacy reasons).
-* To check if the translation is enabled, the command 0x20 must be sent on port 0x64, and then read the byte on 0x60. If the 6th bit is set than the translation is enabled. 
+* Usually the PS/2 controller (the device that the OS is actually talking to on ports `0x60` and `0x64`) converts set 2 scancodes into set 1 (for legacy reasons).
+* To check if the translation is enabled, the command `0x20` must be sent on port `0x64`, and then read the byte on `0x60`. If the 6th bit is set than the translation is enabled. 
 * If we want to disable the translation we need: 
-   - Read current controller configuration byte, by sending command 0x20 to port 0x64 (the reply byte will be sent on port 0x60).
+   - Read current controller configuration byte, by sending command `0x20` to port `0x64` (the reply byte will be sent on port `0x60`).
    - Clear the 6th bit on the current controller configuration byte.
-   - To send the modified config byte back to the controller, send command 0x60 (to port 0x64), then send the byte to port 0x60.
+   - To send the modified config byte back to the controller, send command `0x60` (to port `0x64`), then send the byte to port `0x60`.
    - For our driver we will keep the translation enabled, since we'll be using set 1.
 * The only scancode set guaranted to be supported by keyboards is the set 2. Keep in mind that most of the time the kernel communicate with the a controller compatible with the intel 8042 PS2 controller. In this case the scancodes can be translated into set 1.
 
@@ -60,7 +60,7 @@ As mentioned in the introduction, we'll need to know to implement our keyboard s
 * If we're supporting set 1, we can try to enable translation on the PS2 controlle.
 * Do nothing if it is the same set supported by our os.
 
-The keyboard command to get/set the scancode set used by the controller is 0x60 followed by another byte: 
+The keyboard command to get/set the scancode set used by the controller is `0x60` followed by another byte: 
 
 | Value | Description           |
 |-------|-----------------------|
@@ -69,7 +69,7 @@ The keyboard command to get/set the scancode set used by the controller is 0x60 
 |   2   | Set scancode set 2    |
 |   3   | Set scancode set 3    |
 
-Now the keyboard will reply with 2 bytes: if we are setting the scancode, set the reply will be: 0xFA 0xFE. If we are reading the current used set the response will be: 0xFA followed by one of the below values:
+Now the keyboard will reply with 2 bytes: if we are setting the scancode, set the reply will be: `0xFA 0xFE`. If we are reading the current used set the response will be: `0xFA` followed by one of the below values:
 
 | Value | Description       |
 |-------|-------------------|
@@ -103,7 +103,7 @@ void keyboard_irq_handler() {
 ```
 
 For set 1, the most significant bit of the scancode indicates whether it's a MAKE (MSB = 0) or BREAK (MSB = 1).
-For set 2, a scancode is always a MAKE code, unless prefixed with the byte 0xF0.
+For set 2, a scancode is always a MAKE code, unless prefixed with the byte `0xF0`.
 
 Keep in mind that when we have multibyte scancodes (i.e. left ctrl, pause, and others), an interrupt is raised for every byte placed on the data buffer.
 

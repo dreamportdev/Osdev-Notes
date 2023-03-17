@@ -92,6 +92,8 @@ Sometime could be needed to avoid the emulator restart on triple fault, in this 
 qemu -d int -no-reboot
 ```
 
+While debugging with gdb, we may want to keep qemu hanging after a triple fault (when the cpu should reset), to do some more investigation, in this case we need to add also `-no-shutdown` (along with) `-no-reboot`
+
 ### Start Qemu for remote Debugging
 
 To start Qemu to accepts connections from gdb, you need to add *-s* and *-S*  flags to the command, where: 
@@ -116,6 +118,8 @@ symbol-file path/to/kernel.bin
 ```
 
 ### Useful commands
+
+Below a list of some useful gdb commands 
 
 * Show register content: *info register reg* where reg is the register we need
 * Set breakpoint to specific address: *break 0xaddress*
@@ -154,7 +158,9 @@ Here a collection of useful command to keep track of the call stack.
 * `frame x` will jump directly to frame number x (view frame numbers with `bt`)
 * `info args` will display the arguments passed into the function. It's worth nothing that the first few instructions of a function set up the stack frame, 
 so you may need to `si` a few times when entering a function for this to return correct values.
-* `info locals` diplays local variables (on the stack). Any variables that have no yet been declared in the source code will have junk values (keep this in mind!).
+* `info locals` displays local variables (on the stack). Any variables that have no yet been declared in the source code will have junk values (keep this in mind!).
+* `info variables` is similar to info global and static variables
+* `info args` list the arguments of the current stack frame, name and values.
 
 ### Breakpoints
 
@@ -189,7 +195,7 @@ This area of gdb is hilariously undocumented, but still really useful. It can be
 
 Tui layouts can be switched at any time, or you can return to your regular shell at any time using `tui disable`, or exiting gdb.
 
-The layouts offer little interaction besides the usual terminal in/out, but can useful for quickly referencing things, or examining exactly what instructions are running.
+The layouts offer little interaction besides the usual terminal in/out, but can be useful for quickly referencing things, or examining exactly what instructions are running.
 
 If you are using debian, you most-likely need to install the *gdb* package, because by default *gdb-minimal* is being installed, which doesn't contain the TUI.
 
@@ -265,8 +271,12 @@ From here you can send commands directly to the emulator, below a list of useful
 
 * **help** Well this is the first command to get some help on how to use the monitor
 * **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic
+* **x/cf address** where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address
+* **xp/cf address** same as above, but for physical memory
+
 
 ### Debugcon
+
 Qemu (and several other emulators - bochs for example) support something called debugcon.
 It's an extremely simple protocol, similar to serial - but with no config, where anything written to port 0xE9 in the VM will appear byte-for-byte at where you tell qemu to put it.
 Same is true with input (although this is quite buggy, best to use serial for this).

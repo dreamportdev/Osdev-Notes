@@ -51,7 +51,7 @@ struct interrupt_descriptor
 } __attribute__((packed));
 ```
 
-Note the use of the packed attribute! Since this structure is processed by hardware, we dont want the compiler to insert any padding in our struct, we want it to look exactly as we defined it (and be exactly 128 bits long, like the manual says).
+Note the use of the packed attribute! Since this structure is processed by hardware, we don't want the compiler to insert any padding in our struct, we want it to look exactly as we defined it (and be exactly 128 bits long, like the manual says).
 The three `address_` fields represent the 64-bit address of our handler function, split into different parts: with `address_low` being bits 15:0, `address_mid` is bits 31:16 and `address_high` is bits 63:32. The `reserved` field should be set to zero, and otherwise ignored.
 
 The selector field is the *code selector* the cpu will load into `%cs` before running the interrupt handler. This should be your kernel code selector. Since your kernel code selector should be running in ring 0, there is no need to set the RPL field. This selector can just be the byte offset into the GDT you want to use. 
@@ -239,7 +239,7 @@ If we don't send the EOI, the cpu will return from the interrupt handler and exe
 
 *Authors Note: This section is biased towards how I usually implement my interrupt handling. I like it because it lets me collect all interrupts in one place, and if something fires an interrupt I'm not ready for, I can log it for debugging. As always, there are other ways to go about this, but for the purposes of this chapter and the chapters to follow, it's assumed that your interrupt handling looks like the following (for simplicity of the explanations). -DT*
 
-We introduced the `interrupt_dispatch` function before, and had *all* of our interrupts call it. The `dispatch` part of the name hints at it's function, but for clarity it's purpose it to call other functions within the kernel, based on the interrupt vector. There is also a hidden benefit here that we dont have to route one interrupt to one kernel function. An intermediate design could maintain a list for each vector of functions that wish to be called when something occurs. For example you might have multiple parts of the kernel that wish to know when a timer fires. This design is not covered here, but it's something to think about for future uses. For now we'll stick with a simple design which just calls a single kernel function directly.
+We introduced the `interrupt_dispatch` function before, and had *all* of our interrupts call it. The `dispatch` part of the name hints at it's function, but for clarity it's purpose it to call other functions within the kernel, based on the interrupt vector. There is also a hidden benefit here that we don't have to route one interrupt to one kernel function. An intermediate design could maintain a list for each vector of functions that wish to be called when something occurs. For example you might have multiple parts of the kernel that wish to know when a timer fires. This design is not covered here, but it's something to think about for future uses. For now we'll stick with a simple design which just calls a single kernel function directly.
 
 ```c
 void interrupt_dispatch()

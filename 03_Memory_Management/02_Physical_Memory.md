@@ -15,7 +15,7 @@ In this document we will explain the bitmap method, because is probably the simp
 
 ## The Bitmap
 
-Now let's start with a simple example, imagine that we have a very tiny amount of ram like 256kb of ram, and we want to use 4kb pages, and assume that we have the kernel that takes the first 3 pages. As said above using the bitmap method assign 1 bit to every page, this means that every bytes can keep track of *8x4k=32kb* of memory, if the page is taken the bit is set to 1, if is free the bit is clear (=0)
+Now let's start with a simple example, imagine that we have a very tiny amount of ram like 256kb of ram, and we want to use 4kb pages, and assume that we have the kernel that takes the first 3 pages. As said above using the bitmap method assign 1 bit to every page, this means that every bytes can keep track of $8*4k=32kb$ of memory, if the page is taken the bit is set to 1, if is free the bit is clear (=0)
 
 This means that a single *unsigned char* variable can hold the status of 32kb of ram, to keep track of 256kb of ram we then need 8bytes (They can stay in a single uint64_t variable, but for this example let's stick with the char type), this means that with an array of 8 elements of *unsigned char* we can represent the whole amount of memory, so we are going to have something like this: 
 
@@ -38,7 +38,7 @@ So marking a memory location as free or used is just matter of setting clearing 
 But how do we mark a page as taken or free? We need to translate row/column in an address, or the address in row/column. Let's assume that we asked fro a free page and we found the first available bit at row 0 and column 3, how we translate it to address, well for that we need few extra info: 
 
 * The page size (we should know what is the size of the page you are using XD), Let's call it PAGE_SIZE
-* How many bits are in a row (it's up to us to decide it, in this example we are using an unsigned char, but most probably in real life it is going to be a uin32_t for 32bit OS or uint64_t for 64bit os) let's call it BITS_PER_ROW
+* How many bits are in a row (it's up to us to decide it, in this example we are using an unsigned char, but most probably in real life it is going to be a `uint32_t` for 32bit OS or `uint64_t` for 64bit os) let's call it BITS_PER_ROW
 
 To get the address we just need to do: 
 
@@ -51,7 +51,7 @@ Let's pause for a second, and have a look at bit_number, what it represent? Mayb
  |------------|---|---|---|-----|-----|-----|----|------|-----|----|
  | \*bitmap   | 1 | 1 | 1 | ... | *0* | ... |  0 |  *0* | ... |  0 |
   
-It just represent the offset in bit from &bitmap (the starting address of the bitmap). 
+It just represent the offset in bit from `&bitmap` (the starting address of the bitmap). 
 
 In our example with *row=0 column=3* (and page size of 4k) we get:
 
@@ -60,17 +60,17 @@ In our example with *row=0 column=3* (and page size of 4k) we get:
 
 Another example: *row = 1 column = 4* we will get: 
 
-* bit_number = (1 * 8) + 4 = 12
+* bit_number = (1 * 8) + 4 = 12$
 * address = bit_number * 4k = 0xC000
 
 But what about the opposite way? Given an address compute the bitmap location? Still pretty easy: 
 
-* bitmap_location = address / 4096
+$$bitmap_{location}=\frac{address}{4096}$$
 
 In this way we know the "page" index into an hypoteteical array of Pages. But we need row and columns, how do we compute them? That depends on the variable size used for the bitmap, let's stick to 8 bits, in this case:
 
-* The row is given by *bitmap_location / 8* 
-* The column is given by: *bitmap_location % 8*
+* The row is given by `bitmap_location / 8`
+* The column is given by: `bitmap_location % 8`
 
 ### Freeing A Page
 
@@ -80,4 +80,4 @@ So now knowing how the bitmap works, let's see how to update/test it. We need ba
 * A function to mark a location as set
 * A function to mark a location as clear 
 
-For all the above functions we are going to use bitwise operators, and all of them will take one argument that is the bit_number location (as seen in the previous paragraph). 
+For all the above functions we are going to use bitwise operators, and all of them will take one argument that is the bit_number location (as seen in the previous paragraph), the implementation is left as exercise.
