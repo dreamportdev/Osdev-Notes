@@ -117,7 +117,7 @@ Let's have a look at the common parts between all of the entries in these tables
 
 ### PML4 & PDPR & PD
 
-PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's start seeing the structure of the first two types: 
+PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's begin by looking at the structure of the first two types: 
 
 |63     | 62        | 51 ... 40            | 39 ... 12              | 11  ...  9 |
 |-------|-----------|----------------------|------------------------|------------|
@@ -137,7 +137,8 @@ Now the page directory has few differences:
 * Bit 7 (the PS) must be 1.
 * If we are using 2mb pages bit 12 to 20 are reserved and must be 0. If not, accessing address within this range will cause a #PF.
 
-### Page Table 
+### Page Table
+
 A page table entry structure is still similar to the one above, but it contains few more bits that can be set: 
 
 |63     | 62    | 51 ... 40  | 39 ... 12             | 11  ... 9 |
