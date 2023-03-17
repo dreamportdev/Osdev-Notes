@@ -145,7 +145,7 @@ ui_element_base* create_button(bool is_toggle) {
     base->type = button;
     base->render = render_button;
     base->handle_click = handle_click_button;
-    base->handle_key = NULL; //dont handle keypresses
+    base->handle_key = NULL; //don't handle keypresses
 
     ui_element_button* btn = malloc();
     btn->toggle = is_toggle;
@@ -201,7 +201,7 @@ The exact process depends on the library you've chosen to port. The best instruc
 - Get a copy of the source code, integrate building the libc into your project's build system.
 - Once you have it attempting to build, see what dependencies are required. Larger libraries like Glibc will require much more, but there are often options to disable extra functionality to lower the number of dependencies.
 - When you can build your libc, try write a simple program that links against it. Load this program from your kernel and see what system calls the libc tries to perform. This will give you an indication of what you need to support.
-- Now begins the process of implementing these syscalls. Hopefully most of these are things you have support for, but if you dont you may need to add extra functionality to your kernel.
+- Now begins the process of implementing these syscalls. Hopefully most of these are things you have support for, but if you don't you may need to add extra functionality to your kernel.
 
 ### Hosted Cross Compiler
 

@@ -130,7 +130,7 @@ mb2_framebuffer_req:
     .short 1
     .long (mb2_framebuffer_end - mb2_framebuffer_req)
     # preferred width, height, bpp.
-    # leave as zero to indicate "dont care"
+    # leave as zero to indicate "don't care"
     .long 0
     .long 0
     .long 0

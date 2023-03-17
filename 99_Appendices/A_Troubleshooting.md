@@ -32,7 +32,7 @@ The x87 fpu and SSE are the main ones, most compilers wont output 3dnow or mmx, 
 First you'll went to set some flags in cr0 for the fpu:
 
 * Bit 1 = MP/Monitor processor - required
-* Bit 2 = Must be cleared (if set means you want to emulate the fpu - you dont).
+* Bit 2 = Must be cleared (if set means you want to emulate the fpu - you don't).
 * Bit 4 = Hardwired to 1 (but not always in some emulator versions!). If set means use 387 protocol, otherwise 287.
 * Bit 5 = NE/Native exceptions - required.
 
@@ -46,6 +46,6 @@ You'll want to set the following bits in cr4:
 * Bit 10 = OSXMMEXCPT, tell the cpu it can issue #XM (simd/sse exceptions), and we'll handle them.
 
 If the cpu supports XSAVE (check cpuid), you can also set bit 18 here to enable it, otherwise leave it as is. 
-There is more work to setting up xsave as well, for running in a single-task state where you dont care about saving/loading registers, not having xsave setup is fine.
+There is more work to setting up xsave as well, for running in a single-task state where you don't care about saving/loading registers, not having xsave setup is fine.
 
 That's it, that should enable your compiler-generated code with sse instructions to work.

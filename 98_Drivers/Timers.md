@@ -26,7 +26,7 @@ We're going to focus on setting up the local APIC timer, and calibrating it with
 
 ### Calibrating Timers
 
-There are some timers that we arent told the frequency of, and must determine this ourselves. The local APIC timer and TSC (up until recently) are examples of this. In order to use these, we have to know how fast each 'tick' is in real-world time, and the easiest way to do this is with another time that we do know the frequency of.
+There are some timers that we aren't told the frequency of, and must determine this ourselves. The local APIC timer and TSC (up until recently) are examples of this. In order to use these, we have to know how fast each 'tick' is in real-world time, and the easiest way to do this is with another time that we do know the frequency of.
 
 This is where timers like the PIT can still be useful: even though it's very simple and not very flexible, it can used to calibrate more advanced timers like the local APIC timer. Commonly the HPET is also used for calibration purposes if it's available, since we can know it's frequency without calibration.
 
@@ -34,12 +34,12 @@ Actually calibrating a timer is straightforward. We'll refer to the timer we kno
 
 - Ensure both timers are stopped.
 - If the target timer is counts down, set it the maximum allowed value. If it counts up, set it to zero.
-- Choose how long you want to calibrate for. This should be long enougn to allow a good number of ticks to pass on the reference timer, because more ticks passing will mean a more accurate calibration. This time shouldn't be too long however, because if one of the timer counters rolls over then we'll trouble determining the results. A good starting place is 5-10ms.
+- Choose how long you want to calibrate for. This should be long enough to allow a good number of ticks to pass on the reference timer, because more ticks passing will mean a more accurate calibration. This time shouldn't be too long however, because if one of the timer counters rolls over then we'll trouble determining the results. A good starting place is 5-10ms.
 - Start both timers, and poll the reference timer until the calibration time has passed.
 - Stop both timers, and we look at how many ticks has passed for the target timer. If it's a count-down timer, we can determine this by subtracting the current value from the maximum value for the counter.
 - Now we know that a certain amount of time (the calibration time) is equal to a certain number of ticks for our target timer.
 
-Sometimes running your kernel in a virtual machine, or on less-stable hardware can give varying results, so it can be useful to calibrate a timer multiple times and compare the results. If some results are odd, dont use them. It can also be helpful to continuously calibrate timers while you're using them, which will help correct small errors over time.
+Sometimes running your kernel in a virtual machine, or on less-stable hardware can give varying results, so it can be useful to calibrate a timer multiple times and compare the results. If some results are odd, don't use them. It can also be helpful to continuously calibrate timers while you're using them, which will help correct small errors over time.
 
 ## Programmable Interval Timer (PIT)
 
@@ -47,7 +47,7 @@ The PIT is actually from the original IBM PC, and has remained as a standard dev
 
 On the original PC the PIT also had other uses, like providing the clock for the RAM and the oscillator for the speaker. Each of these functions is provided by a 'channel', with channel 0 being the timer (channels 1 and 2 are the other functions). On modern PITs it's likely that only channel 0 exists, so the other channels are best left untouched.
 
-Despite it being so old the PIT is still useful because it provides several useful modes and a known frequency. This means we can use it to calibrate the other timers in our system, which we dont always know the frequency of.
+Despite it being so old the PIT is still useful because it provides several useful modes and a known frequency. This means we can use it to calibrate the other timers in our system, which we don't always know the frequency of.
 
 The PIT itself provides several modes of operation, although we only really care about a few of them:
 
@@ -162,7 +162,7 @@ The general configuration register also contains one other interesting setting: 
 
 ### Comparators
 
-The main counter is only suitable for polling the time, but it cannot generate interrupts. For that we have to use one of the comparators. The HPET will always have at least three comparators, but may have up to 32. In reality most vendors use the stock intel chip which comes with 3 comparators, although some older and more exotic hardware may provide more.
+The main counter is only suitable for polling the time, but it cannot generate interrupts. For that we have to use one of the comparators. The HPET will always have at least three comparators, but may have up to 32. In reality most vendors use the stock intel chip which comes with 3 comparators, but there are some other vendors of compatible hardware out there which may support more.
 
 By default the first two comparators are set up to mimic the PIT and RTC clocks, but they can be configured like the others.
 
@@ -271,7 +271,7 @@ The TSC is probably the simplest timer we've covered so far: it's simply a 64-bi
 
 There are some issues with this version of the TSC however: modern processors will change their base speed depending on power/performance requirements, which means that the rate the TSC ticks at will change dynamically! This makes it pretty useless as a timer, and a newer version was quickly implemented, called the invariant TSC.
 
-The I-TSC ticks at the base speed the processor is supposed to run at, not what it's actually running at, meaning the tick-rate is constant. Most processors support the I-TSC nowdays, and most emulators also do, even if they dont advertise it through cpuid (qemu has invariant TSC, but doesn't set the bit). To test if the TSC is invariant can be done via cpuid once again: leaf 7, edx bit 8.
+The I-TSC ticks at the base speed the processor is supposed to run at, not what it's actually running at, meaning the tick-rate is constant. Most processors support the I-TSC nowadays, and most emulators also do, even if they don't advertise it through cpuid (qemu has invariant TSC, but doesn't set the bit). To test if the TSC is invariant can be done via cpuid once again: leaf 7, edx bit 8.
 
 How about generating interrupts with the TSC? This is also an option feature (that's almost always supported) called TSC deadline. We can test for it's existence via cpuid leaf 1, ecx, bit 24. To use TSC deadline we write the absolute time (in TSC ticks) of when we want the interrupt to a special MSR, called IA_32_TSC_DEADLINE (MSR `0x6E0`).
 

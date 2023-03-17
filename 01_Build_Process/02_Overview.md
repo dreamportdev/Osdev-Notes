@@ -64,7 +64,7 @@ If you're using clang be sure to remember to pass `--target=xyz` with each comma
 
 ### Building C Source Files
 Now that we have a toolchain setup we can test it all works by compiling a C file.
-Create a C source file, it's contents dont matter here as we wont be running it, just telling it compiles.
+Create a C source file, it's contents don't matter here as we wont be running it, just telling it compiles.
 
 Run the following to compile the file into an object file, and then to link that into the final executable.
 
@@ -101,7 +101,7 @@ This section should be seen as an extension to the section above on compiling C 
 When compiling C++ for a freestanding environment, there are a few extra flags that are required:
 
 - `-fno-rtti`: Tells the compiler not to generate **R**un**t**ime **t**ype **i**nformation. This requires runtime support from the compiler libaries, and the os. Neither of which we have in a freestanding environment.
-- `-fno-exceptions`: Requires the compiler libraries to work, again which we dont have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) still require you to declare them `noexcept` so the correct symbols are generated.
+- `-fno-exceptions`: Requires the compiler libraries to work, again which we don't have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) still require you to declare them `noexcept` so the correct symbols are generated.
 
 And a few flags that are not required, but can be nice to have:
 

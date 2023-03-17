@@ -42,7 +42,7 @@ void thead_two() {
 }
 ```
 
-What would we expect to see on the serial output? We dont know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more like they will get in the way of each other.
+What would we expect to see on the serial output? We don't know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more like they will get in the way of each other.
 
 ![Tasks execution sequence](/Images/taskssequence.png)
 
@@ -199,7 +199,7 @@ There is no decisive solution to this, and instead care must be taken when using
 
 In this chapter we've implemented a simple spinlock that allows us to protect shared resources. As you can imagine there are other types of locks you could implement, each with various pros and cons. For example the spinlock shown here has the following problems:
 
-- It doesn't guarentee the order of processes accessing it. If we have threads A, B and C wanting access to a resource, threads A and B may keep acquiring the lock before C can, resulting in thread C stalling. One possible solution to this is called the ticket lock: it's a very simple next step to take from a basic spinlock.
+- It doesn't guaren'tee the order of processes accessing it. If we have threads A, B and C wanting access to a resource, threads A and B may keep acquiring the lock before C can, resulting in thread C stalling. One possible solution to this is called the ticket lock: it's a very simple next step to take from a basic spinlock.
 - It also doesn't prevent a *deadlock* scenario. For example lets say thread A takes lock X, and then needs to take lock Y, but lock Y is held by another thread. Thread B might be holding lock Y, but needs to take lock X. In this scenario neither thread can progress and both are effectively stalled.
 
 Preventing a deadlock is big topic that can be condensed to be: be careful what locks are held when taking another lock. Best practice is to never hold more than a single lock if you can avoid it.

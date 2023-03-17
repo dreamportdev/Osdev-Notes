@@ -41,7 +41,7 @@ A heap allocator exposes two main functions:
 * `void *alloc(size_t size);` To request memory of size bytes.
 * `void free(void *ptr);` To free previously allocated memory.
 
-In user space these are the well known `malloc()/free()` functions. However the kernel will also need it's own heap (we dont want to put data where user programs can access it!). The kernel heap usually exposes functions called `kmalloc()/kfree()`. Functionally these heaps can be the same.
+In user space these are the well known `malloc()/free()` functions. However the kernel will also need it's own heap (we don't want to put data where user programs can access it!). The kernel heap usually exposes functions called `kmalloc()/kfree()`. Functionally these heaps can be the same.
 
 So let's get started with describing the allocation algorithm. 
 

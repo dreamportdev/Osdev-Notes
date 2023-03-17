@@ -183,7 +183,7 @@ Working memory is called anonymous memory in the unix world and refers to what m
 
 The next thing we should add support for is mapping MMIO (memory mapped I/O). Plenty of modern devices will expose their interfaces via mmio, like the APICs, PCI config space or NVMe controllers. MMIO is usually some physical addresses we can interact with, that are redirected to the internal registers of the device. The trick is that MMIO requires us to access *specific* physical addresses, see the issue with our current design?
 
-This is easily solved however! We can add a new `VM_FLAG` that specifies we're allocating a virtual object for MMIO, and pass the physical address in the extra argument. If the VMM sees this flag, it will know not to allocate (and later on, not to free) the mapped physical address. This is important because there's not any physical memory there, so we dont want to try free it.
+This is easily solved however! We can add a new `VM_FLAG` that specifies we're allocating a virtual object for MMIO, and pass the physical address in the extra argument. If the VMM sees this flag, it will know not to allocate (and later on, not to free) the mapped physical address. This is important because there's not any physical memory there, so we don't want to try free it.
 
 Let's add our new flag:
 
@@ -229,7 +229,7 @@ Now that we have a virtual memory manager, let's take a look at how we might use
 
 ### Example 1: Allocating A Temporary Buffer
 
-Traditionally you would use `malloc()` or a variable-length array for something like this. However we don't have a heap yet (see the next chapter), and allocating from the VMM directly like this gives us a few guarentees we might want, like the memory always being page-aligned.
+Traditionally you would use `malloc()` or a variable-length array for something like this. However we don't have a heap yet (see the next chapter), and allocating from the VMM directly like this gives us a few guaren'tees we might want, like the memory always being page-aligned.
 
 ```c
 void* buffer = vmm_alloc(buffer_length, VM_FLAG_WRITE, NULL);
