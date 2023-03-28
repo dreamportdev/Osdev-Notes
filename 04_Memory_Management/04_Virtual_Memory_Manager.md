@@ -121,7 +121,7 @@ vm_object* vm_objs = NULL;
 Now onto our alloc function. The first thing it will need to do is align the length up to the nearest page. This should look familiar.
 
 ```c
-length = (length + (PAGE_SIZE - 1)) / PAGE_SIZE * PAGE_SIZE;
+length = (length + (PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE;
 ```
 
 The next step is to find a space between two VM objects big enough to hold `length` bytes. We'll also want to handle the edge cases of allocating before the first object, after the last object, or if there are no VM objects in the list at all.
