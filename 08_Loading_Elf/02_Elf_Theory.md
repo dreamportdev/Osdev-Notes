@@ -9,7 +9,7 @@ The format has four main sections:
 - *Section headers*: Each header has a name and some metadata associated with it, and describes a region of the data blob. Section names usually begin with a dot (`.`), like `.strtab` which refers to the string table. Section headers are for other software to parse the ELF and understand it's structure and contents.
 - *Program headers*: These are for the program loader (what we're going to write). Each program header has a type that tells the loader how to interpret it, as well as specifying a range within the data blob. These ranges in the data blob can overlap (or often cover the same area as some section header ranges) ranges described by section headers.
 
-Within the ELF specification section headers and program headers are often abbreviated to SHDRs and PHDRs. In a real file the data blob is actually located after the section and program headers.
+Within the ELF specification section headers and program headers are often abbreviated to *SHDRs* and *PHDRs*. In a real file the data blob is actually located after the section and program headers.
 
 ## Section Headers
 
@@ -22,7 +22,7 @@ TODO: how to parse SHDRs (shdrstridx or whatever it's called)
 
 ## Program Headers
 
-While section headers contain a more granular description of our ELF binary, program headers contain just enough information to load the program. Program headers are design to be simple, and by extension allow the program loader to be simple.
+While section headers contain a more granular description of our ELF binary, program headers contain just enough information to load the program. Program headers are designed to be simple, and by extension allow the program loader to be simple.
 
 The layout of a `PHDR` is as follows:
 
@@ -39,7 +39,9 @@ typedef struct {
 } Elf64_Phdr;
 ```
 
-This is the layout of a program header in memory. Locating a phdr is similar to locating an shdr. The first header is located `elf_header->phoff` bytes from the start of the ELF file. It's that easy! 
+The meaning of all these fields is explained below when we look at how actually loading a program header. The most important field here is `p_type`: this tells the program loader what it should do with this particular header. A full list of types is available in the ELF spec, but for now we only need one type: `PT_LOAD`.
+
+Finding the program headers within an ELF binary is also quite straightforward. The offset of the first phdr is given by the `phoff` (program header offset) field of the ELF header. 
 
 Like section headers, each program header is tighly packed against the next one. This means you can treat the program headers as an array. As an example you could loop through the phdrs as follows:
 
@@ -54,8 +56,6 @@ void loop_phdrs(Elf64_Hdr* ehdr) {
     }
 }
 ```
-
-Unlike section headers, program headers don't have names. Instead we use the type field (`p_type`) to determine what to do with the contents of the phdr.
 
 ## Loading Theory
 
@@ -87,7 +87,7 @@ Before looking at some example code your VMM will need a new function that tries
 void* vmm_alloc_at(uintptr_t addr, size_t length, size_t flags);
 ```
 
-Alternatively you could make use of the extra argument in `vmm_alloc`, and add a new flag like `VM_FLAG_AT_ADDR` that indicates the VMM should use the extra arg as the virtual address.
+Alternatively you could make use of the extra argument in `vmm_alloc`, and add a new flag like `VM_FLAG_AT_ADDR` that indicates the VMM should use the extra arg as the virtual address. Bare in mind that if you're loading a program into another address space you will need a way to copy the phdr contents into that address space. The specifics of this don't matter too much, as long as you have a way to do it.
 
 The reason we need to use a specific address is that the code and data contained in the ELF are compiled and linked assuming that they're at that address. There might be code that jumps to a fixed address or data that is expected to be at a certain address. If we don't copy the program header where it expects to be, the program may break.
 
@@ -110,12 +110,14 @@ void load_phdr(Elf64_EHdr* ehdr, Elf64_Phdr* phdr) {
 
 ### Program Header Flags
 
-At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guarenteed to be code), we'll fault.
+At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers in virtual memory as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guarenteed to be code), we'll fault. Some of these headers should be read-only, and some (in the case of code) should be readable and executable. 
 
-Fortunately the solution is quite straightforward, the read/write/execute permissions required for a phdr are encoded in the `p_flags` field. This field is actually a bitfield, with the following definition:
+While you could map everything as read + write + execute, that's not recommended for security reasons. It can also lead to bugs in your programs, and potentially cause crashes.
 
-- `bit 0`: Represents whether a phdr should be executable. Remember that the executable flag is backwards on x86: all memory can be executed by default, unless you set the NX bit. Ideally this should be hidden behind your VMM interface though.
-- `bit 1`: Indicates a region should be writable, the region is read-only if this bit is clear.
-- `bit 2`: Indicates  a region should be readable. This bit should always be set, as exec-only or write-only memory is not very useful, and some hardware platforms will consider these states as an error.
+Each program header stores what permissions it requires in the `p_flags` field. This field is actually a bitfield, with the following definition:
 
-You'll want to adjust these permission *after copying the program header content*, because you'll need the memory to be writable for that. Then you can modify the flags of the mapped memory to what the program header requests.
+- `Bit 0`: Represents whether a phdr should be executable. Remember that the executable flag is backwards on x86: all memory can be executed by default, unless you set the NX bit. Ideally this should be hidden behind your VMM interface though.
+- `Bit 1`: Indicates a region should be writable, the region is read-only if this bit is clear.
+- `Bit 2`: Indicates  a region should be readable. This bit should always be set, as exec-only or write-only memory is not very useful, and some hardware platforms will consider these states as an error.
+
+You'll want to adjust the permissions of the mapped memory *after copying the program header content*. This is because you will need the memory to be mapped as writable so the CPU lets us copy the phdr content into it, and then you can adjust the permissions to what the program header requested.

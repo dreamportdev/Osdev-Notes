@@ -1,5 +1,9 @@
 # Loading An ELF
 
+The *executable and linker file* (ELF) is an open standard for programs, libraries and shards of code and data that are waiting to linked. It's the most common format used by linux and BSD operating systems, and sees some use elsewhere. It's also the most common format for programs in hobby as it's quite simple to implement and it's public specification is feature-complete.
+
+That's not to say ELF is the *only* format for these kinds of files (there are others like PE/portable execute, a.out or even mach-o), but the ELF format is the best for our purposes. A majority of operating systems have come to a similar to conclusion. You could also use your own format, but be aware this requires a compiler capable of outputting your custom format (meaning you either write your own compiler, or modify an existing one - a lot of work!).
+
 This chapter won't be too heavy on new concepts, besides the ELF specification itself, but will focus on bringing everything together. We're going to load a program in a new process, and run it in userspace. This is typically how most programs run, and then from there we can execute a few example system calls.
 
 It should be noted that the original ELF specification is for 32-bit programs, but a *64-bit extension* was created later on called ELF64. We'll be focusing on ELF64.
