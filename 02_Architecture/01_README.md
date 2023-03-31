@@ -1,4 +1,4 @@
-# Architecture
+# Architecture and Drivers
 
 Before going beyond a basic "hello world" and implementing the first real parts of our kernel, there are some key concepts about how the CPU operates that we have to understand. What is an interrupt, and how do we handle it? What does it mean to mask them? What is the GDT and what is it's purpose?
 
@@ -51,7 +51,7 @@ When an unexpected event happens, the cpu will immediately stop the current code
 
 The interrupted code is usually never aware that an interrupt even occured, and should continue on as normal.
 
-# Drivers
+## Drivers
 
 Not device drivers for graphic cards, network interfaces, and other hardware, but on early stages of development we will need some basic drivers to implement some of the future features, for example we will need to have at least one supported Timer to implement the scheduler, we will most likely want to add a basic support for a keyboard in order to implement a cli, these topics will be covered in this section, along with other architecture specific drivers required by the CPU.
 
