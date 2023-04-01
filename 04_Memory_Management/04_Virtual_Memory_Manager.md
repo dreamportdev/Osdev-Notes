@@ -10,7 +10,7 @@ As mentioned before, a simple kernel only requires a simple VMM which may end up
 
 What exactly does the virtual memory manager *manage*? The PMM manages the physical memory installed in a computer, so it would make sense that the VMM manages the virtual memory. What do we mean by virtual memory?
 
-Once we have some kind of address translation enabled, all memory we can access is now virtual memory. This address translation is usually performed by the MMU (memory management unit) which we can program in someway. On x86_64 the MMU parses the page tables we provide to determine what should happen during this translation.
+Once we have some kind of address translation enabled, all memory we can access is now virtual memory. This address translation is usually performed by the MMU (memory management unit) which we can program in someway. On `x86_64` the MMU parses the page tables we provide to determine what should happen during this translation.
 
 Even if you create an identity map of physical memory (meaning virtual address = physical address) you're still accessing physical memory *through* virtual memory. This is subtle, but important difference.
 
@@ -31,9 +31,9 @@ A lot of these features are not needed in the beginning, but hopefully the uses 
 ## Concepts
 
 As you might expect, there are many VMM designs out there. We're going to look at a simple one that should provide all the functionality needed for now.
-First we'll need to introduce a new concept: a *virtual memory object*, sometimes called a *virtual memory range*. This is just a struct that represents part of the virtual address space, so it will need a base address and length, both of these are measured in bytes and will be page-aligned. This requirement to be page-aligned comes from the mechanism used to manage virtual memory: paging. On x86 the smallest page we can manage is 4K, meaning that all of our VM objects must be aligned to this.
+First we'll need to introduce a new concept: a *virtual memory object*, sometimes called a *virtual memory range*. This is just a struct that represents part of the virtual address space, so it will need a base address and length, both of these are measured in bytes and will be page-aligned. This requirement to be page-aligned comes from the mechanism used to manage virtual memory: paging. On `x86` the smallest page we can manage is `4K`, meaning that all of our VM objects must be aligned to this.
 
-These flags we store seem like the flags used in the page tables, so you could just store them there, but storing them as part of the object makes looking them up faster, since you don't need to manually traverse the paging structure. It also allows us to store flags that the are not relevant to paging.
+In addition we might want to store some flags in the *vm object*, they are like the flags used in the page tables, we could technically just store them there, but having them as part of the object makes looking them up faster, since we don't need to manually traverse the paging structure. It also allows us to store flags that the are not relevant to paging.
 
 Here's what our example virtual memory object looks like:
 
@@ -53,9 +53,9 @@ typedef struct {
 
 The `flags` field is actually a bitfield, and we've defined some macros to use with it. 
 
-These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convinient for oddities like x86 and it's nx-bit, where all memory is executable by default, and you must specify if you *don't* want it to be executable. 
+These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convenient for oddities like `x86` and it's nx-bit, where all memory is executable by default, and you must specify if you *don't* want it to be executable. 
 
-Having it like this allows that to be abstracted away from the rest of our kernel. For x86_64 our translation function would look like the following:
+Having it like this allows that to be abstracted away from the rest of our kernel. For `x86_64` our translation function would look like the following:
 
 ```c
 uint64_t convert_x86_64_vm_flags(size_t flags) {

@@ -34,7 +34,7 @@ A virtual address is what a running program sees. Thats any program: a driver, u
 
 A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
 
-![address_translation drawio](/Images/addrtranslation.png)
+![Address Translation](/Images/addrtranslation.png)
 
 
 Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
