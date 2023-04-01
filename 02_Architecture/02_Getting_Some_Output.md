@@ -37,9 +37,11 @@ extern inline void outportb (int portnum, unsigned char data)
 
 ```
 
+Where `portnum` is the number of port where we are sending our data (usually is 0x3f8 or 0xe9), and the data is the `char` we want to send in output. 
+
 ### Initialization
 
-The second part again is pretty simple, we just need to send few configuration command for initializing the serial communication, the code below is copied from https://wiki.osdev.org/Serial_Ports#Initialization:
+The second part is pretty simple, we just need to send few configuration command for initializing the serial communication, the code below is copied from https://wiki.osdev.org/Serial_Ports#Initialization:
 
 ```C
 #define PORT 0x3f8          // COM1
@@ -67,7 +69,7 @@ static int init_serial() {
 }
 ```
 
-Notice that usually the com1 port is mapped to address: *0x3f8*. The function above is setting just default values for serial communication. 
+Notice that usually the com1 port is mapped to address: *0x3f8*. The function above is setting just default values for serial communication. An alternative that does not require any initialization is to use the port `0xe9`, this is also know as the _debugcon_ or the _port e9 hack_ and it still use the `inportb` and `outportb` functions as they are, but is often faster because is a special port that sends data directly to the emulator console output. 
 
 ### Sending a string
 
