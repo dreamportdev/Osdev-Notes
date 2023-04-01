@@ -1,6 +1,6 @@
 # Serial Logging (aka Hello World)
 
-During the developmen of our kernel we will need to debug a lot, and checking a lot of values, but so far our kernel is not capable of doing anything, and having proper video output with scrolling, fonts etc, can take some time to implement (and probably we need to check again some values), so we need a quick way of getting some output from our kernel, not necessarily on the screen. 
+During the development of our kernel we will need to debug a lot, and checking a lot of values, but so far our kernel is not capable of doing anything, and having proper video output with scrolling, fonts etc, can take some time to implement (and probably we need to check again some values), so we need a quick way of getting some output from our kernel, not necessarily on the screen. 
 
 This is where the serial logging came to an aid, we will use the serial port to output our text and numbers. 
 
