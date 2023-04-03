@@ -260,6 +260,8 @@ The virtual memory manager is a layer between the physical memory manager and th
 
 The workflow should be the similar to the following: 
 
-Allcoation function return an address --> This address is mapped to it's own page table (eventually allocating intermediate page dirs) -> Physical memory is requested.
+Allocation function return an address --> This address is mapped to it's own page table (eventually allocating intermediate page dirs) -> Physical memory is requested.
 
-Is not necessary to allocate physical memory immediately, but it can be handled also during the page fault. 
+Is not necessary to allocate physical memory immediately, but it can be handled also during the page fault, this depends on the design. 
+
+Details about implementing a basic VMM will be given in the following chapter.

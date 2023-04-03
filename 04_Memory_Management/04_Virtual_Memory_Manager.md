@@ -70,9 +70,9 @@ uint64_t convert_x86_64_vm_flags(size_t flags) {
 };
 ```
 
-The `PT_xyz` macros are just setting the bits in the page table entry, for specifics see the paging chapter. Notice how we set the NX-bit if `VM_FLAG_EXEC` is not set because of a quirk on x86.
+The `PT_xyz` macros are just setting the bits in the page table entry, for specifics see the *paging chapter*. Notice how we set the NX-bit if `VM_FLAG_EXEC` is not set because of a quirk on x86.
 
-We're going to store these vm objects as a linked list, which is the purpose of the `next` field.
+We're going to store these *vm objects* as a linked list, which is the purpose of the `next` field.
 
 ### How Many VMMs Is Enough?
 
@@ -84,11 +84,18 @@ There are many ways of handling this, one example is to have a special kernel VM
 
 ### Managing An Address Space
 
-This is where design and reality collide, because our high level VMM needs to program the MMU. The exact details of this vary by platform, but for x86(_64) we have paging! See the previous chapter on how x86 paging works. Each virtual memory manager will need to store the appropriate data to manage the address space it controls: for paging we just need the address of the root table.
+This is where design and reality collide, because our high level VMM needs to program the MMU. The exact details of this vary by platform, but for `x86(_64)` we have paging! See the previous chapter on how x86 paging works. Each virtual memory manager will need to store the appropriate data to manage the address space it controls: for paging we just need the address of the root table.
 
 ```c
 void* vmm_pt_root;
 ```
+
+This variable can be placed anywhere, this depend on our design decisions, there is not correct answer, but a good idea is to reserve some space in the VM space to be used by the VMM to store it's data. Usually a good idea is to place this space somewhere in the higher half area probably anwhere below the kernel. 
+
+Once we got the address, this needs to be mappet to an existing physical address, so we will need to do two things: 
+
+* Allocate a physical page for the `vmm_pt_root` pointer (at this point a function to do that should be present) 
+* Map the phyiscal address into the virtual address `vmm_pt_root`. 
 
 ## Allocating Objects
 
