@@ -115,7 +115,7 @@ The `length` field is how many bytes we want. Internally we will round this **up
 
 The final argument is unused for the moment, but will be used to pass data for more exotic allocations. We'll look at an example of this later on.
 
-The function will return a virtual address, it doesn't have necessarily to be already mapped and present, it just need to be an available address. Again the question is: where is that address? The answer is again that it depends on the design decisions. So we again need to decide where we want the virtual memory range to be returned is, and use it's base as starting address. It can be the same space used for the vmm data strutctures, or another area, that is up to us. 
+The function will return a virtual address, it doesn't have necessarily to be already mapped and present, it just need to be an available address. Again the question is: where is that address? The answer is again that it depends on the design decisions. So we need to decide where we want the virtual memory range to be returned is, and use it as starting address. It can be the same space used for the vmm data strutctures, or another area, that is up to us. 
 
 For the example code we're going to assume you have a function to modify page tables that looks like the following:
 
@@ -135,7 +135,7 @@ Now onto our alloc function. The first thing it will need to do is align the len
 length = (length + (PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE;
 ```
 
-The next step is to find a space between two VM objects big enough to hold `length` bytes. We'll also want to handle the edge cases of allocating before the first object, after the last object, or if there are no VM objects in the list at all.
+The next step is to find a space between two VM objects big enough to hold `length` bytes. We'll also want to handle the edge cases of allocating before the first object, after the last object, or if there are no VM objects in the list at all (not covered in the example below, they are left as exercise).
 
 ```c
 vm_object* current = vm_objs;
