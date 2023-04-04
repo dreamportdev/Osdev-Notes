@@ -97,6 +97,8 @@ Once we got the address, this needs to be mappet to an existing physical address
 * Allocate a physical page for the `vmm_pt_root` pointer (at this point a function to do that should be present) 
 * Map the phyiscal address into the virtual address `vmm_pt_root`. 
 
+It is important to keep in mind that the all the addresses must be page aligned.
+
 ## Allocating Objects
 
 Now we know what a VM object is, let's look at how we're going to create them.
@@ -112,6 +114,8 @@ void* vmm_alloc(size_t length, size_t flags, void* arg);
 The `length` field is how many bytes we want. Internally we will round this **up** to the nearest page size, since everything must be page-aligned. The `flags` field is the same bitfield we store in a VM object, it contains a description of the type of memory we want to allocate.
 
 The final argument is unused for the moment, but will be used to pass data for more exotic allocations. We'll look at an example of this later on.
+
+The function will return a virtual address, it doesn't have necessarily to be already mapped and present, it just need to be an available address. Again the question is: where is that address? The answer is again that it depends on the design decisions. So we again need to decide where we want the virtual memory range to be returned is, and use it's base as starting address. It can be the same space used for the vmm data strutctures, or another area, that is up to us. 
 
 For the example code we're going to assume you have a function to modify page tables that looks like the following:
 

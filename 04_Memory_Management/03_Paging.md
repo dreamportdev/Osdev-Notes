@@ -251,17 +251,3 @@ A few examples of recursive addresses:
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: PML4: 510, PDPR: 510, PD: 510, PT: 510, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT wit page number equals to 510, and we obtain access to the PML4 page itself.
     - Now using a similar approach we can get acces to other tables, for example the following values: PML4: 510, PDPR:510, PD: 1, PT: 256, will give access at the Page Directory PD at  entry number 256 in PDPR that is  contained in the first PML4 entry .
 
-## Virtual Memory Manager
-
-The virtual memory manager is a layer between the physical memory manager and the allocation function (slab/heap/whatever), it basically has to do only two things: 
-
-* Given a virtual address in input it has to be mapped in the page table
-* And also given a virtual address in input it has to be unmapped it from the physical location. 
-
-The workflow should be the similar to the following: 
-
-Allocation function return an address --> This address is mapped to it's own page table (eventually allocating intermediate page dirs) -> Physical memory is requested.
-
-Is not necessary to allocate physical memory immediately, but it can be handled also during the page fault, this depends on the design. 
-
-Details about implementing a basic VMM will be given in the following chapter.
