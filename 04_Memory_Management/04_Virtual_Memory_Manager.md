@@ -90,9 +90,9 @@ This is where design and reality collide, because our high level VMM needs to pr
 void* vmm_pt_root;
 ```
 
-This variable can be placed anywhere, this depend on our design decisions, there is not correct answer, but a good idea is to reserve some space in the VM space to be used by the VMM to store it's data. Usually a good idea is to place this space somewhere in the higher half area probably anwhere below the kernel. 
+This variable can be placed anywhere, this depend on our design decisions, there is not correct answer, but a good idea is to reserve some space in the VM space to be used by the VMM to store it's data. Usually a good idea is to place this space somewhere in the higher half area probably anywhere below the kernel. 
 
-Once we got the address, this needs to be mappet to an existing physical address, so we will need to do two things: 
+Once we got the address, this needs to be mapped to an existing physical address, so we will need to do two things: 
 
 * Allocate a physical page for the `vmm_pt_root` pointer (at this point a function to do that should be present) 
 * Map the phyiscal address into the virtual address `vmm_pt_root`. 
@@ -115,7 +115,7 @@ The `length` field is how many bytes we want. Internally we will round this **up
 
 The final argument is unused for the moment, but will be used to pass data for more exotic allocations. We'll look at an example of this later on.
 
-The function will return a virtual address, it doesn't have necessarily to be already mapped and present, it just need to be an available address. Again the question is: where is that address? The answer is again that it depends on the design decisions. So we need to decide where we want the virtual memory range to be returned is, and use it as starting address. It can be the same space used for the vmm data strutctures, or another area, that is up to us. 
+The function will return a virtual address, it doesn't have necessarily to be already mapped and present, it just need to be an available address. Again the question is: where is that address? The answer again is that it depends on the design decisions. So we need to decide where we want the virtual memory range to be returned is, and use it as starting address. It can be the same space used for the vmm data strutctures, or another area, that is up to us, of course this decision will have an impact on the design of the algorithm.
 
 For the example code we're going to assume you have a function to modify page tables that looks like the following:
 
