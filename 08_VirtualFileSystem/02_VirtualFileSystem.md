@@ -182,13 +182,13 @@ And we want to access the following paths:
 * /home/mount/folder1/file
 * /opt
 
-As we can see the first two paths have a common part, but belongs to different file system so we need to implement a function that given a path return the index of the file system it belongs to. 
+As we can see the first two paths have a common part, but belongs to different file system so we need to implement a function that given a path return a reference of the file system it belongs to. 
 
-How to do it is pretty simple, we scan the array, and search for the "longest" mountpoint that is contained in the path, so in the first example, we can see that there are two items in the array that are contained in the path: "/" (0), and "/home" (3), and the longest one is number 3, so this is what our function is going to return. 
+How to do it is pretty simple, we scan the list, and search for the "longest" mountpoint that is contained in the path, so in the first example, we can see that there are two items in the array that are contained in the path: _"/" (0)_, and _"/home" (3)_, and the longest one is number 3, so this is the file system our function is going to return (wheter it is going to be an id or the reference to the mountpoint item).
 
-The second path instead has three mountpoints contained into it: "/" (0), "/home/mount" (1), "/home", in this case we are going to return 1. 
+The second path instead has three mountpoints contained into it: _/" (0)_, _"/home/mount" (1)_, _"/home" (3)_, in this case we are going to return 1. 
 
-The last one, has only one mountpoint that is contained into the path, and it is "/" (0). 
+The last one, has only one mountpoint that is contained into the path, and it is _"/" (0)_. 
 
 In a single root scenario, there is always at least a mountpoint that is contained into the given path, and this is the root folder "/".
 
@@ -373,7 +373,7 @@ So now we have managed to access a file stored somewhere on a file system using 
 ssize_t read(int fildes, void *buf, size_t nbyte);
 ```
 
-Where the paramaters are the opened file descriptor (fildes) the buffer we want to read into (buf), and the number of bytes (nbyte`) we want to read.
+Where the paramaters are the opened file descriptor (`fildes) the buffer we want to read into (`buf`), and the number of bytes (`nbytes`) we want to read.
 
 The read function will return the number of bytes read, and in case of failure -1. Like all other vfs functions, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file and fill the `buf` buffer.  
 
