@@ -1,10 +1,10 @@
 # Hello World
 
-During the development of our kernel we will need to debug a lot, and checking a lot of values, but so far our kernel is not capable of doing anything, and having proper video output with scrolling, fonts etc, can take some time to implement (and probably we need to check again some values), so we need a quick way of getting some output from our kernel, not necessarily on the screen. 
+During the development of our kernel we will need to debug a lot, and checking a lot of values, but so far our kernel is not capable of doing anything, and having proper video output with scrolling, fonts etc, can take some time, so we need a quick way of getting some text out from our kernel, not necessarily on the screen. 
 
 This is where the serial logging came to an aid, we will use the serial port to output our text and numbers. 
 
-Many emulators has an option to redirect serial output to a file, if you are using QEmu (for more information about it refer to the Appendices section) you need to start it passing the parameter *-s filename*:
+Many emulators has an option to redirect serial data to a file, if you are using QEmu (for more information about it refer to the Appendices section) you need to start it passing the parameter *-s filename*:
 
 ```bash
 qemu -S filename.log -cdrom yourosiso
@@ -87,14 +87,18 @@ This is the first function that we want to implement.
 
 ### Printing Digits
 
-Once we are able to print strings is time to print digits. The basic idea is simple, we takeread every single digit that compose the number, and print the corresponding character, luckily enough the digits symbols are consecutive in the ascii map, so for example: 
+Once we are able to print strings is time to print digits. The basic idea is simple, we read every single digit that compose the number, and print the corresponding character, luckily enough the digits symbols are consecutive in the ascii map, so for example: 
 
 ```c
 '0' + 1 // will contain the symbol '1'
 '0' + 5 // will contain the symbol '5'
 ```
 
-How to get the single digits will depend on what base we are using (the most common are base 8, 10 and 16), let's assume we want for now just print decimals (base 10). For doing this we will use a property of division by 10, that the remainder of any integer number divided by 10 is always the same as the least significant digit, this means that for example $1235/10=123.5$ and $1235 \mod 10=5$, remember that in C (and other programming languages) a division between integers will ignore any decimal digit, so this means that $1235=123$. And what if now we divide 123 by 10? yes we get 3 as remainder, below the full list of divisions for the number 1235:
+How to get the single digits will depend on what base we are using (the most common are base 8, 10 and 16), let's assume we want for now just print decimals (base 10). 
+
+To get decimal strings we will use a property of division by 10: _The remainder of any integer number divided by 10 is always the same as the least significant digit. _
+
+As an example consider the number 1235:  $1235/10=123.5$ and $1235 \mod 10=5$, remember that in C (and other programming languages) a division between integers will ignore any decimal digit, so this means that $1235=123$. And what if now we divide 123 by 10? yes we get 3 as remainder, below the full list of divisions for the number 1235:
 
 * $1235/10 = 123$ and $1235 \mod 10 = 5$
 * $123/10 = 12$ and $123 \mod 10 = 3$
