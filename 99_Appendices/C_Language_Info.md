@@ -36,7 +36,7 @@ Pointers can be compared too, with the operators: ==, <=, >=, <.>, of course the
 The inline assembly instruction has the following format: 
 
 ```C
-asm("assenmbly_template" 
+asm("assembly_template" 
     : output_operand
     : input_operand
     : list of clobbered registers
