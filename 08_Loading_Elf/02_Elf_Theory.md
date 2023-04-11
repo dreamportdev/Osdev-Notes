@@ -13,12 +13,17 @@ Within the ELF specification section headers and program headers are often abbre
 
 ## Section Headers
 
-We won't be dealing with a lot of section headers, as the program loader is mainly interested in program headers. Having said that, there are some special section headers you should be aware of:
+Section headers describe the ELF in more detail and often contain useful (but not required for running) data. We won't be dealing with section headers at all in our program loader, since everything we need is nicely contained in the program headers. 
 
-- `.strtab`: This header contains a number of null-terminated strings, with the first string simply being a null-terminator. When a string is referenced in an ELF, it's stored as an offset 
-- `.symtab`: This section contains information on symbols (variables and functions) within the ELF. This is where to look for extracting debug information.
+Having said that, if you're curious about what's inside the rest of the ELF file, tools like `objdump` or `readelf` can parse and display section headers for you. They're also documented thoroughly in the ELF specification.
 
-TODO: how to parse SHDRs (shdrstridx or whatever it's called)
+There are a few special section headers worth knowing about, even if we dont use them right now:
+
+- `.text`, `.rodata`, `.data`, and `.bss`: These usually map directly to the program headers of the same name. Since section headers contain more information than program headers, there is often some extra information stored here about these sections. This is not needed by a program loader so it's not present in the PHDRs.
+- `.strtab`: Short for *string table*, this section header is a series of null-terminated strings. The first entry in this table is also a null-terminator. When other sections need to store a string they actually store a byte offset into this section. 
+- `.symtab`: Short for *symbol table*, this section contains all the exported (and internal) symbols for the program. This section may also include some debugging symbols if compiling with `-g` or they may be stored under a `.debug_*` section. If you ever need to get symbols for a program, they'll be here.
+
+Often there will be other section headers in your program, often serving specific purposes. For example `.eh_frame` is used for storing language-based exception and unwinding information, and you may also have `.ctors` if there any global constructors.
 
 ## Program Headers
 
