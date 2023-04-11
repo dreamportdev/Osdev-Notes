@@ -117,7 +117,7 @@ void load_phdr(Elf64_EHdr* ehdr, Elf64_Phdr* phdr) {
 
 At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers in virtual memory as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guarenteed to be code), we'll fault. Some of these headers should be read-only, and some (in the case of code) should be readable and executable. 
 
-While you could map everything as read + write + execute, that's not recommended for security reasons. It can also lead to bugs in your programs, and potentially cause crashes.
+While you could map everything as *read* + *write* + *execute*, that's not recommended for security reasons. It can also lead to bugs in your programs, and potentially cause crashes.
 
 Each program header stores what permissions it requires in the `p_flags` field. This field is actually a bitfield, with the following definition:
 

@@ -18,7 +18,7 @@ In the previous chapter we looked at the details of loading program headers, but
 - Create a new address space for the program to live in. This usually involves creating a new VMM instance, but the specifics will vary depending on your design. Don't forget to keep the kernel mappings in the higher half!
 - Copy the loadable program headers into this new address space. Take care when writing this code, as the program headers may not be page-aligned. Don't forget to zero the extra bytes between `memsz` and `filesz`.
 - Once loaded, set the appropriate permission on the memory each program header lives in: the write, execute (or no-execute) and user flags.
-- Now we'll need to create a thread to act as the main thread for this program, set the thread's entry function to the `e_entry` field in the ELF header. This field is the start function of the program. You'll also need to create a stack in the memory space of this program for the thread to use, if this wasnt already done as part of your thread creation.
+- Now we'll need to create a new thread to act as the main thread for this program, and set it's entry point to the `e_entry` field in the ELF header. This field is the start function of the program. You'll also need to create a stack in the memory space of this program for the thread to use, if this wasnt already done as part of your thread creation.
 
 If you've done all of this then the program is ready to run! You should be able to emqueue the main thread in your scheduler and let it run.
 
@@ -28,4 +28,4 @@ As you can already see from the restrictions we made above there is plenty of ro
 
 - If you're loading a program into *userspace* (rather than in the kernel) you will need to map all the memory you want to allow the program to use as user-accessible. This means not just the program headers but also the stack. You'll want to mark all this memory as user-accessible *after* copying the program data in there though.
 - Again if you're loading a user program your scheduler will need to handle switching between different privilege levels on the cpu. On x86_64 these are called rings (ring 0 = kernel, ring 3 = user), other platforms may use different names. See the userspace chapter for more detail.
-- As was mentioned in the scheduling chapter, don't forget to call a function when exiting the main thread of the program! In a typical userspace program the standard library does this for us, but our programs are freedstanding so you'll need to do this manually. If coming from userspace this will require a syscall.
+- As was mentioned in the scheduling chapter, don't forget to call a function when exiting the main thread of the program! In a typical userspace program the standard library does this for us, but our programs are freestanding so you'll need to do this manually. If coming from userspace this will require a syscall.
