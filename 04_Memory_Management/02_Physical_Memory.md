@@ -1,4 +1,4 @@
-Physical memory manager
+Physical Memory Manager
 =======================
 
 The physical memory manager will keep track of used physical memory in chunks of pages. The page size will depends on the configuration of VMM. 
@@ -11,7 +11,7 @@ What the physical memory manager has to take care of as its bare minimum is:
 2. Check if given an address it is already used or not
 3. Allocate/free a page
 
-In this document we will explain the bitmap method, because is probably the simplest to understand for a beginner. 
+In this document we will explain the bitmap method, because is probably the simplest to understand for a beginner. To keep the explanation simple, we will assume that the kernel will support only one page size.
 
 ## The Bitmap
 
@@ -37,7 +37,7 @@ So marking a memory location as free or used is just matter of setting clearing 
 
 But how do we mark a page as taken or free? We need to translate row/column in an address, or the address in row/column. Let's assume that we asked fro a free page and we found the first available bit at row 0 and column 3, how we translate it to address, well for that we need few extra info: 
 
-* The page size (we should know what is the size of the page you are using XD), Let's call it `PAGE_SIZE`
+* The page size (we should know what is the size of the page you are using), Let's call it `PAGE_SIZE`
 * How many bits are in a row (it's up to us to decide it, in this example we are using an unsigned char, but most probably in real life it is going to be a `uint32_t` for 32bit OS or `uint64_t` for 64bit os) let's call it `BITS_PER_ROW`
 
 To get the address we just need to do: 
