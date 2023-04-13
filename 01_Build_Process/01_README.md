@@ -3,11 +3,11 @@
 An OS like any other project needs to be built, and packaged in a special way in order to be "booted". 
 This part will cover all the steps needed to have an initial set of building script for our os, and also explore some of the bootloader that can be used to load our kernel. 
 
-- [General Overview](02_Overview.md) This chapter will a high level overview of the building process, introducing some of the basic concepts and tools that will be used in the following chapters and showing two possible compiler options
+- [General Overview](02_Overview.md) This chapter will serve as a high level overview of the building process, introducing some of the basic concepts and tools that will be used in the following chapters and showing two possible compiler options
 - [Boot Protocols & Bootloaders](03_Boot_Protocols.md) Here we will explore two possible solutions for booting our kernel: Multiboot2 and Stivale, explaining how they must be used and configured in order to boot our kernel
 - [Makefiles](04_Gnu_Makefiles.md) The building script, we are going to use: Makefile. 
-- [Linker Scripts](05_Linker_Scripts.md) Probably one of the most _obscure_ parts of the building process, especially for beginners, this chapter explains what are the linker scripts, why they are important, an how to write one.
-- [Generating A Bootable Iso](06_Generating_Iso.md) After building our kernel we want to run it too (yeah like the cake...) but for doing that we need a bootable support, only the kernel file is not enough, this chapter will show how to create a bootable iso and start to test it on emulators/real hardware.
+- [Linker Scripts](05_Linker_Scripts.md) Probably one of the most _obscure_ parts of the building process, especially for beginners, this chapter explains what are the linker scripts, why they are important, and how to write one.
+- [Generating A Bootable Iso](06_Generating_Iso.md) After building our kernel we want to run it too (yeah like the cake...). In order to do that we need a bootable iso, as only the kernel file is not enough. This chapter will show how to create a bootable iso and start to test it on emulators/real hardware.
 
 ## Useful Links
 
