@@ -1,12 +1,22 @@
 # Tips and Tricks
 
-## don't forget about unions
+## Don't Forget About Unions
+
 Unions may not see as much use as structs (or classes), but they can be useful.
-For example if you have a packed struct of 8 uint8_ts that are from a single hardware register.
-Rather than reading a uint64_t, and then breaking it up into the various fields of a struct, use a union!
+For example if you have a packed struct of 8 `uint8_t`s that are from a single hardware register.
+Rather than reading a `uint64_t`, and then breaking it up into the various fields of a struct, use a union.
+
+Let's look at some examples and see how they can be useful. While this technique is useful, it has to be used carefully. If accessing MMIO using a `volatile` instance of a union, be sure you read about access requirements for the underlying hardware. For example a device may expose a 64-bit register, consisting of 8 8-bit fields. However the device may *require* that perform 64-bit reads and writes to the register, in which you will have to read the whole register, and create the union from that value. If the device doesn't have such a requirement, you could instead use a `volatile` union and access it normally.
+
+Imagine we have a function that reads a register and returns it's value as `uint64_t`:
+
 ```c
 uint64_t read_register();
+```
 
+If we want to use a struct and populate it with the value returned by the function, we will have something similar to the following code:
+
+```c
 struct BadIdea
 {
     uint8_t a;
@@ -24,9 +34,11 @@ uint64_t reg = read_register();
 BadIdea bi;
 bi.a = reg & 0xFF;
 bi.b = (reg >> 8) & 0xFF;
-bi.c = (reg >> 16) & 0xFF; //yes the AND is not necessary, but it makes the point.
+bi.c = (reg >> 16) & 0xFF; //T AND is not necessary, but it makes the point.
 etc...
 ```
+
+Now let's see what happens instead if we are using a union approach:
 
 ```c
 union GoodIdea
@@ -55,6 +67,11 @@ gi.squished = read_register();
 //assuming a is bits 7:0, b is bits 16:8, etc ...
 ```
 
+As you can see we moved the struct declaration inside the union. This means that now that the struct and the union share the same memory location, using an anonymous structure it ensures that the fields are treated as a _single item_
+
+In this way we can either access the `uint64_t` value of the register _squished_, or the single fields _a, b, ..., h_.
+
+
 ## Bitfields? More like minefields.
 
 ```c
@@ -70,11 +87,11 @@ struct BitfieldExample
 ```
 Bitfields can be very useful, as they allow access to oddly sized bits of data. However there's big issue that can lead to unexpected bugs:
 
-Consider the example above. This struct would form 16bits of data in memory, and while `_3bits` and `_5bits` would share 1 byte, same with `_6bits` and `_2bits`, the compiler makes no guaren'tees about which field occupies the least or most significant bits.
-Byte order of fields is always guaren'teed by the spec to be in the order they were declared in the source file.
+Consider the example above. This struct would form 16bits of data in memory, and while `_3bits` and `_5bits` would share 1 byte, same with `_6bits` and `_2bits`, the compiler makes no guarentees about which field occupies the least or most significant bits.
+Byte order of fields is always guarenteed by the spec to be in the order they were declared in the source file.
 Bitwise order is not.
 
 It is worth noting that relying on this is *usually* okay, most compilers will do the right thing, but optimizations can get a little weird sometimes. Especially -O2 and above.
 
 ### The solution?
-There's no easy replacement for bitfields. Personally I'd suggest doing the maths yourself, and just store data in a uint8_t or whatever size is appropriate. Until the day some compiler extensions come along to resolve this.
+There's no easy replacement for bitfields. Our suggestion is doing the maths yourself, and store data in a `uint8_t` or whatever size is appropriate. Until the day some compiler extensions come along to resolve this.

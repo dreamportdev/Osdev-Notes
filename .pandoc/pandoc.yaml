@@ -5,7 +5,7 @@ author:
   - Dean T.
 header-includes:
  - \usepackage{fvextra}
- - \usepackage{appendix}
+ - \usepackage[page,toc,titletoc,title]{appendix}
  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 book: true
 ---

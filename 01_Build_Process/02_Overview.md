@@ -132,6 +132,7 @@ For an explanation of the above linker flags used:
 One other linker option to keep in mind is `-M`, which displays the link map that was generated. This is a description of how and where the linker allocated everything in the final file. It can be seen as a manual symbol table.
 
 ### Building with Makefiles
+
 Now compiling and building one file isn't so bad, but the same process for multiple files can quickly get out of hand. This is especially true when you only want to build files that have been modified, and use previously compiled versions of other files.
 
 Make is a common tool used for building many pieces of software due to how easy and commmon `make` is. Specifically GNU make. GNU make is also chosen as it comes installed by default in many linux distros, and is almost always available if it's not already installed.
@@ -139,6 +140,7 @@ Make is a common tool used for building many pieces of software due to how easy 
 There are other make-like tools out there (xmake, nmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make, which is discussed later on in this chapter, in it's own section.
 
 ## Quick Addendum: Easily Generating a Bootable Iso
+
 There are more details to this, however most bootloaders will provide a tool that lets you create a bootable iso, with the kernel, the bootloader itself and any other files you might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
 While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in it's own section.
@@ -146,6 +148,7 @@ While the process of generating an iso is straightforward enough when using some
 If you're just here for a quick reference, grub uses `grub-mkrescue` and a grub.cfg file, limine reqiures you to build the iso yourself with a limine.cfg on it, and then run `limine-deploy`.
 
 ## Testing with An Emulator
+
 Now we have an iso with our bootloader and kernel installed onto it, how do we test this? Well there's a number of emulators out there, with varying levels of performance and debug utility. Generally the more debug functionality an emulator provides, the slower it will run. A brief comparison of some common x86 emulators is provided below.
 
 - Qemu is great middle ground between debugging and speed. By default your OS will run using software virtualization (qemu's implementation is called tcg), but you can optionally enable kvm with the `--enable-kvm` flag for hardware-assisted virtualization. Qemu also provides a wide range of supported platforms.
@@ -177,6 +180,7 @@ There are a few other qemu flags you might want to be aware of:
 - `-no-shutdown` some configurations of qemu will shutdown if `-no-reboot` is specified, instead of pausing the VM. This flag forces qemu to stay open, but paused.
 
 ## Building and Using Debugging Symbols
+
 You'll never know when you need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in your kernel will increase the file size, but can be useful. If you want to remove them from an already compiled kernel the `strip` program can be used to strip excess info from a file.
 
 Including debug info in the kernel is the same as any other program, simply compile with the `-g` flag. 
@@ -186,12 +190,15 @@ There are different versions of DWARF (the debugging format used by elf files), 
 Getting access to these debug symbols is dependent on the boot protocol used:
 
 ### Multiboot 2
+
 Multiboot 2 provides the Elf-Symbols (section 3.6.7 of the spec) tag to the kernel which provides the elf section headers and the location of the string table. Using these is described below in the stivale section.
 
 ### Stivale 2
+
 Stivale2 uses a similar and slightly more complex (but more powerful) mechanism of providing the entire kernel file in memory. This means you're not limited to just using elf files, and can access debug symbols from a kernel in any format. This is because you have the file base address and length and have to do the parsing yourself.
 
 ### ELFs Ahead, Beware!
+
 This section is included to show how elf symbols could be loaded and parsed, but it is not a tutorial on the elf format itself. If you're unfamiliar with the format, give the elf64 specification a read! It's quite straightforward, and written very plainly. This section makes refernce to a number a of structures and fields from the specification.
 
 With that warning out of the way, let's look at the two fields from the elf header we're interested in. If you're using the multiboot 2 info, you will be given these fields directly. For stivale 2, you will need to parse the elf header yourself. We're interested in `e_shoff` (the section header offset) and `e_shstrndx` (the section header string index).
@@ -212,6 +219,7 @@ Now to get the name of a section, you'll need to find the matching symbol entry,
 Languages built around the C model will usually perform some kind of name mangling to enable features like function overloading, namespaces and so on. This is a whole topic on it's own. Name mangling can be through of as a translation that takes place, to allow things like function overloading and templates to work in the C naming model.
 
 ### Locating The Symbol Table
+
 We'll need to access the data stored in the string table quite frequently for looking up symbols, so let's calculate that and store it in the variable `char* strtab_data`. For both protocols it's assumed that you have found the tag returned by the bootloader that contains the location of the elf file/elf symbols.
 
 ```c

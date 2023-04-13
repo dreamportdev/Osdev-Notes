@@ -5,14 +5,14 @@
 Nowadays there are many OSes available for many different hardware architectures, and probably there are even more file systems. One of the problems for the OS is to provide a generic enough interface to support as many file systems as possible, and making it easy to implement new ones, in the future. This is where the VFS layer comes to aid, in this chapter we are going to see in detail how it works, and make a basic implementation of it. 
 To keep our design simple, the features of our VFS driver will be: 
 
-* Fixed number of mountpoints using an array.
+* Mountpoints will be handled using a simple linked list (with no particular sorting or extra features)
 * Support only the following functions: `open, read, write, close, opendir, readdir, closedir, stat`.
 * No extra features like permissions, uid and gid (although we are going to add those fields, they will not be used).
 * The path length will be limited.
 
 ## How Does VFS Works
 
-The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver.
+The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver, as shown in the picture
 
 ![Where the VFS sits in an OS](/Images/vfs_layer.png)
 
@@ -58,7 +58,15 @@ To be able to access the different filesystems currently lodaed (*mounted*) by t
 * A data structure to store all the information related to the loaded File System
 * A list/tree/array of all the file system currently loaded by the os 
 
-As we anticipated earlier this chapter we are going to use an array to keep track of the mounted file systems, even if it has several limitations and probably a tree is the best choice. We want to focus on the implementation details of the VFS without having to also write and explain the tree-handling functions.
+As we anticipated earlier in this chapter we are going to use a linked list to keep track of the mounted file systems, even if it has several limitations and probably a tree is the best choice. We want to focus on the implementation details of the VFS without having to also write and explain the tree-handling functions.
+
+So we assume that functions to handle list of mountpoints are present (their implementation is left as exercise), from now on we assume the following functions are present: 
+
+```c
+mountpoint_t *create_mountpoint(...) 
+mountpoint_t *add_mountpoint(mountpoint_t* mountpoint);
+void remove_mountpoint(mountpoint_t* mountpoint);
+```
 
 We just said that we need a data structure to keep track of the information of a mounted file system, but what we need to keep track? Let's see what we need to store: 
 
@@ -83,15 +91,14 @@ struct {
 typedef struct mountpoint_t mountpoint_t;
 ```
 
-The next thing is to declare an array with this new data structure, that is going to contain all the mounted filesystem, and will be the first place where we will look whenever we want to access a folder or a file: 
+The next thing is to have a variable to store those mountpoints, since we are using a linked list it is going to be just a pointer to it's root, this will be the first place where we will look whenever we want to access a folder or a file: 
 
 ```c
 #define MAX_MOUNTPOINTS 12
-mountpoint_t mountpoints[MAX_MOUNTPOINTS];
+mountpoint_t *mountpoints_root;
 ```
 
 This is all that we need to keep track of the mountpoints.
-
 
 ### Mounting and umounting
 
@@ -120,16 +127,17 @@ The first one for mounting, let's call it for example `vfs_mount`, to work it wi
 int vfs_mount(char *device, char *target, char *fs_type);
 ```
 
-Once called it will simply add a new item in the mountpoint on the first available position, and will populate the data mountpoint data structure with the information provided, for example using the array approach, if a free spot is found at index `i` to add a new file sytem we will have something like: 
 
+Once called it will simply create and add a new item to the mountpoints list, and will populate the data structure with the information provided, for example inside the function to create a  mountpoint (in our example `create_mountpoint`) we are going to  have something like the following code: 
 ```c
-mountpoints[i].device = device;
-mountpoints[i].type = type;
-mountpoints[i].mountpoint = target;
-mountpoints[i[.operations = NULL 
+mountpoint_t *new_mountpoint = malloc(sizeof(mountpoint_t)); // We assume a kind of malloc is present
+new_mountpoint.device = device;
+new_mountpoint.type = type;
+new_mountpoint.mountpoint = target;
+new_mountpoint.operations = NULL 
 ```
 
-the last line will be populated soon, for now let's leave it to null. 
+the last line will be populated soon, for now let's leave it to `NULL`. 
 
 The second instruction is for umounting, in this case since we are just unloading the file device from the system, we don't need to know what type is it, so technically we need either the target device or the target folder, the function can actually accept both parameters, but use only one of them, let's call it `vfs_umount`: 
 
@@ -137,9 +145,8 @@ The second instruction is for umounting, in this case since we are just unloadin
 int vfs_umount(char *device, char *target);
 ```
 
-In this case we need to find the item in the list that contains the required file system, and if found remove it from the list/tree. In our case since we are using an array we need to clear all the fields in the array at the position containing our fs. 
+In this case we just need to find the item in the list that contains the required file system, and if found remove it from the list/tree by calling the `remove_mountpoint` function, making sure to free all resources if possible, or return an error. 
 
-One thing that we should keep in mind is that using an array, once we umount a file system we are just marking that position as available again, so this means that it can be in the middle of the array, and there can be mounted file system after, so we need to keep in mind this while searching for the next free mouuntpoint.
 
 #### A Short Diversion: The Initialization
 
@@ -162,14 +169,12 @@ Now that we know how to handle the mountpoints, we need to understand how given 
 
 We will cover the single root approach, but eventually changing to a multi-root approach should be pretty easy. One last thing to keep in mind is that the path separator is another design decision, mostly every operating system use either "/" or "\" (the latter is mostly on windows os and derivatives), but in theory everything can be used as a path separator, we will stick with the unix-friendly "/", just keep in mind if going for the "windows" way, the separator is the same as the escape character, so it can interfere with the escape sequences.
 
-For example let's assume that we have the following list of mountpoints: 
+For example let's assume that we have the following list of mountpoints :
 
-```c
-mountpoints[0].mountpoint = "/"
-mountpoints[1].mountpoint = "/home/mount"
-mountpoints[2].mountpoint = "/usr"
-mountpoints[3].mountpoint = "/home"
-```
+* "/"
+* "/home/mount"
+* "/usr"
+* "/home"
 
 And we want to access the following paths: 
 
@@ -177,13 +182,13 @@ And we want to access the following paths:
 * /home/mount/folder1/file
 * /opt
 
-As we can see the first two paths have a common part, but belongs to different file system so we need to implement a function that given a path return the index of the file system it belongs to. 
+As we can see the first two paths have a common part, but belongs to different file system so we need to implement a function that given a path return a reference of the file system it belongs to. 
 
-How to do it is pretty simple, we scan the array, and search for the "longest" mountpoint that is contained in the path, so in the first example, we can see that there are two items in the array that are contained in the path: "/" (0), and "/home" (3), and the longest one is number 3, so this is what our function is going to return. 
+How to do it is pretty simple, we scan the list, and search for the "longest" mountpoint that is contained in the path, so in the first example, we can see that there are two items in the array that are contained in the path: _"/" (0)_, and _"/home" (3)_, and the longest one is number 3, so this is the file system our function is going to return (wheter it is going to be an id or the reference to the mountpoint item).
 
-The second path instead has three mountpoints contained into it: "/" (0), "/home/mount" (1), "/home", in this case we are going to return 1. 
+The second path instead has three mountpoints contained into it: _/" (0)_, _"/home/mount" (1)_, _"/home" (3)_, in this case we are going to return 1. 
 
-The last one, has only one mountpoint that is contained into the path, and it is "/" (0). 
+The last one, has only one mountpoint that is contained into the path, and it is _"/" (0)_. 
 
 In a single root scenario, there is always at least a mountpoint that is contained into the given path, and this is the root folder "/".
 
@@ -192,10 +197,10 @@ What if for example path doesn't start with a "/"? this means that it's a relati
 Implementing the function is left as exercise, below we just declare the header (that we will use in the next sections): 
 
 ```c
-int get_mounpoint_id(char *path);
+mountpoint_t get_mountpoint(char *path);
 ```
 
-If the above function fail it should return a negative number (i.e. -1) to let the caller know that something didn't work (it should always return at least 0 in a single root implementation). 
+If the above function fail it should return  NULL to let the caller know that something didn't work (even if it should always return at least the root "/" item in a single root implementation). 
 
 #### Absolute vs Relative Path
 
@@ -278,10 +283,10 @@ struct {
 } file_descriptor_t
 ```
 
-We need to declare a variable that contains the opened file descriptors, as usual we are using a naive approach, and just use an array, this means that we will have a limited number of files that can be opened: 
+We need to declare a variable that contains the opened file descriptors, as usual we are using a naive approach, and just use an array for simplicity, this means that we will have a limited number of files that can be opened: 
 
 ```c 
-struct file_descriptors_t vfS_opened_files[MAX_OPENED_FILES]
+struct file_descriptors_t vfs_opened_files[MAX_OPENED_FILES]
 ```
 
 Where the `mountpoint_id` fields is the id of the mounted file system that is contining the requested file. The `fs_file_id` is the fs specific id of the fs opened by thefile descriptor, `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations and `file_size` is the the size of the opened file.
@@ -308,11 +313,11 @@ The basic idea is that once mountpoint_id has been found, the vfs will use the m
 
 ```c
 int open(const char *path, int flags){
-    mountpoint_id = get_mountpoint_id(pathname);
+    mountpoint_t *mountpoint = get_mountpoint(pathname);
     
-    if (mountpoint_id > -1) {
-        char *rel_path = get_rel_path(mountpoints[mountpoint_id], path);
-        int fs_specific_id = mountpoints[mountpoint_id].operations.open(rel_path, flags);
+    if (mountpoint != NULL`) {
+        char *rel_path = get_rel_path(mountpoint, path);
+        int fs_specific_id = mountpoint.operations.open(rel_path, flags);
         if (fs_specific_id != ERROR) {
             /* IMPLEMENTATION LEFT AS EXERCISE */
             // Get a new vfs descriptor id vfs_id
@@ -340,8 +345,9 @@ In our case where we have no FIFO or data-pipes, we can outline our close functi
 int close(int fildes) {
     if (vfs_opened_files[fildes].fs_file_id != -1) {
         mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
+        mountpoint_t *mountpoint  = get_mountpoint_by_id(mountpoint_id);
         fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        fs_close_result = mountpoints[mountpoint_id].close(fs_file_id);
+        fs_close_result = mountpoint.close(fs_file_id);
         if(fs_close_result == 0) {
             vfs_opened_files[fildes].fs_file_id = -1;
             return 0;
@@ -351,6 +357,14 @@ int close(int fildes) {
 }
 ```
 
+The above code expects a function to find a mountpoint given it's id `get_mountpoint_by_id`, the implementation is left as exercise, since it's pretty trivial and consists only of iterating inside a list where the header is: 
+
+```c 
+mountpoint_t *get_mountpoint_by_id(size_t mountpoint_id);
+```
+
+This function will be used in the following paragraphs too.
+
 #### Reading From A File
 
 So now we have managed to access a file stored somewhere on a file system using our VFS, and now we need to read its contents. The function used in the file read example at the beginning of this chapter is the C read include in unistd, with the following signature:
@@ -359,7 +373,7 @@ So now we have managed to access a file stored somewhere on a file system using 
 ssize_t read(int fildes, void *buf, size_t nbyte);
 ```
 
-Where the paramaters are the opened file descriptor (fildes) the buffer we want to read into (buf), and the number of bytes (nbyte`) we want to read.
+Where the paramaters are the opened file descriptor (`fildes) the buffer we want to read into (`buf`), and the number of bytes (`nbytes`) we want to read.
 
 The read function will return the number of bytes read, and in case of failure -1. Like all other vfs functions, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file and fill the `buf` buffer.  
 
@@ -387,8 +401,9 @@ ssize_t read(int fildes, void *buf, size_t nbytes) {
 
     if (vfs_opened_files[fildes].fs_fildes_id != -1) {
         int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
+        mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id)
         int fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        int bytes_read = mountpoints[mountpoint_id].read(fs_file_id, buf, nbytes)
+        int bytes_read = mountpoints.read(fs_file_id, buf, nbytes)
         if (opened_files[fildes].buf_read_pos + nbytes < opened_files[fildes].file_size) {
             opened_files[fildes].buf_read_pos += nbytes;
         } else {
