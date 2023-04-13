@@ -1,14 +1,14 @@
 # Tips and Tricks
 
-## Don't forget about unions
+## Don't Forget About Unions
 
 Unions may not see as much use as structs (or classes), but they can be useful.
 For example if you have a packed struct of 8 `uint8_t`s that are from a single hardware register.
 Rather than reading a `uint64_t`, and then breaking it up into the various fields of a struct, use a union.
 
-The following example will show what are the benefits:
+Let's look at some examples and see how they can be useful. While this technique is useful, it has to be used carefully. If accessing MMIO using a `volatile` instance of a union, be sure you read about access requirements for the underlying hardware. For example a device may expose a 64-bit register, consisting of 8 8-bit fields. However the device may *require* that perform 64-bit reads and writes to the register, in which you will have to read the whole register, and create the union from that value. If the device doesn't have such a requirement, you could instead use a `volatile` union and access it normally.
 
-Imagine we have a function that reads a register and return it's value as `uint64_t`:
+Imagine we have a function that reads a register and returns it's value as `uint64_t`:
 
 ```c
 uint64_t read_register();
@@ -34,7 +34,7 @@ uint64_t reg = read_register();
 BadIdea bi;
 bi.a = reg & 0xFF;
 bi.b = (reg >> 8) & 0xFF;
-bi.c = (reg >> 16) & 0xFF; //yes the AND is not necessary, but it makes the point.
+bi.c = (reg >> 16) & 0xFF; //T AND is not necessary, but it makes the point.
 etc...
 ```
 
@@ -94,4 +94,4 @@ Bitwise order is not.
 It is worth noting that relying on this is *usually* okay, most compilers will do the right thing, but optimizations can get a little weird sometimes. Especially -O2 and above.
 
 ### The solution?
-There's no easy replacement for bitfields. Our suggestion is doing the maths by ourselves, and just store data in a `uint8_t` or whatever size is appropriate. Until the day some compiler extensions come along to resolve this.
+There's no easy replacement for bitfields. Our suggestion is doing the maths yourself, and store data in a `uint8_t` or whatever size is appropriate. Until the day some compiler extensions come along to resolve this.
