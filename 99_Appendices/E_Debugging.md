@@ -150,12 +150,13 @@ virtualboxvm --startvm vmname
  ```
 
 You can use either the Virtual Machine name, or its uuid. 
+
 ### Run a vm with debug enabled
 
 To run a VM with debug you need two things: 
 
-* The first one is either the VBOX_GUI_DBG_ENABLED or VBOX_GUI_DBG_AUTO_SHOW set to true 
-* Launch the virtual machine with the --debug option: 
+* The first one is either the `VBOX_GUI_DBG_ENABLED` or `VBOX_GUI_DBG_AUTO_SHOW` set to true 
+* Launch the virtual machine with the `--debug` option: 
 
 ```bash
 virtualboxvm --startvm vmname --debug
@@ -165,7 +166,7 @@ this will open the Virtual Machine with the Debugger command line and ui.
 
 ## QEmu 
 
-### Qemu monitor
+### QEmu monitor
 
 Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger. 
 
