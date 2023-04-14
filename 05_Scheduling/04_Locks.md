@@ -42,13 +42,14 @@ void thead_two() {
 }
 ```
 
-What would we expect to see on the serial output? We don't know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more like they will get in the way of each other.
-
+What would we expect to see on the serial output? We don't know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more likely they will get in the way of each other.
+ 
 ![Tasks execution sequence](/Images/taskssequence.png)
 
-One example of what we could see is `Iwh aI ammi  lethe secfionrsd t stristngring`. This contains all the right characters but it's completely unreadable. The image below shows what could happen:
+The image above is an example of threads being scheduled, assuming there are only three of them in the system (labeled as _A, B, C_. 
+Imagine that A is `thread_one` and B is `thread_two`, while C does not interact with the serial. One example of what we could see then is `Iwh aI ammi  lethe secfionrsd t stristngring`. This contains all the right characters but it's completely unreadable. The image below shows what could happen:
 
-![Shared Resource Sequence](Images/sharedressequence.png)
+![Shared Resource Sequence](/Images/sharedressequence.png)
 
 What we'd expect to see is one of two outcomes: `I am the first string while I am the second` or `while I am the second I am the first string`.
 

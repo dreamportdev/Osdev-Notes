@@ -179,11 +179,11 @@ Note about PWT and PCD, the definiton of those bits depends on whether PAT (page
 
 If we are using 2MB pages this is how the address will be handled by the paging mechanism:
 
-|            |           |                     |            |              |
-|------------|-----------|---------------------|------------|--------------|
-| 63 .... 48 | 47 ... 39 | 38   ... 32  31  30 | 29  ..  21 | 20 19 ...  0 |
-|  1 ...  1  | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0  0  ...  0 |
-|  Sgn. ext  |    PML4   |      PDPR           |   Page dir |    Offset    |
+|            |           |               |            |           |
+|------------|-----------|---------------|------------|-----------|
+| 63 .... 48 | 47 ... 39 | 38   ...   30 | 29  ..  21 | 20 ...  0 |
+|  1 ...  1  | 1  ...  1 | 1    ...    0 | 0   ... 0  | 0  ...  0 |
+|  Sgn. ext  |    PML4   |      PDPR     |   Page dir |   Offset  |
 
 * Bits 63 to 48, not used in address translation.
 * Bits 47 ... 39 are the PML4 entry.
@@ -191,17 +191,17 @@ If we are using 2MB pages this is how the address will be handled by the paging 
 * Bits 29 ... 21 are the PD entry.
 * Offset in the page directory.
 
-Every table has 512 elements, so we have an address space of $2^{512} * 2^{512} * 2^{512} * 0x200000$ (that is the page size)
+Every table has 512 elements, so we have an address space of $2^{512}*2^{512}*2^{512}*0x200000$ (that is the page size)
 
 ### Address translation Using 4KB Pages
    
 If we are using 4kB pages this is how the address will be handled by the paging mechanism:
 
-|            |           |                     |            |             |              |
-|------------|-----------|---------------------|------------|-------------|--------------|
-| 63 .... 48 | 47 ... 39 | 38   ... 32  31  30 | 29  ..  21 | 20  ...  12 | 11 10 ...  0 |
-| 1   ...  1 | 1  ...  1 | 1    ... 1   1   0  | 0   ... 0  | 0   ...  0  | 0 ...  ... 0 |
-|  Sgn. ext  |    PML4   |      PDPR           |   Page dir |  Page Table |   Offset     |
+|           |           |           |           |             |           |
+|-----------|-----------|-----------|-----------|-------------|-----------|
+| 63 ... 48 | 47 ... 39 | 38 ... 30 | 29 ... 21 | 20  ...  12 | 11 ...  0 |
+| 1  ...  1 | 1  ...  1 | 1  ... 0  | 0  ... 0  | 0   ...  0  | 0  ... 0  |
+|  Sgn. ext |    PML4   |   PDPR    |  Page dir |  Page Table |   Offset  |
 
 * Bits 63 to 48, not used in address translation.
 * Bits 47 ... 39 are the PML4 entry.
@@ -211,7 +211,7 @@ If we are using 4kB pages this is how the address will be handled by the paging 
 * Offset in the page table.
 
 Same as above: 
-Every table has 512 elements, so we have an address space of: $2^{512} * 2^{512} * 2^{512} * 2^{512} * 0x1000$ (that is the page size)
+Every table has 512 elements, so we have an address space of: $2^{512}*2^{512}*2^{512}*2^{512}*0x1000$ (that is the page size)
 
 ## Page Fault
 
@@ -248,6 +248,6 @@ A few examples of recursive addresses:
 
 * PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: `0xFFFF'FFFF'8000'0000`.
 * Let's assume we mapped PML4 into itself at entry 510, 
-    - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: PML4: 510, PDPR: 510, PD: 510, PT: 510, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT wit page number equals to 510, and we obtain access to the PML4 page itself.
-    - Now using a similar approach we can get acces to other tables, for example the following values: PML4: 510, PDPR:510, PD: 1, PT: 256, will give access at the Page Directory PD at  entry number 256 in PDPR that is  contained in the first PML4 entry .
+    - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: _PML4: 510, PDPR: 510, PD: 510, PT: 510_, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT with page number equals to 510, and we got access to the PML4 table.
+    - Now using a similar approach we can get acces to other tables, for example the following values: _PML4: 510, PDPR:510, PD: 1, PT: 256_, will give access at the Page Directory PD at entry number 256 in PDPR that is contained in the first PML4 entry.
 
