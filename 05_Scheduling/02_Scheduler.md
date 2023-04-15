@@ -1,32 +1,35 @@
 # The Scheduler
 
 ## What Is It?
-The scheduler is the part of the kernel responsible for selecting the next process to run, as well as keeping track of what threads and processes exist.
 
-The primitives used (thread and process) have various names in other kernels and literature: job, task, lightweight task. 
+The scheduler is the part of the kernel responsible for selecting the next process to run, as well as keeping track of what threads and processes exist in the system.
+
+The primitives used (thread and process) have various names in other kernels and literature: job, task, lightweight task.
 
 ### Thread Selection
+
 There are many selection algorithms out there, ranging from general purpose to special purpose. A real-time kernel might have a selection algorithm that focuses on meeting hard deadlines (required for real-time softare), where as a general purpose algorithm might focus on flexibility (priority levels and being extensible).
 
 Our scheduler is going to operate on a first-come first-served (FCFS) bases, commonly known as round-robin. 
 
 ## Overview 
+
 Before we start describing the workflow in detail, let's answer a few questions:
 
 * When does the scheduler run? The simplest answer is during a timer interrupt. Having said that, there are many other times you might want to trigger the scheduler, such as a waiting on a slow IO operation to complete (the network, or an old hard drive). Some programs may have run out of work to do temporarily and want to ask the scheduler to end their current time slice early. This is called *yielding*.
-* How long does a thread run for before being replaced by the next one? There's no simple answer to this, as it can depend a number of factors, even down to personal preference. There is a minimum time that a thread can run for, and that's the between between one timer interrupt and the next. This portion of time is called a *quantum*, because it represents the fundamental unit of time we will be dealing with. The act of a running thread being interrupted and replaced is called *pre-emption*.
+* How long does a thread run for before being replaced by the next one? There's no simple answer to this, as it can depend by a number of factors, even down to personal preference. There is a minimum time that a thread can run for, and that's the time between one timer interrupt and the next. This portion of time is called a *quantum*, because it represents the fundamental unit of time we will be dealing with. The act of a running thread being interrupted and replaced is called *pre-emption*.
 
-The main part of your scheduler is going to be thread selection. Let's breakdown how we're going to implement it:
+The main part of our scheduler is going to be thread selection. Let's breakdown how we're going to implement it:
 
 * When called, the first thing the scheduler needs to do is check whether the current thread should be pre-empted or not. Some critical sections of kernel code may disable pre-emption for various reasons, or a thread may simply be running for more than one quantum. The scheduler can choose to simply return here if it decides it's not time to reschedule.
 * Next it must save the current thread's context so that we can resume it later. 
-* The step is where we select the next thread to run. For a round robin scheduler we will search the list of threads that are available to run, starting with the current thread. We stop searching when we find the next thread that can run.
-* Optionally, while iterating through the list of threads we may want to do some house-keeping. This is a good time to do things like check wake-timers for sleeping threads, or remove dead threads from the list. If this is unfamiliar to you, we'll discuss this more later don't worry.
+* Then we select the next thread to run. For a round robin scheduler we will search the list of threads that are available to run, starting with the current thread. We stop searching when we find the first thread that can run.
+* Optionally, while iterating through the list of threads we may want to do some house-keeping. This is a good time to do things like check wakeup-timers for sleeping threads, or remove dead threads from the list. If this is unfamiliar to you, we'll discuss this more later don't worry.
 * Now we load the context for the selected thread and mark it as the current thread.
 
 The basic scheduler we are going to implement will have the following characteristics:
 
-1. It will execute in a first-come first-served basis.
+1. It will execute on a first-come first-served basis.
 2. The threads will be kept in a fixed size array. This was done to keep the implementation simple, and keep the focus on the scheduling code. This is an easy first step to improving your own scheduler!
 3. Each thread will only run for a single quantum (i.e. each timer interrupt will trigger the thread to reschedule).
 4. While we have explained the difference between a thread and process, we're going to combine them both into the same structure for simplicity. This limits each process to one thread, but this is an easy next-step for you to take with your own scheduler. We'll be referring to this structure as just a process from now on.
