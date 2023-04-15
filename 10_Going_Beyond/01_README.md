@@ -230,6 +230,8 @@ Unlike a framebuffer which is often provided to us by the bootloader, we'll need
 
 A good place to start is with the Intel e1000 driver (or the e1000e extended version). This card is supported by most emulators and is used as the basis for almost all intel networking chipsets. Even some non-intel chipsets are compatible with it! The osdev wiki has documentation for several different chipsets that can be implemented. 
 
+#### Implementation
+
 Once the driver is in place this means we are able to send and receive data through a network, we can start implementing a communication protocol. Although there are different protocols available nowadays, we most likely want to implement the TCP/IP one, since it is basically used by every internet service. 
 
 The TCP/IP protocol is composed by 7 levels divided into 4 different layers:
@@ -241,7 +243,7 @@ The TCP/IP protocol is composed by 7 levels divided into 4 different layers:
 
 As mentioned above each layer is comprised of one or more levels. Implementing a TCP/IP stack is beyond our scope and also require a good knowledge of it. This paragraph is just a general overview of what are the layers and what we should expect to implement. 
 
-Usually the network levels should be pretty easy to implement, since it reflect the hardware part of the network. Every layer/level is built on top of the previous, so a packet that is received by a host in the network will climb down the stack and at every level some of the information it contains will be read, stripped from it and the result passed to the level below. The same is true also for sending a packet.
+Usually the network levels should be pretty easy to implement, since it reflect the hardware part of the network. Every layer/level is built on top of the previous, so a packet that is received by a host in the network will traverse the stack and at every level some of the information it contains will be read, stripped from it and the result passed to the level below. The same is true also for sending a packet (but in this case at every level some information will be added).
 
 The internet layer is responsible of moving datagrams (packets) in the network, it provides a uniform networking interface that hides the actual topology of the network, or the network connections. This is the layer that estabilishes the `inter-networking` and defines the addressing of the netwrok (IP), at this layer we have implemented ICMP and IGMP protocols.
 
@@ -251,7 +253,7 @@ The Application layer instead are usually the protocols we want to implement, so
 
 When we want to send data, we start from the topmost layer (the application) and go down the whole stack until the network layer adding some extra information on each level. The extra information is the layer header and footer (if needed), so when the data has reached the last level it will have all the tehcnical information for each level. This is described in the picture below.
 
-On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application layer it will be the information we are looking for (you can just look  at the previous picture from bottom to top.
+On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application Layer it will be the information we are looking for (you can just look  at the picture from bottom to top.
 
 ![TCP/IP Layers](/Images/tcpip.png)  
 
@@ -259,11 +261,11 @@ Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivia
 
 ## Few final words
 
-Now we're nearly at the end of our kernel development notes. We tried to cover all the topics so that you can have a bare but complete-enough kernel. We had an overview on all the core components of an operating system explaining how they should be implemented, and what are the key concepts to be understood. We tried to stay focused on the implementation part of the development, using theory only when it was strictly necessary. We provided lot of code examples to help explain some of the trickier parts of the kernel. At the same time the purpose was not to provide some ready-to-use code, our intention was to give the readers enough knowledge to get started implementing it themselves.
+Now we're really at the end of our kernel development notes. We tried to cover all the topics so that you can have a bare but complete-enough kernel. We had an overview on all the core components of an operating system explaining how they should be implemented, and what are the key concepts to be understood. We tried to stay focused on the implementation part of the development, using theory only when it was strictly necessary. We provided lot of code examples to help explain some of the trickier parts of the kernel. At the same time the purpose was not to provide some ready-to-use code, our intention was to give the readers enough knowledge to get started implementing it themselves.
 
 The solutions proposed are optimized for the simplicity of the explanation. You will likely find ways to improve the code in your implementation! Finding better (or perhaps more interesting) solutions is all a part of your kernel development journey.
 
-If you're still reading and are wondering what's next, it's up to you. If you've followed all the previous chapters you may wish to take a look at some of the topics mentioned above, implement some more device drivers (for more hardware compatibility) or rewrite a core system with renewed understanding. A CLI and then libC will greatly boost what you can do with your kernel, making it less of a toy and more of a tool.
+If you're still reading and are wondering what's next, it's up to you. If you've followed all the previous chapters you may wish to take a look at some of the topics mentioned in this chapter, implement some more device drivers (for more hardware compatibility) or rewrite a core system with renewed understanding. A CLI and then libC will greatly boost what you can do with your kernel, making it less of a toy and more of a tool.
 
 We've also provided some appendices with some extra information that you might find useful. These are things we wanted to include that didn't fit elsewhere. We hope you found our notes useful and enjoyed reading them.
 
