@@ -216,10 +216,11 @@ Then if we are going to create an ISO using grub-mkrescue, we must make sure tha
 
 ```
 menuentry "My Os" {
-    multiboot2 /boot/kernel.bin                  // Path to the loader executable
+    multiboot2 /boot/kernel.bin // Path to the loader executable
     module2 /examplefs.tar
     boot
-     // More modules may be added here in the form 'module <path> "<cmdline>"'
+    // More modules may be added here 
+    // in the form 'module <path> "<cmdline>"'
 }
 ```
 
