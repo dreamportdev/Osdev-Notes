@@ -16,7 +16,7 @@ Let's say we use this serial port to for log messages, with a function like the 
 
 ```c
 void serial_log(const char* msg) {
-    volatile char* resource = (char*)0xDEAD'BEEF;
+    volatile char* resource = (char*)0xDEADBEEF;
     for (size_t i = 0; msg[i] != 0; i++)
         *resource = msg[i];
 }
@@ -46,7 +46,7 @@ What would we expect to see on the serial output? We don't know! It's essentiall
  
 ![Tasks execution sequence](/Images/taskssequence.png)
 
-The image above is an example of threads being scheduled, assuming there are only three of them in the system (labeled as _A, B, C_. 
+The image above is an example of threads being scheduled, assuming there are only three of them in the system (labeled as _A, B, C_). 
 Imagine that A is `thread_one` and B is `thread_two`, while C does not interact with the serial. One example of what we could see then is `Iwh aI ammi  lethe secfionrsd t stristngring`. This contains all the right characters but it's completely unreadable. The image below shows what could happen:
 
 ![Shared Resource Sequence](/Images/sharedressequence.png)
@@ -66,7 +66,7 @@ We'll need a few things to achieve that:
 
 While we only need one variable per lock, we're going to create a new struct for it so it can be expanded in the future.
 
-```
+```c
 typedef struct {
     bool lock;
 } spinlock_t;
