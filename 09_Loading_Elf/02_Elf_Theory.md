@@ -15,15 +15,15 @@ Within the ELF specification section headers and program headers are often abbre
 
 Section headers describe the ELF in more detail and often contain useful (but not required for running) data. We won't be dealing with section headers at all in our program loader, since everything we need is nicely contained in the program headers. 
 
-Having said that, if you're curious about what's inside the rest of the ELF file, tools like `objdump` or `readelf` can parse and display section headers for you. They're also documented thoroughly in the ELF specification.
+Having said that, if we're curious about what's inside the rest of the ELF file, tools like `objdump` or `readelf` can parse and display section headers for us. They're also documented thoroughly in the ELF specification.
 
 There are a few special section headers worth knowing about, even if we dont use them right now:
 
 - `.text`, `.rodata`, `.data`, and `.bss`: These usually map directly to the program headers of the same name. Since section headers contain more information than program headers, there is often some extra information stored here about these sections. This is not needed by a program loader so it's not present in the PHDRs.
 - `.strtab`: Short for *string table*, this section header is a series of null-terminated strings. The first entry in this table is also a null-terminator. When other sections need to store a string they actually store a byte offset into this section. 
-- `.symtab`: Short for *symbol table*, this section contains all the exported (and internal) symbols for the program. This section may also include some debugging symbols if compiling with `-g` or they may be stored under a `.debug_*` section. If you ever need to get symbols for a program, they'll be here.
+- `.symtab`: Short for *symbol table*, this section contains all the exported (and internal) symbols for the program. This section may also include some debugging symbols if compiling with `-g` or they may be stored under a `.debug_*` section. If we ever need to get symbols for a program, they'll be here.
 
-Often there will be other section headers in your program, often serving specific purposes. For example `.eh_frame` is used for storing language-based exception and unwinding information, and you may also have `.ctors` if there any global constructors.
+Often there will be other section headers in a program, serving specific purposes. For example `.eh_frame` is used for storing language-based exception and unwinding information, and if there are any global constructors, the `.ctors` section may be present.
 
 ## Program Headers
 
@@ -48,7 +48,7 @@ The meaning of all these fields is explained below when we look at how actually 
 
 Finding the program headers within an ELF binary is also quite straightforward. The offset of the first phdr is given by the `phoff` (program header offset) field of the ELF header. 
 
-Like section headers, each program header is tighly packed against the next one. This means you can treat the program headers as an array. As an example you could loop through the phdrs as follows:
+Like section headers, each program header is tighly packed against the next one. This means that  program headers can be treated as an array. As an example is possible to loop through the _phdrs_ as follows:
 
 ```c
 void loop_phdrs(Elf64_Hdr* ehdr) {
@@ -86,13 +86,13 @@ Like the program headers are located `e_phoff` bytes into the ELF, it's the same
 
 This is actually how the `.bss` section is allocated, and any pre-zeroed parts of an ELF executable are created this way. 
 
-Before looking at some example code your VMM will need a new function that tries to allocate memory at a *specific* virtual address, instead of whatever is the best fit. For our example we're going to assume you have the following implemented, but adjust to your own design:
+Before looking at some example code our VMM will need a new function that tries to allocate memory at a *specific* virtual address, instead of whatever is the best fit. For our example we're going to assume the following function is implemented (according to the chosen design):
 
 ```c
 void* vmm_alloc_at(uintptr_t addr, size_t length, size_t flags);
 ```
 
-Alternatively you could make use of the extra argument in `vmm_alloc`, and add a new flag like `VM_FLAG_AT_ADDR` that indicates the VMM should use the extra arg as the virtual address. Bare in mind that if you're loading a program into another address space you will need a way to copy the phdr contents into that address space. The specifics of this don't matter too much, as long as you have a way to do it.
+Alternatively the in `vmm_alloc` function we can make use of the `flag` parameter, and add a new flag like `VM_FLAG_AT_ADDR` that indicates the VMM should use the extra arg as the virtual address. Bear in mind that if we're loading a program into another address space we will need a way to copy the phdr contents into that address space. The specifics of this don't matter too much, as long as there is a way to do it.
 
 The reason we need to use a specific address is that the code and data contained in the ELF are compiled and linked assuming that they're at that address. There might be code that jumps to a fixed address or data that is expected to be at a certain address. If we don't copy the program header where it expects to be, the program may break.
 
@@ -117,12 +117,12 @@ void load_phdr(Elf64_EHdr* ehdr, Elf64_Phdr* phdr) {
 
 At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers in virtual memory as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guarenteed to be code), we'll fault. Some of these headers should be read-only, and some (in the case of code) should be readable and executable. 
 
-While you could map everything as *read* + *write* + *execute*, that's not recommended for security reasons. It can also lead to bugs in your programs, and potentially cause crashes.
+While everything could be mapped  as *read* + *write* + *execute*, that's not recommended for security reasons. It can also lead to bugs in programs, and potentially cause crashes.
 
 Each program header stores what permissions it requires in the `p_flags` field. This field is actually a bitfield, with the following definition:
 
-- `Bit 0`: Represents whether a phdr should be executable. Remember that the executable flag is backwards on x86: all memory can be executed by default, unless you set the NX bit. Ideally this should be hidden behind your VMM interface though.
+- `Bit 0`: Represents whether a phdr should be executable. Remember that the executable flag is backwards on x86: all memory can be executed by default, unless the NX bit is set. Ideally this should be hidden behind the VMM interface.
 - `Bit 1`: Indicates a region should be writable, the region is read-only if this bit is clear.
 - `Bit 2`: Indicates  a region should be readable. This bit should always be set, as exec-only or write-only memory is not very useful, and some hardware platforms will consider these states as an error.
 
-You'll want to adjust the permissions of the mapped memory *after copying the program header content*. This is because you will need the memory to be mapped as writable so the CPU lets us copy the phdr content into it, and then you can adjust the permissions to what the program header requested.
+We´ll also want to adjust the permissions of the mapped memory *after copying the program header content*. This is because we will need the memory to be mapped as writable so the CPU lets us copy the `phdr` content into it, and then the permissions can be adjusted to what the program header requested.
