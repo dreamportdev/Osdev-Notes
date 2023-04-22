@@ -4,7 +4,7 @@ This section is a collection of useful strategies for memory protection. This ma
 
 ## WP bit
 
-On x86 platforms, we have the R/W bit in our page tables. This flag must be enabled in order for a page to be written to, otherwise the page is read-only (assuming the page is present at all).
+On `x86_*` platforms, we have the R/W bit in our page tables. This flag must be enabled in order for a page to be written to, otherwise the page is read-only (assuming the page is present at all).
 
 However this is not actually true! Supervisor accesses (rings 0/1/2 - not ring 3) *can* write to readonly pages by default. This is not as bad as it might seem, as the kernel is usually carefully crafted to only access the memory it needs. However when you allow user code to access the kernel (via system calls for example), the kernel can be 'tricked' into writing into areas it wouldn't normally, via software or hardware bugs.
 
