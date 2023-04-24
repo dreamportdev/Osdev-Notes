@@ -10,7 +10,7 @@ It should be noted that the original ELF specification is for 32-bit programs, b
 
 It's worth having a copy of the ELF specification as a reference for this chapter as we won't define every structure required. The specification doesn't use fixed width types in it's definiton, instead using `words` and `half words`, which are based on the word size of the cpu. For the exact definition of these terms we will need the platform-specific part of the ELF spec, which gives concrete types for these.
 
-For x86_64 these types are defined as follows:
+For `x86_64` these types are defined as follows:
 
 ```c
 typedef uint64_t Elf64_Addr;

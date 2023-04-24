@@ -243,7 +243,7 @@ The code snippet above is using the C stdlib file handling libraries, what the i
 * If we want to print the string read we need to append the EndOfLine symbol after the last byte read. 
 * Now we can close the file_pointer (destroying the file descriptor associated with the id if it is possible, otherwise -1 will be returned). 
 
-As you can see there are no instructions where we specify the file system type, or the driver to use this is all managed by the vfs layer. The above functions will avail of kernel system calls open/read/close, they usually sits somewhere above the kernel VFS layer, in our _naive_ implementation they we are not going to create new system calls, and let them to be our VFS layer, and where needed  make a simpler version of them.
+As we can see there are no instructions where we specify the file system type, or the driver to use this is all managed by the vfs layer. The above functions will avail of kernel system calls open/read/close, they usually sits somewhere above the kernel VFS layer, in our _naive_ implementation they we are not going to create new system calls, and let them to be our VFS layer, and where needed  make a simpler version of them.
 
 We can assume that any file system i/o operation consists of three basic steps: opening the file, reading/writing from/to it and then closing it. 
 
@@ -328,7 +328,7 @@ int open(const char *path, int flags){
 }
 ```
 
-The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as you can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
+The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as we can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
 
 Let's now have a look at the `close` function, as suggested by name this will do the opposite of the open function: given a file descriptor id it will free all the resources related to it and remove the file descriptor from the list of opened files. The function signature is the following:
 

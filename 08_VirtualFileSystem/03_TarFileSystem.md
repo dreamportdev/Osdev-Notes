@@ -266,4 +266,4 @@ Another limitation of our driver is that it expects for the tar to be fully load
 
 And of course we can implement more file systems from here.
 
-There is no write function too, it can be implemented, but since it has many limitations it is not really a good idea (you can check the standard).
+There is no write function too, it can be implemented, but since it has many limitations it is not really a good idea.
