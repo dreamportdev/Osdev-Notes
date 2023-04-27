@@ -24,7 +24,7 @@ We hope you enjoy, and find something interesting here!
     * [Linker Scripts](01_Build_Process/05_Linker_Scripts.md)
     * [Generating a Bootable Iso](01_Build_Process/06_Generating_Iso.md)
 * [Part 2: Architecture and Basic Drivers](02_Architecture/01_README.md)
-    * [Hello World](02_Architecture/02_HelloWorld.md)
+    * [Hello World](02_Architecture/02_Hello_World.md)
     * [A Higher Higher Kernel](02_Architecture/03_HigherHalf.md)
     * [Global Descriptor Table](02_Architecture/04_GDT.md)
     * [Interrupts](02_Architecture/05_InterruptHandling.md)
