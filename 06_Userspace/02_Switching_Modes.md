@@ -61,7 +61,7 @@ First we push the 5 values on to the stack, in this order:
 
 Then we execute `iret`, and we're off! Welcome to user mode!
 
-This is not how it should be done in practice, but for the purposes of an example, here is a function to switch to user mode. Here we're the example user cs of `0x1B` (or `0x18 | 3`) and user ss of `0x23` (or `0x20 | 3`).
+This is not how it should be done in practice, but for the purposes of an example, here is a function to switch to user mode. Here we're using the example user cs of `0x1B` (or `0x18 | 3`) and user ss of `0x23` (or `0x20 | 3`).
 
 ```c
 __attribute__((naked, noreturn))
