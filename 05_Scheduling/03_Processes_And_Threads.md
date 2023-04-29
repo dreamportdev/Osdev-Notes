@@ -22,6 +22,7 @@ We introduced a very basic process control block in the previous chapter:
 typedef struct {
     status_t status;
     cpu_status_t context;
+    process_t *next;
 } process_t;
 ```
 
@@ -48,6 +49,7 @@ typedef struct {
     status_t process_status;
     cpu_status_t context;
     char name[NAME_MAX_LEN];
+    process_t *next;
 } process_t;
 ```
 
@@ -57,19 +59,13 @@ How do we assign pids? We're using to use a bump allocator:  is just a pointer t
 
 ### Creating A New Process
 
-Creating a process is pretty trivial. We need a place to store the new `process_t` struct, in our case the static array, but we might have another data struct for it. We'll want a new function that creates a new process for us. We're going to need the starting address for the code we want our process to run, and it can be nice to pass an argument to this starting function.
+Creating a process is pretty trivial. We need a place to store the new `process_t` struct, in our case is a linked list, where is up to us, for a round robin algorithm, we will add it at the end of the list, and it should be done by the `add_process` function mentioned in the previous chapter. We'll want a new function that creates a new process for us. We're going to need the starting address for the code we want our process to run, and it can be nice to pass an argument to this starting function.
 
 ```c
 size_t next_free_pid = 0;
 
 process_t* create_process(char* name, void(*function)(void*), void* arg) {
-    process_t* process;
-    for (size_t i = 0; i < MAX_PROCESSES; i++) {
-        if (processes_list[i] != NULL)
-            continue;
-        process = &processes_list[i];
-        break;
-    }
+    process_t* process = alloc(sizeof(process_t)); // We should have an allocation function available
 
     strncpy(process->name, name, NAME_MAX_LEN);
     process->pid = next_free_pid++;
@@ -81,6 +77,8 @@ process_t* create_process(char* name, void(*function)(void*), void* arg) {
     process->context.iret_rip = (uint64_t)function;
     process->context.rdi = (uint64_t)arg;
     process->context.rbp = 0;
+
+    add_process(process);
 
     return process;
 }
@@ -111,6 +109,7 @@ typedef struct {
     cpu_status_t context;
     void* root_page_table;
     char name[NAME_MAX_LEN];
+    process_t *next;
 } process_t;
 ```
 
@@ -172,7 +171,7 @@ There are many ways to implement priorities, the easiest way to get started is w
 
 Let's talk about how threads fit in with the current design. Currently each process is both a process and a thread. We'll need to move some of the fields of the `process_t` struct into a `thread_t` struct, and then maintain a list a threads per-process.
 
-As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can bes one or multiple threads, but a thread always belongs to a single process. 
+As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can be composed by one or multiple threads, but a thread always belongs to a single process. 
 
 Threads within the same process share a lot of things:
 
@@ -252,11 +251,12 @@ Let's look at how our `create_process` function would look now:
 
 ```c
 process_t* create_process(char* name) {
-    process_t* process = malloc();
+    process_t* process = alloc(sizeof(process_t));
     process->pid = next_process_id++;
     process->threads = NULL;
     process->root_page_table = vmm_create();
     strncpy(process->name, name, NAME_MAX_LEN);
+    add_process(process)
     return process;
 }
 ```
@@ -276,7 +276,7 @@ After the thread has finished its execution, we'll need a way for it to exit gra
 
 This also places a requirement on the programmer when creating threads: they must call `thread_exit` before the main function used for the thread returns, otherwise we will crash.
 
-We're going to go a step further an implement a wrapper function that will call the thread's main function, and then call `thread_exit` for us. This will only work for kernel threads, but it removes the burden from the programmer. Our wrapper function will look like the following:
+We're going to go a step further and implement a wrapper function that will call the thread's main function, and then call `thread_exit` for us. This will only work for kernel threads, but it removes the burden from the programmer. Our wrapper function will look like the following:
 
 ```c
 void thread_execution_wrapper(void (*function)(void*), void* arg) {
@@ -289,6 +289,7 @@ Now we'll need to modify `create_thread` to make use of our wrapper to make use 
 
 ```c
 thread->context.rip = (uint64_t)thread_execution_wrapper;
+//rdi and rsi are used for argument passing
 thread->context.rdi = (uint64_t)function;
 thread->context.rsi = (uint64_t)arg;
 ```
@@ -304,7 +305,7 @@ void thread_exit() {
 
 At this point the thread can exit succesfully, but the thread's resources are still around. The big ones are the thread control block and the stack. They can be freed in the `thread_exit` but be careful we're not exiting the current thread. If we do, we'll free the stack being currently used. We could switch to a kernel-only stack here, and then safely free the stack. 
 
-Alternatively the thread could be placed into a 'cleanup queue' that is processed a special thread that frees the resources associated with threads. Since the cleanup thread has it's own stack and resources, we can safely free those in the queued threads.
+Alternatively the thread could be placed into a 'cleanup queue' that is processed by a special thread that frees the resources associated with threads. Since the cleanup thread has it's own stack and resources, we can safely free those in the queued threads.
 
 Another option, which we've chosen here, is to update the thread's status here. Then when the scheduler encounters a thread in the DEAD state, it will free it's resources there.
 
@@ -315,8 +316,6 @@ Note that we use an infinite loop at the end of `thread_exit` since that functio
 What about freeing processes? As always there are a few approaches, but the easiest is the check if the thread that is about to be freed is the last in the process. If it is, the process should be deleted too. 
 
 Cleaning up a process requires significantly more work, tearing down page tables properly, freeing other resources, sometimes there is buffered data to flush. This should be approached with some care, so as not the delete the currently page tables in use.
-
-reschedule after exiting?
 
 ### Thread Sleep
 
