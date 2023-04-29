@@ -72,7 +72,7 @@ The above example is just an imaginary translation mechanism, we'll discuss the 
 ## Paging in Long Mode 
 
 In 64 bit mode we have up to 4 levels of page tables. The number depends on the size we want to assign to each page. 
-It's worth noting that newer cpus do support a feature called la57 (large addressing using 57-bits), this just adds another layer of page tables on top the existing 4 to allow for a larger address space. It's a cool feature, but not really required unless you're using crazy amounts of memory.
+It's worth noting that newer cpus do support a feature called la57 (large addressing using 57-bits), this just adds another layer of page tables on top the existing 4 to allow for a larger address space. It's a cool feature, but not really required unless we're using crazy amounts of memory.
 
 There are 3 possible scenarios: 
 
@@ -160,7 +160,7 @@ In the next section we will go through the fields of an entry.
 Below is a list of all the fields present in the table entries, with an explanation of the most commonly used.
 
 * **P** (Present): If set this tells the CPU that this entry is valid, and can be used for translation. Otherwise translation stops here, and results in a page fault. 
-* **R/W** (Read/Write): Pages are always readable, setting this flag allows writing to memory via this virtual address. Otherwise an attempt to write to memory while this bit is cleared results in a page fault. Reminder that these bits also affect the child tables. So if you mark a pml4 entry as read-only, any address that gets translated through that will be read only, even if the entries in the tables below it have this bit set.
+* **R/W** (Read/Write): Pages are always readable, setting this flag allows writing to memory via this virtual address. Otherwise an attempt to write to memory while this bit is cleared results in a page fault. Reminder that these bits also affect the child tables. So if a pml4 entry is marked as read-only, any address that gets translated through that will be read only, even if the entries in the tables below it have this bit set.
 * **User/Supervisor**: It describes the privilege level required to access this address. If clear the page has the supervisor level, while if it is set the level is user. The cpu identifies supervisor/user level by checking the CPL (current protection level, set by the segment registers). If it is less than 3 then the accesses are made in supervisor mode, if it's equal to 3 they are made in user mode.
 * **PWT** (Page Level Write Through): Controls the caching policy (write-through or write-back). I usually leave it to 0, for more information refer to the Intel Developer Manuals.
 * **PCD** (Page Level Cache Disable): Controls the caching of individual pages or tables. I usually leave it to 0, for more information refer to the Intel Developer Manuals.
@@ -239,10 +239,10 @@ The meanings of these bits are expanded below:
 
 ## Recursion
 
-There are few things to take in account when trying to access paging structures using the recursion technique for x86_64 architecture:
+There are few things to take in account when trying to access paging structures using the recursion technique for `x86_64` architecture:
 
 * When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l).
-* Always remember to add the sign extension part (otherwise you will obtain a #GP).
+* Always remember to add the sign extension part (otherwise a #GP will be thrown).
 
 A few examples of recursive addresses: 
 

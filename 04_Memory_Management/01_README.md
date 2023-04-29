@@ -1,6 +1,6 @@
 # Memory Management
 
-Welcome to one of the first big challenges of your osdev adventure. This is the first *complex* component that you'll have to implement. 
+Welcome to one of the first big challenges of our osdev adventure. This is the first *complex* component that we are going to implement. 
 
 The easiest way to define a memory manager is that it is a system that manages computer memory, and provide ways to dynamically allocate and free portions of it. 
 
@@ -39,7 +39,7 @@ Each of the layers has a dedicated section below, however we'll start with a hig
 ## VMM - Virtual Memory Manager
 - Exists per process/running program.
 - Sets up an environment where the program can happily run code at whatever addresses it needs, and access data where it needs too.
-- The VMM can be thought of a black-box to user programs, you ask it for an address and it 'just works', returning memory where needed. It can use several tools to accomplish this job:
+- The VMM can be thought of a black-box to user programs, we ask it for an address and it 'just works', returning memory where needed. It can use several tools to accomplish this job:
    - Segmentation: Mostly obsolete in long mode, replaced by paging.
    - Paging: Can be used to map virtual pages (what the running code sees) to physical pages (where it exists in real memory).
    - Swapping: Can ask other VMMs to swap their in-use memory to storage, and handover any freed pages for us to use.
