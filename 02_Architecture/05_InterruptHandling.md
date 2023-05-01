@@ -1,29 +1,29 @@
 # Interrupt Handling on x86_64
 
-As the title implies, this chapter is purely focused on x86_64. Other platforms will have different mechanisms for handling interrupts.
+As the title implies, this chapter is purely focused on `x86_64`. Other platforms will have different mechanisms for handling interrupts.
 
-If you're not familiar with the term *interrupt*, it's a way for the cpu to tell your code that something unexpected or unpredictable has happened, and that you need to handle it. When an interrupt is triggered, the cpu will *serve* the interrupt by loading the *interrupt handler* we specified. The interrupt handler itself is just a function, but with a few special conditions. 
+If not familiar with the term *interrupt*, it's a way for the cpu to tell our code that something unexpected or unpredictable has happened, and that you need to handle it. When an interrupt is triggered, the cpu will *serve* the interrupt by loading the *interrupt handler* we specified. The interrupt handler itself is just a function, but with a few special conditions. 
 
-Interrupts get their name because they interrupt the normal flow of execution, instead stopping whatever code was running on the cpu, running a handler function, and then resuming the previously running code. Interrupts can signal a number of events from the system, from fatal errors to a device telling you it has some data for you to read.
+Interrupts get their name because they interrupt the normal flow of execution, instead stopping whatever code was running on the cpu, running a handler function, and then resuming the previously running code. Interrupts can signal a number of events from the system, from fatal errors to a device telling us it has some data for you to read.
 
-The x86 architecture makes a distinction between *hardware interrupts* and *software interrupts*. Don't worry though, this is only something you'll need to worry about if you deliberately use it. A software interrupt is one that's triggered by the `int` instruction, anything else is considered a hardware interrupt. The difference is that some hardware interrupts will store an error code (and some will not), but a software interrupt will **never** store an error code. Meaning if you use the `int` instruction to trigger an interrupt which normally has an error code, there wont be one present, and you'll run into bugs if your handler function is not prepared for this.
+The `x86` architecture makes a distinction between *hardware interrupts* and *software interrupts*. Don't worry though, this is only something we'll need to worry about if deliberately use it. A software interrupt is one that's triggered by the `int` instruction, anything else is considered a hardware interrupt. The difference is that some hardware interrupts will store an error code (and some will not), but a software interrupt will **never** store an error code. Meaning if the `int` instruction is used to trigger an interrupt which normally has an error code, there wont be one present, and most likely run into bugs if the handler function is not prepared for this.
 
 ### The Interrupt Flag and Cli/Sti
 
-There will be situations where you don't want to be interrupted, usually in some kind of critical section. In this case, x86 actually provides a flag you can use to disable almost all interrupts. Bit 9 of the `flags` register is the interrupt flag, and like other flag bits it has dedicated instructions for clearing/setting it:
+There will be situations where we don't want to be interrupted, usually in some kind of critical section. In this case, x86 actually provides a flag that can be used to disable almost all interrupts. Bit 9 of the `flags` register is the interrupt flag, and like other flag bits it has dedicated instructions for clearing/setting it:
 
 - `cli`: Clears the interrupt flag, preventing the cpu from serving interrupts.
 - `sti`: Sets the interrupt flag, letting the cpu serve interrupts.
 
 ### Non-Maskable Interrupts
 
-When the interrupt flag is cleared, most interrupts will be *masked* meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's perfectable acceptable to simply have your operating system panic in this case. 
+When the interrupt flag is cleared, most interrupts will be *masked* meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's totally acceptable to simply have panic operating system panic in this case. 
 
 *Authors note: Don't let NMIs scare you, I've never run actually run into one on real hardware. You do need to be aware that they exist and can happen at any time, regardless of the interrupt flag.*
 
 ## Setting Up For Handling Interrupts
 
-Now we know the theory behind interrupts, let's take a look at how we interact with them on x86. As expected, it's a descriptor table! We will be referencing some GDT selectors in this, so you'll need to have your own GDT setup. We're also going to introduce a few new terms:
+Now we know the theory behind interrupts, let's take a look at how we interact with them on `x86`. As expected, it's a descriptor table! We will be referencing some GDT selectors in this, so a GDT loaded is required. We're also going to introduce a few new terms:
 
 - Interrupt Descriptor: A single entry within the interrupt descriptor *table*, it describes what the cpu should do when a specific interrupt occurs.
 - Interrupt Descriptor Table: An array of interrupt descriptors, usually referred to as the IDT.
@@ -54,7 +54,7 @@ struct interrupt_descriptor
 Note the use of the packed attribute! Since this structure is processed by hardware, we don't want the compiler to insert any padding in our struct, we want it to look exactly as we defined it (and be exactly 128 bits long, like the manual says).
 The three `address_` fields represent the 64-bit address of our handler function, split into different parts: with `address_low` being bits 15:0, `address_mid` is bits 31:16 and `address_high` is bits 63:32. The `reserved` field should be set to zero, and otherwise ignored.
 
-The selector field is the *code selector* the cpu will load into `%cs` before running the interrupt handler. This should be your kernel code selector. Since your kernel code selector should be running in ring 0, there is no need to set the RPL field. This selector can just be the byte offset into the GDT you want to use. 
+The selector field is the *code selector* the cpu will load into `%cs` before running the interrupt handler. This should be our kernel code selector. Since the kernel code selector should be running in ring 0, there is no need to set the RPL field. This selector can just be the byte offset into the GDT we want to use. 
 
 The `ist` field can safely be left at zero to disable the IST mechanism. For the curious, this is used in combination with the TSS to force the cpu to switch stacks when handling a specific interrupt vector. This feature can be useful for certain edge cases like handling NMIs. ISTs and the TSS are covered later on when we go to userspace. 
 
@@ -67,14 +67,14 @@ The `flags` field is a little more complex, and is actually a bitfield. It's for
 | 6:5    | DPL       | The *Descriptor Privilege Level* determines the highest cpu ring that can trigger this interrupt via software. A default of zero is fine. |
 | 7      | Present   | If zero, means this descriptor is not valid and we don't support handling this vector. Set this bit to tell the cpu we support this vector, and that the handler address is valid. |
 
-Let's look closer at the type field. We have two options here, with only one difference between them: an interrupt gate will clear the interrupt flag before running the handler function, and a trap gate will not. Meaning if a trap gate is used, interrupts can occur while inside of the handler function. There are situations where this is useful, but you'll know those when you encounter them. An interrupt gate should be used otherwise. They have the following values for the `type` field:
+Let's look closer at the type field. We have two options here, with only one difference between them: an interrupt gate will clear the interrupt flag before running the handler function, and a trap gate will not. Meaning if a trap gate is used, interrupts can occur while inside of the handler function. There are situations where this is useful, but we will know those when we encounter them. An interrupt gate should be used otherwise. They have the following values for the `type` field:
 
 - Interrupt gate: `0b1110`.
 - Trap gate: `0b1111`.
 
 The DPL field is used to control which cpu rings can trigger this vector with a software interrupt. On x86 there are four protection rings (0 being the most privileged, 3 the least). Setting DPL = 0 means that only ring 0 can issue a software interrupt for this vector, if a program in another ring tries to do this it will instead trigger a *general protection fault*. For now we have no use for software interrupts, so we'll set this to 0 to only allow ring 0 to trigger them. 
 
-That's a lot writing, but in practice it won't be that complex. Let's create a function to populate a single IDT entry for us. In this example we'll assume your kernel code selector is 0x8, but yours may not be.
+That's a lot writing, but in practice it won't be that complex. Let's create a function to populate a single IDT entry for us. In this example we'll assume the kernel code selector is 0x8, but it may not be.
 
 ```c
 interrupt_descriptors idt[256];
@@ -96,7 +96,7 @@ void set_idt_entry(uint8_t vector, void* handler, uint8_t dpl)
 }
 ```
 
-In the above example we just used an array of descriptors for our IDT, because that's really all it is! However if you prefer, you can create your own type that represents the array.
+In the above example we just used an array of descriptors for our IDT, because that's really all it is! However, a custom type that represents the array can be created.
 
 ### Loading an IDT
 
@@ -110,7 +110,7 @@ struct idtr
 } __attribute__((packed));
 ```
 
-Again, note the use of the packed attribute. In long mode the limit field should be set to 0xFFF (16 bytes per descriptor * 256 descriptors, and substract 1 because that's how this is encoded). The `base` field needs to contain the *logical address* of the idt. This is usually the virtual address, but if you have re-enabled segmentation in long mode (some cpus allow this), this address ignores segmentation.
+Again, note the use of the packed attribute. In long mode the limit field should be set to 0xFFF (16 bytes per descriptor * 256 descriptors, and substract 1 because that's how this is encoded). The `base` field needs to contain the *logical address* of the idt. This is usually the virtual address, but if the segmentation have been re-enabled in long mode (some cpus allow this), this address ignores segmentation.
 
 *Authors Note: The reason for substracting one from the size of the idt is interesting. Loading an IDT with zero entries would effectively be pointless, as there would be nothing there to handle interrupts, and so no point in having loaded it in the first place. Since the size of 1 is useless, the length field is encoded as one less than the actual length. This has the benefit of reducing the 12-bit value of 4096 (for a full IDT), to a smaller 11-bit value of 4096. One less bit to store!*
 
@@ -126,7 +126,7 @@ void load_idt(void* idt_addr)
 
 In this example we stored `idtr` on the stack, which gets cleaned up when the function returns. This is okay because the IDTR register is like a segment register in that it caches whatever value was loaded into it, similar to the GDTR. So it's okay that our idtr structure is no longer present after the function returns, as the register will have a copy of the data our structure contained. Having said that, the actual IDT can't be on the stack, as the cpu does not cache that.
 
-At this point you should be able to install an interrupt handler into your IDT, load the IDT and set the interrupts flag. Your kernel will likely crash as soon as an interrupt is triggered though, as there are some special things we need to perform inside of the interrupt handler before it can finish.
+At this point we should be able to install an interrupt handler into the IDT, load it,  and set the interrupts flag. The kernel will likely crash as soon as an interrupt is triggered though, as there are some special things we need to perform inside of the interrupt handler before it can finish.
 
 ## Interrupt Handler Stub
 
@@ -136,7 +136,7 @@ There are a number of ways we could go about something like this, we're going to
 
 *Authors Note: Using `__attribute__((interrupt))` may seem tempting with how simple it is, and it lets you avoid assembly! This is easy mistake to make (one I made my myself early on). This method is best avoided as covers the simple case of saving all the general purpose registers, but does nothing else. Later on you will want to do other things inside your interrupt stub, and thus have to abandon the attribute and write your own stub anyway. Better to get it right from the beginning. - DT.*
 
-There are a number of places you could store the state of the general purpose registers, we're going to use the stack as it's extremely simple to implement. In protected mode we have the `pusha`/`popa` instructions for this, but they're not present in long mode so we have to do this ourselves.
+There are a number of places where the state of the general purpose registers could be stored, we're going to use the stack as it's extremely simple to implement. In protected mode there are the `pusha`/`popa` instructions for this, but they're not present in long mode so we have to do this ourselves.
 
 There is also one other thing: when an interrupt is served the cpu will store some things on the stack, so that when the handler is done we can return to the previous code. The cpu pushes the following on to the stack (in this order):
 

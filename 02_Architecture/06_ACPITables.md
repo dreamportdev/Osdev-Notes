@@ -145,7 +145,7 @@ ACPISDTHeader* header = (ACPISDTHeader*)(use_xsdt ? xsdt->sdtAddresses[n] : (uin
 
 ### Some useful infos
 
-*  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if you try to print it, you will most likely end up in printing garbage in the best case scenario.
+*  Be aware that the Signature in the RSD*  structure is not null terminated. This means that if we try to print it, you will most likely end up in printing garbage in the best case scenario.
 *  The RSDT Data is an array of uint32_t addresses while the XSDT data is an array of uint64_t addresses. The number of items in the RSDT and XSDT can be computed in the following way:
 
 ```c
