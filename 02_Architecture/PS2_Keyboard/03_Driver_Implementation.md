@@ -87,7 +87,7 @@ Depending on the scancode set, there are some keys that generate a scancode with
 * _Normal State_: This is exactly what it sounds like and also the one the driver starts in. If the driver reads a byte that is not the prefix byte (`0xE0`) it will remain in this state. After being in the prefix state and reading a byte, it will also return to this state.
 * _Prefix state_: In case the driver it encountered the prefix byte, the driver will enter into this state. While in this state we know the next read is an extended scancode, and can be processed appropriately.
 
-If you don't know what a state machine is there's a link to the wikipedia page in the useful links section below. It's a straight-foward concept: an algorithm can only be in one of several states, and the algorithm reacts differently in each state. In our example we're going to use a global variable to identity the state:
+If we don't know what a state machine is there's a link to the wikipedia page in the useful links section below. It's a straight-foward concept: an algorithm can only be in one of several states, and the algorithm reacts differently in each state. In our example we're going to use a global variable to identity the state:
 
 ```c
 #define NORMAL_STATE 0
@@ -98,7 +98,7 @@ uint8_t current_state;
 
 There are some scancodes that have up to 4 or more bytes which we're not going to cover here. 
 
-*Editor's note: This is one area where the state-machine implementation can break down. As you potentially need a separate state for each byte in the sequence. An alternative implementation, that's not covered here, is to have an array of `uint8_t`s, and a pointer to the latest byte in the buffer. The idea being: read a byte from the buffer, place it after the last received byte in the array, and then increment the variable of the latest byte. Then you can check if a full scancode has been received, for extended codes beginning with 0xE0 you're expecting 2 bytes, for normal codes only 1 byte. Once you've detected a full scancode in the buffer, process it, and reset the pointer in the buffer for the next byte to zero. Therefore the next byte gets placed at the start of the buffer. Now it's just a matter of making the buffer large enough, which is trivial.*
+*Author's note: This is one area where the state-machine implementation can break down. As you potentially need a separate state for each byte in the sequence. An alternative implementation, that's not covered here, is to have an array of `uint8_t`s, and a pointer to the latest byte in the buffer. The idea being: read a byte from the buffer, place it after the last received byte in the array, and then increment the variable of the latest byte. Then you can check if a full scancode has been received, for extended codes beginning with 0xE0 you're expecting 2 bytes, for normal codes only 1 byte. Once you've detected a full scancode in the buffer, process it, and reset the pointer in the buffer for the next byte to zero. Therefore the next byte gets placed at the start of the buffer. Now it's just a matter of making the buffer large enough, which is trivial.*
 
 Regarding storing the prefix byte, this comes down a design decision. In our case we're not going to store them as they don't contain any information we need later on, when translating these scancodes into the kernel scancodes. Just to re-iterate: the idea of using a separate, unrelated, scancode set inside the kernel is that we're not bound to any implementation. Our keyboard driver can support as many sets as needed, and the running programs just use what the kernel provides, in this case it's own scancode set. It seems like a lot of work up front, but it's a very useful abstraction to have!
 
@@ -175,7 +175,7 @@ Now it's just a matter of keeping track of which bit represents which modifier k
 #define SHIFT_MASK 3
 ```
 
-We're not interested in the difference between the left and right versions of the modifier keys for now, but you could store those as separate bits if you were.
+We're not interested in the difference between the left and right versions of the modifier keys for now, but we could store those as separate bits if you were.
 Updating the state of a modifier key can be done by using standard bitwise operations. 
 
 As an example, say we detect the CTRL key is pressed. We would want to update the current modifiers (which we store a copy of when whenever we store a new key event):
@@ -190,9 +190,9 @@ And to clear the bit when we detect CTRL is released:
 current_modifiers &= ~(1 << CTRL_MASK);
 ```
 
-So now we need to just identify what key is being pressed/released and update the status_mask accordingly. 
+So now we need to just identify what key is being pressed/released and update the `status_mask` accordingly. 
 
-The case of caps lock can be handled in 2 ways. The first is to add a boolean variable to the key_event struct which stores the current state of caps lock. We can also use one of the unused bits in the status_mask field.
+The case of caps lock can be handled in 2 ways. The first is to add a boolean variable to the `key_event` struct which stores the current state of caps lock. We can also use one of the unused bits in the `status_mask` field.
 An interesting note is that on ps/2 keyboards the LEDs must be controlled manually, implementing this is as simple as a single command to the keyboard, and is left as an exercise for the reader.
 
 ### Translation
@@ -202,7 +202,7 @@ Now that all the core parts of the driver are in place, let's talk about transla
 There's two main stages of translation we're interested in at the moment:
 
 * From the keyboard-specific scancode to our kernel scancode (the one applications use).
-* From the kernel scancode to a printable ascii character. This isn't really part of the keyboard driver, but we will cover it here since it's a useful function to test if your keyboard driver works.
+* From the kernel scancode to a printable ascii character. This isn't really part of the keyboard driver, but we will cover it here since it's a useful function to test if the keyboard driver works.
 
 Translation from the keyboard scancode to the kernel one can be done a number of ways. For our example driver we're going to use a lookup table in the form of an array. 
 
@@ -247,7 +247,7 @@ becomes
     keyboard_buffer[buf_position].code = scancode_mapping[scancode];
 ```
 
-At this point you have a fully functioning PS/2 keyboard driver! However we will quickly cover translating a kernel scancode into a printable character, as that's a useful feature to have at this stage.
+At this point we have a fully functioning PS/2 keyboard driver! However we will quickly cover translating a kernel scancode into a printable character, as that's a useful feature to have at this stage.
 
 There's a few approaches to getting printable characters from our kernel scancodes:
 
@@ -255,7 +255,7 @@ There's a few approaches to getting printable characters from our kernel scancod
 
 * Using a big switch statement, with inline if/elses to handle shifting.
 
-A lookup table would work the same as it did above. If you want the scancode with the value 6 to to translate to the printable character 'f', you would put 'f' at the 6th position in the lowercase array, and 'F' in the 6th position of the shifted array.
+A lookup table would work the same as it did above. If we want the scancode with the value 6 to to translate to the printable character 'f', we would put 'f' at the 6th position in the lowercase array, and 'F' in the 6th position of the shifted array.
 
 ```c
 char lower_chars[] = {
@@ -275,11 +275,11 @@ char get_printable_char(key_event key)
 }
 ```
 
-Instead of having two tables, only the lower_chars one can be used and an offset (if using basic ascii) can be used to calculate the shifted key value. This works for simple scenarios, but will break for any non-us keyboards or symbols. It's also not very expandable in the future.
+Instead of having two tables, only the `lower_chars` one can be used and an offset (if using basic ascii) can be used to calculate the shifted key value. This works for simple scenarios, but will break for any non-us keyboards or symbols. It's also not very expandable in the future.
 
-To calculate the offset to apply, you can use `size_t offset = 'a' - 'A';`, and then add `offset` to the value from the lookup table if it's a letter, or just add 0x10 if it's a digit.
+To calculate the offset to apply, we can use `size_t offset = 'a' - 'A';`, and then add `offset` to the value from the lookup table if it's a letter, or just add 0x10 if it's a digit.
 
-Using the switch statement approach looks how you'd expect:
+Using the switch statement approach looks like the following:
 
 ```c
 char get_printable_char(key_event key)
@@ -295,3 +295,5 @@ char get_printable_char(key_event key)
     }
 }
 ```
+
+And that's basically it, in this chapter we went through the basic of implementing a Keyboard Driver, and translating a scancode into a readable character. This will let us in the future to implement our own command line interpreter, and other cool stuffs. 

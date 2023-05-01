@@ -30,7 +30,7 @@ In order to develop our keyboard driver we'll need to do the following:
 * Read the scancode byte.
 * Once we have the full scancode, store it in a buffer along with any extra info we might need (any currently pressed modifers).
 
-As you can see translation the scancode to a printable character is not in the list above, we'll touch on how to do this briefly, although it's not really related to the keyboard driver.
+Translating the scancode to a printable character is not in the list above, we'll touch on how to do this briefly, although it's not really related to the keyboard driver.
 
 ### Useful Links
 

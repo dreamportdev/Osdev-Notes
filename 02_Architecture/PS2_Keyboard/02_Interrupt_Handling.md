@@ -1,6 +1,6 @@
 # Handling The Keyboard Interrupt
 
-Either the PIC or IOAPIC can be used to set up the keyboard irq. For this section we'll use the IOAPIC as it's more modern and the LAPIC + IOAPIC is the evolution of the PIC. However if you are using the PIC, most of the theory still applies, you'll need to adjust the irq routing code accordingly.
+Either the PIC or IOAPIC can be used to set up the keyboard irq. For this section we'll use the IOAPIC as it's more modern and the LAPIC + IOAPIC is the evolution of the PIC. However if using the PIC, most of the theory still applies, we'll need to adjust the irq routing code accordingly.
 
 To keep the examples below simple, we'll assume only a single IOAPIC is present in the system. This is true for most desktop systems, and is only something to worry about in server hardware.
 
@@ -23,7 +23,7 @@ void keyboard_irq_handler() {
 }
 ```
  
-Once we have a valid IDT entry, we can clear the mask bit in the IOAPIC redirect entry for the ps/2 keyboard. Be sure that the destination LAPIC id is set to the cpu you want to handle the keyboard interrupts.
+Once we have a valid IDT entry, we can clear the mask bit in the IOAPIC redirect entry for the ps/2 keyboard. Be sure that the destination LAPIC id is set to the cpu we want to handle the keyboard interrupts.
 This id can be read from the LAPIC registers.
 
 

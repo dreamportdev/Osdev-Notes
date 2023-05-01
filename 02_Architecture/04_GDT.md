@@ -18,11 +18,11 @@ There is one exception to the 8-byte-per-descriptor rule, the TSS descriptor, wh
 
 Usually these selectors are for code (CS) and data (DS, SS), which tell the cpu where it's allowed to fetch instructions from, and what regions of memory it can read/write to. There are other selectors, for example the first entry in the GDT must be all zeroes (called the null descriptor).
 
-The null selector is mainly used for edge cases, and is usually treated as 'ignore segmentation', although it can lead to #GP faults if certain instructions are issued. Its usage only occurs with more advanced parts of x86, so you'll known to look out for it.
+The null selector is mainly used for edge cases, and is usually treated as 'ignore segmentation', although it can lead to #GP faults if certain instructions are issued. Its usage only occurs with more advanced parts of x86, so we'll known to look out for it.
 
 The code and data descriptors are what they sound like: the code descriptor tells the cpu what region of memory it can fetch instructions from, and how to interpret them. Code selectors can be either 16-bit or 32-bit, or if running in long mode 64-bit or 32-bit.
 
-To illustrate this point, you could run 32 bit code in 2 ways:
+To illustrate this point, is possible to run 32 bit code in 2 ways:
 - in long mode, with a compatability (32-bit) segment loaded. Paging is required to be used here as we're in long mode (4 or 5 levels used), and segmentation is also enabled due to compatability mode. SSE/SSE2 and various other long mode features are always available too.
 - in protected mode, with a 32-bit segment loaded. Segmentation is mandatory here, and paging is optional (available as 2 or 3 levels). SSE/SSE2 is an optional cpu extension, and may not be supported.
 
@@ -48,7 +48,7 @@ The various segment registers:
 - FS: F selector, no specific purpose. Sys V ABI uses it for thread local storage.
 - GS: G selector, no specific purpose. Sys V ABI uses it for process local storage, commonly used for cpu-local storage in kernels due to `swapgs` instruction.
 
-When using a selector to refer to a GDT descriptor, you'll also need to specify the ring you're trying to access. This exists for legacy reasons to solve a few edge cases that have been solved in other ways. If you need to use these mechanisms, you'll know, otherwise the default (setting to zero) is fine.
+When using a selector to refer to a GDT descriptor, we'll also need to specify the ring we're trying to access. This exists for legacy reasons to solve a few edge cases that have been solved in other ways. If we will need to use these mechanisms, we'll know, otherwise the default (setting to zero) is fine.
 Constructing a segment selector is done like so:
 
 ```c
@@ -61,7 +61,7 @@ selector |= ((is_ldt_selector & 0b1) << 2);
 
 The `is_ldt_selector` field can be set to tell the cpu this selector referrences the LDT (local descriptor table) instead of the GDT. We're not interested in the LDT, so we will leave this as zero. The `target_cpu_ring` field (called RPL in the manuals), is used to handle some edge cases. This is best set to the same ring the selector refers to (if the selector is for ring 0, set this to 0, if the selector is for ring 3, set this to 3).
 
-It's worth noting that in the early stages of your kernel you only be using the GDT and kernel selectors, meaning these fields are zero. Therefore this calculation is not necessary, you can simply use the byte offset into the GDT as the selector.
+It's worth noting that in the early stages of the kernel we only be using the GDT and kernel selectors, meaning these fields are zero. Therefore this calculation is not necessary, we can simply use the byte offset into the GDT as the selector.
 
 This is also the first mention of the LDT (local descriptor table). The LDT uses the same structure as the GDT, but is loaded into a separate register. The idea being that the GDT would hold system descriptors, and the LDT would hold process-specific descriptors. This tied in with the hardware task switching that existed in protected mode. The LDT still exists in long mode, but should be considered deprecated by paging.
 
@@ -84,15 +84,15 @@ When a descriptor is loaded into the appropriate segment register, it creates a 
 
 The idea is to place code in one region of memory, and then create a descriptor with a base and limit that only expose that region of memory to the cpu. Any attempts to fetch instructions from outside that region will result in a #GP fault being triggered, and the kernel will intervene.
 
-Accessing memory inside a segment is done relative to it's base. Lets say you have a segment with a base of 0x1000,
-and some data in memory at address 0x1100.
-The data would be accessed at address 0x100 (assuming the segment is the active DS), as addressed are translated as `segment_base + offset`. In this case the segment base is 0x1000, and the offset is 0x100.
+Accessing memory inside a segment is done relative to it's base. Lets say we have a segment with a base of `0x1000`,
+and some data in memory at address `0x1100`.
+The data would be accessed at address `0x100` (assuming the segment is the active DS), as addressed are translated as `segment_base + offset`. In this case the segment base is `0x1000`, and the offset is `0x100`.
 
-Segments can also be explicitly referenced. To load something at offset 0x100 into the ES region, you can use `mov es:0x100, $rax`. This would perform the translation from logical address to linear address using ES instead of DS (the default for data), a common example is when an interrupt occurs while the cpu is in ring 3, it will switch to ring 0 and load the appropriate descriptors into the segment registers.
+Segments can also be explicitly referenced. To load something at offset 0x100 into the ES region, an instruction like `mov es:0x100, $rax` can be used. This would perform the translation from logical address to linear address using ES instead of DS (the default for data), a common example is when an interrupt occurs while the cpu is in ring 3, it will switch to ring 0 and load the appropriate descriptors into the segment registers.
 
 ### Segment Registers
 
-The various segment registers and their uses are outlined below. There are some tricks to load a descriptor from the GDT into a segment register. They can't be mov'd into directly, so you'll need to use a scratch register to change their value. The cpu will also automatically reload segment registers on certain events (see the manual for these). 
+The various segment registers and their uses are outlined below. There are some tricks to load a descriptor from the GDT into a segment register. They can't be mov'd into directly, so we'll need to use a scratch register to change their value. The cpu will also automatically reload segment registers on certain events (see the manual for these). 
 
 To load any of the data registers, use the following:
 
@@ -117,7 +117,7 @@ reload_cs:
     retfq 
 ```
 
-In the above example we take advantage of the `call` instruction pushing the return address onto the stack before jumping. To reload `%cs` we'll need an address to jump to, so we'll use the saved address on the stack. We need to place the selector we want to load into `%cs` onto the stack *before* the return address though, so we'll briefly store it in `%rdi`, push our example code selector (0x8 in this - yours may differ), then push the return address back onto the stack.
+In the above example we take advantage of the `call` instruction pushing the return address onto the stack before jumping. To reload `%cs` we'll need an address to jump to, so we'll use the saved address on the stack. We need to place the selector we want to load into `%cs` onto the stack *before* the return address though, so we'll briefly store it in `%rdi`, push our example code selector (0x8 in this - the implementation may differ), then push the return address back onto the stack.
 
 We use `retfq` instead of `ret` because we want to do a *far* return, and we want to use the 64-bit (quadword) version of the instructio. Some assemblers have different syntax for this instruction, and it may be called `lretq`.
 
@@ -167,7 +167,7 @@ For a code selector, the remaining bits are: Conforming (bit 2) - a tricky subje
 ## Using the GDT
 
 All the theory is great, but how to apply it? 
-A simple example is outline just below, for a simple 64-bit long mode setup you'd need
+A simple example is outline just below, for a simple 64-bit long mode setup we'd need
 
 - Selector 0x00: null
 - Selector 0x08: kernel code (64-bit, ring 0)
@@ -254,7 +254,7 @@ void load_gdt()
 }
 ```
 
-If you're not familiar with inline assembly, check the appendix on using inline ssembly in C. The short of it is we use the "m" constraint to tell the compiler that `example_gdtr` is a memory address. The `lgdt` instruction loads the new GDT, and all that's left is to reload the current selectors, since they're using cached information from the previous GDT.
+If not familiar with inline assembly, check the appendix on using inline assembly in C. The short of it is we use the "m" constraint to tell the compiler that `example_gdtr` is a memory address. The `lgdt` instruction loads the new GDT, and all that's left is to reload the current selectors, since they're using cached information from the previous GDT.
 
 ```c
 void flush_gdt()
@@ -275,6 +275,6 @@ void flush_gdt()
 }
 ```
 
-In this example we assume that your kernel code selector is 0x8, and kernel data is 0x10. If these are different in your GDT, change these accordingly.
+In this example we assume that the kernel code selector is 0x8, and kernel data is 0x10. If these are different in our GDT, change these accordingly.
 
 At this point we've successfully changed the GDT, and reloaded all the segment registers!
