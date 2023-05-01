@@ -1,4 +1,5 @@
 # Boot Protocols
+
 A boot protocol defines the machine state when the kernel is given control by the bootloader. It also makes several services available to the kernel, like a memory map of the machine, a framebuffer and sometimes other utilities like uart or kernel debug symbols.
 
 This section covers 2 protocols: multiboot 2 and stivale 2.
@@ -7,45 +8,45 @@ Multiboot 2 supercedes multiboot 1, both of which are the native protocols of gr
 
 Stivale 2 (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. Stivale 2 is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
-While this article was being written, limine has since added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural architectural changes, but similar concepts behind it. If you're familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
+While this article was being written, limine has since added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
 
 All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
 ### What about the earlier versions?
-Both protocols have their earlier versions (multiboot 1 & stivale 1), but these are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set you get for the short term gains. The only thing multiboot 1 is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the x86 emulation, so there are better ways to do that.
+Both protocols have their earlier versions (_multiboot 1 & stivale 1_), but these are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set we get for the short term gains. The only thing multiboot 1 is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the `x86` emulation, so there are better ways to do that.
 
 ### Why A Bootloader At All?
 It's a fair question. In the world of testing on qemu/bochs/vmware/vbox, its easy to write a bootloader directly against UEFI or BIOS. Things get more complicated on real hardware though.
 
 Unlike CPUs, where the manufacturers follow the spec exactly and everything works as described, manufacturers of PCs generally follow *most* of the specs, with every machine having its minor caveats. Some assumptions can't be assumed everywhere, and some machines sometimes outright break spec. This leads to a few edge cases on some machines, and more or less on some others. It's a big mess. 
 
-This is where a bootloader comes in: a layer of abstraction between the kernel and the mess of PC hardware. It provides a boot protocol (often many you can choose from), and then ensures that everything in the hardware world is setup to allow that protocol to function. This is until the kernel has enough drivers set up to take full control of the hardware itself.
+This is where a bootloader comes in: a layer of abstraction between the kernel and the mess of PC hardware. It provides a boot protocol (often many we can choose from), and then ensures that everything in the hardware world is setup to allow that protocol to function. This is until the kernel has enough drivers set up to take full control of the hardware itself.
 
 *Authors note: I would consider writing a good bootloader an advanced topic in the osdev world. If you're new, please use an existing bootloader. It's a fun project, but not at the same time as an os. Using an existing bootloader will save you many issues down the road. And no, an assembly stub to get into long mode is not a bootloader.*
 
 ## Multiboot 2
-For this section we'll mainly be talking about grub 2. There is a previous version of grub (called grub legacy), and if you have hardware that *must* run grub legacy, there are patches for legacy that add most of the version 2 features to it. This is highly recommended.
 
-One such feature is the ability for grub to load 64-bit elf kernels. This greatly simplifies creating a 64-bit OS with multiboot 2, as previously you would have needed to load a 32-bit elf, and the 64-bit kernel as a module, and then load the 64-bit elf yourself. Effectively re-writing stage3 of the bootloader.
+For this section we'll mainly be talking about grub 2. There is a previous version of grub (called grub legacy), and if we have hardware that *must* run grub legacy, there are patches for legacy that add most of the version 2 features to it. This is highly recommended.
 
-Regardless of what kind of elf is loaded, multiboot 2 is well defined and will always drop you into 32-bit protected mode, with the cpu in the state as described in the specification. If you're writing a 64-bit kernel this means that you will need a hand-crafted 32-bit assembly stub to set up and enter long mode.
+One such feature is the ability for grub to load 64-bit elf kernels. This greatly simplifies creating a 64-bit OS with multiboot 2, as previously we would have needed to load a 32-bit elf, and the 64-bit kernel as a module, and then load the 64-bit elf manually. Effectively re-writing stage3 of the bootloader.
+
+Regardless of what kind of elf is loaded, multiboot 2 is well defined and will always drop us into 32-bit protected mode, with the cpu in the state as described in the specification. If writing a 64-bit kernel this means that we will need a hand-crafted 32-bit assembly stub to set up and enter long mode.
 
 One of the major differences between the two protocols is how info is passed between the kernel and bootloader:
 
-- Multiboot 1 has a fixed size header within the kernel, that is read by the bootloader. This limits the number of options available, and wastes space if not all options are used.
-- Multiboot 2 uses a fixed sized header that includes a `size` field, which contains the number of bytes of the header + all of the following requests. Each request contains an `identifier` field and then some request specific fields. This has slightly more overhead, but is more flexible. The requests are terminated with a special 'null request' (see the specs on this).
+- _Multiboot 1_ has a fixed size header within the kernel, that is read by the bootloader. This limits the number of options available, and wastes space if not all options are used.
+- _Multiboot 2_ uses a fixed sized header that includes a `size` field, which contains the number of bytes of the header + all of the following requests. Each request contains an `identifier` field and then some request specific fields. This has slightly more overhead, but is more flexible. The requests are terminated with a special `null request` (see the specs on this).
 
-- Multiboot 1 returns info to the kernel via a single large structure, with a bitmap indicating which sections of the structure are considered valid.
-- Multiboot 2 returns a pointer to a series of tags. Each tag has an `identifier` field, used to determine it's contents, and a size field that can be used to calculate the address of the next tag. This list is also terminated with a special null tag.
+- _Multiboot 1_ returns info to the kernel via a single large structure, with a bitmap indicating which sections of the structure are considered valid.
+- _Multiboot 2_ returns a pointer to a series of tags. Each tag has an `identifier` field, used to determine it's contents, and a size field that can be used to calculate the address of the next tag. This list is also terminated with a special `null` tag.
 
 One important note about multiboot 2: the memory map is essentially the map given by the bios/uefi. The areas used by bootloader memory (like the current gdt/idt), kernel and info structure given to the kernel are all allocated in *free* regions of memory. The specification does not say that these regions must then be marked as *used* before giving the memory map to the kernel. This is actually how grub handles this, so should definitely do a sanity check on the memory map.
 
 ### Creating a Boot Shim
-The major caveat of multiboot when first getting started is that it drops you into 32-bit protected mode, meaning that you must set up long mode yourself. This also means you'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
 
-Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard address used for higher half kernels: `0xFFFF'FFFF'8000'0000`. This address is sometimes referred to as the -2GB region(yes that's a minus), as a catch-all term for the upper-most 2GB of any address space. Since the exact address will be different depending on the number of bits used for the address space (32-bit vs 64-bit for example), referring to it as an underflow value is more portable.
+The major caveat of multiboot when first getting started is that it drops us into 32-bit protected mode, meaning that long mode needs to be manually set-up. This also means we'll need to create a set of page tables to map the kernel into the higher half, since in pmode it'll be running with paging disabled, and therefore no translation.
 
-If you're curious as to why it's referred to as *minus* 2GB, it's a catch-all term for the upper-most 2GB of the address space, regardless of how big the address space may be (the upper 2GB of 32-bit and 64-bit addresses spaces are different addresses!).
+Most implementations will use an assembly stub, linked at a lower address so it can be placed in physical memory properly. While the main kernel code is linked against the standard address used for higher half kernels: `0xFFFFFFFF80000000`. This address is sometimes referred to as the -2GB region (yes that's a minus), as a catch-all term for the upper-most 2GB of any address space. Since the exact address will be different depending on the number of bits used for the address space (32-bit vs 64-bit for example), referring to it as an underflow value is more portable.
 
 Entering long mode is fairly easy, it requires setting 3 flags:
 
@@ -53,13 +54,13 @@ Entering long mode is fairly easy, it requires setting 3 flags:
 - LME (long mode enable), bit 8 in EFER (this is an MSR).
 - PG (paging enable), bit 31 in cr0. This MUST be enabled last.
 
-If you're unfamiliar with paging, there is a section that goes into more detail in the memory management chapter.
+If unfamiliar with paging, there is a section that goes into more detail in the memory management chapter.
 
-Now, since we have enabled paging, we'll also need to populate cr3 with a valid paging structure. This needs to be done before setting the PG bit. Generally these initial page tables can be set up using 2mb pages with the present and writable flags set. Nothing else is needed for the initial pages.
+Since we have enabled paging, we'll also need to populate `cr3` with a valid paging structure. This needs to be done before setting the PG bit. Generally these initial page tables can be set up using 2mb pages with the present and writable flags set. Nothing else is needed for the initial pages.
 
-Now you will be operating in compatibility mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
+We will be operating in compatibility mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
 
-It's worth noting that this boot shim will need it's own linker sections for code and data, since until you have entered long mode the higher half sections used by the rest of the kernel won't be available, as we have no memory at those addresses yet.
+It's worth noting that this boot shim will need it's own linker sections for code and data, since until we have entered long mode the higher half sections used by the rest of the kernel won't be available, as we have no memory at those addresses yet.
 
 ### Creating a Multiboot 2 Header
 Multiboot 2 has a header available at the bottom of it's specification that we're going to use here.
@@ -142,7 +143,7 @@ mb2_framebuffer_end:
 mb2_hdr_end:
 ```
 
-A full boot shim is left as an exercise to the reader, as you may want to do extra things before moving into long mode. Or you may not, but an skeleton of what's required is provided below. 
+A full boot shim is left as an exercise to the reader, we may want to do extra things before moving into long mode. Or may not, but a skeleton of what's required is provided below. 
 
 ```x86asm
 .section .data
@@ -194,21 +195,23 @@ After performing the long-return (`lret`) we'll be running `target_function` in 
 
 Some of the things were glossed there, like paging and setting up a gdt, are explained in their own sections.
 
-You'll also want to pass the multiboot info structure to your kernel's main function. 
-The interface between a higher level language like C and assembly (or another high level language) is called the ABI (application binary interface). This is discussed more in the section about C, but for now if you want to pass a single `uint64_t` (or a pointer of any kind, which the info structure is) simply move it to `rdi`, and it'll be available as the first argument in C.
+We'll also want to pass the multiboot info structure to the kernel's main function. 
+
+The interface between a higher level language like C and assembly (or another high level language) is called the ABI (application binary interface). This is discussed more in the section about C, but for now to pass a single `uint64_t` (or a pointer of any kind, which the info structure is) simply move it to `rdi`, and it'll be available as the first argument in C.
 
 ## Stivale 2
+
 Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
 While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
 
-To use stivale2, you'll need a copy of the limine bootloader. A link to it and the stivale2 specification are available at the start of this chapter. There is also a C header file containing all the structs and magic numbers used by the protocol. A link to a barebones example is also provided.
+To use stivale2, we'll need a copy of the limine bootloader. A link to it and the stivale2 specification are available at the start of this chapter. There is also a C header file containing all the structs and magic numbers used by the protocol. A link to a barebones example is also provided.
 
 It operates in a similar way to multiboot 2, by using a linked list of tags, although this time in both directions (kernel -> bootloader and bootloader -> kernel). Tags from the kernel to the bootloader are called `header_tag`s, and ones returned from the bootloader are called `struct_tag`s.
 Stivale 2 has a number of major differences to multiboot 2 though:
 
 - The kernel starts in 64-bit long mode, by default. No need for a protected mode stub to setup up some initial paging.
 - The kernel starts with the first 4GB of memory and any usable regions of memory identity mapped.
-- Stivale 2 also sets up a 'higher half direct map', or hhdm. This is the same identity map as the lower half, but it starts as the hhdm_offset returned in a struct tag when the kernel runs. The idea is that as long you ensure all your pointers are in the higher half, you can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
+- Stivale 2 also sets up a 'higher half direct map', or hhdm. This is the same identity map as the lower half, but it starts as the hhdm_offset returned in a struct tag when the kernel runs. The idea is that as long we ensure all the pointers are in the higher half, we can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
 - A well-defined GDT is provided.
 - Unlike mb2, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
 
@@ -221,11 +224,12 @@ if (next_tag == NULL)
 ```
 
 ### Fancy Features
+
 Stivale 2 also provides some more advanced features:
 
 - It can enable 5 level paging, if requested.
 - It boots up AP (all other) cores in the system, and provides an easy interface to run code on them.
-- It supports KASLR, loading your kernel at a random offset each time.
+- It supports KASLR, loading our kernel at a random offset each time.
 - It can also provide things like EDID blobs, address of the PXE server (if booted this way), and a device tree blob on some platforms.
 - A fully ANSI-compliant terminal is provided. This does require the kernel to make certain promises about memory layout and the GDT, but it's a very useful debug tool or basic shell in the early stages.
 
@@ -245,7 +249,7 @@ First of all, we'll need an extra section in our linker script, this is how the 
 }
 ```
 
-If you're not familiar with the `KEEP()` command in linker scripts, it tells the linker to keep that section even if it's not referenced by anything. Useful in this case, since the only reference will be the bootloader, which the linker can't know about at link-time.
+If not familiar with the `KEEP()` command in linker scripts, it tells the linker to keep that section even if it's not referenced by anything. Useful in this case, since the only reference will be the bootloader, which the linker can't know about at link-time.
 
 Next we'll need to create space for our stack (stivale2 requires us to provide our own) and define the stivale2 header, like so:
 
@@ -265,7 +269,7 @@ static stivale2_header stivale2_hdr =
 };
 ```
 
-If you're not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.stivale2hdr` section, as is required by the stivale2 spec.
+If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.stivale2hdr` section, as is required by the stivale2 spec.
 
 Next we set some fields in the stivale2 header:
 
