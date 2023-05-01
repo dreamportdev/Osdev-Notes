@@ -12,7 +12,7 @@ echo ${decorators[10]}
 
 while IFS='' read -r -d '' filename; do
   : # something with "$filename"
-  if [ $filename = "." ]; then
+  if [ $filename = "." ] || [ $filename = "./Images" ]; then
     continue
   fi
   echo $filename "- ${counter}"
