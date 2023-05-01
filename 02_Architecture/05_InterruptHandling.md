@@ -17,7 +17,7 @@ There will be situations where you don't want to be interrupted, usually in some
 
 ### Non-Maskable Interrupts
 
-When the interrupt flag is cleared, most interrupts will be *masked* meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's perfectable acceptable to simply have your operating system panic in this case. 
+When the interrupt flag is cleared, most interrupts will be *masked* meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's perfectly acceptable to simply have your operating system panic in this case. 
 
 *Authors note: Don't let NMIs scare you, I've never run actually run into one on real hardware. You do need to be aware that they exist and can happen at any time, regardless of the interrupt flag.*
 
@@ -112,7 +112,7 @@ struct idtr
 
 Again, note the use of the packed attribute. In long mode the limit field should be set to 0xFFF (16 bytes per descriptor * 256 descriptors, and substract 1 because that's how this is encoded). The `base` field needs to contain the *logical address* of the idt. This is usually the virtual address, but if you have re-enabled segmentation in long mode (some cpus allow this), this address ignores segmentation.
 
-*Authors Note: The reason for substracting one from the size of the idt is interesting. Loading an IDT with zero entries would effectively be pointless, as there would be nothing there to handle interrupts, and so no point in having loaded it in the first place. Since the size of 1 is useless, the length field is encoded as one less than the actual length. This has the benefit of reducing the 12-bit value of 4096 (for a full IDT), to a smaller 11-bit value of 4096. One less bit to store!*
+*Authors Note: The reason for subtracting one from the size of the idt is interesting. Loading an IDT with zero entries would effectively be pointless, as there would be nothing there to handle interrupts, and so no point in having loaded it in the first place. Since the size of 1 is useless, the length field is encoded as one less than the actual length. This has the benefit of reducing the 12-bit value of 4096 (for a full IDT), to a smaller 11-bit value of 4096. One less bit to store!*
 
 ```c
 void load_idt(void* idt_addr)
@@ -130,7 +130,7 @@ At this point you should be able to install an interrupt handler into your IDT, 
 
 ## Interrupt Handler Stub
 
-Since an interrupt handler uses the same general purpose registers as the code that was interupted, we'll need to save and then restore the values of those registers, otherwise we may crash the interrupted program.
+Since an interrupt handler uses the same general purpose registers as the code that was interrupted, we'll need to save and then restore the values of those registers, otherwise we may crash the interrupted program.
 
 There are a number of ways we could go about something like this, we're going to use some assembly (not too much!) as it gives us the fine control over the cpu we need. There are other ways, like the infamous `__attribute__((interrupt))`, but these have their own issues and limitations. This small bit of assembly code will allow us to add other things as we go.
 
@@ -358,7 +358,7 @@ There's one piece of housekeeping to take care of! On x86 there first 32 interru
 | 19             | #XF       | SIMD (SSE/AVX) error                  | No             |
 | 20-31          |           | Currently Unused                      | -              |
 
-While some of these vectors are unused, they are still reserved and might be used in the future. So consider using them yourself as an error. Most of these are fairly rare occurances, however we will quickly explain a few of the common ones:
+While some of these vectors are unused, they are still reserved and might be used in the future. So consider using them yourself as an error. Most of these are fairly rare occurrences, however we will quickly explain a few of the common ones:
 
 - Page Fault: Easily the most common one to run into. It means there was an issue with translating a virtual address into a physical one. This does push an error code which describes the memory access that triggered the page fault. Note the error describes what was being attempted, not what caused translation to fail. The `%cr2` register will also contain the virtual address that was being translated. 
 - General Protection Fault: A GP fault can come from a large number of places, although it's generally from an instruction dealing with the segment registers in some way. This includes `iret` (it modifies cs/ss), and others like `lidt`/`ltr`. It also pushes an error code, which is described below. A GP fault can also come from trying to execute a privileged instruction outside when it's not allowed to be. This case is different to an undefined opcode, as the instruction exists, but is just not allowed.
@@ -376,7 +376,7 @@ A Page Fault will push a bitfield as it's error code. This is not a complete des
 | 3   | Reserved Bit Set | If set, means a reserved bit was set in a page table entry. Best to walk the page tables manually and see what's happening yourself. |
 | 4   | Instruction Fetch | If NX (No-Execute) is enabled in EFER, this bit can be set. If set the page fault was caused by trying to fetch an instruction from an NX page. |
 
-The other interrupts that push an error code (exlcuding the always-zero ones) use the following format to indicate which selector caused the fault:
+The other interrupts that push an error code (excluding the always-zero ones) use the following format to indicate which selector caused the fault:
 
 | Bits | Name     | Description                            |
 |------|----------|----------------------------------------|

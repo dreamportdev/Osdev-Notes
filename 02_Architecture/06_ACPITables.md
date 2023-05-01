@@ -6,9 +6,9 @@ We need to access the ACPI Tables in order to read the IO-Apic information, used
 
 ## RSDP and RSDT/XSDT
 
-Many of the information are organized and accessible through different data structures, but since the ACPI specs are quite big, and cover so many different components, we focus only on what we just need to get the informations we need about the APIC.
+Many of the information are organized and accessible through different data structures, but since the ACPI specs are quite big, and cover so many different components, we focus only on what we just need to get the information we need about the APIC.
 
-Before proceeding let's keep in mind that all address described below are physical, so if we will enable paging, keep in mind that we need to ensure they are properly mapped in the virtual memory spacea. 
+Before proceeding let's keep in mind that all address described below are physical, so if we will enable paging, keep in mind that we need to ensure they are properly mapped in the virtual memory space.
 
 ### RSDP
 
@@ -23,7 +23,7 @@ Accessing the RSDP register depends on the boot system used, if we are using gru
 * For the version 1 the MULTIBOOT_TAG_TYPE_ACPI_OLD is used (type 14)
 * For the version 2 the MULTIBOOT_TAG_TYPE_ACPI_NEW is used (type 15)
 
-Both headers are identical, with the only difference being in the type value, they are compoosed of just two fields: 
+Both headers are identical, with the only difference being in the type value, they are composed of just two fields: 
 
 * The type field that can be 14 or 15 depending on the version
 * The size of the RSDP
@@ -93,7 +93,7 @@ In the XSDT since it has more fields, the previous checksum field wont offset th
 
 ### RSDT Data structure and fields
 
-RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers to many different table descriptor (SDTs). Explaining all the tables is beyond of the scope of these notes, and for our purpose we are going to need only one of those table (the APIC table that we will enocunter later).
+RSDT (Root System Description Table) is a data structure used in the ACPI programming interface. This table contains pointers to many different table descriptor (SDTs). Explaining all the tables is beyond of the scope of these notes, and for our purpose we are going to need only one of those table (the APIC table that we will encounter later).
 
 Since every SDT table contains different type of information, they are all different from each other, we can define an RSDT table by the composition of two parts:
 

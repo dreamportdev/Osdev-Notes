@@ -12,7 +12,7 @@ There's a few ways we can get output on the screen. We're going to use a linear 
 
 In these chapters we're going to use a linear framebuffer, since it's the only framebuffer type reliably available on `x86_64` and other platforms.
 
-## Setting framebuffer (using grub)
+## Requesting a Framebuffer Mode (Using Grub)
 
 One way to enable framebuffer is asking grub to do it (this can be done also using uefi but it is not covered in this chapter). 
 
@@ -32,7 +32,7 @@ framebuffer_tag_end:
 
 The comments are self explanatory. 
 
-## Accessing the framebuffer from the kernel
+## Accessing the Framebuffer
 
 Once the framebuffer is set in the multiboot header, when grub loads the kernel it should add  a new tag: the `framebuffer_info` tag. As explained in the Multiboot paragraph, if using the header provided in the documentation, there should already be a *struct multiboot_tag_framebuffer*, otherwise we should create our own.  
 
@@ -53,7 +53,7 @@ The basic structure of the framebuffer info tag is:
         
 Where: 
 
-* *type* is the type of the tag being read, and 8 means that it is a Framebuffer info tag.
+* *type* is the type of the tag being read, and 8 means that it is a framebuffer info tag.
 * *size* it indicates the size of the tag (header info included).
 * *framebuffer_addr* it contains the current address of the framebuffer.
 * *framebuffer_pitch* contains the pitch in bytes.
@@ -67,11 +67,11 @@ Where:
 **Pitch** is the number of bytes on each row.
 **bpp** is same as depths.
 
-## Framebuffer type
+## Framebuffer Type
 
 Depending on the `framebuffer_type` value there can be different values for `color_info` field.
 
-* If frambuffer_type is 0 this means indexed colors, and that the `color-info` field has the following values:
+* If framebuffer_type is 0 this means indexed colors, and that the `color-info` field has the following values:
 
 | Size    | Description                    |
 |---------|--------------------------------|
@@ -102,7 +102,7 @@ Where `framebuffer_XXX_field_position` is the starting bit of the color XXX, and
 
 * If it is 2, it means EGA text, so the width and height are specified in characters and not pixels, framebuffer-bpp = 16 and framebuffer_pitch is expressed in byte text per line.
 
-## Plotting a pixel
+## Plotting A Pixel
 
 Everything that we see on the screen with the framebuffer enabled will be done by the function that plot pixels. 
 
@@ -131,9 +131,9 @@ $$pixel_{position} = base_{address} + column + row$$
 
 This address is the location where we are going to write a colour value and it will be displayed on our screen. 
 
-**Please be aware that the framebuffer base_address is an absolute physical address, and on the early stages of our OS is totally fine, but remember that when/if we are going to enable virtual memory, the framebuffer address will need to be mapped somewhere. And the base_address could change, depending on design decisions, this will be explained later**
+Be aware that grub is giving us a physical address for the framebuffer_base. When enabling virtual memory be sure to map the framebuffer somewhere so that you can still access it!
 
-### Drawing an image
+### Drawing An Image
 
 Now that we have a plot pixel function is time to draw something nice on the screen. Usually to do this we should have a file system supported, and at least an image format implemented. But some graphic tools, like *The Gimp* provide an option to save an image into `C source code header`, or `C source code`. 
 
@@ -147,7 +147,7 @@ HEADER_PIXEL(logo_data, pixel)
 
 where `logo_data` is a pointer to the image content and `pixel` is an array of 4 chars, that will contain the pixel values.
 
-Now since each pixel is identified by 3 colors and we have 4 elements into an array, we know that the last element (`pixel[3]`) is always zero. The color is encoded in RGB format with Blue being the least significant byte, and to plot that pixel we need to fill a 32 bit address, so the array need to be converted into a `uint32_t` variable, this can easily be done with some bitwise operatory: 
+Now since each pixel is identified by 3 colors and we have 4 elements into an array, we know that the last element (`pixel[3]`) is always zero. The color is encoded in RGB format with Blue being the least significant byte, and to plot that pixel we need to fill a 32 bit address, so the array need to be converted into a `uint32_t` variable, this can easily be done with some bitwise operations: 
 
 ```c
 char *pixel[4];

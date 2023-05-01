@@ -107,7 +107,7 @@ As an example consider the number 1235:  $1235/10=123.5$ and $1235 \mod 10=5$, r
 
 And as you can see we got all the digits in reverse order, so now the only thing we need to do is reverse the them. The implementation of this function should be now pretty straightforward, and it will be left as exercise. 
 
-Printing other format like Hex or Octal is little bit different, but the base idea of getting the single number and converting it into a character is similar. The only tricky thing with the hex number is that now we have symbols for numbers between 10 and 15 that are characters, and they are before the digits simbol in the ascii map, but once that is know is going to be just an if statement in our function. 
+Printing other format like Hex or Octal is little bit different, but the base idea of getting the single number and converting it into a character is similar. The only tricky thing with the hex number is that now we have symbols for numbers between 10 and 15 that are characters, and they are before the digits symbol in the ascii map, but once that is know is going to be just an if statement in our function. 
  
 ### Troubleshooting
 

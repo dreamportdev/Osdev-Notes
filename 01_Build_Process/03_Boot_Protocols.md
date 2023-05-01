@@ -57,7 +57,7 @@ If you're unfamiliar with paging, there is a section that goes into more detail 
 
 Now, since we have enabled paging, we'll also need to populate cr3 with a valid paging structure. This needs to be done before setting the PG bit. Generally these initial page tables can be set up using 2mb pages with the present and writable flags set. Nothing else is needed for the initial pages.
 
-Now you will be operating in compatability mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
+Now you will be operating in compatibility mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
 
 It's worth noting that this boot shim will need it's own linker sections for code and data, since until you have entered long mode the higher half sections used by the rest of the kernel won't be available, as we have no memory at those addresses yet.
 
@@ -110,7 +110,7 @@ SECTIONS
 
 This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xFFFF'FFFF'8000'0000` lower than it's virtual address. 
 
-However the first two sections are both loaded and linked at lower memory addresses. The first is our multiboot header, this is just static data, it dosnt really matter where it's loaded, as long as it's in the final file somewhere. The second section contains our protected mode boot shim: a small bit of code that sets up paging, and boots into long mode.
+However the first two sections are both loaded and linked at lower memory addresses. The first is our multiboot header, this is just static data, it doesn't really matter where it's loaded, as long as it's in the final file somewhere. The second section contains our protected mode boot shim: a small bit of code that sets up paging, and boots into long mode.
 
 The next thing is to create our multiboot2 header and boot shim. Multiboot2 headers require some calculations that easier in assembly, so we'll be writing it in assembly for this example. It would look something like this:
 

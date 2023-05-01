@@ -1,4 +1,4 @@
-# Drawing fonts
+# Drawing Fonts
 
 When framebuffer is enabled, the hardware bios video memory is no longer accessible, and the only things that we can do now is drawing pixels. 
 
@@ -23,7 +23,7 @@ The steps involved are:
 3. When the kernel is loading identify the PSF version and parse it accordingly
 4. Write functions to: pick the glyph (a single character) and draw it on the screen
 
-## Find a Font and add it to the kernel (1 and 2)
+## Embedding a PSF File In The Kernel
 
 
 As already said the best place to look for a font if running on linux is to look into the folder `/usr/share/kbd/consolefonts`, to know the psf version the tool *gbdfed* can be used, just import the font with it (use the File->Import->console font menu), and then go to *View->Messages*, there should be a message similar to the following: 
@@ -67,7 +67,7 @@ Symbol table '.symtab' contains 5 entries:
 ```
 (the variable name depends on the font file name). 
 
-## Identify version and parse the PSF
+## Parsing the PSF
 
 Since there are two different version of PSF fonts available, identified with v1, and v2, to know what is the version of the font loaded we need to check the magic number first: 
 
@@ -104,7 +104,7 @@ All the fields above are declared as `unsigned char` variables, except for the m
 
 The font data starts right after the header. 
 
-### PSF v2 structure
+### PSF v2 Structure
 
 The psf structure header has a fixed size of 32 bytes, with the following information: 
 
@@ -202,7 +202,7 @@ The number of bytes in each line, assuming that we are using grub and the frameb
 
 Implementing the function above should be pretty simple and is left as exercise.
  
-## Useful resources
+## Useful Resources
 
 * https://wiki.osdev.org/PC_Screen_Font
 * gbdfed - Tool to inspect PSF files

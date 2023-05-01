@@ -35,7 +35,7 @@ You can think of a symbol as a pointer.
 
 Why is this useful though? Well we can add symbols to the linker script, and the linker will ensure any references to that symbol in our code point to the same place. That means we can now access info that is only known by the linker, such as where the code will be stored in memory, or how big the read-only data section in our kernel is.
 
-Although not useful on x86, on some embedded platforms physical RAM does not start at address 0. These platforms usually don't have an  equivilent to the bios/uefi. Since you would need a different linker script for each of those platforms anyway, you could also include a symbol that tells your kernel where physical ram starts, and how much of it is available, letting your code remain more generic.
+Although not useful on x86, on some embedded platforms physical RAM does not start at address 0. These platforms usually don't have an  equivalent to the bios/uefi. Since you would need a different linker script for each of those platforms anyway, you could also include a symbol that tells your kernel where physical ram starts, and how much of it is available, letting your code remain more generic.
 
 Keep reading to see how we use symbols later in the example makefile.
 
@@ -45,12 +45,12 @@ A program header can be seen as a block of *stuff* that the program loader will 
 | Name         | Value | Description                                     |
 |--------------|--------|-------------------------------------------------|
 | PT_NULL      | 0     | Just a placeholder, a null value. Does nothing. |
-| PT_LOAD      | 1     | Means this program header describes that should be loaded, in orer for the program to run. The flags specify read/write/execute permissions. |
+| PT_LOAD      | 1     | Means this program header describes that should be loaded, in order for the program to run. The flags specify read/write/execute permissions. |
 | PT_DYNAMIC   | 2     | Advanced use, for dynamically linking functions into a program or relocating a program when it is loaded. |
-| PT_INTERP    | 3     | A program can request a specific progam loader here, often this is just the default for the operating system. |
+| PT_INTERP    | 3     | A program can request a specific program loader here, often this is just the default for the operating system. |
 | PT_NOTE      | 4     | Contains non-useful data, often the linker name and version. |
 
-Modern linkers are quite clever, and will often deduce which program headers are needed, but it never hurts to specify these yourself. For a freestanding kernel you will need at least threee program headers, all of type PT_LOAD:
+Modern linkers are quite clever, and will often deduce which program headers are needed, but it never hurts to specify these yourself. For a freestanding kernel you will need at least three program headers, all of type PT_LOAD:
 
 - text, with execute and read permissions.
 - rodata, with only the read permission.
@@ -89,7 +89,7 @@ PHDRS
 While program headers are a fairly course mechanism for telling the program loader what it needs to do in order to get our program running, sections allow us a lot of control over how the code and data within those areas is arranged.
 
 ### The '.' Operator
-When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll potentially need to update the linker script everytime the code or data sections change in size. Instead, we can use the dot operator (`.`). It represents the current VMA (remember this is the runtime address), and allows us to perform certian opeations on it, without specifying exactly what the address is. 
+When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll potentially need to update the linker script every time the code or data sections change in size. Instead, we can use the dot operator (`.`). It represents the current VMA (remember this is the runtime address), and allows us to perform certain operations on it, without specifying exactly what the address is. 
 
 We can align it to certain values, add relative offsets based on it's current address and a few other things. Linker scripts accept 
 
@@ -101,7 +101,7 @@ Often simply setting it at the beginning (before the first section) is enough, l
 SECTIONS
 {
     . = 0xFFFFFFFF80000000;
-    /* section descritions go here */
+    /* section descriptions go here */
 }
 ```
 
