@@ -49,7 +49,7 @@ These things can happen at any time, and as the operating system kernel we would
 
 When an unexpected event happens, the cpu will immediately stop the current code it's running and start running a special function called an *interrupt handler*. The interrupt handler is something the kernel tells the cpu about, and the function can then work out what event happened, and then take some action. The interrupt handler then tells the cpu when it's done, and then cpu goes back to executing the previously running code.
 
-The interrupted code is usually never aware that an interrupt even occured, and should continue on as normal.
+The interrupted code is usually never aware that an interrupt even ocurred, and should continue on as normal.
 
 ## Drivers
 

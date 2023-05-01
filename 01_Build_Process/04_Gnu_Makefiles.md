@@ -77,7 +77,7 @@ Next up is an important line: `.PHONY: `. Make targets are presumed to output a 
 
 The `all` and `clean` targets work as you'd expect, building the final output or cleaning the build files. It's worth noting the '@' symbol in front of echo. When at the start of a line, it tells make not to echo the rest of the line to the shell. In this case we're using echo because we want to output text without the shell trying to run it. Therefore we tell make not to output the echo line itself, since echo will already write the following text to the shell.
 
-The line `-rm -r build/` begins with a minus/hyphen. Normally if a command fails (returns a non-zero exit code), make will abort the sequence of commands and display an error. Beginning a line with a hyphen tells make to ignore the error code. Make will still tell you an error occured, but it won't stop the executing the make file. In this case this is what we want.
+The line `-rm -r build/` begins with a minus/hyphen. Normally if a command fails (returns a non-zero exit code), make will abort the sequence of commands and display an error. Beginning a line with a hyphen tells make to ignore the error code. Make will still tell you an error ocurred, but it won't stop the executing the make file. In this case this is what we want.
 
 The last two rules tell make how it should create a `*.c.o` or `*.S.o` file if it needs them. They have a dependency on a file of the same name, but with a different extension (`*.c` or `*.S`). This means make will fail with an error if the source file does not exist, or if we forget to add it to the `SRCS` variables above. We do a protective mkdir, to ensure that the filepath used for output actually exists.
 
@@ -98,7 +98,7 @@ output.o: input.c build_dir
 ```
 
 - `$@`: Evaluates to the target name of the current rule, in the example this would be `output.o`.
-- `$<`: Evaluates to the first prequesite, in the example this would be `input.c`.
+- `$<`: Evaluates to the first prerequisite, in the example this would be `input.c`.
 - `$^`: Evaluates to a list of the all the prerequisites, in the example this would be `input.c build_dir`.
 
 For the following, the example used is a file path:
@@ -122,7 +122,7 @@ This would place the contents of the included file (extras.mk) *at the line wher
 
 One *import*ant note about using `import` is to remember that the included file will run with the current working directory of the file that used the import, not the directly of the where the included file is.
 
-You can also run `make` itself as part of a command to build a target. This opens the door to a whole new world of makefiles calling further makefiles and including othes.
+You can also run `make` itself as part of a command to build a target. This opens the door to a whole new world of makefiles calling further makefiles and including others.
 
 ### Think Bigger!
 *__Authors Note:__ This section is written using a personal project as a reference, there are definitely other ways to approach this, but I thought it would be an interesting example to look at how I approached this for my kernel/OS. - DT.*
@@ -178,7 +178,7 @@ Whew, there's a lot going on there! Let's look at why the various parts exist:
     - For example, the kernel makefile will be run, and it will have all of the make variables specified in the root makefile in it's environment.
     - This means if we decide to change the toolchain, or want to add debug symbols to *all* projects, we can do it in a single change.
     - Libraries and userland apps work in a similar way, but there is an extra layer. What I've called the glue makefile. It's very simple, it just passes through the make commands from above to each sub project. 
-    - This means we don't need to update the root makefile everytime a new userland app is updated, or a new library.
+    - This means we don't need to update the root makefile every time a new userland app is updated, or a new library.
     - It also allows us to override some variables for every library or every userspace app, instead of globally. Useful!
 
 - There are a few extra makefiles:

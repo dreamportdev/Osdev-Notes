@@ -45,7 +45,7 @@ The old x86 architecture had two PIC processor, and they were called "master" an
 
 The ICW values are initialization commands (ICW stands for Initialization Command Words), every command word is one byte, and their meaning is: 
 
-* ICW_1 (value `0x11`) is a word that indicates a start of inizialization sequence, it is the same for both the master and slave pic. 
+* ICW_1 (value `0x11`) is a word that indicates a start of initialization sequence, it is the same for both the master and slave pic. 
 * ICW_2 (value `0x20` for master, and `0x28` for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
 * ICW_3 (value `0x2` for master, `0x4` for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be it's id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
 * ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode. 
@@ -77,7 +77,7 @@ A complete list of local APIC registers is available in the Intel/AMD software d
 
 ### Enabling the Local APIC, and The Spurious Vector
 
-The spurious vector register is also contains some miscellanious config for the local APIC, including the enable/disable flag. This register has the following format:
+The spurious vector register is also contains some miscellaneous config for the local APIC, including the enable/disable flag. This register has the following format:
 
 | Bits  | Value                        |
 |-------|------------------------------|
@@ -133,7 +133,7 @@ The delivery mode field determines how the the APIC should present the interrupt
 
 The X2APIC is an extension of the XAPIC (the local APIC in it's regular mode). The main difference is the registers are now accessed via MSRs and some the ID register is expanded to use a 32-bit value (previously 8-bits). While we're going to look at how to use this mode, it's perfectly fine to not support it.
 
-Checking whether the current processor supports the X2APIC or not can be done via `cpuid`. It will be under leaf 1, bit 21 in `ecx`. If this bit is set, the processor supoorts the X2APIC.
+Checking whether the current processor supports the X2APIC or not can be done via `cpuid`. It will be under leaf 1, bit 21 in `ecx`. If this bit is set, the processor supports the X2APIC.
 
 Enabling the X2APIC is done by setting bit 10 in the IA32_APIC_BASE MSR. It's important to note that once this bit is set, we cannot clear it to transition back to the regular APIC operation without resetting the system.
 
@@ -145,7 +145,7 @@ Since MSRs are 64-bits, the upper 32 bits are zero on reads and ignored on write
 
 ### Handling Interrupts
 
-Once an interrupt for the local APIC is served, it won't send any further interrupts until the end of interrupt signal is sent. To do this write a 0 to the EOI register, and the local APIC will resume sending interrupts to the processor. This is a separate mechanism to the interrupt flag (IF), which also disables interrupts being served to the processor. It is possible to send EOI to the local APIC while IF is cleared (disabling interrupts) and no futher interrupts will be served until IF is set again.
+Once an interrupt for the local APIC is served, it won't send any further interrupts until the end of interrupt signal is sent. To do this write a 0 to the EOI register, and the local APIC will resume sending interrupts to the processor. This is a separate mechanism to the interrupt flag (IF), which also disables interrupts being served to the processor. It is possible to send EOI to the local APIC while IF is cleared (disabling interrupts) and no further interrupts will be served until IF is set again.
 
 There are few exceptions where sending an EOI is not needed, this is mainly spurious interrupts and NMIs. 
 
@@ -153,7 +153,7 @@ The EOI can be sent at any time when handling an interrupt, but it's important t
 
 ### Sending An IPI
 
-If we want to support SMP (multiple cores) in our kernel, we will need a way to inform other cores that an event has occured. This is typically done by sending an IPI. Note that IPIs don't carry any information about what event occureed, they simply indicate that *something* has happened. To send data about what the event is a struct is usually placed in memory somewhere, sometimes called a *mailbox*.
+If we want to support SMP (multiple cores) in our kernel, we will need a way to inform other cores that an event has occurred. This is typically done by sending an IPI. Note that IPIs don't carry any information about what event occurred, they simply indicate that *something* has happened. To send data about what the event is a struct is usually placed in memory somewhere, sometimes called a *mailbox*.
 
 To send an IPI we need to know the local APIC ID of the core we wish to interrupt. We will also need a vector in the IDT set up for handling IPIs. With these two things we can use the ICR (interrupt command register).
 
@@ -182,7 +182,7 @@ There is also a shorthand field in the ICR which overrides the destination id. I
 
 ## IOAPIC
 
-The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the lapic timer, all external devices are going to use the IRQs provided by it (like it was done in the passt by the PIC8259).
+The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the lapic timer, all external devices are going to use the IRQs provided by it (like it was done in the past by the PIC).
 
 ### Configure the IO-APIC
 

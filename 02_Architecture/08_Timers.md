@@ -78,7 +78,7 @@ $$\frac{1,193,180 (clock frequency)}{1000 (duration wanted)} = 1193.18 (Hz for d
 
 One problem is that we can't use floating point numbers for these counters so we truncate the result to 1193. This does introduce some error, and it can be corrected for this over a long time if we want. However for our purposes it's small enough to ignore, for now.
 
-To actually program the PIT with this value is pretty straightfoward, we first send a configuration byte to the command port (`0x43`) and then the reload value to the channel port (`0x40`).
+To actually program the PIT with this value is pretty straight-foward, we first send a configuration byte to the command port (`0x43`) and then the reload value to the channel port (`0x40`).
 
 The configuration byte is actually a bitfield with the following layout:
 
@@ -168,7 +168,7 @@ By default the first two comparators are set up to mimic the PIT and RTC clocks,
 
 It's worth noting that all comparators support one-shot mode, but periodic mode is optional. Testing if a comparator supports periodic mode can be done by checking if bit 4 is set in the capabilities register for that comparator.
 
-Speaking of which: each comparator has it's own set of registers to control it. These registers are accessed as an offset from the HPET base. There are two registers we're interested in: the comparator config and capability registger (accessed at offset `0x100 + N * 0x20`), and the comparator value register (at offset `0x108 + N * 0x20`). In those equations `N` is the comparator number we want. As an example to access the config and capability register for comparator 2, we would determine it's location as: `0x100 + 2 * 0x20 = 0x140`. Meaning we would access the register at offset `0x140` from the HPET mmio base address.
+Speaking of which: each comparator has it's own set of registers to control it. These registers are accessed as an offset from the HPET base. There are two registers we're interested in: the comparator config and capability register (accessed at offset `0x100 + N * 0x20`), and the comparator value register (at offset `0x108 + N * 0x20`). In those equations `N` is the comparator number we want. As an example to access the config and capability register for comparator 2, we would determine it's location as: `0x100 + 2 * 0x20 = 0x140`. Meaning we would access the register at offset `0x140` from the HPET mmio base address.
 
 The config and capabilities register for a comparator also contains some other useful fields to be aware of:
 
@@ -195,7 +195,7 @@ uint64_t poll_hpet() {
 }
 ```
 
-This function returns the main counter of the hpet as a number of femtoseconds since it was last reset. You may want to convert this to a more managemable unit like nano or even microseconds.
+This function returns the main counter of the hpet as a number of femtoseconds since it was last reset. You may want to convert this to a more manageable unit like nano or even microseconds.
 
 Next let's look at setting up an interrupt timer. This requires the use of a comparator, and a bit of logic. We'll also need the IO APIC set up, and we're going to use some dummy functions to show what we need to do. We're going to use comparator 0, but this could be any comparator.
 

@@ -10,7 +10,7 @@ A userspace program actually begins executing at `void _start()`, which is part 
 
 Since we will be writing the operating system, we can't depend on any functionality that requires our *host operating system*, like these libraries. A program like this is called a *freestanding* program. It has no external dependencies.
 
-*Authors note: techincally your kernel can depend on some utility libraries, or sections of the compiler runtime. However the idea is you should build your code with nothing extra added by default, and only add things back in that are also freestanding.*
+*Authors note: technically your kernel can depend on some utility libraries, or sections of the compiler runtime. However the idea is you should build your code with nothing extra added by default, and only add things back in that are also freestanding.*
 
 In a freestanding environment, you should assume nothing. That includes the standard library (as it requires os support to work). Your program will also need a special linker script in order to run properly, since the linker wont know where to start your program. Linker scripts are expanded on below, as well as in their own section.
 
@@ -21,7 +21,7 @@ Often this is not necessary for hobby os projects, as we are running our code on
 
 A cross compiler is always required when building your os for a different cpu architecture to your host. Building code for a risc-v cpu, while running on an x86 cpu would require a cross compiler for example.
 
-The two main compiler toolchains used are gcc and clang. They differ a lot in philosophy, but are comparable for a lot of the things we care about. GCC is much older and so it established a lot of the conventions used, such as the majority of compiler flags, inline assembly and some language extensions. Clang honours most (if not all) of these, and the two seem to be feature equivilent, with the exception of some experimental features.
+The two main compiler toolchains used are gcc and clang. They differ a lot in philosophy, but are comparable for a lot of the things we care about. GCC is much older and so it established a lot of the conventions used, such as the majority of compiler flags, inline assembly and some language extensions. Clang honours most (if not all) of these, and the two seem to be feature equivalent, with the exception of some experimental features.
 
 ## Differences Between GCC and Clang
 
@@ -42,11 +42,11 @@ Setting up a proper build environment can be broken down into a few steps:
 
 ### Getting a Cross Compiler
 The easiest approach here is to simply use clang. Clang is designed to be a cross compiler, and so any install of clang can compile to any supported platform.
-To compile for another platform simply invoke clang as you normally would, additonally passing `--target=xyz`, where xyz is the target triplet for your target platform.
+To compile for another platform simply invoke clang as you normally would, additionally passing `--target=xyz`, where xyz is the target triplet for your target platform.
 
 For x86_64 you would pass `--target=x86_64-elf`. Target triplets describe the hardware instruction set + operating system + file format of what you want to compile for. In this case we are the operating system so that part can be omitted.
 
-Setting up a GCC cross compiler is a little more hands on, but still very simple. The first approach is to simply download a pre-compiled toolchain (see the link above). This is super simple, with the only major disavantage being that you may not be getting the latest version.
+Setting up a GCC cross compiler is a little more hands on, but still very simple. The first approach is to simply download a pre-compiled toolchain (see the link above). This is super simple, with the only major disadvantage being that you may not be getting the latest version.
 
 The other approach is to compile GCC yourself. This takes more time, but it's worth understanding the process. The osdev wiki has a great guide on this, a link is available at the start of this chapter.
 
@@ -91,7 +91,7 @@ Telling the compiler to not use these features can be done by passing some extra
 
 There are also a few other compiler flags that are useful, but not necessary:
 
-- `-fno-stack-protector`: Disables stack protector checks, which use the compiler library to check for stack smashing attacks. Since we're not including the standard libaries, we can't use this unless we implement the functions ourselves. Not really worth it.
+- `-fno-stack-protector`: Disables stack protector checks, which use the compiler library to check for stack smashing attacks. Since we're not including the standard libraries, we can't use this unless we implement the functions ourselves. Not really worth it.
 - `-fno-omit-frame-pointer`: Sometimes the compiler will skip creating a new stack frame for optimization reasons. This will mess with stack traces, and only increases the memory usage by a few bytes here and there. Well worth having.
 - `-Wall` and `-Wextra`: These flags need no introduction, they just enable all default warnings, and then extra warnings on top of that. Some people like to use `-Wpedantic` as well, but it can cause some false positives.
 
@@ -100,7 +100,7 @@ This section should be seen as an extension to the section above on compiling C 
 
 When compiling C++ for a freestanding environment, there are a few extra flags that are required:
 
-- `-fno-rtti`: Tells the compiler not to generate **R**un**t**ime **t**ype **i**nformation. This requires runtime support from the compiler libaries, and the os. Neither of which we have in a freestanding environment.
+- `-fno-rtti`: Tells the compiler not to generate runtime type information. This requires runtime support from the compiler libaries, and the os. Neither of which we have in a freestanding environment.
 - `-fno-exceptions`: Requires the compiler libraries to work, again which we don't have. Means you can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) still require you to declare them `noexcept` so the correct symbols are generated.
 
 And a few flags that are not required, but can be nice to have:
@@ -108,7 +108,7 @@ And a few flags that are not required, but can be nice to have:
 - `-fno-unwind-tables` and `-fno-asynchronous-unwind-tables`: tells the compiler not to generate unwind tables. These are mainly used by exceptions and runtime type info (rtti - dynamic_cast and friends). Disabling them just cleans up the resulting binary, and reduces its file size.
 
 ## Linking Object Files Together
-The GCC Linker (ld) and the compatable clang linker (lld.ld) can accept linker scripts.
+The GCC Linker (ld) and the compatible clang linker (lld.ld) can accept linker scripts.
 These describe the layout of the final executable to the linker: what things go where, with what alignment and permissions.
 This is incredibly important for a kernel, as it's the file that will be loaded by the bootloader, which may impose certain restrictions or provide certain features.
 
@@ -126,7 +126,7 @@ $(LD) $(OBJS) -o output_filename_here.elf
 For an explanation of the above linker flags used:
 
 - `-nostdlib`: this is crucial for building a freestanding program, as it stops the linker automatically including the default libraries for the host platform. Otherwise your program will contain a bunch of code that wants to make syscalls to your host OS.
-- `-static`: A safeguard for linking against other libarires. The linker will error if you try to dynamically link with anything (i.e static linking only). Because again there is not runtime, there is no dynamic linker. 
+- `-static`: A safeguard for linking against other libraries. The linker will error if you try to dynamically link with anything (i.e static linking only). Because again there is not runtime, there is no dynamic linker. 
 - `-pie` and `--no-dynamic-linker`: Not strictly necessary, but forces the linker to output a relocatable program with a very narrow set of relocations. This is useful as it allows some bootloaders to perform relocations on the kernel.
 
 One other linker option to keep in mind is `-M`, which displays the link map that was generated. This is a description of how and where the linker allocated everything in the final file. It can be seen as a manual symbol table.
@@ -135,7 +135,7 @@ One other linker option to keep in mind is `-M`, which displays the link map tha
 
 Now compiling and building one file isn't so bad, but the same process for multiple files can quickly get out of hand. This is especially true when you only want to build files that have been modified, and use previously compiled versions of other files.
 
-Make is a common tool used for building many pieces of software due to how easy and commmon `make` is. Specifically GNU make. GNU make is also chosen as it comes installed by default in many linux distros, and is almost always available if it's not already installed.
+Make is a common tool used for building many pieces of software due to how easy and common `make` is. Specifically GNU make. GNU make is also chosen as it comes installed by default in many linux distros, and is almost always available if it's not already installed.
 
 There are other make-like tools out there (xmake, nmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make, which is discussed later on in this chapter, in it's own section.
 
@@ -153,7 +153,7 @@ Now we have an iso with our bootloader and kernel installed onto it, how do we t
 
 - Qemu is great middle ground between debugging and speed. By default your OS will run using software virtualization (qemu's implementation is called tcg), but you can optionally enable kvm with the `--enable-kvm` flag for hardware-assisted virtualization. Qemu also provides a wide range of supported platforms.
 - Bochs is x86 only at the time of writing, and can be quite slow. Very useful for figuring things out at the early stages, or for testing very specific hardware combinations though, as you get the most control over the emulated machine.
-- VirtualBox/VMWare. These are grouped together as they're more industrial virtualization software. They aim to be as fast as possible, and provide little to no debug functionality. Useful for testing compatability, but not day-to-day development.
+- VirtualBox/VMWare. These are grouped together as they're more industrial virtualization software. They aim to be as fast as possible, and provide little to no debug functionality. Useful for testing compatibility, but not day-to-day development.
 
 We'll be using qemu for this example, and assuming the output filename of the iso is contained in the makefile variable `ISO_FILENAME`.
 
@@ -185,7 +185,7 @@ You'll never know when you need to debug your kernel, especially when running in
 
 Including debug info in the kernel is the same as any other program, simply compile with the `-g` flag. 
 
-There are different versions of DWARF (the debugging format used by elf files), and by default the compiler will use the most recent one for your target platform. However this can be overriden and the compiler can be forced to use a different debug format (if needed). Sometimes there can be issues if your debugger is from a different vendor to your compiler, or is much older.
+There are different versions of DWARF (the debugging format used by elf files), and by default the compiler will use the most recent one for your target platform. However this can be overridden and the compiler can be forced to use a different debug format (if needed). Sometimes there can be issues if your debugger is from a different vendor to your compiler, or is much older.
 
 Getting access to these debug symbols is dependent on the boot protocol used:
 
@@ -199,7 +199,7 @@ Stivale2 uses a similar and slightly more complex (but more powerful) mechanism 
 
 ### ELFs Ahead, Beware!
 
-This section is included to show how elf symbols could be loaded and parsed, but it is not a tutorial on the elf format itself. If you're unfamiliar with the format, give the elf64 specification a read! It's quite straightforward, and written very plainly. This section makes refernce to a number a of structures and fields from the specification.
+This section is included to show how elf symbols could be loaded and parsed, but it is not a tutorial on the elf format itself. If you're unfamiliar with the format, give the elf64 specification a read! It's quite straightforward, and written very plainly. This section makes reference to a number a of structures and fields from the specification.
 
 With that warning out of the way, let's look at the two fields from the elf header we're interested in. If you're using the multiboot 2 info, you will be given these fields directly. For stivale 2, you will need to parse the elf header yourself. We're interested in `e_shoff` (the section header offset) and `e_shstrndx` (the section header string index).
 

@@ -57,7 +57,7 @@ As mentioned in the introduction, we'll need to know to implement our keyboard s
 
 * If we want to implement the support to all the three sets we will need to tell the driver what is the one being used by the keyboard.
 * Try to set the keyboard to use a scancode we support (not all keyboard support all the sets, but it worth a try).
-* If we're supporting set 1, we can try to enable translation on the PS2 controlle.
+* If we're supporting set 1, we can try to enable translation on the PS2 controller.
 * Do nothing if it is the same set supported by our os.
 
 The keyboard command to get/set the scancode set used by the controller is `0x60` followed by another byte: 
