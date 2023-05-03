@@ -1,6 +1,5 @@
 #!/bin/bash
 
-declarei -a exclusions=
 result=`find . -maxdepth 1 -type d | sort`
 
 decorators=($(ls -d .pandoc/decorators/*))
