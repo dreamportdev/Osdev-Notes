@@ -71,6 +71,7 @@ In this appendix chapter we try to provide links to all useful resources we used
 - The ELF Specification: [https://refspecs.linuxbase.org/LSB_3.0.0/LSB-PDA/LSB-PDA/generic-elf.html](https://refspecs.linuxbase.org/LSB_3.0.0/LSB-PDA/LSB-PDA/generic-elf.html)
 - Osdev Wiki Page for ELF: [https://wiki.osdev.org/ELF](https://wiki.osdev.org/ELF)
 - Osdev Wiki Page ELF Tutorial: [https://wiki.osdev.org/ELF_Tutorial](https://wiki.osdev.org/ELF_Tutorial)
+- x86-64 psABI: [https://gitlab.com/x86-psABIs/x86-64-ABI](https://gitlab.com/x86-psABIs/x86-64-ABI)
 
 ## Other Resources
 
