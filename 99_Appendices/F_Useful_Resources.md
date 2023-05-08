@@ -1,5 +1,6 @@
 # Useful Resources
 
+In this appendix chapter we try to provide links to all useful resources we used during the development of these notes and our kernels.
 ## Build Process
 
 - Grub and grub.cfg documentation: [https://www.gnu.org/software/grub/manual/grub/grub.html](https://www.gnu.org/software/grub/manual/grub/grub.html)
@@ -18,11 +19,11 @@
 
 - Intel Software developer's manual Vol 3A APIC Chapter
 - IOAPIC Datasheet: [https://pdos.csail.mit.edu/6.828/2016/readings/ia32/ioapic.pdf](https://pdos.csail.mit.edu/6.828/2016/readings/ia32/ioapic.pdf)
-- Brokern Thorn Osdev Book Series, The PIC: [http://www.brokenthorn.com/Resources/OSDevPic.html](http://www.brokenthorn.com/Resources/OSDevPic.html)
+- Broken Thorn Osdev Book Series, The PIC: [http://www.brokenthorn.com/Resources/OSDevPic.html](http://www.brokenthorn.com/Resources/OSDevPic.html)
 - Osdev wiki page for RSDP: [https://wiki.osdev.org/RSDP](https://wiki.osdev.org/RSDP)
 - Osdev wiki page for RSDT[https://wiki.osdev.org/RSDT](https://wiki.osdev.org/RSDT)
 - OSdev Wiki - Pit page: [https://wiki.osdev.org/Programmable_Interval_Timer](https://wiki.osdev.org/Programmable_Interval_Timer)
-- Brokern Thron Osdev Book Series Chapter 16 PIC, PIT and Exceptions: [http://www.brokenthorn.com/Resources/OSDev16.htm](http://www.brokenthorn.com/Resources/OSDev16.html)
+- Broken Thron Osdev Book Series Chapter 16 PIC, PIT and Exceptions: [http://www.brokenthorn.com/Resources/OSDev16.htm](http://www.brokenthorn.com/Resources/OSDev16.html)
 - Osdev Wiki Ps2 Keyboard page: [https://wiki.osdev.org/PS/2_Keyboard](https://wiki.osdev.org/PS/2_Keyboard)
 - Osdev Wiki Interrupts page: [https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective](https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective)
 - Osdev Wiki 8042 Controller pagepage: [https://wiki.osdev.org/"8042"_PS/2_Controller#Translation](https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation)
@@ -42,9 +43,54 @@
 
 - Intel Software developer's manual Vol 3A Paging Chapter
 - Osdev Wiki page for  Page Frame Allocation: [https://wiki.osdev.org/Page_Frame_Allocation](https://wiki.osdev.org/Page_Frame_Allocation)
-- Writing an Os in Rust by Philipp Oppermann: [https://os.phil-opp.com/paging-introduction/](https://os.phil-opp.com/paging-introduction/)
-- Brokern Thorn Osdev Book Series, Chapter 18: The VMM [http://www.brokenthorn.com/Resources/OSDev18.html](http://www.brokenthorn.com/Resources/OSDev18.html)
+- Writing an Os in Rust by Philipp Oppermann Memory management: [https://os.phil-opp.com/paging-introduction/](https://os.phil-opp.com/paging-introduction/)
+- Broken Thorn Osdev Book Series, Chapter 18: The VMM [http://www.brokenthorn.com/Resources/OSDev18.html](http://www.brokenthorn.com/Resources/OSDev18.html)
 
+## Scheduling
 
+- Osdev Wiki page for Scheduling Algirthm: [https://wiki.osdev.org/Scheduling_Algorithms](https://wiki.osdev.org/Scheduling_Algorithms)
+- Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/)
+- Broken Thorn Osdev Book Series: [http://www.brokenthorn.com/Resources/OSDev25.html](http://www.brokenthorn.com/Resources/OSDev25.html)
+- Writing an Os in Rust by Philip Opperman Multitasking: [https://os.phil-opp.com/async-await/](https://os.phil-opp.com/async-await/)
 
+## Userspace
+
+- Intel Software developer's manual Vol 3A Protection Chapter
+- Wiki Osdeve Page for Ring 3: [https://wiki.osdev.org/Getting_to_Ring_3](https://wiki.osdev.org/Getting_to_Ring_3)
+- JamesMolloy User mode chapter: [http://www.jamesmolloy.co.uk/tutorial_html/10.-User Mode.html](http://www.jamesmolloy.co.uk/tutorial_html/10.-User%20Mode.html)
+
+## Virtual File System
+
+- JamesMolloy VFS chapter: [http://www.jamesmolloy.co.uk/tutorial_html/8.-The VFS and the initrd.html](http://www.jamesmolloy.co.uk/tutorial_html/8.-The%20VFS%20and%20the%20initrd.html)
+- Wiki Osdev page for USTAR: [https://wiki.osdev.org/USTAR](https://wiki.osdev.org/USTAR)
+- Tar (Wikipedia): [https://en.wikipedia.org/wiki/Tar_(computing)](https://en.wikipedia.org/wiki/Tar_\(computing\))
+- Osdev Wiki page for VFS: [https://wiki.osdev.org/VFS](https://wiki.osdev.org/VFS)
+
+## Loading Elfs
+
+- The ELF Specification: [https://refspecs.linuxbase.org/LSB_3.0.0/LSB-PDA/LSB-PDA/generic-elf.html](https://refspecs.linuxbase.org/LSB_3.0.0/LSB-PDA/LSB-PDA/generic-elf.html)
+- Osdev Wiki Page for ELF: [https://wiki.osdev.org/ELF](https://wiki.osdev.org/ELF)
+- Osdev Wiki Page ELF Tutorial: [https://wiki.osdev.org/ELF_Tutorial](https://wiki.osdev.org/ELF_Tutorial)
+
+## Other Resources
+
+Sometime the information that we look for are note easy to find on books, tutorials, guides, etc, so we need to ask for help, below a list of communities where we can try to ask for help (probably already known to many):
+
+- Osdev Fourm: [https://forum.osdev.org/](https://forum.osdev.org/)
+- Operating System Developmen on Reddit: [https://www.reddit.com/r/osdev/](https://www.reddit.com/r/osdev/)
+- Osdev Discord server: [https://discord.gg/osdev](https://discord.gg/osdev)
+- Gnu.org TAR manual page: [https://www.gnu.org/software/tar/manual/html_node/Standard.html](https://www.gnu.org/software/tar/manual/html_node/Standard.html)
+- Broken Thorne Osdev Book Series Chapter 22 VFS: [http://www.brokenthorn.com/Resources/OSDev22.html](http://www.brokenthorn.com/Resources/OSDev22.html)
+
+Two books that are also worth to mention are:
+
+- Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/) A Free Operating Systems book that is totally free (a printed copy can be ordered too)
+- Operating Systems Design And Implementation by Andres S. Tanenbaum: Very hard to find as of today (unless we want to spend a decent sum of money) is the book that explain the minix source code, the Operating System that inspirded linux
+
+An interesting github repository with a lot of resources about operating systems, like guides, tutorials, hobby kernels, interesting project is the `awesome-os` rpository by @jubalh available here: [https://github.com/jubalh/awesome-os](https://github.com/jubalh/awesome-os)
+
+And finally a mention to the author's kernels:
+
+- Dreamos64 - A crappy Hobby Operating System for `x86_64` Architecture, with framebuffer support and rudimental scheduling: [https://github.com/dreamos82/Dreamos64/](https://github.com/dreamos82/Dreamos64/) By Ivan G.
+- Northport - Monolithic kernel and support libraries for riscv64 and x86_64, by Dean. T.: [https://github.com/DeanoBurrito/northport](https://github.com/DeanoBurrito/northport)
 
