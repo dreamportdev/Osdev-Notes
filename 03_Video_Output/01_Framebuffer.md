@@ -165,7 +165,3 @@ in the code above we are making sure that the value of `pixel[3]` is zero, since
 With this value we can call the function we have created to plot the pixel with the color indicated by `num`. 
 
 Using width and height given by the gimp header, and a given staring position x, y to draw an image we just need to iterate through the pixels using a nested for loop, to iterate through rows (x) and columns (y) using height and width as limits.
-
-### Useful resources
-
-* https://jmnl.xyz/window-manager/

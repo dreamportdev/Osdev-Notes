@@ -154,9 +154,3 @@ size_t number_of_items = (rsdt->sdtHeader.Length - sizeof(ACPISDTheader)) / 4;
 //for the XSDT
 size_t number_of_items = (xsdt->sdtHeader.Length - sizeof(ACPISDTHeader)) / 8;
 ```
-
-## Useful links
-
-* Osdev wiki page for RSDP: https://wiki.osdev.org/RSDP
-* Osdev wiki page for RSDT: https://wiki.osdev.org/RSDT
-

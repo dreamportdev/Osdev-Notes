@@ -6,7 +6,7 @@ We hope you enjoy, and find something interesting here!
 
 ## Structure Of The Book
 
-Each numbered chapter adds a new layer to the kernel, expanding it's capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones. 
+The book is divded in parts and every part is composde by one or more capter. Each numbered chapter adds a new layer to the kernel, expanding it's capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones. 
 
 There is also a series of appendices at the end of the book, covering some extra topics that may be useful along the way. The appendices are intended to be used a reference, and can be read at any time. 
 
@@ -14,7 +14,7 @@ There is also a series of appendices at the end of the book, covering some extra
 
 As we've already mentioned, our main purpose here is the guide the reader through the general process of building a kernel (and surrounding operating system). We're using `x86_64` as our reference architecture, but most of the concepts should transfer to other architectures, with the exception of the very early states of booting.
 
-Below a short list of all the topics that are covered so far: 
+Below the list of parts that compose the book: 
 
 * *Build Process* - The first part is all about setting up a suitable environment for operating systems development, explaining what tools are needed and the steps required to build and test a kernel.
 * *Architecture/Drivers* - This part contains most the architecture specific parts, as well as most of the data structures and underlying mechanisms of the hardware we'll need. It also includes some early drivers that are very useful during further development (like the keyboard and timer).

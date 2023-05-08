@@ -201,10 +201,4 @@ For the horizontal coordinate:
 The number of bytes in each line, assuming that we are using grub and the framebuffer is configured via the multiboot header, is available in the *multiboot_tag_framebuffer* structure, the field is *framebuffer_pitch*. 
 
 Implementing the function above should be pretty simple and is left as exercise.
- 
-## Useful Resources
 
-* https://wiki.osdev.org/PC_Screen_Font
-* gbdfed - Tool to inspect PSF files
-* https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html
-* https://forum.osdev.org/viewtopic.php?f=1&t=41549

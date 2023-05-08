@@ -32,16 +32,4 @@ In order to develop our keyboard driver we'll need to do the following:
 
 Translating the scancode to a printable character is not in the list above, we'll touch on how to do this briefly, although it's not really related to the keyboard driver.
 
-### Useful Links
-
-* [https://wiki.osdev.org/PS/2_Keyboard](https://wiki.osdev.org/PS/2_Keyboard)
-* [https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective](https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective)
-* [https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation](https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation)
-* [https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets](https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets)
-* [http://www.brokenthorn.com/Resources/OSDev19.html](http://www.brokenthorn.com/Resources/OSDev19.html)
-
-
-
-
-
 
