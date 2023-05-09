@@ -12,7 +12,7 @@ The [Makefiles](04_Gnu_Makefiles.md) chapter will explain how to build a process
 
 One of the most _obscure_, that is always present while building any software, but is hidden to us until we start to roll up our own kernel is the _linking process_. The [Linker Scripts](05_Linker_Scripts.md) chapter will introduce us to the world of _linking_ files and explain how to write a linker script.
 
-Finally the kernel is built but not ready to run yet, we need to copy it into a bootable media, the [Generating A Bootable Iso](06_Generating_Iso.md) will show how to create a bootalbe iso of our kernel, and finally being able to launch it and see the results of our hard work.
+Finally the kernel is built but not ready to run yet, we need to copy it into a bootable media, the [Generating A Bootable Iso](06_Generating_Iso.md) chapter will show how to create a bootalbe iso of our kernel, and finally being able to launch it and see the results of our hard work.
 
 
 For the rest of this part a basic knowledge of compiling these languages is assumed.

@@ -4,6 +4,20 @@ Before going beyond a basic "hello world" and implementing the first real parts 
 
 It's worth noting that we're going to focus exclusively on `x86_64` here, and some concepts are specific to this platform (the GDT, for example), while some concepts are transferable across most platforms (like a higher half kernels). Some, like interrupts and interrupt handlers, are only partially transferable to other platforms.
 
+Similarly to the previous part, this chapter will be an high level introduction of the concept that will be explained later. 
+
+The [Hello World](02_Hello_World.md) chapter will guide through the implementation of some basic _serial i/o_ functions to be used mostly for debugging purpose (especially with an emulator), we will see how to send characters, strings and how to read them.
+
+Many modern operating systems place their kernel in the _Higher Half_ of the virtual memory space, what it is, and how to place the kernel there is explained in the [Higher Half](03_Higher_Half.md) chapter.
+
+In the [GDT](04_GDT.md) we will explain one of the `x86` structures used to _describe_ the memory to the CPU, although is a legacy structures its usage is still required in several part of the kernel (especially when dealing with userspace)
+
+Then the chapters [Interrup Handling](05_InterruptHandling.md), [ACPI Tables](06_AcpiTables.md) and [APIC](07_APIC.md) will discuss how the `x86` cpu handle the exceptions and interrupts, and how the kernel should deal with them.
+
+The [Timers](08_Timers.md) chapter will use one of the Interrupts handling routines to interrupt the kernel execution at regular intervals, this will be the ground for the implementation of the multitasking in our kernel. 
+
+The final three chapters of this part: [PS2 Keyboard Overview](PS2_Keyboard/01_README.md), [PS2 Keybord Interrupt Handling](PS2_Keyboard/02_Interrupt_Handling.md), [PS2 Keyboard Driver implementation](PS2_Keyboard/03_Driver_Implemenation.md) will explain how a keyboard work, what are the scancodes, how to translate them into character, and finally describe the steps to implement a basic keyboard driver.
+
 ## Address Spaces
 
 If we've never programmed at a low level before, we'll likely only dealt with a single address space: the virtual address space the program lives in. However there are actually many other address spaces to be aware of!
