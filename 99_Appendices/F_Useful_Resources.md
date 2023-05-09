@@ -56,8 +56,16 @@ In this appendix chapter we try to provide links to all useful resources we used
 ## Userspace
 
 - Intel Software developer's manual Vol 3A Protection Chapter
-- Wiki Osdeve Page for Ring 3: [https://wiki.osdev.org/Getting_to_Ring_3](https://wiki.osdev.org/Getting_to_Ring_3)
+- Wiki Osdev Page for Ring 3: [https://wiki.osdev.org/Getting_to_Ring_3](https://wiki.osdev.org/Getting_to_Ring_3)
 - JamesMolloy User mode chapter: [http://www.jamesmolloy.co.uk/tutorial_html/10.-User Mode.html](http://www.jamesmolloy.co.uk/tutorial_html/10.-User%20Mode.html)
+- Default calling conventions for different compilers: [https://www.agner.org/optimize/#manuals](https://www.agner.org/optimize/#manuals)
+
+## IPC
+
+- Wiki Osdev Page for IPC Data Copying: [https://wiki.osdev.org/IPC_Data_Copying_methods](https://wiki.osdev.org/IPC_Data_Copying_methods)
+- Wiki Osdev Page Message Passing Tutorial: [https://wiki.osdev.org/Message_Passing_Tutorial](https://wiki.osdev.org/Message_Passing_Tutorial)
+- Wikipedia IPC page: [https://en.wikipedia.org/wiki/Inter-process_communication](https://en.wikipedia.org/wiki/Inter-process_communication)
+- InterProcess communication by GeeksForGeeks: [https://www.geeksforgeeks.org/inter-process-communication-ipc/](https://www.geeksforgeeks.org/inter-process-communication-ipc/)
 
 ## Virtual File System
 
@@ -65,6 +73,7 @@ In this appendix chapter we try to provide links to all useful resources we used
 - Wiki Osdev page for USTAR: [https://wiki.osdev.org/USTAR](https://wiki.osdev.org/USTAR)
 - Tar (Wikipedia): [https://en.wikipedia.org/wiki/Tar_(computing)](https://en.wikipedia.org/wiki/Tar_\(computing\))
 - Osdev Wiki page for VFS: [https://wiki.osdev.org/VFS](https://wiki.osdev.org/VFS)
+- Vnodes: An Architecture for Multiple File System Types in Sun Unix: [https://www.cs.fsu.edu/~awang/courses/cop5611_s2004/vnode.pd](https://www.cs.fsu.edu/~awang/courses/cop5611_s2004/vnode.pdf)
 
 ## Loading Elfs
 
@@ -85,8 +94,13 @@ Sometime the information that we look for are note easy to find on books, tutori
 
 Two books that are also worth to mention are:
 
-- Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/) A Free Operating Systems book that is totally free (a printed copy can be ordered too)
+- Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/) A Free Operating Systems book that is totally free focused most on theory, but with a lot of coding examples and exercises (a printed copy can be ordered too)
 - Operating Systems Design And Implementation by Andres S. Tanenbaum: Very hard to find as of today (unless we want to spend a decent sum of money) is the book that explain the minix source code, the Operating System that inspirded linux
+
+In addition to the above books, the following resources are pretty useful:
+
+- Thinks Os By Allen B. Downey: [https://greenteapress.com/thinkos/](https://greenteapress.com/thinkos/) A small book (only 99 pages) that is an introduction to operating systems for programmers, it uses the C programming language.
+- XV6 A symple, Unix-like teaching operating system by Russ Cox, Frans Kaashoek, Robert Morris: The book behind the source code of the Operating System XV6, available here: [https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf](https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf) This version is based on riscv (there is also an old version based on x86)
 
 An interesting github repository with a lot of resources about operating systems, like guides, tutorials, hobby kernels, interesting project is the `awesome-os` rpository by @jubalh available here: [https://github.com/jubalh/awesome-os](https://github.com/jubalh/awesome-os)
 
@@ -94,4 +108,3 @@ And finally a mention to the author's kernels:
 
 - Dreamos64 - A crappy Hobby Operating System for `x86_64` Architecture, with framebuffer support and rudimental scheduling: [https://github.com/dreamos82/Dreamos64/](https://github.com/dreamos82/Dreamos64/) By Ivan G.
 - Northport - Monolithic kernel and support libraries for riscv64 and x86_64, by Dean. T.: [https://github.com/DeanoBurrito/northport](https://github.com/DeanoBurrito/northport)
-

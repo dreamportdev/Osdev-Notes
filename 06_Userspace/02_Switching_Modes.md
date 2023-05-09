@@ -1,5 +1,7 @@
 # Switching Modes
 
+In this chapter we are going to study how to get to userspace, and back. Although it is focused on `x86`, a lot of high level concepts apply to other platforms too.
+
 ## Getting to User Mode
 There are a few ways to do this, but the most straightforward way is to use the `iret` instruction.
 

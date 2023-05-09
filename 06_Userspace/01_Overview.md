@@ -1,6 +1,16 @@
 # All About Userspace
 
-In this section we are going to study how to get to userspace, and back. Although it is focused on x86, a lot of high level concepts apply to other platforms too. 
+In this part we are going to study how to get to userspace, and back. Although it is focused on `x86`, a lot of high level concepts apply to other platforms too.
+
+After finishing this part we will have our os that will be able to switch back and forth between user and superviso mode, and we will have prepared the ground to start the implementation of our own System Calls.
+
+In the [Switching Modes](02_Switching_Modes.md) chapter we are going to explore how the `x86` architecture handle the change of privilege level, and how to switch back and fort between the _supervisor_ and _user_ mode.
+
+In the [Handling Interrupts](03_Handling_Interrupts.md) chapter we will update our interrupt handling to be able to run in user mode too, and avoid kernel panics
+
+Then in the [System Calls](04_System_Calls.md) it introduce the new concept of System Calls, that should be the only way to run supervisor code while in user mode.
+
+Finally in [Example ABI](05_Example_ABI.md) chapter we will implement an example system call for our os.
 
 ## Some Terminology
 
@@ -20,7 +30,3 @@ Of course there is only a single kernel, and it's the same kernel that runs alon
 
 These functions provided by the kernel are special, they're called *system calls*. This is code that runs in supervisor mode, but can be called by user mode. Meaning we must be extremely careful what system calls are allowed to do, how they accept arguments, and what data is returned. Every argument that is given to a system call should be scrutinized and validated anyway it can be.
 
-* [Switching Modes](02_Switching_Modes.md)
-* [Handling Interrupts](03_Handling_Interrupts.md)
-* [System Calls](04_System_Calls.md)
-* [An Example Syscall ABI](05_Example_ABI.md)

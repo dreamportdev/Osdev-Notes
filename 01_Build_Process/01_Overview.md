@@ -1,8 +1,24 @@
-# Building A Kernel from C/C++ Source Files.
+# Build Process
 
-Basic knowledge of compiling these languages is assumed, but kernel specific details are detailed below. This section goes over how and why to build a freestanding program.
+An OS like any other project needs to be built and packaged, but it is different from any other programs, we don't only need it to be compiled, but  it needs different tools and steps in order to have an image that can be loaded by a bootloader. And booting it requires another step.
+
+In this part we are going to explore all the tools and steps that are needed in order to have an initial set of building scripts for our os, and also will explore some options for the compilers and the bootloader that can be used for our kernel.
+
+In this chapter we will have a global overview of the build process, touching briefly what are the steps involved, and the tools that are going to be used.
+
+Then in the [Boots Protocols and Bootloaders](02_Boot_Protocols.md) chapter we will explore in detail how to boot a kernel, and describe two options that can be used for the boot process: Multiboot and Stivale.
+
+The [Makefiles](04_Gnu_Makefiles.md) chapter will explain how to build a process, even if initially is just a bunch of file and it can be done manually, it soon grow more complex, and having the process automated will be more than useful, we will use _Makefile_ for our build script.
+
+One of the most _obscure_, that is always present while building any software, but is hidden to us until we start to roll up our own kernel is the _linking process_. The [Linker Scripts](05_Linker_Scripts.md) chapter will introduce us to the world of _linking_ files and explain how to write a linker script.
+
+Finally the kernel is built but not ready to run yet, we need to copy it into a bootable media, the [Generating A Bootable Iso](06_Generating_Iso.md) will show how to create a bootalbe iso of our kernel, and finally being able to launch it and see the results of our hard work.
+
+
+For the rest of this part a basic knowledge of compiling these languages is assumed.
 
 ## Freestanding Environment
+
 If we build a C file with no extra flags, we'll end up with an executable that starts running code at the function `void main(int argc, char** argv, char** envp)`.
 However, this is actually not where our program starts executing! A number of libraries from the host os, compiler and sometimes specific to the language will be added to our program automatically. This eases development for regular applications, but complicates life a little for developing a kernel.
 

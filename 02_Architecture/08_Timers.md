@@ -284,9 +284,3 @@ As we've seen there are lots of timers with varying capabilities. Some of these 
 - `polled_sleep()`: this functions spins until the requested time has passed.
 - `poll_timer()`: gets an absolute value of a timer, useful for timing short sections of code. Also useful for keeping track of time when an interrupt timer is not armed.
 - `arm_interrupt_timer()`: sets a timer to trigger an interrupt at a point in the future, immediately returns control to the calling function. Arguably the most of these functions, and what will be used to impement scheduling or other clock-based functions.
-
-## Useful links
-
-* [Ehtereality osdev Notes - Apic/Timing/Context Switching](https//ethv.net/workshops/osdev/notes/notes-4.html)
-* [OSdev Wiki - Pit page](https://wiki.osdev.org/Programmable_Interval_Timer)
-* [Brokern Thron Osdev Series](http://www.brokenthorn.com/Resources/OSDev16.html)

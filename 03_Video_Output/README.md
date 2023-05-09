@@ -1,6 +1,6 @@
 # Video Output
 
-This partwill cover the basic information on how to get access to a linear framebuffer, draw pixels how to add and render a font on screen.
+This part will cover the basic information on how to get access to a linear framebuffer, draw pixels how to add and render a font on screen.
 
 The chapters are listed below: 
 
