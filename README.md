@@ -71,8 +71,9 @@ We hope you enjoy, and find something interesting here!
     * [C Language](99_Appendices/C_Language_Info.md)
     * [Working With NASM](99_Appendices/D_Nasm.md)
     * [Debugging](99_Appendices/E_Debugging.md)
-    * [Useful Resources](99_Appendices/F_Useful_Resources.md)
-    * [Acknowledgments](99_Appendices/G_Acknowledgments.md)
+    * [Memory Protection](99_Appendices/F_Memory_Protection.md)
+    * [Useful Resources](99_Appendices/G_Useful_Resources.md)
+    * [Acknowledgments](99_Appendices/H_Acknowledgments.md)
 
 ## Our Projects
 

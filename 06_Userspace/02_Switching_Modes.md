@@ -91,8 +91,4 @@ This is trickier! Since we don't want user programs to just execute kernel code,
 
 The third way is inside of an interrupt handler. While is _possible_ to run interrupts in user mode (an advanced topic for sure), most interrupts will result in supervisor code running, in the form of the interrupt handler. Any interrupt will work, for example a page fault or ps/2 keyboard irq, but the most common one is a timer. Since the timer can be programmed to tick at a fixed interval, we can ensure that supervisor code gets to run at a fixed interval. That code may return immediately, but it gives the kernel a chance to look at the program and machine states and see if anything needs to be done. Commonly the handler code for the timer also runs the scheduler tick, and can trigger a task switch.
 
-Handling interrupts while the cpu is in user mode is a surpringly big topic, and so it has a section of it's own. Just for reference, the short of it is:
-
-- Populate and and load a TSS into the task register (TR).
-- Set `rsp0` stack to something valid.
-- Enter user mode and wait for a hardware interupt.
+Handling interrupts while not in supervisor mode on x86 is a surprisingly big topic, so we're going to cover it in a separate chapter. In fact, it's the next chapter!

@@ -59,3 +59,7 @@ void memcpy(void* src, void* dest, size_t count)
     return do_syscall(3, (uint64_t)src, (uint64_t)dest, (uint64_t)count, 0, 0);
 }
 ```
+
+## Summary
+
+At this point we should be ready to go off and implement our own system call interface, and maybe even begin to expose some kernel functions to userspace. Always keep in mind that values (especially pointers) coming from userspace may contain anything, so we should verify them and their contents as much as possible before passing them deeper into the kernel.
