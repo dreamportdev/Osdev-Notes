@@ -301,8 +301,4 @@ The content of each entry is:
     - Bits 17 to 55: are Reserved
     - Bits 56 to 63: are the Destitnation Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the IO-APIC datasheet.
 
-The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
-
-#### Delivery modes
-
- Do we need it?
+The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24.

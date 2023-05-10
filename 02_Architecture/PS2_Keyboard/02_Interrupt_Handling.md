@@ -86,6 +86,8 @@ The scancode can be one of the following types:
 
 The value of those code depends on the set in use.
 
+For example if using scancode set 1, the BREAK code is composed by adding `0x80` to the MAKE code.
+
 ## Handling Keyboard Interrupts
 
 When a key is pressed/released the keyboard pushes the bytes that make up the scancode into the ps2 controller buffer, then triggers an interrupt. We'll need to read these bytes, and assemble them into a scancode.
@@ -105,7 +107,14 @@ void keyboard_irq_handler() {
 For set 1, the most significant bit of the scancode indicates whether it's a MAKE (MSB = 0) or BREAK (MSB = 1).
 For set 2, a scancode is always a MAKE code, unless prefixed with the byte `0xF0`.
 
-Keep in mind that when we have multibyte scancodes (i.e. left ctrl, pause, and others), an interrupt is raised for every byte placed on the data buffer.
+Keep in mind that when we have multibyte scancodes (i.e. left ctrl, pause, and others), an interrupt is raised for every byte placed on the data buffer, this means that we need to handle them within 2 different interrupt calls, this is explained the next chapter, but for now we are fine with printing the scancode received.
 
-*To be Continued...*
+For now this function is enough and what we should expect from it is:
+
+* If the key pressed use a single byte scancode, it will print only one line of the scancode read (the MAKE code).
+* If it uses a multibyte scancode we will see two lines with two different scancodes, if using the set 1 the first byte is usually `0xE0`, the _extended_ byte (the MAKE codes).
+* When a single byte key is released it will print a single line with the scancode read, this time will be the BREAK code.
+* Again if it is a multibyte key to be released, we will have two lines with the scancode printed. one will still be `0xE0` and the other one is the BREAK code for the key.
+
+As an exercise before implementing the full driver, could be interesting to implement a logic to identify if the irq is about a key being _pressed_ or _released_ (remember it depends on the scancode set used).
 
