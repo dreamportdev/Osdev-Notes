@@ -42,7 +42,6 @@ We hope you enjoy, and find something interesting here!
     * [Paging](04_Memory_Management/03_Paging.md)
     * [Virtual Memory Manager](04_Memory_Management/04_Virtual_Memory_Manager.md)
     * [Heap Allocation](04_Memory_Management/05_Heap_Allocation.md)
-    * [Memory Protection](04_Memory_Management/06_Memory_Protection.md)
 * [Part 5: Scheduling](05_Scheduling/README.md)
     * [The Scheduler](05_Scheduling/02_Scheduler.md)
     * [Processes and Threads](05_Scheduling/03_Processes_And_Threads.md)

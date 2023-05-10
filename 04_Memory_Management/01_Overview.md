@@ -14,7 +14,6 @@ We will cover the following topics:
 * [Paging](03_Paging.md)
 * [Virtual Memory Manager](04_Virtual_Memory_Manager.md)
 * [Heap Allocation](05_Heap_Allocation.md)
-* [Memory Protection](06_Memory_Protection.md)
 
 *Authors note: don't worry, we will try to keep it as simple as possible, using basic algorithms and explaining all the gray areas as we go. The logic may sometimes be hard to follow, you will most likely have to go through several parts of this section multiple times.*
 

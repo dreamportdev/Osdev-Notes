@@ -9,4 +9,3 @@ Below the list of chapters:
 * [Paging](03_Paging.md) Paging will provide a separation between a physical memory address and a virtual address. This mean that the kernel we will be able to access much more addresses than the ones available.
 * [Virtual Memory Manager](04_Virtual_Memory_Manager.md) It sits between the heap and the physical memory manager, it is similar to the Physical Memory Manager, but for the virtual space.
 * [Heap Allocation](05_Heap_Allocation.md) Allocating memory, aka _malloc_ and friends. What is behind it and how it works.
-* [Memory Protection](06_Memory_Protection.md) Protecting memory from undesired access. How to do it?
