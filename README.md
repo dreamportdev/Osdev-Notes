@@ -70,6 +70,9 @@ We hope you enjoy, and find something interesting here!
     * [Tips and Tricks](99_Appendices/B_Tips_And_Tricks.md)
     * [C Language](99_Appendices/C_Language_Info.md)
     * [Working With NASM](99_Appendices/D_Nasm.md)
+    * [Debugging](99_Appendices/E_Debugging.md)
+    * [Useful Resources](99_Appendices/F_Useful_Resources.md)
+    * [Acknowledgments](99_Appendices/G_Acknowledgments.md)
 
 ## Our Projects
 

@@ -5,3 +5,5 @@
 - [Appendix C: C Language Extras](C_Language_Info.md)
 - [Appendix D: Using NASM](D_Nasm.md)
 - [Appendix E: Debugging](E_Debugging.md)
+- [Appendix F: Useful Resources](F_Useful_Resources.md)
+- [Appendix F: Acknowledgments](G_Acknowledgments.md)
