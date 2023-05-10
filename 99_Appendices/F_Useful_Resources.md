@@ -1,6 +1,7 @@
 # Useful Resources
 
-In this appendix chapter we try to provide links to all useful resources we used during the development of these notes and our kernels.
+This appendix is a collection of links we found useful developing our own kernels and these notes.
+
 ## Build Process
 
 - Grub and grub.cfg documentation: [https://www.gnu.org/software/grub/manual/grub/grub.html](https://www.gnu.org/software/grub/manual/grub/grub.html)
@@ -82,29 +83,19 @@ In this appendix chapter we try to provide links to all useful resources we used
 - Osdev Wiki Page ELF Tutorial: [https://wiki.osdev.org/ELF_Tutorial](https://wiki.osdev.org/ELF_Tutorial)
 - x86-64 psABI: [https://gitlab.com/x86-psABIs/x86-64-ABI](https://gitlab.com/x86-psABIs/x86-64-ABI)
 
-## Other Resources
-
-Sometime the information that we look for are note easy to find on books, tutorials, guides, etc, so we need to ask for help, below a list of communities where we can try to ask for help (probably already known to many):
+## Communities
 
 - Osdev Fourm: [https://forum.osdev.org/](https://forum.osdev.org/)
 - Operating System Developmen on Reddit: [https://www.reddit.com/r/osdev/](https://www.reddit.com/r/osdev/)
 - Osdev Discord server: [https://discord.gg/osdev](https://discord.gg/osdev)
+
+## Books and Manuals
+
 - Gnu.org TAR manual page: [https://www.gnu.org/software/tar/manual/html_node/Standard.html](https://www.gnu.org/software/tar/manual/html_node/Standard.html)
 - Broken Thorne Osdev Book Series Chapter 22 VFS: [http://www.brokenthorn.com/Resources/OSDev22.html](http://www.brokenthorn.com/Resources/OSDev22.html)
-
-Two books that are also worth to mention are:
-
-- Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/) A Free Operating Systems book that is totally free focused most on theory, but with a lot of coding examples and exercises (a printed copy can be ordered too)
-- Operating Systems Design And Implementation by Andres S. Tanenbaum: Very hard to find as of today (unless we want to spend a decent sum of money) is the book that explain the minix source code, the Operating System that inspirded linux
-
-In addition to the above books, the following resources are pretty useful:
-
-- Thinks Os By Allen B. Downey: [https://greenteapress.com/thinkos/](https://greenteapress.com/thinkos/) A small book (only 99 pages) that is an introduction to operating systems for programmers, it uses the C programming language.
-- XV6 A symple, Unix-like teaching operating system by Russ Cox, Frans Kaashoek, Robert Morris: The book behind the source code of the Operating System XV6, available here: [https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf](https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf) This version is based on riscv (there is also an old version based on x86)
+- Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/)
+- Operating Systems Design And Implementation by Andres S. Tanenbaum. Difficult to find as of today, but if you can it's an excellent resource on the minix kernel.
+- Thinks Os By Allen B. Downey: [https://greenteapress.com/thinkos/](https://greenteapress.com/thinkos/)
+- Xv6 is a modern rewrite of v6 unix, for teaching purposes. It comes with an accompanying book which walks through each part of the source code. It was later ported to risc-v, but the x86 version is still available (but no longer actively maintained). [https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf](https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf)
 
 An interesting github repository with a lot of resources about operating systems, like guides, tutorials, hobby kernels, interesting project is the `awesome-os` rpository by @jubalh available here: [https://github.com/jubalh/awesome-os](https://github.com/jubalh/awesome-os)
-
-And finally a mention to the author's kernels:
-
-- Dreamos64 - A crappy Hobby Operating System for `x86_64` Architecture, with framebuffer support and rudimental scheduling: [https://github.com/dreamos82/Dreamos64/](https://github.com/dreamos82/Dreamos64/) By Ivan G.
-- Northport - Monolithic kernel and support libraries for riscv64 and x86_64, by Dean. T.: [https://github.com/DeanoBurrito/northport](https://github.com/DeanoBurrito/northport)

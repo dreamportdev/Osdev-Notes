@@ -2,7 +2,7 @@
 
 So far we've put a lot of effort into making sure each program (represented by a process in our kernel) is completely isolated from all others. This is great for safety and security, but it presents a big problem: what if we want two processes to communicate with each other?
 
-The answer to this is some form of IPC (aka Inter-Process Communication). This part will look at some basic implementations for the common types and will hopefully serve a good jumping off point for further implementations.
+The answer to this is some form of inter-process communication (IPC). This part will look at some basic implementations for the common types and will hopefully serve a good jumping off point for further implementations.
 
 ## Shared Memory vs Message Passing
 

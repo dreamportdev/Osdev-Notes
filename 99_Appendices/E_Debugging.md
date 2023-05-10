@@ -1,7 +1,7 @@
 # Debugging
 
 
-## Dumping register on exception
+## Qemu Interrupt Log
 
 If you are using qemu, a good idea is to dump registers when an exception occurs, you just need to add the following option to qemu command: 
 
@@ -17,7 +17,7 @@ qemu -d int -no-reboot
 
 While debugging with gdb, we may want to keep qemu hanging after a triple fault (when the cpu should reset), to do some more investigation, in this case we need to add also `-no-shutdown` (along with) `-no-reboot`
 
-### Start Qemu for remote Debugging
+### Using Qemu's Remote GDB Server
 
 To start Qemu to accepts connections from gdb, you need to add *-s* and *-S*  flags to the command, where: 
 
@@ -26,7 +26,7 @@ To start Qemu to accepts connections from gdb, you need to add *-s* and *-S*  fl
 
 ## GDB 
 
-### Remote debugging
+### Remote Debugging
 
 To connect with qemu/bochs host configure for remote debugging launch gdb, and type the following command in gdb cli: 
 
@@ -40,7 +40,7 @@ And then you can load the symbols (if you have compiled your os with debugging s
 symbol-file path/to/kernel.bin
 ```
 
-### Useful commands
+### Useful Commands
 
 Below a list of some useful gdb commands 
 
@@ -57,7 +57,7 @@ Below a list of some useful gdb commands
 * `n/next` similar to step, but will 'step over' any function calls, treating them like the rest of the lines of code.
 * `si/ni` step instruction/next instruction. These are like step and next, but work on instructions, rather than lines of code.
 
-### Print and Examine memory
+### Print and Examine Memory
 
 `p/print symbol` can be used to used to print almost anything that makes sense in your program.
 Lets say you have an integer variable i, `p i` will disable what i currently is. This takes a c-like syntax, 
@@ -72,7 +72,7 @@ The format specifier can be prefixed with a number of repeats. For example if yo
 `x/10i 0x1234`, and gdb would show you that.
 
 
-### How did I get here?
+### How Did I Get Here?
 
 Here a collection of useful command to keep track of the call stack.
 
@@ -133,7 +133,7 @@ When in a view with multiple windows, you can use focus xyz to change which wind
 
 ## Virtual Box
 
-### Virtualbox command line useful commands
+### Useful Commands
 
 * To list the available machine using command line use the following command:
 
@@ -151,7 +151,7 @@ virtualboxvm --startvm vmname
 
 You can use either the Virtual Machine name, or its uuid. 
 
-### Run a vm with debug enabled
+### Debugging a Virtual Machine
 
 To run a VM with debug you need two things: 
 
@@ -164,9 +164,9 @@ virtualboxvm --startvm vmname --debug
 
 this will open the Virtual Machine with the Debugger command line and ui. 
 
-## QEmu 
+## Qemu
 
-### QEmu monitor
+### Qemu Monitor
 
 Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger. 
 
@@ -208,7 +208,7 @@ To enable it in qemu add this to your qemu flags `-debugcon where`. Where can be
 
 It's worth noting that because this is just a binary stream, and not a serial device emulation, its much faster than usual port io. And there's no state management or device setup to worry about.
 
-## Useful resources
+## Useful Resources
 
 * https://wiki.osdev.org/Kernel_Debugging
 * https://wiki.osdev.org/Serial_Ports

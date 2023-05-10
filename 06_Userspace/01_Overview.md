@@ -1,24 +1,20 @@
 # All About Userspace
 
-In this part we are going to study how to get to userspace, and back. Although it is focused on `x86`, a lot of high level concepts apply to other platforms too.
+After this part our kernel will be able to switch between user and supervisor privilege levels, and we'll have a basic system call interface.
 
-After finishing this part we will have our os that will be able to switch back and forth between user and superviso mode, and we will have prepared the ground to start the implementation of our own System Calls.
-
-In the [Switching Modes](02_Switching_Modes.md) chapter we are going to explore how the `x86` architecture handle the change of privilege level, and how to switch back and fort between the _supervisor_ and _user_ mode.
+In the [Switching Modes](02_Switching_Modes.md) chapter we are going to explore how the `x86` architecture handles changing privilege levels, and how to switch back and forth between the _supervisor_ and _user_ mode.
 
 In the [Handling Interrupts](03_Handling_Interrupts.md) chapter we will update our interrupt handling to be able to run in user mode too, and avoid kernel panics
 
-Then in the [System Calls](04_System_Calls.md) it introduce the new concept of System Calls, that should be the only way to run supervisor code while in user mode.
+Then in the [System Calls](04_System_Calls.md) we'll introduce the the concept of system calls. These are a controlled way to allow user programs to ask the kernel to perform certain tasks for it.
 
-Finally in [Example ABI](05_Example_ABI.md) chapter we will implement an example system call for our os.
+Finally in [Example ABI](05_Example_ABI.md) chapter we will implement an example system call interface for our kernel.
 
 ## Some Terminology
 
 The `x86` architecture defines 4 rings of operation, with ring 0 having the most hardware access, and ring 3 having the least. The intent was for drivers to run in rings 1 and 2, with various permissions granted to those rings. However, overtime most programs were written to run with either full kernel permissions (ring 0) or as a user program (ring 3).
 
-By the time paging was added to x86, rings 1 and 2 were essentially non-existent. That's why paging has a single bit to indicate whether a page is user or supervisor. Supervisor being the term used to refer to privileged ring 0 code and data. This trend carries across to other platforms too, where permissions are often binary. Just for curiosity  rings 1 and 2 do count as supervisor for page accesses.
-
-For example, the risc-v platform has supervisor mode and user mode. Later ARM processors have PL0 and PL1, sound familiar?
+By the time paging was added to x86, rings 1 and 2 were essentially non-existent. That's why paging has a single bit to indicate whether a page is user or supervisor. Supervisor being the term used to refer to privileged ring 0 code and data. This trend carries across to other platforms too, where permissions are often binary. Just for curiosity, rings 1 and 2 do count as supervisor mode for page accesses.
 
 We'll try to use the terms supervisor and user where possible, as this is the suggested approach to thinking about this, but will refer to protection rings where it's more accurate to do so.
 

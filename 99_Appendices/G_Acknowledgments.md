@@ -1,9 +1,11 @@
 # Acknowledgments
 
-Thanks to all the people that give their small contributions finding errors and fixing them  by creating a PR, we will write their username here: 
+A special thanks to all the contributors who helped by fixing errors, spelling mistakes or providing critique.
 
-- [@xyve7](https://github.com/xyve7)
-- [@Pigmy-penguin](https://github.com/Pigmy-penguin)
-- [@Zenails](https://github.com/zenails)
-- [@qvjp](https://github.com/qvjp)
+In no particular order:
+
+- @xyve7 ([https://github.com/xyve7](https://github.com/xyve7))
+- @Pigmy-penguin ([https://github.com/Pigmy-penguin](https://github.com/Pigmy-penguin))
+- @Zenails ([https://github.com/zenails](https://github.com/zenails))
+- @qvjp ([https://github.com/qvjp](https://github.com/qvjp))
 
