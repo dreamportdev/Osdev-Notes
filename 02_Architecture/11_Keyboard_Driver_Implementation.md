@@ -1,8 +1,8 @@
 # Keyboard Driver Implementation
 
-Now that we can get scancodes from the keyboard (see [here](InterruptHandling.md)), we'll look at building a simple ps/2 keyboard driver.
+Now that we can get scancodes from the keyboard (see [the previous chapter](11_Keyboard_Interrupt.md)), we'll look at building a simple PS/2 keyboard driver.
 
-First of all, the driver is generally not responsible for translating the key presses and releases into printable characters, the driver's purpose is to deal with the specifics of the device (the ps2 keyboard) and provide a generic interface for getting key presses/releases. However it does usually involve translating from the keyboard-specific scancode into an os-specific one. The idea is that if more scancode sets or keyboards (like USB) are supported later on, these can be added without having to modify any code that uses the keyboard. Simply write a new driver that provides the same interface and it will work!
+First of all, the driver is generally not responsible for translating the key presses and releases into printable characters, the driver's purpose is to deal with the specifics of the device (the PS2 keyboard) and provide a generic interface for getting key presses/releases. However it does usually involve translating from the keyboard-specific scancode into an os-specific one. The idea is that if more scancode sets or keyboards (like USB) are supported later on, these can be added without having to modify any code that uses the keyboard. Simply write a new driver that provides the same interface and it will work!
 
 Our keyboard driver does care about keeping track of any keyboard events (presses/releases), and making them available to any code that needs them.
 Quite often these events will be consumed (that is, read by some other code and then removed from the driver's buffer).
@@ -22,13 +22,13 @@ From now on we will assume that the scancode translation is enabled, so no matte
 
 ## High Level Overview
 
-In the previous section we have seen how an interrupt was generated and how to read data from the keyboard. Now we need to write a proper driver, one which addresses the issues listed above (well not all of them since some are an higher level than they will be implemented "using" the driver, not by it).
+In the chapter section we have seen how an interrupt was generated and how to read data from the keyboard. Now we need to write a proper driver, one which addresses the issues listed above (well not all of them since some are an higher level than they will be implemented "using" the driver, not by it).
 
 We will try to build the driver in small steps adding one piece at time, so it will be easier to understand it. 
 
 ### Storing A History Of Pressed Keys
 
-The first thing we'll want to keep track of in the keyboard driver: what keys were pressed and in what order. For our example driver we're going to use a circular buffer because it has a fixed memory usage (does not require re-allocating memory) and is similar in speed to an array. The only downside is that we have to decide what happens when the buffer is full: we can either drop the oldest scancodes, or drop the latest one we tried to add. This is not really an issue if the buffer is made large enough, given that some application will be consuming the keyboard events from the buffer shortly after they're added.
+The first thing we'll want to keep track of in the keyboard driver is what keys were pressed and in what order. For our example driver we're going to use a circular buffer because it has a fixed memory usage (does not require re-allocating memory) and is similar in speed to an array. The only downside is that we have to decide what happens when the buffer is full: we can either drop the oldest scancodes, or drop the latest one we tried to add. This is not really an issue if the buffer is made large enough, given that some application will be consuming the keyboard events from the buffer shortly after they're added.
 
 ```c
 #define MAX_KEYB_BUFFER_SIZE    255
@@ -38,6 +38,7 @@ uint8_t buf_position = 0;
 ```
 
 If we want to store just the scancode we don't need much more, so we can already implement our new irq handler:
+
 
 ```c
 
@@ -82,12 +83,13 @@ There are a few limitations with this implementation, but we have a working skel
 
 ### Handling Multi-Byte Scancodes
 
-Depending on the scancode set, there are some keys that generate a scancode with more than one byte. This means that we will have one interrupt generated for every byte placed on the data port. For example when using the scancode set 1 there are some keys (i.e. ctrl, shift, alt) that have the prefix byte `0xE0`. Now the problem is that we can't read both bytes in one single interrupt, because even if we do we still get two interrupts generated. We're going to solve this problem by keeping track of the current status of what we're reading. To do this we will implement a very simple state machine that has two states:
+Depending on the scancode set, there are some keys that generate a scancode with more than one byte. This means that we will have one interrupt generated for every byte placed on the data port. For example when using the scancode set 1 there are some keys (i.e. ctrl, shift, alt) that have the prefix byte `0xE0`. Now the problem is that we can't read both bytes in one single interrupt, because even if we do, we still get two interrupts generated. We're going to solve this problem by keeping track of the current status of what we're reading. To do this we will implement a very simple state machine that has two states:
 
 * _Normal State_: This is exactly what it sounds like and also the one the driver starts in. If the driver reads a byte that is not the prefix byte (`0xE0`) it will remain in this state. After being in the prefix state and reading a byte, it will also return to this state.
-* _Prefix state_: In case the driver it encountered the prefix byte, the driver will enter into this state. While in this state we know the next read is an extended scancode, and can be processed appropriately.
+* _Prefix state_: In case the driver has encountered the prefix byte, it will enter into this state. While in this state we know the next read is an extended scancode, and can be processed appropriately.
 
-If we don't know what a state machine is there's a link to the wikipedia page in the useful links section below. It's a straight-foward concept: an algorithm can only be in one of several states, and the algorithm reacts differently in each state. In our example we're going to use a global variable to identity the state:
+If we don't know what a state machine is there's a link to the wikipedia page in the `Useful Resources` appendix chapter. It's a straight-foward concept: an algorithm can only be in one of several states, and the algorithm reacts differently in each state. In our example we're going to use a global variable to identity the state:
+
 
 ```c
 #define NORMAL_STATE 0
@@ -100,9 +102,9 @@ There are some scancodes that have up to 4 or more bytes which we're not going t
 
 *Author's note: This is one area where the state-machine implementation can break down. As you potentially need a separate state for each byte in the sequence. An alternative implementation, that's not covered here, is to have an array of `uint8_t`s, and a pointer to the latest byte in the buffer. The idea being: read a byte from the buffer, place it after the last received byte in the array, and then increment the variable of the latest byte. Then you can check if a full scancode has been received, for extended codes beginning with 0xE0 you're expecting 2 bytes, for normal codes only 1 byte. Once you've detected a full scancode in the buffer, process it, and reset the pointer in the buffer for the next byte to zero. Therefore the next byte gets placed at the start of the buffer. Now it's just a matter of making the buffer large enough, which is trivial.*
 
-Regarding storing the prefix byte, this comes down a design decision. In our case we're not going to store them as they don't contain any information we need later on, when translating these scancodes into the kernel scancodes. Just to re-iterate: the idea of using a separate, unrelated, scancode set inside the kernel is that we're not bound to any implementation. Our keyboard driver can support as many sets as needed, and the running programs just use what the kernel provides, in this case it's own scancode set. It seems like a lot of work up front, but it's a very useful abstraction to have!
+Regarding storing the prefix byte, this comes down to a design decision. In our case we're not going to store them as they don't contain any information we need later on, when translating these scancodes into the kernel scancodes. Just to re-iterate: the idea of using a separate, unrelated, scancode set inside the kernel is that we're not bound to any implementation. Our keyboard driver can support as many sets as needed, and the running programs just use what the kernel provides, in this case it's own scancode set. It seems like a lot of work up front, but it's a very useful abstraction to have!
 
-Now by changing the `current_state` variable, we can change how the code will treat the incoming data. We'll also need an init function, so we that can do some set up like setting the default state and zeroing the keyboard event buffer:
+Now by changing the `current_state` variable, we can change how the code will treat the incoming data. We'll also need an init function, so we can do some set up like setting the default state and zeroing the keyboard event buffer:
 
 ```c
 #define NORMAL_STATE 0
@@ -135,8 +137,7 @@ void keyboard_driver_irq_handler() {
 
 For our purposes we're considering the modifier keys to be *ctrl*, *alt*, *shift*, *gui/super*. The caps lock could also be considered a modifier key too.
 These keys are interesting because they can drastically alter the meaning of other key presses. Of course an application can choose any key to be a modifier key, but we will only be supporting the common ones.
-We're going to store the state of these modifier keys alongside each keypress (inside the struct we created earlier - see below) so that an application can quickly tell how to interpret a key event by only looking at a single event, 
-rather than having to track the state of the modifiers themselves. This reduces a lot of duplicate code, is a nice api to work with!
+We're going to store the state of these modifier keys alongside each keypress inside the struct we created earlier so that an application can quickly tell how to interpret a key event by only looking at a single event, rather than having to track the state of the modifiers themselves. This reduces a lot of duplicate code.
 
 Some examples of how an application might use the modifiers:
 
@@ -175,10 +176,10 @@ Now it's just a matter of keeping track of which bit represents which modifier k
 #define SHIFT_MASK 3
 ```
 
-We're not interested in the difference between the left and right versions of the modifier keys for now, but we could store those as separate bits if you were.
+We're not interested in the difference between the left and right versions of the modifier keys for now, but eventually we could store those as separate bits.
 Updating the state of a modifier key can be done by using standard bitwise operations. 
 
-As an example, say we detect the CTRL key is pressed. We would want to update the current modifiers (which we store a copy of when whenever we store a new key event):
+As an example, say we detect the CTRL key is pressed. We would want to update the current modifiers (which we store a copy of whenever we store a new key event):
 
 ```c
 current_modifiers |= 1 << CTRL_MASK;
@@ -190,9 +191,10 @@ And to clear the bit when we detect CTRL is released:
 current_modifiers &= ~(1 << CTRL_MASK);
 ```
 
-So now we need to just identify what key is being pressed/released and update the `status_mask` accordingly. 
+At this point we just need to identify what key is being pressed/released and update the `status_mask` accordingly.
 
 The case of caps lock can be handled in 2 ways. The first is to add a boolean variable to the `key_event` struct which stores the current state of caps lock. We can also use one of the unused bits in the `status_mask` field.
+
 An interesting note is that on ps/2 keyboards the LEDs must be controlled manually, implementing this is as simple as a single command to the keyboard, and is left as an exercise for the reader.
 
 ### Translation
@@ -204,11 +206,12 @@ There's two main stages of translation we're interested in at the moment:
 * From the keyboard-specific scancode to our kernel scancode (the one applications use).
 * From the kernel scancode to a printable ascii character. This isn't really part of the keyboard driver, but we will cover it here since it's a useful function to test if the keyboard driver works.
 
-Translation from the keyboard scancode to the kernel one can be done a number of ways. For our example driver we're going to use a lookup table in the form of an array. 
+Translation from the keyboard scancode to the kernel one can be done in a number of ways. In our example driver we're going to use a lookup table in the form of an array.
 
-Our array is going to be an aray of kernel scancodes, with the index into the array being the keyboard scancode. Let's say get scancode 0x12 from the keyboard, and we know that key is the F1 key (just an example, check the real scancodes before implementing this).
+Our array is going to be an aray of kernel scancodes, with the index into the array being the keyboard scancode. Let's say get scancode `0x12` from the keyboard, and we know that key is the `F1` key (just an example, check the real scancodes before implementing this).
 
 We could use the following:
+
 ```c
 
 //an example of our kernel-specific scancodes
@@ -231,12 +234,13 @@ uint8_t keyboard_scancode = 0x12;
 kernel_scancodes translated_scancode = scancode_mapping[keyboard_scancode];
 ```
 
-There are a few edge cases here, one of them being what if a keyboard scancode dosnt have a kernel scancode to map to? We've used the value zero to mean 'no translation' and any key events with 0 as the scancode should be ignored.
+There are a few edge cases here, one of them being: what if a keyboard scancode doesnt have a kernel scancode to map to? We've used the value zero to mean 'no translation' and any key events with 0 as the scancode should be ignored.
 We could also filter them out when an application tries to get any pending key events.
 
 We also don't check if the keyboard scancode is within the lookup table, which it may not be. This is something to consider.
 
-So now we have our internal representation of a scancode, and the `code` field in the `key_event` structure outlined above can use it. In the paragraph _Store Key Press History_ we have seen how the the interrupt handler should save the key event in the circular buffer. However that was before we had any translation. Using what we saw above we'll change the following line to now use the lookup table instead of storing the scancode directly:
+So now we have our internal representation of a scancode, and the `code` field in the `key_event` structure outlined above can use it. In the paragraph _Store Key Press History_ we have seen how the interrupt handler should save the key event in the circular buffer. However that was before we had any translation. Using what we saw above we'll change the following line to now use the lookup table instead of storing the scancode directly:
+
 
 ```c
     keyboard_buffer[buf_position].code = scancode;

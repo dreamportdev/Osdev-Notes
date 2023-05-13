@@ -16,7 +16,7 @@ Then the chapters [Interrup Handling](05_InterruptHandling.md), [ACPI Tables](06
 
 The [Timers](08_Timers.md) chapter will use one of the Interrupts handling routines to interrupt the kernel execution at regular intervals, this will be the ground for the implementation of the multitasking in our kernel. 
 
-The final three chapters of this part: [PS2 Keyboard Overview](PS2_Keyboard/01_README.md), [PS2 Keybord Interrupt Handling](PS2_Keyboard/02_Interrupt_Handling.md), [PS2 Keyboard Driver implementation](PS2_Keyboard/03_Driver_Implemenation.md) will explain how a keyboard work, what are the scancodes, how to translate them into character, and finally describe the steps to implement a basic keyboard driver.
+The final three chapters of this part: [PS2 Keyboard Overview](09_Add_Keyboard_Support.md), [PS2 Keybord Interrupt Handling](10_Keyboard_Interrupt_Handling.md), [PS2 Keyboard Driver implementation](11_Keyboard_Driver_Implemenation.md) will explain how a keyboard work, what are the scancodes, how to translate them into character, and finally describe the steps to implement a basic keyboard driver.
 
 ## Address Spaces
 

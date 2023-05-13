@@ -6,7 +6,7 @@ We hope you enjoy, and find something interesting here!
 
 ## Structure Of The Book
 
-The book is divded in parts and every part is composde by one or more capter. Each numbered chapter adds a new layer to the kernel, expanding it's capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones. 
+The book is divided in parts and every part is composed by one or more capter. Each numbered chapter adds a new layer to the kernel, expanding it's capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones.
 
 There is also a series of appendices at the end of the book, covering some extra topics that may be useful along the way. The appendices are intended to be used a reference, and can be read at any time. 
 
@@ -17,9 +17,9 @@ As we've already mentioned, our main purpose here is to guide the reader through
 Below the list of parts that compose the book: 
 
 * *Build Process* - The first part is all about setting up a suitable environment for operating systems development, explaining what tools are needed and the steps required to build and test a kernel.
-* *Architecture/Drivers* - This part contains most the architecture specific parts, as well as most of the data structures and underlying mechanisms of the hardware we'll need. It also includes some early drivers that are very useful during further development (like the keyboard and timer).
-* *Video Output* - This chapter looks at working with linear framebuffers, and how we can display text on them to aid with early debugging.
-* *Memory Management* - This chapter looks at the memory management stack of a kernel. We cover all the layers from the physical memory manager, to the virtual memory manager and the heap. 
+* *Architecture/Drivers* - This part contains most the architecture specific components, as well as most of the data structures and underlying mechanisms of the hardware we'll need. It also includes some early drivers that are very useful during further development (like the keyboard and timer).
+* *Video Output* - This part looks at working with linear framebuffers, and how we can display text on them to aid with early debugging.
+* *Memory Management* - This part looks at the memory management stack of a kernel. We cover all the layers from the physical memory manager, to the virtual memory manager and the heap.
 * *Scheduling* - A modern operating system should support running multiple programs at once. In this part we're going to look at how processes and threads are implemented, write a simple scheduler and have a look at some of the typical concurrency issues that arise. 
 * *Userspace* - Many modern architectures support different level of privileges, that means programs that are running on lower levels can't access resources/data reserved for higher levels.
 * *Inter-Process Communication (IPC)* - This part looks at how we might implement IPC for our kernel, allowing isolated programs to communicate with each other in a controlled way. 
