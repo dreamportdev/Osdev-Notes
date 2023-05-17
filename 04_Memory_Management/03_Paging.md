@@ -24,7 +24,7 @@ What are those directories and tables? Let's start from the tables:
 A special register, `CR3` contains the address of the root page directory. This register has the following format:
 
 * bits from 12 to 63 (31 if we are in running a 32 bit kernel) are the address of the root page directory.
-* bits 0 to 12 change their meaning depending on the value of bit 14 in CR4, but in this section and for our purpose are not relevant anyway, so they can be left as 0.
+* bits 0 to 12 change their meaning depending on the value of bit 14 in CR4, but in this chapter and for our purpose are not relevant anyway, so they can be left as 0.
 
 Sometimes CR3 (although technically it's just the data from bits 12+) are referred to as the PDBR, short for page directory base address.
 
@@ -94,7 +94,7 @@ If we are using 4kb pages then we will have: PML4, PDPR, PD, PT, while if we go 
 
 ## Page Directories and Table Structure
 
-As we have seen earlier in this section, when paging is enabled, a virtual address is translated into a set of entry numbers in different tables. In this paragraph we will see the different types available for them.
+As we have seen earlier in this chapter, when paging is enabled, a virtual address is translated into a set of entry numbers in different tables. In this paragraph we will see the different types available for them.
 
 But before proceeding with the details let's see some of the characteristics common between all table/directory types: 
 
@@ -153,7 +153,7 @@ A page table entry structure is still similar to the one above, but it contains 
 
 In this table there are 3 new bits (D, PAT, G) and the page base address, as already explained, is not pointing to a table but to the physical memory this page represents.
 
-In the next section we will go through the fields of an entry.
+In the next chapter we will go through the fields of an entry.
 
 ### Page Table Entry Fields
 

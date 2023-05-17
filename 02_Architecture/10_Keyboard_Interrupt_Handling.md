@@ -1,6 +1,6 @@
 # Handling The Keyboard Interrupt
 
-Either the PIC or IOAPIC can be used to set up the keyboard irq. For this section we'll use the IOAPIC as it's more modern and the LAPIC + IOAPIC is the evolution of the PIC. However if using the PIC, most of the theory still applies, we'll need to adjust the irq routing code accordingly.
+Either the PIC or IOAPIC can be used to set up the keyboard irq. For this chapter we'll use the IOAPIC as it's more modern and the LAPIC + IOAPIC is the evolution of the PIC. However if using the PIC, most of the theory still applies, we'll need to adjust the irq routing code accordingly.
 
 To keep the examples below simple, we'll assume only a single IOAPIC is present in the system. This is true for most desktop systems, and is only something to worry about in server hardware.
 
@@ -15,7 +15,7 @@ redtbl_offset = 0x10 + (entry_number * 2)
 
 In this case then we have the offset for our entry at: `0x12` and `0x13` (called IOREDTBL1 in the spec), where `0x12` is the lower 32-bits of the table entry. 
 
-Before unmasking the keyboard interrupt, we need an entry in the IDT, and a function (we can leave it empty for now) for the IDT entry to call. For this section we will call the function `keyboard_irq_handler`:
+Before unmasking the keyboard interrupt, we need an entry in the IDT, and a function (we can leave it empty for now) for the IDT entry to call. We will call the function `keyboard_irq_handler`:
 
 ```c
 void keyboard_irq_handler() {

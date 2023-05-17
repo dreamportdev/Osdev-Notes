@@ -14,7 +14,7 @@ The font can be one of many different available (ttf, psf, etc.) in this tutoria
 
 If running on linux there are some nearly ready to use fonts in */usr/share/consolefonts*
 
-In this section we are going to see how to use a font that has been stored into memory. 
+In this chapter we are going to see how to use a font that has been stored into memory. 
 
 The steps involved are: 
 

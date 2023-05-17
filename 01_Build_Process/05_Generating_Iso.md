@@ -7,7 +7,7 @@ The generated iso can then be used as a cdrom in an emulator, or burnt to a real
 
 Xorisso is a tool used to create iso disk images. Iso is actually quite a complex format, as it aims to be compatible with a lot of different formats and ways of booting.
 
-A walkthrough of xorisso is outside the scope of this section, but just know it's the standard tool for working with the iso format.
+A walkthrough of xorisso is outside the scope of this chapter, but just know it's the standard tool for working with the iso format.
 
 ## Grub (Multiboot 2)
 

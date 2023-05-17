@@ -141,7 +141,7 @@ call my_c_function
 ; other magic asm stuff that we don't care of...
 ```
 
-As mentioned in the multiboot section, argument passing from asm to C in 64 bits is little bit different from 32 bits, so the first parameter of a C function is taken from *rdi* (followed by: rsi, rdx, rcx, r8, r9, then the stack), so the *mov rdi, 42* is setting the value of *my_value* parameter to 42.
+As mentioned in the multiboot chapter, argument passing from asm to C in 64 bits is little bit different from 32 bits, so the first parameter of a C function is taken from *rdi* (followed by: rsi, rdx, rcx, r8, r9, then the stack), so the *mov rdi, 42* is setting the value of *my_value* parameter to 42.
 
 The output of the printf will be then: 
 

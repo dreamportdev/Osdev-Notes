@@ -28,7 +28,7 @@ Since we will be writing the operating system, we can't depend on any functional
 
 *Authors note: technically your kernel can depend on some utility libraries, or sections of the compiler runtime. However the idea is you should build your code with nothing extra added by default, and only add things back in that are also freestanding.*
 
-In a freestanding environment, we should assume nothing. That includes the standard library (as it requires os support to work). Our program will also need a special linker script in order to run properly, since the linker wont know where to start the program. Linker scripts are expanded on below, as well as in their own section.
+In a freestanding environment, we should assume nothing. That includes the standard library (as it requires os support to work). Our program will also need a special linker script in order to run properly, since the linker wont know where to start the program. Linker scripts are expanded on below, as well as in their own chapter.
 
 Both C and C++ have several freestanding headers. The common ones are `stdint.h`, `stddef.h` for C/C++, and `utility` and `type_traits` for C++. There are a few others, and compiler vendors will often supply extra freestanding headers. GCC and Clang provide ones like `cpuid.h` as a helper for x86 cpuid functions, for example.
 
@@ -46,7 +46,7 @@ The main difference is that GCC requires a completely separate set of binaries (
 
 However, each GCC toolchain will use the platform-specific headers by default, where as clang seems to have insane defaults in this area. We'll generally always want to have the platform-specific headers GCC supplies regardless of which toolchain we build with.
 
-Compiling GCC from source doesn't take too long on a modern CPU (~10 minutes for a complete build on a 7th gen intel mobile cpu, 4 cores), however there are also prebuilt binaries online from places like bootlin, see the useful links section for .
+Compiling GCC from source doesn't take too long on a modern CPU (~10 minutes for a complete build on a 7th gen intel mobile cpu, 4 cores), however there are also prebuilt binaries online from places like bootlin, see the useful links appendix for .
 
 ## Setting up a build environment
 Setting up a proper build environment can be broken down into a few steps:
@@ -113,6 +113,7 @@ There are also a few other compiler flags that are useful, but not necessary:
 - `-Wall` and `-Wextra`: These flags need no introduction, they just enable all default warnings, and then extra warnings on top of that. Some people like to use `-Wpedantic` as well, but it can cause some false positives.
 
 ### Building C++ Source Files
+
 This section should be seen as an extension to the section above on compiling C files, compiler flags included.
 
 When compiling C++ for a freestanding environment, there are a few extra flags that are required:
@@ -125,11 +126,12 @@ And a few flags that are not required, but can be nice to have:
 - `-fno-unwind-tables` and `-fno-asynchronous-unwind-tables`: tells the compiler not to generate unwind tables. These are mainly used by exceptions and runtime type info (_rtti, dynamic_cast_ and friends). Disabling them just cleans up the resulting binary, and reduces its file size.
 
 ## Linking Object Files Together
+
 The GCC Linker (`ld`) and the compatible clang linker (`lld.ld`) can accept linker scripts.
 These describe the layout of the final executable to the linker: what things go where, with what alignment and permissions.
 This is incredibly important for a kernel, as it's the file that will be loaded by the bootloader, which may impose certain restrictions or provide certain features.
 
-These are their own topic, and have a full section dedicated to them later in this chapter. We likely haven't used these when building userspace programs, as our compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) now we need to be explicit about these things. 
+These are their own topic, and have a full chapter  dedicated to them later in this chapter. We likely haven't used these when building userspace programs, as our compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) now we need to be explicit about these things. 
 
 A linker script can be simply added appending the `-T script_name_here.ld` to the linker command.
 
@@ -160,7 +162,7 @@ There are other make-like tools out there (xmake, nmake) but these are less popu
 
 There are more details to this, however most bootloaders will provide a tool that lets us create a bootable iso, with the kernel, the bootloader itself and any other files we might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
-While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in it's own section.
+While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in it's own chapter.
 
 If just here for a quick reference, grub uses `grub-mkrescue` and a `grub.cfg` file, limine reqiures us to build the iso by yourselves with a `limine.cfg` on it, and then run `limine-deploy`.
 

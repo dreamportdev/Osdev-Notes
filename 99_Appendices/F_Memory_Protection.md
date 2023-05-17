@@ -1,6 +1,6 @@
 # Memory Protection
 
-This section is a collection of useful strategies for memory protection. This mainly serves as a reminder that these features exist, and are worth looking into!
+This appendix is a collection of useful strategies for memory protection. This mainly serves as a reminder that these features exist, and are worth looking into!
 
 ## WP bit
 

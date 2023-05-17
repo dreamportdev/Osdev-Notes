@@ -1,6 +1,6 @@
 # Handling Interrupts
 
-This is not a complete guide on how to handle interrupts. It assumes we already have an IDT setup and working in supervisor mode, if don't refer the earlier chapter that covers how to set up an IDT and the basics of handling interrupts. This section is focused on handling interrupts when user mode programs are executing.
+This is not a complete guide on how to handle interrupts. It assumes we already have an IDT setup and working in supervisor mode, if don't refer the earlier chapter that covers how to set up an IDT and the basics of handling interrupts. This chapter is focused on handling interrupts when user mode programs are executing.
 
 On `x86_64` there are two main structures involved in handling interrupts. The first is the IDT, which we should already be familiar with. The second is the task state segment (TSS). While the TSS is not technically mandatory for handling interrupts, once we leave ring 0 it's functionally impossible to handle interrupts without it. 
 

@@ -1,5 +1,4 @@
-Physical Memory Manager
-=======================
+# Physical Memory Manager
 
 The physical memory manager will keep track of used physical memory in chunks of pages. The page size will depends on the configuration of VMM. 
 

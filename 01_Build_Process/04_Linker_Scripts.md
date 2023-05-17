@@ -4,7 +4,7 @@ If never done any kind of low level programming before, it's unlikely we've had 
 
 A linker script is just a description of the final linked binary. It tells the linker how we want the various bits of code and data from our compiled source files (currently they're unlinked object files) to be laid out in the final executable.
 
-For the rest of this section we'll assume we're using *elf* as the file format. If building a UEFI binary we'll need to use PE/COFF+ instead, and that's a separate beast of it's own. There's nothing `x86` specific here, but it was written with `x86` in mind, other architectures may have slight differences. We also reference some fields of structs, these are described very plainly in the `elf64` base specification.
+For the rest of this chapter we'll assume we're using *elf* as the file format. If building a UEFI binary we'll need to use PE/COFF+ instead, and that's a separate beast of it's own. There's nothing `x86` specific here, but it was written with `x86` in mind, other architectures may have slight differences. We also reference some fields of structs, these are described very plainly in the `elf64` base specification.
 
 ## Anatomy of a Script
 

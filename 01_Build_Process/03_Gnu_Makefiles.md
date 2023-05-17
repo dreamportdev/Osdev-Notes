@@ -1,6 +1,6 @@
 # Makefiles
 
-There's a million and one excellent resources on makefiles out there, so this section is less of a tutorial and more of a collection of interesting things.
+There's a million and one excellent resources on makefiles out there, so this chapter is less of a tutorial and more of a collection of interesting things.
 
 ## GNUMakefile vs Makefile
 
@@ -129,7 +129,7 @@ One *import*ant note about using `import` is to remember that the included file 
 You can also run `make` itself as part of a command to build a target. This opens the door to a whole new world of makefiles calling further makefiles and including others.
 
 ### Think Bigger!
-*__Authors Note:__ This section is written using a personal project as a reference, there are definitely other ways to approach this, but I thought it would be an interesting example to look at how I approached this for my kernel/OS. - DT.*
+*__Authors Note:__ This chapter is written using a personal project as a reference, there are definitely other ways to approach this, but I thought it would be an interesting example to look at how I approached this for my kernel/OS. - DT.*
 
 Now what about managing a large project with many sub-projects, custom and external libraries that all interact? As an example lets look at the northport os, it features the following structure of makefiles:
 

@@ -4,9 +4,9 @@ Welcome to the first challenge of our osdev adventure! Memory management in a ke
 
 The design and complexity of a memory manger can vary greatly, a lot depends on what the operating system is designed, and it's specific goals. For example if only want mono-tasking os, with paging disabled and no memory protection, it will probably be fairly simple to implement. 
 
-In this section we will try to cover a more common use case that is probably what nearly all modern operating system uses, that is a 32/64 operating system with paging enabled, and various forms of memory allocators for the kernel and one for user space.
+In this part we will try to cover a more common use case that is probably what nearly all modern operating system uses, that is a 32/64 operating system with paging enabled, and various forms of memory allocators for the kernel and one for user space.
 
-There is also an additional section on memory protection features available in some CPUs.
+In the appendices there is also an additional section on memory protection features available in some CPUs.
 
 We will cover the following topics: 
 
@@ -15,7 +15,7 @@ We will cover the following topics:
 * [Virtual Memory Manager](04_Virtual_Memory_Manager.md)
 * [Heap Allocation](05_Heap_Allocation.md)
 
-*Authors note: don't worry, we will try to keep it as simple as possible, using basic algorithms and explaining all the gray areas as we go. The logic may sometimes be hard to follow, you will most likely have to go through several parts of this section multiple times.*
+*Authors note: don't worry, we will try to keep it as simple as possible, using basic algorithms and explaining all the gray areas as we go. The logic may sometimes be hard to follow, you will most likely have to go through several reads of this part multiple times.*
 
 Each of the layers has a dedicated section below, however we'll start with a high level look at how they fit together. Before proceeding let's briefly define the concepts above: 
 

@@ -2,7 +2,7 @@
 
 A boot protocol defines the machine state when the kernel is given control by the bootloader. It also makes several services available to the kernel, like a memory map of the machine, a framebuffer and sometimes other utilities like uart or kernel debug symbols.
 
-This section covers 2 protocols: multiboot 2 and stivale 2.
+This chapter covers 2 protocols: multiboot 2 and stivale 2.
 
 Multiboot 2 supercedes multiboot 1, both of which are the native protocols of grub. This means that anywhere grub is installed, a multiboot kernel can be loaded. This means testing will be easy on most linux machines. Multiboot 2 is quite an old, but very robust protocol.
 
@@ -56,7 +56,7 @@ Entering long mode is fairly easy, it requires setting 3 flags:
 - LME (long mode enable), bit 8 in EFER (this is an MSR).
 - PG (paging enable), bit 31 in cr0. This MUST be enabled last.
 
-If unfamiliar with paging, there is a section that goes into more detail in the memory management chapter.
+If unfamiliar with paging, there is a chapter that goes into more detail in the memory management chapter.
 
 Since we have enabled paging, we'll also need to populate `cr3` with a valid paging structure. This needs to be done before setting the PG bit. Generally these initial page tables can be set up using 2mb pages with the present and writable flags set. Nothing else is needed for the initial pages.
 
@@ -195,11 +195,11 @@ boot_stack_base:
 
 After performing the long-return (`lret`) we'll be running `target_function` in full 64-bit long mode. It's worth noting that at this point we still have the lower-half stack, so it may be worth having some more assembly that changes that, before jumping directly to C.
 
-Some of the things were glossed there, like paging and setting up a gdt, are explained in their own sections.
+Some of the things were glossed there, like paging and setting up a gdt, are explained in their own chapters.
 
 We'll also want to pass the multiboot info structure to the kernel's main function. 
 
-The interface between a higher level language like C and assembly (or another high level language) is called the ABI (application binary interface). This is discussed more in the section about C, but for now to pass a single `uint64_t` (or a pointer of any kind, which the info structure is) simply move it to `rdi`, and it'll be available as the first argument in C.
+The interface between a higher level language like C and assembly (or another high level language) is called the ABI (application binary interface). This is discussed more in the chapter about C, but for now to pass a single `uint64_t` (or a pointer of any kind, which the info structure is) simply move it to `rdi`, and it'll be available as the first argument in C.
 
 ## Stivale 2
 
@@ -296,7 +296,7 @@ static stivale2_header_tag_framebuffer framebuffer_tag =
 };
 ```
 
-The `framebuffer_*` fields can be used to ask for a specific kind of framebuffer, but leaving them to zero tells the bootloader we want to best possible available. The `next` field can be used to point to the next header tag, if we had another one we wanted. The full list of tags is available in the stivale2 specification (see the useful links section).
+The `framebuffer_*` fields can be used to ask for a specific kind of framebuffer, but leaving them to zero tells the bootloader we want to best possible available. The `next` field can be used to point to the next header tag, if we had another one we wanted. The full list of tags is available in the stivale2 specification (see the useful links appendix).
 
 The last detail is to change the signature of our kernel entry function to:
 

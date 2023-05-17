@@ -15,7 +15,7 @@ This term when used in a memory management/osdev environment has a different mea
 
 ## A Quick Recap: Allocating Memory
 
-There are many kinds of memory allocators in the osdev world (physical, virtual, and others) with various subtypes (page frame, bitmap, etc ...). For the following section we assume the following components are present:
+There are many kinds of memory allocators in the osdev world (physical, virtual, and others) with various subtypes (page frame, bitmap, etc ...). For the next section we assume the following components are present:
 
 - a physical memory allocator.
 - a virtual memory allocator (using paging).

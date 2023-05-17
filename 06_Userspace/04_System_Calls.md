@@ -1,5 +1,5 @@
 # System Calls
-System calls are a way for a user mode program to request something from the kernel, or other supervisor code. For this section we're going to focus on a user program calling the kernel directly. If the kernel being written is a micro-kernel, system calls can be more complicated, as they might be redirected to other supervisor (or even user) programs, but we're not going to talk about that here.
+System calls are a way for a user mode program to request something from the kernel, or other supervisor code. For this chapter we're going to focus on a user program calling the kernel directly. If the kernel being written is a micro-kernel, system calls can be more complicated, as they might be redirected to other supervisor (or even user) programs, but we're not going to talk about that here.
 
 On `x86_64` there are a few ways to perform a system call. The first is to dedicate an interrupt vector to be used for software interrupts. This is the most common, and straightforward way. The other main way is to use the dedicated instructions (`sysenter` and friends), however these are rather niche and have some issues of their own. This is discussed below.
 
@@ -71,7 +71,7 @@ There's a few tricks happening with the inline assembly above. First is the `nak
 
 Next we're using two special constraints for the input and output operands. "S" and "D" are the source and destination registers, or on x86 the `rsi` and `rdi` registers. This means the compiler will ensure that those registers are loaded with the values we specify before the assembly body is run. The compiler will then also move the value of "S" (`rsi`) into `arg` after the assembly body has run. This is where we'll be placing the return value of the system call, hence why the `return arg` line below.
 
-For more details on inline assembly, see the dedicated section on it, or check the compiler's manual.
+For more details on inline assembly, see the dedicated appendix on it, or check the compiler's manual.
 
 Now assuming everything is setup correctly, running the above code in user mode should trigger the kernel's system call handler. In the example below, the `syscall_handler` function should end up running, and we've just implemented system calls!
 

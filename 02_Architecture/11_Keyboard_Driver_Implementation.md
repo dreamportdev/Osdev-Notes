@@ -22,7 +22,7 @@ From now on we will assume that the scancode translation is enabled, so no matte
 
 ## High Level Overview
 
-In the chapter section we have seen how an interrupt was generated and how to read data from the keyboard. Now we need to write a proper driver, one which addresses the issues listed above (well not all of them since some are an higher level than they will be implemented "using" the driver, not by it).
+In the previous chapter we have seen how an interrupt was generated and how to read data from the keyboard. Now we need to write a proper driver, one which addresses the issues listed above (well not all of them since some are an higher level than they will be implemented "using" the driver, not by it).
 
 We will try to build the driver in small steps adding one piece at time, so it will be easier to understand it. 
 
