@@ -46,8 +46,8 @@ For example:
 phys(0x123'456) = virt(0xFFF'F234'5235)
 ```
 
-In `x86` this mapping is achieved through the usage of several hierarchical tables, with each item in one level pointing to the next level table. 
-A virtual address is a composition of _entry numbers_ for each level of the tables. So for example assume that we have 3 levels, and 32 bits addressing assuming the address translation used in the picture above:
+Usually this mapping is achieved through the usage of several hierarchical tables, with each item in one level pointing to the next level table. 
+A virtual address is a composition of _entry numbers_ for each level of the tables. So for example assume that we have 3 levels, and 32 bits addressing and the address translation used  is the one in the picture above:
 
 ```c
 virtaddress = 0x2F880120
@@ -60,7 +60,7 @@ Now we know that the bits:
 * 14 to 21 are the page directory level 1 entry.
 * 21 to 31 are the page directory level 2 entry.
 
-We can translate the abbove address to: 
+We can translate the above address to: 
 
 * Offset:  0x20 bytes into page.
 * Page Table entry: number 0x4 (it points to the memory page).
