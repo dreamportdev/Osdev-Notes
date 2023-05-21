@@ -32,12 +32,12 @@ Sometimes CR3 (although technically it's just the data from bits 12+) are referr
 
 A virtual address is what a running program sees. Thats any program: a driver, user application or the kernel itself. In the kernel, often a virtual address will map to the same physical address. It is called `identity mapping`. but is not always the case though.
 
-A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
+A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows with an example how address translation works: 
 
 ![Address Translation](/Images/addrtranslation.png)
 
 
-This address translation is just as an example, and it doesn't reflect the actual `x86_64` mechanism, it will be introduced later in this chapter. Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
+Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
 
 
 For example: 
@@ -67,20 +67,20 @@ We can translate the above address to:
 * Page Dir 1 entry: 0x20 (it points to a page table).
 * Page Dir 2 entry: 0xBE (it points to a page dir 1).
 
-The above example is just an imaginary translation mechanism, we'll discuss the actual x86_64 4-level paging below.
+The above example is just an imaginary translation mechanism, we'll discuss the actual `x86_64` 4-level paging below.
 
 ## Paging in Long Mode 
 
 In 64 bit mode we have up to 4 levels of page tables. The number depends on the size we want to assign to each page. 
-It's worth noting that newer cpus do support a feature called la57 (large addressing using 57-bits), this just adds another layer of page tables on top the existing 4 to allow for a larger address space. It's a cool feature, but not really required unless we're using crazy amounts of memory.
+It's worth noting that newer cpus do support a feature called _la57_ (large addressing using 57-bits), this just adds another layer of page tables on top the existing 4 to allow for a larger address space. It's a cool feature, but not really required unless we're using crazy amounts of memory.
 
 There are 3 possible scenarios: 
 
 * 4kib Pages: We are going to use all 4 levels, so the address will be composed of all the 4 table entries.
-* 2Mib Pages: in the case we only need 3 page levels.
+* 2Mib Pages: in this case we only need 3 page levels.
 * 1Gib Pages: Only 2 levels are needed.
 
-To implement paging, is strongly reccomended to have implemented interrupts too, specifically handling #PF (vcetor 0xd).
+To implement paging, is strongly reccomended to have already implemented interrupts too, specifically handling #PF (vector 0xd).
 
 The 4 levels of page directories/tables are: 
 
@@ -90,7 +90,7 @@ The 4 levels of page directories/tables are:
 * and the Page Table (PT).
 
 The number of levels depend on the size of the pages chosen. 
-If we are using 4kb pages then we will have: PML4, PDPR, PD, PT, while if we go for 2mb Pages we have only PML4, PDPR, PD. 1gb pages would only use the PML4 and PDPR.
+If we are using 4kb pages then we will have: PML4, PDPR, PD, PT, while if we go for 2mb Pages we have only PML4, PDPR, PD, finally 1gb pages would only use the PML4 and PDPR.
 
 ## Page Directories and Table Structure
 
