@@ -30,27 +30,27 @@ Sometimes CR3 (although technically it's just the data from bits 12+) are referr
 
 ### Virtual (or Logical) Address
 
-A virtual address is what a running program sees. Thats any program: a driver, user application or the kernel itself. In the kernel, often a virtual address will map to the same physical address. This is called identity mapping. This is not always the case though.
+A virtual address is what a running program sees. Thats any program: a driver, user application or the kernel itself. In the kernel, often a virtual address will map to the same physical address. It is called `identity mapping`. but is not always the case though.
 
 A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
 
 ![Address Translation](/Images/addrtranslation.png)
 
 
-Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
+This address translation is just as an example, and it doesn't reflect the actual `x86_64` mechanism, it will be introduced later in this chapter. Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
 
 
 For example: 
 
 ```c
-phys(0x12'3456) = virt(0xFFF'F234'5235)
+phys(0x123'456) = virt(0xFFF'F234'5235)
 ```
 
-In x86 this mapping is achieved through the usage of several hierarchical tables, with  each item in one level pointing to the next level table. 
-A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address assuming address translation used in the picture above:
+In `x86` this mapping is achieved through the usage of several hierarchical tables, with each item in one level pointing to the next level table. 
+A virtual address is a composition of _entry numbers_ for each level of the tables. So for example assume that we have 3 levels, and 32 bits addressing assuming the address translation used in the picture above:
 
 ```c
-virtaddress = 0x2F88'0120
+virtaddress = 0x2F880120
 ```
 
 Now we know that the bits: 
