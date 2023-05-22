@@ -328,5 +328,11 @@ While recursive paging only requires using a single page table entry at the high
 
 There are few things to take in account when trying to access paging structures using the recursion technique for `x86_64` architecture:
 
-* When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l).
+
+* When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l). Especially when dealing with macros, because otherwise they could be converted to the wrong type, causing wrong result. Usually `gcc` show a warning message while compiling if this happens: 
+
+```gcc
+ warning: result of ‘510 << 30’ requires 40 bits to represent, but ‘int’ only has 32 bits
+ ```
+ 
 * Always remember to properly sign extend any addresses if we're creating them from nothing. We won't need to sign extend on every operation, as things are usually relative to a pointer we've already set up. The CPU will throw a page fault if it's a good address but something is wrong in the page tables, and a general protection fault if the virtual address is non-canonical (it's a bad address).
