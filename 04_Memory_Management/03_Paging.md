@@ -127,6 +127,16 @@ Until now we have explained how address translation works now let's see how the 
 
 The first `mov` is needed because cr3 can be loaded only from another register. Keep in mind that in order to enter long mode we should have already paging enabled, so the first page tables should be loaded very early in the boot process. Once enabled we can change the content of `CR3` to load a new addressing space.
 
+This can be done using inline assembly too: 
+
+```c
+void load_cr3( void* cr3_value ) {
+    asm volatile("mov %0, %%cr3" :: "r"((uint64_t)cr3_value) : "memory");
+}
+```
+
+The inline assembly syntax will be explained in one of the appendices chapter: [C Language Info](../99_Appendices/C_Language_Info.md). The `mov` into a register her is hidden, by the lable `"r"` in front of the variable `cr3_value`, this label indicate that the variable value should be put into a register. 
+
 The bits that we need to set in order to have paging enabled in long mode are in order the: `PAE` Page Address Extension, bit number 5 in CR4, the `LME` Long Mode Enable Bit (Bit 8 in EFER, and has to be loaded with the `rdmsr`/`wrmsr` instructions), and finally the `PG` Paging bit number 31 in `cr0`.
 
 Every time we need to change a value of a system register, `cr*`, and similar we must always load the current value first and update it's content, otherwise we can run into troubles. And finally the Paging bit must be the last to be enabled.
