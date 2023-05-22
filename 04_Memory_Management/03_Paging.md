@@ -114,6 +114,8 @@ The hierarchy of the tables is:
 
 Is important to note that the x86_64 architecture support mixing page sizes.
 
+In the following paragraphs we will have a look with more detail at how the paging is enabled and the common parts between all of the entries in these tables, and look at what they mean.
+
 ### Loading the root table and enable paging
 
 Until now we have explained how address translation works now let's see how the Root Table is loaded (in `x86_64` is PML4), this is done by loading the special register `CR3`, also known as `PDBR`, we introduced it at the beginning of the chapter, and is contents is basically the base address of our PML4 table. This can be easily done with two lines of assembly:
@@ -131,9 +133,10 @@ Every time we need to change a value of a system register, `cr*`, and similar we
 
 Setting those bits must be done only once at early stages of boot process (probably one of the first thing we do).
 
+
 ### PML4 & PDPR & PD
 
-PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's begin by looking at the structure of the first two types: 
+PML4 and PDPR entry structures are identical, while the PD one has few differences. Let's begin by looking at the structure of the first two types:
 
 |63     | 62        | 51 ... 40            | 39 ... 12              | 11  ...  9 |
 |-------|-----------|----------------------|------------------------|------------|
@@ -169,9 +172,9 @@ A page table entry structure is still similar to the one above, but it contains 
 
 In this table there are 3 new bits (D, PAT, G) and the page base address, as already explained, is not pointing to a table but to the physical memory this page represents.
 
-In the next chapter we will go through the fields of an entry.
+In the next section we will go through the fields of an entry.
 
-### Page Table Entry Fields
+### Page Table/Directory Entry Fields
 
 Below is a list of all the fields present in the table entries, with an explanation of the most commonly used.
 
