@@ -266,7 +266,9 @@ The meanings of these bits are expanded below:
 * Bit 1: set if the false was caused by a write, otherwise it was a read. 
 * Bit 0: set if a protection violation caused the fault, otherwise it means translation failed due to a non present page.
 
-## Recursion
+## Accessing Page Tables and Physical Memory
+
+### Recursive Paging
 
 One of the problems that we face while enabling _paging_ is of how to access the page directories and table, in case we need to access them, and especially when we need to map a new physical address. 
 
@@ -310,9 +312,21 @@ Few more examples of address translation:
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: _PML4: 510, PDPR: 510, PD: 510, PT: 510_, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT with page number equals to 510, and we got access to the PML4 table.
     - Now using a similar approach we can get acces to other tables, for example the following values: _PML4: 510, PDPR:510, PD: 1, PT: 256_, will give access at the Page Directory PD at entry number 256 in PDPR that is contained in the first PML4 entry.
 
+### Direct Map
+
+Another technique for modifying page tables is a 'direct map' (similar to an identity map). As we know an identity map allows is where a page's physical address is the same as it's virtual address, and we could describe it as: `paddr = vaddr`. A direct map is sometimes referred to as an offset map because it introduces an offset, which gives us some flexibility. We're using to have a global variable containing the offset for our map called `dmap_base`. Typically we'll set this to some address in the higher half so that the lower half of the address space is completely free for userspace programs. This also makes other parts of the kernel easier later on.
+
+How does the direct map actually work though? It's simple enough, we just map all of physical memory at the same virtual address *plus the dmap_base offset*: `paddr = vaddr - dmap_base`. Now in order to access a physical page (from our PMM for example) we just add `dmap_base` to it and we can read and write to it as normal.
+
+The direct map does require a one-time setup early in your kernel, as you do need to map all usable physical memory starting at `dmap_base`. This is no more work than creating an identity map though.
+
+What address should you use for the base address of the direct map? Well you can put it at the lowest address in the higher half, which depends on how many levels of page tables you have. For 4 level paging this will `0xffff'8000'0000'0000`.
+
+While recursive paging only requires using a single page table entry at the highest level, a direct map consumes a decent chunk of address space. A direct map is also more flexible as it allows the kernel to access arbitrary parts of physical memory as needed. Direct mapping is only really possible in 64-bit kernels due to the large address space made available, 32-bit kernels should opt to use recursive mapping to reduce the amount of address space used.
+
 ### Troubleshooting
 
 There are few things to take in account when trying to access paging structures using the recursion technique for `x86_64` architecture:
 
 * When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l).
-* Always remember to add the sign extension part (otherwise a #GP will be thrown).
+* Always remember to properly sign extend any addresses if we're creating them from nothing. We won't need to sign extend on every operation, as things are usually relative to a pointer we've already set up. The CPU will throw a page fault if it's a good address but something is wrong in the page tables, and a general protection fault if the virtual address is non-canonical (it's a bad address).
