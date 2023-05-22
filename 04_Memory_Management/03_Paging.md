@@ -314,7 +314,7 @@ Few more examples of address translation:
 
 ### Direct Map
 
-Another technique for modifying page tables is a 'direct map' (similar to an identity map). As we know an identity map allows is where a page's physical address is the same as it's virtual address, and we could describe it as: `paddr = vaddr`. A direct map is sometimes referred to as an offset map because it introduces an offset, which gives us some flexibility. We're using to have a global variable containing the offset for our map called `dmap_base`. Typically we'll set this to some address in the higher half so that the lower half of the address space is completely free for userspace programs. This also makes other parts of the kernel easier later on.
+Another technique for modifying page tables is a 'direct map' (similar to an identity map). As we know an identity map is when a page's physical address is the same as it's virtual address, and we could describe it as: `paddr = vaddr`. A direct map is sometimes referred to as an offset map because it introduces an offset, which gives us some flexibility. We're using to have a global variable containing the offset for our map called `dmap_base`. Typically we'll set this to some address in the higher half so that the lower half of the address space is completely free for userspace programs. This also makes other parts of the kernel easier later on.
 
 How does the direct map actually work though? It's simple enough, we just map all of physical memory at the same virtual address *plus the dmap_base offset*: `paddr = vaddr - dmap_base`. Now in order to access a physical page (from our PMM for example) we just add `dmap_base` to it and we can read and write to it as normal.
 
