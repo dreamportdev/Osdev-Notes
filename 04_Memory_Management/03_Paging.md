@@ -258,15 +258,51 @@ The meanings of these bits are expanded below:
 
 ## Recursion
 
-There are few things to take in account when trying to access paging structures using the recursion technique for `x86_64` architecture:
+One of the problems that we face while enabling _paging_ is of how to access the page directories and table, in case we need to access them, and especially when we need to map a new physical address. 
 
-* When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l).
-* Always remember to add the sign extension part (otherwise a #GP will be thrown).
+There are two ways to achieve it: 
 
-A few examples of recursive addresses: 
+* Having all the phyisical memory mapped somewhere in the virtual addressing space (probably in the _Higher Half_, in this case we should be able to retrieve all the tables easily, by just adding a prefix to the physical address of the table. 
+* Using a tecnique called _recursion_, where access the tables using special virtual addresses. 
+
+To use the recursion the only thing we need to do, is reserve an entry in the _root_ page directory (`PML4` in our case) and make its base address to point to the directory itsef.
+
+A good idea is to pick a number high enough, that will not interfer with other kernel/hardware special addresses. For example let's use the entry `510` for the recurisve item 
+
+Creating the self reference is pretty straightforward, we just need to use the directory physical address as the base address for the entry being created:
+
+```c
+pml4[510l] = pml4_physical_address | PRESENT | WRITE;
+```
+
+This should be done again when setting up paging, on early boot stages. 
+
+Now as we have seen above address translation will split the `virtual address` in entry numbers for the different tables, starting from the leftmost (the root). So now if we have for example the following address: 
+
+```c
+virt_addr = 0xff7f80005000
+```
+
+The entries in this address are: 510 for PML4, 510 for PDPR, 0 for PD and 5 for PT (we are using 4k pages for this example).  Now let's see what appens from the point of view of the address translation: 
+
+* First the `510th` PML4 entry is loaded, that is the pointer to the PDPR, and in this case its content is PML4 itself. 
+* Now it get the next entry from the address, to load the PD, that is again the `510th`, and is again PML4 itself, so it is loaded as PD too. 
+* It is time for the third entry the PT, and in this case we have `0`, so it loads the first entry from the Page Directory loaded, that in this case is still PML4, so it loads the PDPR table
+* Finally the PT entry is loaded, that is `5`, and since the current PD loaded for translation is actually a PDPR we are going to get the `5th` item of the page directory. 
+* Now the last part of the address is the offset, this can be used then to access the entries of the directory/table loaded. 
+
+This means that by carefully using the recursive item from PML4 we can access all the tables.
+
+Few more examples of address translation:
 
 * PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: `0xFFFF'FFFF'8000'0000`.
 * Let's assume we mapped PML4 into itself at entry 510, 
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: _PML4: 510, PDPR: 510, PD: 510, PT: 510_, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT with page number equals to 510, and we got access to the PML4 table.
     - Now using a similar approach we can get acces to other tables, for example the following values: _PML4: 510, PDPR:510, PD: 1, PT: 256_, will give access at the Page Directory PD at entry number 256 in PDPR that is contained in the first PML4 entry.
 
+### Troubleshooting
+
+There are few things to take in account when trying to access paging structures using the recursion technique for `x86_64` architecture:
+
+* When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l).
+* Always remember to add the sign extension part (otherwise a #GP will be thrown).
