@@ -53,7 +53,7 @@ typedef struct {
 
 The `flags` field is actually a bitfield, and we've defined some macros to use with it. 
 
-These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convenient for oddities like `x86` and it's nx-bit, where all memory is executable by default, and it must specified if the memory *don't* want to be executable. 
+These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convenient for oddities like `x86` and it's ` nx-bit`, where all memory is executable by default, and it must specified if the memory *don't* want to be executable. 
 
 Having it like this allows that to be abstracted away from the rest of our kernel. For `x86_64` our translation function would look like the following:
 
@@ -70,7 +70,7 @@ uint64_t convert_x86_64_vm_flags(size_t flags) {
 };
 ```
 
-The `PT_xyz` macros are just setting the bits in the page table entry, for specifics see the *paging chapter*. Notice how we set the NX-bit if `VM_FLAG_EXEC` is not set because of a quirk on x86.
+The `PT_xyz` macros are just setting the bits in the page table entry, for specifics see the *paging chapter*. Notice how we set the NX-bit if `VM_FLAG_EXEC` is not set because of a quirk on `x86`.
 
 We're going to store these *vm objects* as a linked list, which is the purpose of the `next` field.
 
