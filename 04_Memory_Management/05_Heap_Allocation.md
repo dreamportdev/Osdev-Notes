@@ -20,7 +20,7 @@ There are many kinds of memory allocators in the osdev world (physical, virtual,
 - a physical memory allocator.
 - a virtual memory allocator (using paging).
 
-If some of these terms need more explanation, they have articles of their own to explain their purpose and function!
+If some of these terms need more explanation, they have chapters of their own to explain their purpose and function!
 
 With the above assumptions, what happens under the hood when we want to allocate some memory from the heap?
 
@@ -345,14 +345,14 @@ Pretty small allocation and we have plenty of space... no wait. The heap is most
 How do we solve this issue? The idea is pretty straightforward, every time a memory location is being freed, we do the following: 
 
 * First check if it is adjacent to to other free locations (both directions: previous and next)
-    * If `ptr_to_be_freed + ptr_to_be_freed_size == next_node` then merge the two nodes and create a single node of `ptr_to_be_freed_size + next_node_size` (notice we don't ned to add the size of Heap_node because ptr should be the address immediately after the struct). 
-    * If `prev_node_address + prev_node_size + sizeof(Heap_Node) == ptr_to_be_freed` then merge the two nodes and create a single node of `prev_node_size + ptr_to_be_freed_size`
+    * If `ptr_to_free + ptr_to_free_size == next_node` then merge the two nodes and create a single node of `ptr_to_free_size + next_node_size` (notice we don't ned to add the size of `Heap_node` because `ptr` should be the address immediately after the struct). 
+    * If `prev_node_address + prev_node_size + sizeof(Heap_Node) == ptr_to_free` then merge the two nodes and create a single node of `prev_node_size + ptr_to_free_size`
 * If not just mark this location as free.
 
 There are different ways to implement this: 
 
-* Adding a next and prev pointer to the node structure. This is the way we'll use in the rest of this article. This makes checking the next and previous nodes for mergability very easy. It does dramatically increase the memeory overhead. Checking if a node can be merged can be done via `(cur_node->prev).status = FREE` and `(next_node->next).status = FREE`.
-* Otherwise without adding the next and prev pointer to the node, we can scan the heap from the start until the node before `ptr_to_be_freed`, and if is free we can merge. For the next node instead things are easier: we just need to check if the node starting at `ptr_to_be_freed + ptr_size` if it is free is possible to merge. By comparison this increases the runtime overhead of `free()`.
+* Adding a `next` and `prev` pointer to the node structure. This is the way we'll use in the rest of this chapter. This makes checking the next and previous nodes for mergability very easy. It does dramatically increase the memeory overhead. Checking if a node can be merged can be done via `(cur_node->prev).status = FREE` and `(next_node->next).status = FREE`.
+* Otherwise without adding the next and prev pointer to the node, we can scan the heap from the start until the node before `ptr_to_free`, and if is free we can merge. For the next node instead things are easier: we just need to check if the node starting at `ptr_to_free + ptr_size` if it is free is possible to merge. By comparison this increases the runtime overhead of `free()`.
 
 Both solutions have their own pros and cons, like previously mentioned we'll go with the first one for these examples. Adding the `prev` and `next` pointers to the heap node struct leaves us with:
 
