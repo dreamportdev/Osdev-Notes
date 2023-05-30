@@ -83,6 +83,13 @@ This appendix is a collection of links we found useful developing our own kernel
 - Osdev Wiki Page ELF Tutorial: [https://wiki.osdev.org/ELF_Tutorial](https://wiki.osdev.org/ELF_Tutorial)
 - x86-64 psABI: [https://gitlab.com/x86-psABIs/x86-64-ABI](https://gitlab.com/x86-psABIs/x86-64-ABI)
 
+## Debugging
+
+* Osdev Wiki Page for kernel debugiggin: [https://wiki.osdev.org/Kernel_Debugging](https://wiki.osdev.org/Kernel_Debugging)
+* Osdev Wiki Page for Serial ports: [https://wiki.osdev.org/Serial_Ports](https://wiki.osdev.org/Serial_Ports)
+* Debugging with Qemu at Wikibooks: [https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU](https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU)
+    
+
 ## Communities
 
 - Osdev Fourm: [https://forum.osdev.org/](https://forum.osdev.org/)

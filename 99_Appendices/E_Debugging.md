@@ -204,8 +204,3 @@ To enable it in qemu add this to your qemu flags `-debugcon where`. Where can be
 
 It's worth noting that because this is just a binary stream, and not a serial device emulation, its much faster than usual port io. And there's no state management or device setup to worry about.
 
-## Useful Resources
-
-* https://wiki.osdev.org/Kernel_Debugging
-* https://wiki.osdev.org/Serial_Ports
-* https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU
