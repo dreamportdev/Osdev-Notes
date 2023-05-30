@@ -1,33 +1,13 @@
 # Debugging
 
-
-## Qemu Interrupt Log
-
-If you are using qemu, a good idea is to dump registers when an exception occurs, you just need to add the following option to qemu command: 
-
-```bash
-qemu -d int
-```
-
-Sometime could be needed to avoid the emulator restart on triple fault, in this case to catch the "offending" exception, just add: 
-
-```bash
-qemu -d int -no-reboot
-```
-
-While debugging with gdb, we may want to keep qemu hanging after a triple fault (when the cpu should reset), to do some more investigation, in this case we need to add also `-no-shutdown` (along with) `-no-reboot`
-
-### Using Qemu's Remote GDB Server
-
-To start Qemu to accepts connections from gdb, you need to add *-s* and *-S*  flags to the command, where: 
-
-* **-s** is a shortand for **-gdb tcp::1234** 
-* **-S** instead tells the emulator to halt before starting the CPU, in this way you have time to connect the debugger before the OS start.
-
 ## GDB 
 
 ### Remote Debugging
 
+First thing Qemu needs to be launched telling it to accepts connections from gdb, it needs the parameters: *-s* and *-S*  added to the command, where: 
+
+* **-s** is a shortand for **-gdb tcp::1234** 
+* **-S** instead tells the emulator to halt before starting the CPU, in this way you have time to connect the debugger before the OS start.
 To connect with qemu/bochs host configure for remote debugging launch gdb, and type the following command in gdb cli: 
 
 ```bash
@@ -166,6 +146,22 @@ this will open the Virtual Machine with the Debugger command line and ui.
 
 ## Qemu
 
+## Qemu Interrupt Log
+
+If you are using qemu, a good idea is to dump registers when an exception occurs, you just need to add the following option to qemu command: 
+
+```bash
+qemu -d int
+```
+
+Sometime could be needed to avoid the emulator restart on triple fault, in this case to catch the "offending" exception, just add: 
+
+```bash
+qemu -d int -no-reboot
+```
+
+While debugging with gdb, we may want to keep qemu hanging after a triple fault (when the cpu should reset), to do some more investigation, in this case we need to add also `-no-shutdown` (along with) `-no-reboot`
+
 ### Qemu Monitor
 
 Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger. 
@@ -194,7 +190,7 @@ QEMU 6.1.0 monitor - type 'help' for more information
 From here you can send commands directly to the emulator, below a list of useful commands:
 
 * **help** Well this is the first command to get some help on how to use the monitor
-* **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic
+* **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic, *info mem* will print current virtual memory mappings
 * **x/cf address** where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address
 * **xp/cf address** same as above, but for physical memory
 
