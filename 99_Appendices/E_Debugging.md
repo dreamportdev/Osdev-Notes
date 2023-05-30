@@ -40,7 +40,7 @@ Below a list of some useful gdb commands
 ### Print and Examine Memory
 
 `p/print symbol` can be used to used to print almost anything that makes sense in your program.
-Lets say you have an integer variable i, `p i` will disable what i currently is. This takes a c-like syntax, 
+Lets say you have an integer variable i, `p i` will print what i currently is. This takes a c-like syntax, 
 so if you print a pointer, gdb will simply tell you its address. To view it's contents you would need to use `p *i`, like in c.
 `x address` is similar to print, but takes a memory address instead of a symbol.
 
