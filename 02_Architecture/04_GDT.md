@@ -209,7 +209,7 @@ kernel_data |= 1 << 21; //long-mode segment
 gdt_entries[2] = kernel_data << 32;
 ```
 
-Most of this descriptor is unchanged, except for the type field. Bit 4 is cleared to indicate this is a data selector. Creating the user mode selectors is even more straight foward, as we'll reuse the existing descriptors and just update their DPL fields (bits 13 and 14).
+Most of this descriptor is unchanged, except for the type field. Bit 4 is cleared to indicate this is a data selector. Creating the user mode selectors is even more straightforward, as we'll reuse the existing descriptors and just update their DPL fields (bits 13 and 14).
 
 ```c
 uint64_t user_code = kernel_code | (3 << 13);
