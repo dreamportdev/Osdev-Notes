@@ -2,7 +2,7 @@
 
 Commonly kernels will place themselves in the higher half of the address space, as this allows the lower half to be used for userspace. It greatly simplifies writing new programs and porting existing ones. Of course this does make it slightly more complex for the kernel, but not by much!
 
-Most architectures that support virtual addressing use an MMU (memory management unit), and for x86 it's built into the CPU. Virtual memory (and paging - which is how the x86 MMU is programmed) is discussed more in the chapter on paging, but for now think of it as allowing us to *map* what the code running on the CPU sees to a different location in physical memory. This allows us to put things anywhere we want in memory and at any address.
+Most architectures that support virtual addressing use an MMU (memory management unit), and for `x86` it's built into the CPU. Virtual memory (and paging - which is how the `x86` MMU is programmed) is discussed in more detail in the paging chapter, but for now think of it as allowing us to *map* what the code running on the CPU sees to a different location in physical memory. This allows us to put things anywhere we want in memory and at any address.
 
 With a higher half kernel we take advantage of this, and place our kernel at a very high address, so that is it out of the way of any user programs that might be running. Commonly we typically claim the entire *higher half* of the virtual address space for use by the kernel, and leave the entire lower half alone for userspace.
 
