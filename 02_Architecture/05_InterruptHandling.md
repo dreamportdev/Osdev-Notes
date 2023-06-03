@@ -4,13 +4,13 @@ As the title implies, this chapter is purely focused on `x86_64`. Other platform
 
 If not familiar with the term *interrupt*, it's a way for the cpu to tell our code that something unexpected or unpredictable has happened, and that it need to be handled. When an interrupt is triggered, the cpu will *serve* the interrupt by loading the *interrupt handler* specified. The handler itself is just a function, but with a few special conditions. 
 
-__Interrupts__ get their name because they interrupt the normal flow of execution, instead stopping whatever code was running on the cpu, running a handler function, and then resuming the previously running code. Interrupts can signal a number of events from the system, from fatal errors to a device telling us it has some data ready to read.
+__Interrupts__ get their name because they interrupt the normal flow of execution, stop whatever code was running on the cpu, execute a handler function, and then resume the previously running code. Interrupts can signal a number of events from the system, from fatal errors to a device telling us it has some data ready to read.
 
 The `x86` architecture makes a distinction between *hardware interrupts* and *software interrupts*. Don't worry though, this is only something we'll need to worry about if deliberately use it. A software interrupt is one that's triggered by the `int` instruction, anything else is considered a hardware interrupt. The difference is that some hardware interrupts will store an error code (and some will not), but a software interrupt will **never** store an error code. Meaning if the `int` instruction is used to trigger an interrupt which normally has an error code, there wont be one present, and most likely run into bugs if the handler function is not prepared for this.
 
 ### The Interrupt Flag and Cli/Sti
 
-There will be situations where we don't want to be interrupted, usually in some kind of critical section. In this case, x86 actually provides a flag that can be used to disable almost all interrupts. Bit 9 of the `flags` register is the interrupt flag, and like other flag bits it has dedicated instructions for clearing/setting it:
+There will be situations where we don't want to be interrupted, usually in some kind of critical section. In this case, `x86 actually provides a flag that can be used to disable almost all interrupts. Bit 9 of the `flags` register is the interrupt flag, and like other flag bits it has dedicated instructions for clearing/setting it:
 
 - `cli`: Clears the interrupt flag, preventing the cpu from serving interrupts.
 - `sti`: Sets the interrupt flag, letting the cpu serve interrupts.
@@ -19,18 +19,18 @@ There will be situations where we don't want to be interrupted, usually in some 
 
 When the interrupt flag is cleared, most interrupts will be *masked* meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's perfectly acceptable to simply have the operating system panic in this case. 
 
-*Authors note: Don't let NMIs scare you, I've never run actually run into one on real hardware. You do need to be aware that they exist and can happen at any time, regardless of the interrupt flag.*
+*Authors note: Don't let NMIs scare you, we've never run actually run into one on real hardware. You do need to be aware that they exist and can happen at any time, regardless of the interrupt flag.*
 
 ## Setting Up For Handling Interrupts
 
 Now we know the theory behind interrupts, let's take a look at how we interact with them on `x86`. As expected, it's a descriptor table! We will be referencing some GDT selectors in this, so a GDT loaded is required. We're also going to introduce a few new terms:
 
-- Interrupt Descriptor: A single entry within the interrupt descriptor *table*, it describes what the cpu should do when a specific interrupt occurs.
-- Interrupt Descriptor Table: An array of interrupt descriptors, usually referred to as the IDT.
-- Interrupt Descriptor Table Register: Usually called the IDTR, this is the register within the cpu that holds the address of the IDT. Similar to the GDTR.
-- Interrupt Vector: Refers to the interrupt number. Each vector is unique, and vectors 0-32 are reserved for special purposes (which we'll cover below). The x86 platform supports 256 vectors.
-- Interrupt Request: A term used to describe interrupts that are sent to the Programmable Interrupt Controller. The PIC was deprecated long ago and has since been replaced by the APIC. An IRQ refers to the pin number used on the pic: IRQ2 would be pin #2 for example. The APIC has a chapter of it's own.
-- Interrupt Service Routine: Similar to IRQ, this is an older term, used to describe the handler function for IRQ. Often shortened to ISR.
+- _Interrupt Descriptor_: A single entry within the interrupt descriptor *table*, it describes what the cpu should do when a specific interrupt occurs.
+- _Interrupt Descriptor Table_: An array of interrupt descriptors, usually referred to as the _IDT_.
+- _Interrupt Descriptor Table Register_: Usually called the _IDTR_, this is the register within the cpu that holds the address of the IDT. Similar to the GDTR.
+- _Interrupt Vector_: Refers to the interrupt number. Each vector is unique, and vectors 0-32 are reserved for special purposes (which we'll cover below). The x86 platform supports 256 vectors.
+- _Interrupt Request_: A term used to describe interrupts that are sent to the Programmable Interrupt Controller. The PIC was deprecated long ago and has since been replaced by the APIC. An IRQ refers to the pin number used on the pic: IRQ2 would be pin #2 for example. The APIC has a chapter of it's own.
+- _Interrupt Service Routine_: Similar to IRQ, this is an older term, used to describe the handler function for IRQ. Often shortened to ISR.
 
 In order for us to be able to handle interrupts, we're going to need to create an array of descriptors (or rather a table, called the *Interrupt Descriptor Table*). We then load the address of this IDT into the IDTR, and if the entries of the table are set up correctly we should be able to handle interrupts.
 
@@ -72,7 +72,7 @@ Let's look closer at the type field. We have two options here, with only one dif
 - Interrupt gate: `0b1110`.
 - Trap gate: `0b1111`.
 
-The DPL field is used to control which cpu rings can trigger this vector with a software interrupt. On x86 there are four protection rings (0 being the most privileged, 3 the least). Setting DPL = 0 means that only ring 0 can issue a software interrupt for this vector, if a program in another ring tries to do this it will instead trigger a *general protection fault*. For now we have no use for software interrupts, so we'll set this to 0 to only allow ring 0 to trigger them. 
+The DPL field is used to control which cpu rings can trigger this vector with a software interrupt. On `x86` there are four protection rings (0 being the most privileged, 3 the least). Setting DPL = 0 means that only ring 0 can issue a software interrupt for this vector, if a program in another ring tries to do this it will instead trigger a *general protection fault*. For now we have no use for software interrupts, so we'll set this to 0 to only allow ring 0 to trigger them. 
 
 That's a lot writing, but in practice it won't be that complex. Let's create a function to populate a single IDT entry for us. In this example we'll assume the kernel code selector is 0x8, but it may not be.
 
@@ -110,7 +110,7 @@ struct idtr
 } __attribute__((packed));
 ```
 
-Again, note the use of the packed attribute. In long mode the limit field should be set to 0xFFF (16 bytes per descriptor * 256 descriptors, and substract 1 because that's how this is encoded). The `base` field needs to contain the *logical address* of the idt. This is usually the virtual address, but if the segmentation have been re-enabled in long mode (some cpus allow this), this address ignores segmentation.
+Again, note the use of the packed attribute. In long mode the `limit` field should be set to `0xFFF` (16 bytes per descriptor * 256 descriptors, minus 1). The `base` field needs to contain the *logical address* of the idt. This is usually the virtual address, but if the segmentation have been re-enabled in long mode (some cpus allow this), this address ignores segmentation.
 
 *Authors Note: The reason for subtracting one from the size of the idt is interesting. Loading an IDT with zero entries would effectively be pointless, as there would be nothing there to handle interrupts, and so no point in having loaded it in the first place. Since the size of 1 is useless, the length field is encoded as one less than the actual length. This has the benefit of reducing the 12-bit value of 4096 (for a full IDT), to a smaller 11-bit value of 4096. One less bit to store!*
 
@@ -124,7 +124,7 @@ void load_idt(void* idt_addr)
 }
 ```
 
-In this example we stored `idtr` on the stack, which gets cleaned up when the function returns. This is okay because the IDTR register is like a segment register in that it caches whatever value was loaded into it, similar to the GDTR. So it's okay that our idtr structure is no longer present after the function returns, as the register will have a copy of the data our structure contained. Having said that, the actual IDT can't be on the stack, as the cpu does not cache that.
+In this example we stored `idtr` on the stack, which gets cleaned up when the function returns. This is okay because the IDTR register is like a segment register in that it caches whatever value was loaded into it, similar to the GDTR. So it's okay that our `idtr` structure is no longer present after the function returns, as the register will have a copy of the data our structure contained. Having said that, the actual _IDT_ can't be on the stack, as the cpu does not cache that.
 
 At this point we should be able to install an interrupt handler into the IDT, load it,  and set the interrupts flag. The kernel will likely crash as soon as an interrupt is triggered though, as there are some special things we need to perform inside of the interrupt handler before it can finish.
 
@@ -134,7 +134,7 @@ Since an interrupt handler uses the same general purpose registers as the code t
 
 There are a number of ways we could go about something like this, we're going to use some assembly (not too much!) as it gives us the fine control over the cpu we need. There are other ways, like the infamous `__attribute__((interrupt))`, but these have their own issues and limitations. This small bit of assembly code will allow us to add other things as we go.
 
-*Authors Note: Using `__attribute__((interrupt))` may seem tempting with how simple it is, and it lets you avoid assembly! This is easy mistake to make (one I made my myself early on). This method is best avoided as covers the simple case of saving all the general purpose registers, but does nothing else. Later on you will want to do other things inside your interrupt stub, and thus have to abandon the attribute and write your own stub anyway. Better to get it right from the beginning. - DT.*
+*Authors Note: Using `__attribute__((interrupt))` may seem tempting with how simple it is, and it lets you avoid assembly! This is easy mistake to make (one I made myself early on). This method is best avoided as covers the simple case of saving all the general purpose registers, but does nothing else. Later on you will want to do other things inside your interrupt stub, and thus have to abandon the attribute and write your own stub anyway. Better to get it right from the beginning. - DT.*
 
 There are a number of places where the state of the general purpose registers could be stored, we're going to use the stack as it's extremely simple to implement. In protected mode there are the `pusha`/`popa` instructions for this, but they're not present in long mode so we have to do this ourselves.
 
@@ -226,6 +226,8 @@ extern char vector_0_handler[];
 for (size_t i = 0; i < 256; i++)
     set_idt_entry(i, (uint64_t)vector_0_handler + (i * 16), 0);
 ```
+
+The type of vector_0_handler isn't important, we only care about the address it occupies. This address gets resolved by the linker, and we could just as easily use a pointer type instead of an array here.
 
 ### Sending EOI
 
