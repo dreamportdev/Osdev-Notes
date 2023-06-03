@@ -119,12 +119,12 @@ reload_cs:
 
 In the above example we take advantage of the `call` instruction pushing the return address onto the stack before jumping. To reload `%cs` we'll need an address to jump to, so we'll use the saved address on the stack. We need to place the selector we want to load into `%cs` onto the stack *before* the return address though, so we'll briefly store it in `%rdi`, push our example code selector (0x8 in this - the implementation may differ), then push the return address back onto the stack.
 
-We use `retfq` instead of `ret` because we want to do a *far* return, and we want to use the 64-bit (quadword) version of the instructio. Some assemblers have different syntax for this instruction, and it may be called `lretq`.
+We use `retfq` instead of `ret` because we want to do a *far* return, and we want to use the 64-bit (quadword) version of the instruction. Some assemblers have different syntax for this instruction, and it may be called `lretq`.
 
 ## Segmentation and Paging
 
 When segmentation and paging are used together, segmentation is applied first, then paging.
-The process of translation an address is as follows:
+The process of translation for an address is as follows:
 
 - Calculate linear address: `logical_address + segment_base`.
 - Traverse paging structure for physical address, using linear address.
@@ -175,7 +175,7 @@ A simple example is outline just below, for a simple 64-bit long mode setup we'd
 - Selector 0x18: user code (64-bit, ring 3)
 - Selector 0x20: user data (64-bit)
 
-To create a GDT populated with these entries, we'd do something like the following:
+To create a GDT populated with these entries we'd do something like the following:
 
 ```c
 uint64_t gdt_entries[];
