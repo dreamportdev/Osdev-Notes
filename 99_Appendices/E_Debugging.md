@@ -76,7 +76,7 @@ A breakpoint can be set in a variety of ways! The command is `b/break symbol`, w
 Breakpoints can be enabled/disabled at runtime with `enable x`/`disable x` where x is the breakpoint number (displayed when you first it it).
 
 Breakpoints can also take conditions if you're trying to debug a commonly-run function. The syntax follows a c-like style, and is pretty forgiving.
-For example: `break main if i == 0` would break at the function main() whenever the variable `i` is equal to 0.
+For example: `break main if i == 0` would break at the function `main()` whenever the variable `i` is equal to 0.
 This syntax supports all sorts of things, like casts and working with pointers.
 
 Breakpoints can also be issued contextually too! If you're at a breakpoint `main.c:123`, you can simply use `b 234` to break at line 234 in the same file.
