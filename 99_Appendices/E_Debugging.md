@@ -89,6 +89,16 @@ It's worth noting if you're debugging a kernel running with kvm, you wont be abl
 GDB does support hardware breakpoints using `hb` instead of `b` for above, although their functionality can be limited, depending on what the hardware supports.
 Best to do serious debugging without kvm, and only use hardware debugging when absolutely necessary.
 
+### Variables
+
+While debugging with gdb, we can change the value of the variables in the code being executed. To do that we just need the command: 
+
+```gdb
+set variable_name=value
+```
+
+where `variable_name` is a variable present in the code being debugged. This is extermely useful in the cases where we want to test some edge cases, that are hard to reproduce. 
+
 ### TUI - Text User Interface
 This area of gdb is hilariously undocumented, but still really useful. It can be entered in a number of ways:
 
