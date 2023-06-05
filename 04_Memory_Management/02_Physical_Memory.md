@@ -1,6 +1,6 @@
 # Physical Memory Manager
 
-The physical memory manager will keep track of used physical memory in chunks of pages. The page size will depends on the configuration of VMM. 
+The physical memory manager is responsible for tracking which parts of physical memory are in use, or free for use. The PMM doesn't manage individual bytes of memory, rather it keeps track of *pages*. A page is a fixed size determined by the MMU: in the case of x86 this is 4096 (0x1000) bytes.
 
 There are different ways on how to handle a PMM, one of them is using a bitmap. Where every bit represent a page, if the bit is a 0 the page is available, if is 1 is taken. 
 

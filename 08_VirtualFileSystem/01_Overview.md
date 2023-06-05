@@ -1,19 +1,19 @@
 # Virtual File System
 
-After we have made our kernel works with multiple programs, let them communicate each other, handle access to shared resources and protect the kernel space, now it is time to start to think about how to store and access files on our kernel, and how to support one or more file systems.
+After we have made our kernel works with multiple programs, let them communicate each other, handle access to shared resources and protect the kernel space. Now it is time to start to think about how to store and access files in our kernel, and how we want to support file systems.
 
-# The VFS and The File System
+# The VFS and File Systems
 
 As we probably already know there are many different operating system available nowadays, some are proprietary of specific os/architectures, some are open source etc. Using any operating system daily usually we deal with at least 2/3 different file system types, that can grow quickly if we start to add an external device. For example if we are using a linux operating system with an external drive plugged, and a cdrom inserted we are already dealing with three different file system: 
 
-* The main hard drive file system (it can be any of the supported fs like ext2, ext4, reiserfs, etc) 
-* The external drive file system (probably a vfat, exfat or ntfs file system)
-* The cdrom file system (usually iso9660)
+* The main hard drive file system (it can be any of the supported fs like ext2, ext4, reiserfs, etc).
+* The external drive file system (probably a vfat, exfat or ntfs file system).
+* The cdrom file system (usually iso9660).
 * The pseudo file-systems like: /proc and /dev in unix-like operating systems.
 
-But how can an operating system works with so many different file system, how can they coexist like in linux under the same directory tree? And most important of all: how are we going to implement it?
+How can an operating system manage all these difference file systems and expose them to userspace under the same interface (and directory tree) - and most important of all: how are we going to implement it?
 
-In this part we are going to understand how everything works, and how the OS can handle so many different file systems, we will try to make our basic implementation, to put the knowledge to work, and making our OS able to read and write (kind of...) files.
+In this part we're going to look at the subsystem that handles all of this, and how we might implement one.
 
 It will be divided into two main topics: 
 
@@ -24,18 +24,16 @@ It will be divided into two main topics:
 
 Before proceeding is useful to recap some basic file system concepts.
 
-The main purpose of a file system is to store data and make it easily accessible on a human readable way. What a file system does is organize how the data is stored, how they are represented on the disk, and provide functionalities to access, create, update and delete them. More advanced FS can also provide some kind of recovery mechanism (aka `journaling`), permissions,  but we are not going to cover them because it's out of the scope of this guide. 
+The main purpose of a file system is to store and organise data, and make it easily accessible to humans and programs. A file system also provides the ability to access, create and update files. More advanced file systems can also provide some kind of recovery mechanism (aka `journaling`), permissions,  but we are not going to cover them because it's out of the scope of this guide. 
 
-Any operating system usually implements it's own FS version, and like many other OS topics, there are different types available that try to solve specific issues, or optimize certain type of operations. 
+Different filesystems have different advantages: some are simpler to implement, otherwise may be offer extreme redundancy and others may be usable across a network. Each filesystem implementation is typically provided by a separate driver that then interacts with the virtual file system provided by the kernel. The most common filesystem drivers you will want to provide are ext2, FAT(12/16/32 - they are fundamentally all the same) and an ram-based 'temp fs'. The tempfs may also support loading it's contents from a TAR passed by the bootloader. This is the concept of a init ramdisk, and we'll look at an example of how to implement this.
 
-Any file system is provided by a driver, so an OS has to implement one for each type they want to support (the most popular and easy to implement are probably FAT, tar and ext2).
+Each filesystem interally represents file (and directory) data in different ways. Whether they are just a structure laid out before the data, or an entry in a array or list somewhere.
 
-They will internally represents file, directories in different ways, wether they are just an overhead structure on top of the data, or an entry into an array/list. 
+How do we combine the output of all these different filesystems in a uniform way that's usable by the rest of the OS? We achieve this through a layer of abstraction, which we called the *virtual file system*, or VFS. It's responsible for acting as a scaffold that other filesystems can attach themselves to. 
 
-But how to make different file systems with different file representation, be seen in a uniform way by the os? This is achieved through an abstraction layer, that is the Virtual File System, it will be responsible to talk with the different drivers and provide an unified way to represent them to the user.
+How the VFS presents itself is another design decision, but the two common ways to do it are:
 
-How the different drivers are presented to the user is a design decision, but the two most known (and probably common) ways to do that are:
-
-* Show them as separated entities, like windows does, where every file system is identified by a unique letter (called the `drive letter`). The pro of this design is that we can have for example same path on two different device with the only difference being the drive letter (this is called the *multi-root* approach, and Windows is the most famous os using it)
-* Show them under a single tree, where there is a unique root `/` and device is `mounted` in a subfolder of the root, and even the root is a filesystem mounted. So a folder can be either a just an fs folder or a mountpoint to another file system.  This is the way used by any unix inspired operating system. The pro of this design are that we have everything under the same tree, and the feeling of being using the same file system on our OS.
+* Each mounted filesystem is distinct filesystem, with a separate root. Typically each root is given a single letter to identify it. This is the MS-DOS/Windows approach. This is called the *multi-root* approach.RREADME.md
+* Each mounted filesystem exists within a single global tree, under a single root. This is the usual unix approach, where a directory can actually a window into another filesystem.
 

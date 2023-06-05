@@ -160,7 +160,7 @@ uint32_t num = (uint32_t) pixel[0] << 24 |
 
 ```
 
-in the code above we are making sure that the value of `pixel[3]` is zero, since the `HEADER_PIXEL` function is not touching it. Now the value of `num` will be the colour of the pixel to be plotted. 
+In the code above we are making sure that the value of `pixel[3]` is zero, since the `HEADER_PIXEL` function is not touching it. Now the value of `num` will be the colour of the pixel to be plotted. 
 
 With this value we can call the function we have created to plot the pixel with the color indicated by `num`. 
 
