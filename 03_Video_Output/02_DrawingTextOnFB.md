@@ -1,20 +1,20 @@
-# Drawing fonts
+# Drawing Fonts
 
 When framebuffer is enabled, the hardware bios video memory is no longer accessible, and the only things that we can do now is drawing pixels. 
 
 So in order to write text we need first to have at least one font available to our operating system and how to store it.
 
-The font can be one of many different available (ttf, psf, etc.) in this tutorial we will use Pc Screen Font v2 aka PSF (keep in mind that v1 has some differences in the header, if you want to support that as well, you need to adapt the code)
+The font can be one of many different available (ttf, psf, etc.) in this tutorial we will use Pc Screen Font v2 aka PSF (keep in mind that v1 has some differences in the header, if we want to support that as well, the code needs to be adapted)
 
-**How** the font is stored depends on the status of your operating system, there are several way: 
+**How** the font is stored depends on the status of the operating system, there are several way: 
 
-* Store it in memory (if your OS doesn't support a file sytem yet)
-* In case you already have a file system, it could be better to store them in a file
-* You can also get a copy of the VGA Fonts in memory, using grub.
+* Store it in memory (if the OS doesn't support a file sytem yet)
+* In case there is already have a file system, it could be better to store them in a file
+* We can also get a copy of the VGA Fonts in memory, using grub.
 
-If you are running on linux you can find some nearly ready to use fonts in */usr/share/consolefonts*
+If running on linux there are some nearly ready to use fonts in */usr/share/consolefonts*
 
-In this section we are going to see how to use a font that has been stored into memory. 
+In this chapter we are going to see how to use a font that has been stored into memory. 
 
 The steps involved are: 
 
@@ -23,18 +23,18 @@ The steps involved are:
 3. When the kernel is loading identify the PSF version and parse it accordingly
 4. Write functions to: pick the glyph (a single character) and draw it on the screen
 
-## Find a Font and add it to the kernel (1 and 2)
+## Embedding a PSF File In The Kernel
 
 
-As already said the best place to look for a font if you are running on linux is to look into the folder `/usr/share/kbd/consolefonts`, to know the psf version the tool *gbdfed* can be used, just import the font with it (use the File->Import->console font menu), and then go to *View->Messages*, there should be a message similar to the following: 
+As already said the best place to look for a font if running on linux is to look into the folder `/usr/share/kbd/consolefonts`, to know the psf version the tool *gbdfed* can be used, just import the font with it (use the File->Import->console font menu), and then go to *View->Messages*, there should be a message similar to the following: 
 
 ```
 Font converted from PSF1 to BDF.
 ```
 
-Once you got your the font, it needs first to be converted into a ELF binary file that can be linked to our kernel. 
+Once we got the font, it needs first to be converted into an ELF binary file that can be linked to our kernel.
 
-That can be done using the command objcopy: 
+That can be done using the command objcopy (on linux, if on a different operating system search for a suitable alternative): 
 
 ```bash
 objcopy -O elf64-x86-64 -B i386 -I binary font.psf font.o
@@ -67,7 +67,7 @@ Symbol table '.symtab' contains 5 entries:
 ```
 (the variable name depends on the font file name). 
 
-## Identify version and parse the PSF
+## Parsing the PSF
 
 Since there are two different version of PSF fonts available, identified with v1, and v2, to know what is the version of the font loaded we need to check the magic number first: 
 
@@ -104,7 +104,7 @@ All the fields above are declared as `unsigned char` variables, except for the m
 
 The font data starts right after the header. 
 
-### PSF v2 structure
+### PSF v2 Structure
 
 The psf structure header has a fixed size of 32 bytes, with the following information: 
 
@@ -198,13 +198,7 @@ For the horizontal coordinate:
 * The width of the character 
 * How many bytes are in a pixel
 
-The number of bytes in each line, assuming that you are using grub and you configured the framebuffer via the multiboot header, is available in the *multiboot_tag_framebuffer* structure, the field is *framebuffer_pitch*. 
+The number of bytes in each line, assuming that we are using grub and the framebuffer is configured via the multiboot header, is available in the *multiboot_tag_framebuffer* structure, the field is *framebuffer_pitch*. 
 
 Implementing the function above should be pretty simple and is left as exercise.
- 
-## Useful resources
 
-* https://wiki.osdev.org/PC_Screen_Font
-* gbdfed - Tool to inspect PSF files
-* https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html
-* https://forum.osdev.org/viewtopic.php?f=1&t=41549

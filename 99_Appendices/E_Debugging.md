@@ -1,33 +1,13 @@
 # Debugging
 
+## GDB 
 
-## Dumping register on exception
+### Remote Debugging
 
-If you are using qemu, a good idea is to dump registers when an exception occurs, you just need to add the following option to qemu command: 
-
-```bash
-qemu -d int
-```
-
-Sometime could be needed to avoid the emulator restart on triple fault, in this case to catch the "offending" exception, just add: 
-
-```bash
-qemu -d int -no-reboot
-```
-
-While debugging with gdb, we may want to keep qemu hanging after a triple fault (when the cpu should reset), to do some more investigation, in this case we need to add also `-no-shutdown` (along with) `-no-reboot`
-
-### Start Qemu for remote Debugging
-
-To start Qemu to accepts connections from gdb, you need to add *-s* and *-S*  flags to the command, where: 
+First thing Qemu needs to be launched telling it to accepts connections from gdb, it needs the parameters: *-s* and *-S*  added to the command, where: 
 
 * **-s** is a shortand for **-gdb tcp::1234** 
 * **-S** instead tells the emulator to halt before starting the CPU, in this way you have time to connect the debugger before the OS start.
-
-## GDB 
-
-### Remote debugging
-
 To connect with qemu/bochs host configure for remote debugging launch gdb, and type the following command in gdb cli: 
 
 ```bash
@@ -40,7 +20,7 @@ And then you can load the symbols (if you have compiled your os with debugging s
 symbol-file path/to/kernel.bin
 ```
 
-### Useful commands
+### Useful Commands
 
 Below a list of some useful gdb commands 
 
@@ -57,10 +37,10 @@ Below a list of some useful gdb commands
 * `n/next` similar to step, but will 'step over' any function calls, treating them like the rest of the lines of code.
 * `si/ni` step instruction/next instruction. These are like step and next, but work on instructions, rather than lines of code.
 
-### Print and Examine memory
+### Print and Examine Memory
 
 `p/print symbol` can be used to used to print almost anything that makes sense in your program.
-Lets say you have an integer variable i, `p i` will disable what i currently is. This takes a c-like syntax, 
+Lets say you have an integer variable i, `p i` will print what i currently is. This takes a c-like syntax, 
 so if you print a pointer, gdb will simply tell you its address. To view it's contents you would need to use `p *i`, like in c.
 `x address` is similar to print, but takes a memory address instead of a symbol.
 
@@ -72,7 +52,7 @@ The format specifier can be prefixed with a number of repeats. For example if yo
 `x/10i 0x1234`, and gdb would show you that.
 
 
-### How did I get here?
+### How Did I Get Here?
 
 Here a collection of useful command to keep track of the call stack.
 
@@ -96,7 +76,7 @@ A breakpoint can be set in a variety of ways! The command is `b/break symbol`, w
 Breakpoints can be enabled/disabled at runtime with `enable x`/`disable x` where x is the breakpoint number (displayed when you first it it).
 
 Breakpoints can also take conditions if you're trying to debug a commonly-run function. The syntax follows a c-like style, and is pretty forgiving.
-For example: `break main if i == 0` would break at the function main() whenever the variable `i` is equal to 0.
+For example: `break main if i == 0` would break at the function `main()` whenever the variable `i` is equal to 0.
 This syntax supports all sorts of things, like casts and working with pointers.
 
 Breakpoints can also be issued contextually too! If you're at a breakpoint `main.c:123`, you can simply use `b 234` to break at line 234 in the same file.
@@ -108,6 +88,16 @@ And finally breakpoints can be deleted as well using `delete [breakpoints]`
 It's worth noting if you're debugging a kernel running with kvm, you wont be able to use software breakpoints (above) like normal. 
 GDB does support hardware breakpoints using `hb` instead of `b` for above, although their functionality can be limited, depending on what the hardware supports.
 Best to do serious debugging without kvm, and only use hardware debugging when absolutely necessary.
+
+### Variables
+
+While debugging with gdb, we can change the value of the variables in the code being executed. To do that we just need the command: 
+
+```gdb
+set variable_name=value
+```
+
+where `variable_name` is a variable present in the code being debugged. This is extermely useful in the cases where we want to test some edge cases, that are hard to reproduce. 
 
 ### TUI - Text User Interface
 This area of gdb is hilariously undocumented, but still really useful. It can be entered in a number of ways:
@@ -133,7 +123,7 @@ When in a view with multiple windows, you can use focus xyz to change which wind
 
 ## Virtual Box
 
-### Virtualbox command line useful commands
+### Useful Commands
 
 * To list the available machine using command line use the following command:
 
@@ -151,7 +141,7 @@ virtualboxvm --startvm vmname
 
 You can use either the Virtual Machine name, or its uuid. 
 
-### Run a vm with debug enabled
+### Debugging a Virtual Machine
 
 To run a VM with debug you need two things: 
 
@@ -164,9 +154,25 @@ virtualboxvm --startvm vmname --debug
 
 this will open the Virtual Machine with the Debugger command line and ui. 
 
-## QEmu 
+## Qemu
 
-### QEmu monitor
+## Qemu Interrupt Log
+
+If you are using qemu, a good idea is to dump registers when an exception occurs, you just need to add the following option to qemu command: 
+
+```bash
+qemu -d int
+```
+
+Sometime could be needed to avoid the emulator restart on triple fault, in this case to catch the "offending" exception, just add: 
+
+```bash
+qemu -d int -no-reboot
+```
+
+While debugging with gdb, we may want to keep qemu hanging after a triple fault (when the cpu should reset), to do some more investigation, in this case we need to add also `-no-shutdown` (along with) `-no-reboot`
+
+### Qemu Monitor
 
 Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger. 
 
@@ -194,7 +200,7 @@ QEMU 6.1.0 monitor - type 'help' for more information
 From here you can send commands directly to the emulator, below a list of useful commands:
 
 * **help** Well this is the first command to get some help on how to use the monitor
-* **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic
+* **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic, *info mem* will print current virtual memory mappings
 * **x/cf address** where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address
 * **xp/cf address** same as above, but for physical memory
 
@@ -208,8 +214,3 @@ To enable it in qemu add this to your qemu flags `-debugcon where`. Where can be
 
 It's worth noting that because this is just a binary stream, and not a serial device emulation, its much faster than usual port io. And there's no state management or device setup to worry about.
 
-## Useful resources
-
-* https://wiki.osdev.org/Kernel_Debugging
-* https://wiki.osdev.org/Serial_Ports
-* https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU

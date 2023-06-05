@@ -7,7 +7,7 @@ Let's refine some of the previous definitions:
 * *Process*: A process can be thought of as representing a single running program. A program can be multi-threaded, but it is still a single program, running in a single address space and with one set of resources. Resources in this context refer to things like file handles. All of this information is stored in a process control block (PCB).
 * *Thread*: A thread represents an instance of running code. They live within the environment of a process and multiple threads with a process share the same resources, including the address space. This allows them share memory directly to communicate, as opposed to two processes which would need to use some form of IPC (which involves the kernel). While the code a thread is running can be shared, each thread must have it's own stack and context (saved registers).
 
-With these definitions you could create a cross-section of possible scheduler configurations:
+With these definitions is possible to create a cross-section of scheduler configurations:
 
 - *Single Process - Single Thread*: This is how the kernel starts. We have a single set of resources and address space, and only one running thread.
 - *Single Process - Multi Thread*: In reality this is not very useful, but it can be a good stepping stone when developing a scheduler. Here we would have multiple threads running, but all within the same address space.
@@ -22,15 +22,16 @@ We introduced a very basic process control block in the previous chapter:
 typedef struct {
     status_t status;
     cpu_status_t context;
+    process_t *next;
 } process_t;
 ```
 
-While this is functional, there's a few problems:
+While this is functional, there are few problems:
 
 - They can't be easily identified, how do we know the difference between procesess.
-- All processes currently share the same address space, and as a byproduct, the same virtual memory allocator. 
-- We can't keep track of any resources they might be using, like file handles or network sockets.
-- We can't prioritize them, as we don't know which ones are more important.
+- All processes currently share the same address space, and as a byproduct, the same virtual memory allocator.
+- Is not possible to keep track of any resources they might be using, like file handles or network sockets.
+- They can't be prioritized, since we don't know which ones are more important.
 
 We're not going to look at how to solve all of these, but we'll cover the important ones.
 
@@ -48,28 +49,23 @@ typedef struct {
     status_t process_status;
     cpu_status_t context;
     char name[NAME_MAX_LEN];
+    process_t *next;
 } process_t;
 ```
 
-Define `NAME_MAX_LEN` to be a length of your choosing, a good starting place is 64. We've taken the approach of storing the name inside of the control block, but you could also store a pointer to a string on the heap. Using the heap would require more care when using this struct, as you'd have to be sure you managed the memory properly. 
+Decide what value to assign to  `NAME_MAX_LEN`, a good starting place is 64. We've taken the approach of storing the name inside of the control block, but we could also store a pointer to a string on the heap. Using the heap would require more care when using this struct, as we'd have to be sure the memory is managed properly. 
 
-How do we assign pids? We're using to use a bump allocator: which if you'll remember is just a pointer that increases. The next section covers the details of this. It's worth noting that since we're on a 64-bit architecture and using `size_t`, we don't really have to worry about overflowing this simple allocator, as we have 18446744073709551615 possible ids. That's a lot!
+How do we assign pids? We're using to use a bump allocator:  is just a pointer that increases (that should sound familiar). The next section covers the details of this. It's worth noting that since we're on a 64-bit architecture and using `size_t`, we don't really have to worry about overflowing this simple allocator, as we have 18446744073709551615 possible ids. That's a lot!
 
 ### Creating A New Process
 
-Creating a process is pretty trivial. We need a place to store the new `process_t` struct, in our case the static array, but you might have another data struct for it. We'll want a new function that creates a new process for us. We're going to need the starting address for the code we want our process to run, and it can be nice to pass an argument to this starting function.
+Creating a process is pretty trivial. We need a place to store the new `process_t` struct, in our case is a linked list, where is up to us, for a round robin algorithm, we will add it at the end of the list, and it should be done by the `add_process` function mentioned in the previous chapter. We'll want a new function that creates a new process for us. We're going to need the starting address for the code we want our process to run, and it can be nice to pass an argument to this starting function.
 
 ```c
 size_t next_free_pid = 0;
 
 process_t* create_process(char* name, void(*function)(void*), void* arg) {
-    process_t* process;
-    for (size_t i = 0; i < MAX_PROCESSES; i++) {
-        if (processes_list[i] != NULL)
-            continue;
-        process = &processes_list[i];
-        break;
-    }
+    process_t* process = alloc(sizeof(process_t)); // We should have an allocation function available
 
     strncpy(process->name, name, NAME_MAX_LEN);
     process->pid = next_free_pid++;
@@ -82,17 +78,19 @@ process_t* create_process(char* name, void(*function)(void*), void* arg) {
     process->context.rdi = (uint64_t)arg;
     process->context.rbp = 0;
 
+    add_process(process);
+
     return process;
 }
 ```
 
-The above code omits any error handling, but this is left as an exercise to the reader. You may also want to disable interrupts while creating a new process, so that you aren't pre-empted and the half-initialized process starts running.
+The above code omits any error handling, but this is left as an exercise to the reader. We may also want to disable interrupts while creating a new process, so that we aren't pre-empted and the half-initialized process starts running.
 
 Most of what happens in the above function should be familiar, but let's look at `iret_flags` for a moment. The value `0x202` will clear all flags except for bits 2 and 9. Bit 2 is a legacy feature and the manual recommends that it's set, and bit 9 is the interrupts flag. If the interrupt flag is not set when starting a new process, we won't be able to pre-empt it!
 
-We also set `rbp` to 0. This is not strictly required, but it can make debugging easier. If you choose to load and run elf files later on this is the expected set up. Zero is a special value that indicates you have reached the top-most stack frame.
+We also set `rbp` to 0. This is not strictly required, but it can make debugging easier. If we choose to load and run elf files later on this is the expected set up. Zero is a special value that indicates we have reached the top-most stack frame.
 
-The `alloc_stack()` function is a left an exercise to the reader, but it should allocate some memory, and return a pointer to *the top* of the allocated region. 16KiB (4 pages) is a good starting place, although you can always go bigger. Modern systems will allocate around 1MiB per stack.
+The `alloc_stack()` function is a left an exercise to the reader, but it should allocate some memory, and return a pointer to *the top* of the allocated region. 16KiB (4 pages) is a good starting place, although we can always go bigger. Modern systems will allocate around 1MiB per stack.
 
 ### Virtual Memory Allocator
 
@@ -111,6 +109,7 @@ typedef struct {
     cpu_status_t context;
     void* root_page_table;
     char name[NAME_MAX_LEN];
+    process_t *next;
 } process_t;
 ```
 
@@ -136,7 +135,7 @@ Resources are typically implemented as an opaque handle: a resource is given an 
 
 As an example, let's look at opening a file. We wont go over the code for this, as it's beyond the scope of this chapter, but it serves as a familiar example.
 
-When a program goes to open a file, it asks the kernel's VFS (virtual file system) to locate a file by name. Assuming the file exists and can be accessed, the VFS loads the file into memory and keeps track of the buffer holding the loaded file. Let's say this is the 23rd file the VFS has opened, it might be assigned the id 23. You could simply use this id as your resource id, however that is a system-wide id, and not specific to the current process. 
+When a program goes to open a file, it asks the kernel's VFS (virtual file system) to locate a file by name. Assuming the file exists and can be accessed, the VFS loads the file into memory and keeps track of the buffer holding the loaded file. Let's say this is the 23rd file the VFS has opened, it might be assigned the id 23. We could simply use this id as the resource id, however that is a system-wide id, and not specific to the current process. 
 
 Commonly each process holds a table that maps process-specific resource ids to system resource ids. A simple example would be an array, which might look like the following:
 
@@ -166,22 +165,22 @@ Now any further operations on this file can use the returned id to reference thi
 
 ### Priorities
 
-There are many ways to implement priorities, the easiest way to get started is with multiple process queues: one per priority level. Then your scheduler would always check the highest priority queue first, and if there's no threads in the READY state, check the next queue and so on.
+There are many ways to implement priorities, the easiest way to get started is with multiple process queues: one per priority level. Then the scheduler would always check the highest priority queue first, and if there's no threads in the READY state, check the next queue and so on.
 
 ## From Processes To Threads
 
 Let's talk about how threads fit in with the current design. Currently each process is both a process and a thread. We'll need to move some of the fields of the `process_t` struct into a `thread_t` struct, and then maintain a list a threads per-process.
 
-As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can bes one or multiple threads, but a thread always belongs to a single process. 
+As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can be composed by one or multiple threads, but a thread always belongs to a single process. 
 
 Threads within the same process share a lot of things:
 
 - The virtual address space, which is managed by the VMM, so this is included too.
 - Resource handles, like sockets or open files.
 
-Each thread will need it's own stack, and it's own context. That's all that's needed for a thread, but you may want to include fields for a unique id and human-readable name, similar to a process. This brings up the question of do you use the same pool of ids for threads and processes? There's no good answer here, you can, or you can use separate pools. The choice is yours!
+Each thread will need it's own stack, and it's own context. That's all that's needed for a thread, but we may want to include fields for a unique id and human-readable name, similar to a process. This brings up the question of do we use the same pool of ids for threads and processes? There's no good answer here, it is possible, but is also possible to use separate pools. The choice is personal!
 
-We'll also need to keep track of the thread's current status, and you may want some place to keep flags of your own (is it a kernel thread vs user thread etc).
+We'll also need to keep track of the thread's current status, and we may want some place to keep some custom flags (is it a kernel thread vs user thread etc).
 
 ### Changes Required
 
@@ -252,11 +251,12 @@ Let's look at how our `create_process` function would look now:
 
 ```c
 process_t* create_process(char* name) {
-    process_t* process = malloc();
+    process_t* process = alloc(sizeof(process_t));
     process->pid = next_process_id++;
     process->threads = NULL;
     process->root_page_table = vmm_create();
     strncpy(process->name, name, NAME_MAX_LEN);
+    add_process(process)
     return process;
 }
 ```
@@ -267,7 +267,7 @@ The last part is we'll need to update the scheduler to deal with threads instead
 
 That's it! Our scheduler now supports multiple threads and processes. As always there are a number of improvements to be made:
 
-- The `create_process` function could add a default thread, since a process with no threads is not very useful. Or it may not, it depends on your design.
+- The `create_process` function could add a default thread, since a process with no threads is not very useful. Or it may not, it depends on the design.
 - Similarly, `add_thread` could accept `NULL` as the process to add to, and in this case create a new process for the thread instead of returning an error.
 
 ### Exiting A Thread
@@ -276,7 +276,7 @@ After the thread has finished its execution, we'll need a way for it to exit gra
 
 This also places a requirement on the programmer when creating threads: they must call `thread_exit` before the main function used for the thread returns, otherwise we will crash.
 
-We're going to go a step further an implement a wrapper function that will call the thread's main function, and then call `thread_exit` for us. This will only work for kernel threads, but it removes the burden from the programmer. Our wrapper function will look like the following:
+We're going to go a step further and implement a wrapper function that will call the thread's main function, and then call `thread_exit` for us. This will only work for kernel threads, but it removes the burden from the programmer. Our wrapper function will look like the following:
 
 ```c
 void thread_execution_wrapper(void (*function)(void*), void* arg) {
@@ -289,11 +289,12 @@ Now we'll need to modify `create_thread` to make use of our wrapper to make use 
 
 ```c
 thread->context.rip = (uint64_t)thread_execution_wrapper;
+//rdi and rsi are used for argument passing
 thread->context.rdi = (uint64_t)function;
 thread->context.rsi = (uint64_t)arg;
 ```
 
-The implementation of `thread_exit` can look very different depending on what you want to do. In our case we're going to change the thread's status to DEAD. 
+The implementation of `thread_exit` can look very different depending on what we want to do. In our case we're going to change the thread's status to DEAD. 
 
 ```c
 void thread_exit() {
@@ -302,25 +303,23 @@ void thread_exit() {
 }
 ```
 
-At this point you can successfully exit a thread, but the thread's resources are still around. The big one is the thread control block and the stack. You can free these in `thread_exit` but be careful you're not exiting the current thread. If you do, you'll free the stack you're currently using. You could switch to a kernel-only stack here, and then safely free the stack. 
+At this point the thread can exit succesfully, but the thread's resources are still around. The big ones are the thread control block and the stack. They can be freed in the `thread_exit` but be careful we're not exiting the current thread. If we do, we'll free the stack being currently used. We could switch to a kernel-only stack here, and then safely free the stack. 
 
-Alternatively you could place the thread into a 'cleanup queue' that is processed a special thread that frees the resources associated with threads. Since the cleanup thread has it's own stack and resources, you can safely free those in the queued threads.
+Alternatively the thread could be placed into a 'cleanup queue' that is processed by a special thread that frees the resources associated with threads. Since the cleanup thread has it's own stack and resources, we can safely free those in the queued threads.
 
 Another option, which we've chosen here, is to update the thread's status here. Then when the scheduler encounters a thread in the DEAD state, it will free it's resources there.
 
-Note that we use an infinite loop at the end of `thread_exit` since that function cannot return (it would return to the junk after the thread's main function). This will busy-wait until the end of the current quantum, however you could also call the scheduler to reschedule early here.
+Note that we use an infinite loop at the end of `thread_exit` since that function cannot return (it would return to the junk after the thread's main function). This will busy-wait until the end of the current quantum, however we could also call the scheduler to reschedule early here.
 
 #### Last Thread Standing
 
-What about freeing processes? As always there are a few approaches, but the easiest is the check if the thread you're about to free is the last in the process. If it is, the process should be deleted too. 
+What about freeing processes? As always there are a few approaches, but the easiest is the check if the thread that is about to be freed is the last in the process. If it is, the process should be deleted too. 
 
 Cleaning up a process requires significantly more work, tearing down page tables properly, freeing other resources, sometimes there is buffered data to flush. This should be approached with some care, so as not the delete the currently page tables in use.
 
-reschedule after exiting?
-
 ### Thread Sleep
 
-Being able to sleep for an amount of time is very useful. Note that most sleep functions offer a `best effort` approach, and shouldn't be used for accurate time-keeping. Most operating system kernels will provide a more involved, but more accurate time API. Hopefully you'll understand why shortly.
+Being able to sleep for an amount of time is very useful. Note that most sleep functions offer a `best effort` approach, and shouldn't be used for accurate time-keeping. Most operating system kernels will provide a more involved, but more accurate time API. Hopefully why should be more clear shortly.
 
 Putting a thread to sleep is very easy, and we'll just need to add one field to our thread struct:
 
@@ -357,6 +356,6 @@ We've discussed the common approach to writing a scheduler using a periodic time
 
 The main difference is how the scheduler interacts with the timer. A periodic scheduler tells the timer to trigger at a fixed interval, and runs in response to the timer interrupt. A tickless scheduler instead uses a one-shot timer, and set the timer to send an interrupt when the next task switch is due.
 
-At a first glance this may seem like the same thing, but it eliminates unnecessary timer interrupts, when no task switch is occuring. It also removes the idea of a `quantum`, since you can run a thread for any arbitrary amount of time, rather than a number of timer intervals.
+At a first glance this may seem like the same thing, but it eliminates unnecessary timer interrupts, when no task switch is occuring. It also removes the idea of a `quantum`, since we can run a thread for any arbitrary amount of time, rather than a number of timer intervals.
 
 *Authors note: Tickless schedulers are usually seen as more accurrate and operate with less latency than periodic ones, but this comes at the cost of added complexity.*

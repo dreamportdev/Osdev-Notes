@@ -4,7 +4,7 @@ In the previous chapter we have implemented the VFS layer. That will provide us 
 
 ## Introduction
 
-The Tar (standing for Tape ARchive)  format is not a file system (sorry i lied!), it is a a unix's tape archive format. and the acronym USTar is used to identify the posix standard version of it. Although is not a real fs it can be easily used as one in read-only mode. 
+The Tar (standing for Tape ARchive) format is not technically a file system, rather it's an archive format which stores a snapshot of a filesystem. The acronym USTar is used to identify the posix standard version of it. Although is not a real fs it can be easily used as one in read-only mode. 
 
 It was first released on 1979 in Version 7 Unix, there are different tar formats (including historical and current ones) two are codified into standards: *ustar* (the one we will implement), and "pax", also still widely used but not standardized is the GNU Tar format. 
 
@@ -266,4 +266,4 @@ Another limitation of our driver is that it expects for the tar to be fully load
 
 And of course we can implement more file systems from here.
 
-There is no write function too, it can be implemented, but since it has many limitations it is not really a good idea (you can check the standard).
+There is no write function too, it can be implemented, but since it has many limitations it is not really a good idea.

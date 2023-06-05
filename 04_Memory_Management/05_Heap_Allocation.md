@@ -9,20 +9,20 @@ We'll focus on three things: allocating memory (`alloc()`), freeing memory (`fre
 
 ### To Avoid Confusion
 
-The term 'heap' has a few meanings, and if you're coming from a computer science course your first though might be the data structure (specialized tree). That can be used to implement a heap allocator (hence the name), but its not what we're talking about here.
+The term 'heap' has a few meanings, and if coming from a computer science course the first though might be the data structure (specialized tree). That can be used to implement a heap allocator (hence the name), but its not what we're talking about here.
 
 This term when used in a memory management/osdev environment has a different meaning, and it usually refers to the code where memory is _dynamically allocated_ (`malloc()` and friends).
 
 ## A Quick Recap: Allocating Memory
 
-There are many kinds of memory allocators in the osdev world (physical, virtual, and others) with various subtypes (page frame, bitmap, etc ...). For the following section we assume you have the following:
+There are many kinds of memory allocators in the osdev world (physical, virtual, and others) with various subtypes (page frame, bitmap, etc ...). For the next section we assume the following components are present:
 
 - a physical memory allocator.
 - a virtual memory allocator (using paging).
 
-If some of these terms need more explanation, they have articles of their own to explain their purpose and function!
+If some of these terms need more explanation, they have chapters of their own to explain their purpose and function!
 
-Under the assumptions above, what happens under the hood when we want to allocate some memory from the heap?
+With the above assumptions, what happens under the hood when we want to allocate some memory from the heap?
 
 * The heap searches for a suitable address. If one is found returns that address is returned and the algorithm stops there. If it can't find any it will ask the VMM for more space.
 * The VMM will receive the heap's request and ask the PMM a suitable physical page to be allocated to fulfill the heap's request.
@@ -84,7 +84,7 @@ So now we have the following situation:
 |------|------|------|-----|--------|-----|-------|-----|-------|
 |  X   |  X   |  X   |     |   X    |     | cur   |     |       |
 
-Now the third `alloc()` call will work similarly to the others, and you can imagine the results. `
+Now the third `alloc()` call will work similarly to the others, and we can imagine the results. `
 
 What we have so far is already an allocation algorithm, that's easy to implement and very fast! 
 Its implementation is very simple: 
@@ -159,7 +159,7 @@ This new function potentially fixes one of the problems we listed above: it can 
 |------|------|------|-------|-----|--------|------|------|-----|-------|
 |  2   |  X   |  X   |   7   | ... |   X    | cur  |      | ... |       |
 
-*Authors note: just a reminder that the pointer is a uint8_t pointer, so when we are storing the size, the memory cell pointed by cur_heap_position will be of type *uint8_t*, that means that in this example and the followings, the size stored can be maximum 255. In a real allocator you want to support bigger allocations, so using at least a uint32_t or even size_t is recommended.*
+*Authors note: just a reminder that the pointer is a uint8_t pointer, so when we are storing the size, the memory cell pointed by cur_heap_position will be of type *uint8_t*, that means that in this example and the followings, the size stored can be maximum 255. In a real allocator we want to support bigger allocations, so using at least a `uint32_t` or even `size_t` is recommended.*
 
 In this example, the number indicates the size of the allocated block. There have already been 2 memory allocations, with the first of 2 bytes and the second of 7 bytes. Now if we want to iterate from the first to the last item allocated the code will looks like: 
 
@@ -210,8 +210,7 @@ void *third_alloc(size_t size) {
 }
 ```
 
-One thing you might have noticed so far is that for keep track of all those new information we are adding an overhead to our allocator. How big this overhead is depends on the size of the variables we use in the chunk headers (where we store the alloc size and status). Even if we keep things small by only using `uint8_t`, we have already added 2 bytes of overhead for every single allocation. 
-
+One thing that might have been noticed so far is that for keep track of all those new information we are adding an overhead to our allocator. How big this overhead is depends on the size of the variables we use in the chunk headers (where we store the alloc size and status). Even if we keep things small by only using `uint8_t`, we have already added 2 bytes of overhead for every single allocation. 
 The implementation above is not completed yet, since we haven't implemented a mechanism to re-use the freed location but before adding this last piece let's talk about the free. 
 
 Now we know that given a pointer `ptr` (previously allocated from our heap, of course) `ptr - 1` is the status (and should be USED) and `ptr - 2` is the size. 
@@ -346,14 +345,14 @@ Pretty small allocation and we have plenty of space... no wait. The heap is most
 How do we solve this issue? The idea is pretty straightforward, every time a memory location is being freed, we do the following: 
 
 * First check if it is adjacent to to other free locations (both directions: previous and next)
-    * If `ptr_to_be_freed + ptr_to_be_freed_size == next_node` then merge the two nodes and create a single node of `ptr_to_be_freed_size + next_node_size` (notice we don't ned to add the size of Heap_node because ptr should be the address immediately after the struct). 
-    * If `prev_node_address + prev_node_size + sizeof(Heap_Node) == ptr_to_be_freed` then merge the two nodes and create a single node of `prev_node_size + ptr_to_be_freed_size`
+    * If `ptr_to_free + ptr_to_free_size == next_node` then merge the two nodes and create a single node of `ptr_to_free_size + next_node_size` (notice we don't ned to add the size of `Heap_node` because `ptr` should be the address immediately after the struct). 
+    * If `prev_node_address + prev_node_size + sizeof(Heap_Node) == ptr_to_free` then merge the two nodes and create a single node of `prev_node_size + ptr_to_free_size`
 * If not just mark this location as free.
 
 There are different ways to implement this: 
 
-* Adding a next and prev pointer to the node structure. This is the way we'll use in the rest of this article. This makes checking the next and previous nodes for mergability very easy. It does dramatically increase the memeory overhead. Checking if a node can be merged can be done via `(cur_node->prev).status = FREE` and `(next_node->next).status = FREE`.
-* Otherwise without adding the next and prev pointer to the node, we can scan the heap from the start until the node before `ptr_to_be_freed`, and if is free we can merge. For the next node instead things are easier: we just need to check if the node starting at `ptr_to_be_freed + ptr_size` if it is free is possible to merge. By comparison this increases the runtime overhead of `free()`.
+* Adding a `next` and `prev` pointer to the node structure. This is the way we'll use in the rest of this chapter. This makes checking the next and previous nodes for mergability very easy. It does dramatically increase the memeory overhead. Checking if a node can be merged can be done via `(cur_node->prev).status = FREE` and `(next_node->next).status = FREE`.
+* Otherwise without adding the next and prev pointer to the node, we can scan the heap from the start until the node before `ptr_to_free`, and if is free we can merge. For the next node instead things are easier: we just need to check if the node starting at `ptr_to_free + ptr_size` if it is free is possible to merge. By comparison this increases the runtime overhead of `free()`.
 
 Both solutions have their own pros and cons, like previously mentioned we'll go with the first one for these examples. Adding the `prev` and `next` pointers to the heap node struct leaves us with:
 
@@ -384,7 +383,7 @@ Referring to the next node:
 
 Of course merging with the right node is the opposite (update the size and the prev pointer of cur_node->next and update the next pointer of cur_node->next).
 
-**Important note:** You always want to merge in the order of `current + next` and then `prev + current` as if the prev node absorbs current, what happens to the memory owned by the next node when you merge with it? Nothing, it's simply lost. You can get around this with clever and careful logic, but the simpler solution is to simply merge in the right order. 
+**Important note:** We always want to merge in the order of `current + next` and then `prev + current` as if the prev node absorbs current, what happens to the memory owned by the next node when merged with it? Nothing, it's simply lost. It can be avoided with clever and careful logic, but the simpler solution is to simply merge in the right order. 
 
 Below a pseudo-code example of how to merge left: 
 
@@ -442,8 +441,8 @@ The workflow will be the following:
 * Find the first node that is big enough to contain the incoming request.
 * Create a new node at the address `(uintptr_t)cur_node + requested_bytes`. Set this node's size to `cur_node->size - requested_bytes - sizeof(Heap_Node)`, we're substracting the size of the Heap_Node struct here because we're going to use some memory in the heap to store this new node. This is the process of inserting into the heap.
 * `cut_node->size` should now be the requested size.
-* In our example we're using a doubly-linked list (i.e. both forward and back), so you'll need to update the current node and the next node's pointers to include this new node (update it's pointers too).
-* One edge case to be aware of here is if node that was split was the last node of the heap, you'll want to update your `heap_tail` variable, if you're using one.
+* In our example we're using a doubly-linked list (i.e. both forward and back), so we'll need to update the current node and the next node's pointers to include this new node (update it's pointers too).
+* One edge case to be aware of here is if node that was split was the last node of the heap, The `heap_tail` variable should be updated as well, if it is being used (this depend on design decisions).
 
 
 After that the allocator can compute the address to return using `(uintptr_t)cur_node + sizeof(Heap_node)`, since we want to return the memory *after* the node, not the node itself (otherwise the program would put data there and overwrite what we've stored there!).
@@ -451,14 +450,14 @@ After that the allocator can compute the address to return using `(uintptr_t)cur
 Before wrapping up there's a few things worth pointing out about implementing splitting: 
 
 * Remember that every node has some overhead, so when splitting we shouldn't have nodes smaller (or equal to) than `sizeof(Heap_Node)`, because otherwise they will never be allocated.
-* It's a good idea to have a minimum size for the memory a chunk can contain, to avoid having a large number of nodes and for easy alignment later on. For example if the minimum_allocable_size is 0x20 bytes, and we want to allocate 5 bytes, we will still receive a memory block of 0x20 bytes. The program may not know it was returned 0x20 bytes, but that is okay. What exactly you set this value to is implementatin specific, values of 0x10 and 0x20 are popular.
-* Always remember that there is the memory footprint of `sizeof(Heap_Node)` bytes while computing sizes that involve multiple nodes. If you decide to include the overhead size in the node's size, remember to also subtract it when checking for suitable nodes.
+* It's a good idea to have a minimum size for the memory a chunk can contain, to avoid having a large number of nodes and for easy alignment later on. For example if the minimum_allocable_size is 0x20 bytes, and we want to allocate 5 bytes, we will still receive a memory block of `0x20` bytes. The program may not know it was returned `0x20` bytes, but that is okay. What exactly value should be used for it is implementatin specific, values of `0x10` and `0x20` are popular.
+* Always remember that there is the memory footprint of `sizeof(Heap_Node)` bytes while computing sizes that involve multiple nodes. If we decide to include the overhead size in the node's size, remember to also subtract it when checking for suitable nodes.
 
 And that's it!
 
 ### Part 7: Heap Initialization
 
-Each heap will likely have different requires for how it's initialized, depending on whether it's a heap for a user program, or it's running as part of a kernel. For a userspace program heap you may want to allocate a bigger initial size if you know the program will need it. As your operating system grows you will have more instances of the heap (usually at least one per program + global kernel heap), and it becomes important to keep track of all the memory used by these heaps. This is often a job that the VMM for a process will take on.
+Each heap will likely have different requires for how it's initialized, depending on whether it's a heap for a user program, or it's running as part of a kernel. For a userspace program heap we may want to allocate a bigger initial size if we know the program will need it. As the operating system grows there will be more instances of the heap (usually at least one per program + global kernel heap), and it becomes important to keep track of all the memory used by these heaps. This is often a job that the VMM for a process will take on.
 
 What is really needed to initialize a heap is an initial size (for example 8k), and to create a single starting node: 
 
@@ -481,9 +480,9 @@ Now the question is, how do we choose the starting address? This really is arbit
 * Some memory is used by the kernel, we don't want to overwrite anything with our heap, so let's keep sure that the area we are going is free.
 * Usually when paging is enabled, in many case the kernel is moved to one half of the memory space (usually referred as to HIGHER_HALF and LOWER_HALF) so when deciding the initial address we should place it in the correct half, so if the kernel is placed in the HIGHER and we are implementing the kernel heap it should go on the HIGHER Half and if it is for the user space heap it will goes on the LOWER half.
 
-For the kernel heap, a good place for it to start is immediately following the kernel binary in memory. If your kernel is loaded at 0xFFFF'FFFF'8000'0000 as is common for higher half kernels, and your kernel is 0x4321 bytes long. You can round up to the nearest page and then add another page (0x4321 gets rounded to -> 0x5000, add 0x1000 now we're at 0x6000). Therefore our kernel heap would start at 0xFFFF'FFFF'8000'6000. 
+For the kernel heap, a good place for it to start is immediately following the kernel binary in memory. If the kernel is loaded at `0xFFFFFFFF80000000` as is common for higher half kernels, and the kernel is `0x4321` bytes long. It round up to the nearest page and then add another page (`0x4321` gets rounded to `0x5000`, add `0x1000` now we're at `0x6000`). Therefore our kernel heap would start at `0xFFFFFFFF80006000`. 
 
-The reason for the empty page is that you can leave it unmapped, and then any buggy code that attempts to access memory *before* the heap will likely cause a page fault, rather then returning bits of the kernel.
+The reason for the empty page is that it can be left unmapped, and then any buggy code that attempts to access memory *before* the heap will likely cause a page fault, rather then returning bits of the kernel.
 
 And that's it, that is how the heap is initialized with a single node. The first allocation will trigger a split from that node... and so on...
 
@@ -500,5 +499,5 @@ Here is where the virtual memory manager will join the game. Roughly what will  
 
 And with that we're just written a fairly complete heap allocator. 
 
-A final note: in these examples we're not zeroing the memory returned by the heap, which languages like C++ may expect when `new` and `delete` operators are used. This can lead to non-deterministic bugs where objects may be initialized with left over values from previous allocations (if the memory has been used before), and suddenly default construction is not doing what you expect.
-Doing a `memset()` on each block of memory you return does cost cpu time, so its a trade off, a decision to be made for your specific implementation.
+A final note: in these examples we're not zeroing the memory returned by the heap, which languages like C++ may expect when `new` and `delete` operators are used. This can lead to non-deterministic bugs where objects may be initialized with left over values from previous allocations (if the memory has been used before), and suddenly default construction is not doing what is expected.
+Doing a `memset()` on each block of memory returned does cost cpu time, so its a trade off, a decision to be made for your specific implementation.

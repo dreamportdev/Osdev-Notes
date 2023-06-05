@@ -4,10 +4,10 @@ During the development of our kernel we will need to debug a lot, and checking a
 
 This is where the serial logging came to an aid, we will use the serial port to output our text and numbers. 
 
-Many emulators has an option to redirect serial data to a file, if you are using QEmu (for more information about it refer to the Appendices section) you need to start it passing the parameter *-s filename*:
+Many emulators has an option to redirect serial data to a file, if we are using QEmu (for more information about it refer to the Appendices section) we need to start it passing the parameter *-serial file:filename*:
 
 ```bash
-qemu -S filename.log -cdrom yourosiso
+qemu -serial file:filename.log -cdrom yourosiso
 ```
 
 This will save the serial output on the file called `filename.log`, if we want the serial output directly on the screen, we can use `stdio` instead.
@@ -96,18 +96,18 @@ Once we are able to print strings is time to print digits. The basic idea is sim
 
 How to get the single digits will depend on what base we are using (the most common are base 8, 10 and 16), let's assume we want for now just print decimals (base 10). 
 
-To get decimal strings we will use a property of division by 10: _The remainder of any integer number divided by 10 is always the same as the least significant digit. _
+To get decimal strings we will use a property of division by 10: _The remainder of any integer number divided by 10 is always the same as the least significant digit._
 
-As an example consider the number 1235:  $1235/10=123.5$ and $1235 \mod 10=5$, remember that in C (and other programming languages) a division between integers will ignore any decimal digit, so this means that $1235=123$. And what if now we divide 123 by 10? yes we get 3 as remainder, below the full list of divisions for the number 1235:
+As an example consider the number 1235:  $1235/10=123.5$ and $1235 \mod 10=5$, remember that in C (and other programming languages) a division between integers will ignore any decimal digit, so this means that $1235/10=123$. And what if now we divide 123 by 10? yes we get 3 as remainder, below the full list of divisions for the number 1235:
 
 * $1235/10 = 123$ and $1235 \mod 10 = 5$
 * $123/10 = 12$ and $123 \mod 10 = 3$
 * $12/10 = 1$ and $12 \mod10 = 2$
 * $1/10 = 0$  and $1 \mod 10 = 1$
 
-And as you can see we got all the digits in reverse order, so now the only thing we need to do is reverse the them. The implementation of this function should be now pretty straightforward, and it will be left as exercise. 
+And as we can see we got all the digits in reverse order, so now the only thing we need to do is reverse the them. The implementation of this function should be now pretty straightforward, and it will be left as exercise. 
 
-Printing other format like Hex or Octal is little bit different, but the base idea of getting the single number and converting it into a character is similar. The only tricky thing with the hex number is that now we have symbols for numbers between 10 and 15 that are characters, and they are before the digits simbol in the ascii map, but once that is know is going to be just an if statement in our function. 
+Printing other format like Hex or Octal is little bit different, but the base idea of getting the single number and converting it into a character is similar. The only tricky thing with the hex number is that now we have symbols for numbers between 10 and 15 that are characters, and they are before the digits symbol in the ascii map, but once that is known it is going to be just an if statement in our function. 
  
 ### Troubleshooting
 
@@ -116,4 +116,3 @@ If the output to serial is not working, there is no output in the log, try to re
 ```C
 outb(PORT + 4, 0x1E);    // Set in loopback mode, test the serial chip 
 ```
-

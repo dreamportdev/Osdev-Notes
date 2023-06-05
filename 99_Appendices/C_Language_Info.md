@@ -5,7 +5,7 @@
 Memory Addresses are expressed using numbers, so pointers are basically numbers, that means that we can 
 do some basic arithmetic with them. 
 
-With pointers we have 4 basic operations that can be done: ++, +, -- and - 
+With pointers we have 4 basic operations that can be done: `++, +, --` and `-` 
 
 For example let's say that we have a variable **ptr** that points to an **uint32_t** location. 
 
@@ -19,17 +19,17 @@ This means that we have a 32 bit integer, which is 4 bytes, stored at the addres
 
 Let's see now how does the arithmetic operations above works: 
 
-* **ptr++**: increment the pointer to its next value, that is 1 * sizeof(uint32_t) = 4 bytes. That because the pointer is an uint32_t. If the pointer is a char, the next location is given by: 1 * sizeof(char) = 1 byte
-* **ptr+a**, it increment the pointer of a * sizeof(uint32_t) = a * 4 bytes
+* **ptr++**: increment the pointer to its next value, that is `1 * sizeof(uint32_t) = 4` bytes. That because the pointer is an `uint32_t`. If the pointer is a `char`, the next location is given by: `1 * sizeof(char) = 1` byte
+* **ptr+a**, it increment the pointer of `a * sizeof(uint32_t) = a * 4` bytes
 * **ptr--** and **ptr-a**: the same rule of the above cases apply for the decrement and subtraction.
 
-So basically the result of the arithmetic operation depends on the size of the variable the pointers point to, an the general rule is:
+The result of the arithmetic operation depends on the size of the variable the pointers point to, and the general rule is:
 
 ```c
 x * sizeof(variable_type)
 ```
 
-Pointers can be compared too, with the operators: ==, <=, >=, <.>, of course the comparison is based  on the address contained in the pointer. 
+Pointers can be compared too, with the operators: `==, <=, >=, <, >`, of course the comparison is based  on the address contained in the pointer. 
 
 ## Inline assembly  
 
@@ -44,8 +44,8 @@ asm("assembly_template"
 ```
 
 * Every line of assembly code should terminate with: **;**
-* Clobbered registers can usually be left empty. However if you use an instruction like `rdmsr` which places data in registers without the compiler knowing, you'll want to mark those are clobbered. If you specify eax/edx as output operands, the compiler is smart enough to work this out.
-* One special clobber exists: "memory". This is a read/write barrier. It tells the compiler you've accessed memory other than what was specified as input/ouput operands. The cause of many optimization issues!
+* Clobbered registers can usually be left empty. However if we use an instruction like `rdmsr` which places data in registers without the compiler knowing, we'll want to mark those are clobbered. If we specify eax/edx as output operands, the compiler is smart enough to work this out.
+* One special clobber exists: "memory". This is a read/write barrier. It tells the compiler we've accessed memory other than what was specified as input/ouput operands. The cause of many optimization issues!
 * For every operand type there can be more than one, in this case they must be comma separated.
 * Every operand consists of a constraint and c expression pair. A constrait can also have a modifier itself 
 * Operands parameters are indicated with an increasing number prefixed by a %, so the first operand declared is %0, the second is %1, etc. And the order they appears in the output/input operands section represent their numbering
@@ -109,7 +109,7 @@ being pushed first. Stack pushes are 32 bits wide, so smaller values are sign ex
 Return values are left in `eax`, and functions are expected to be called with the `call` instruction, which pushes the current `rip` onto the stack, 
 so the callee can use `ret` to pop the saved instruction pointer, and return to caller function.
 The callee function also usually creates a new 'stack frame' by pushing `ebp` onto the stack, and then setting `ebp = esp`.
-The callee must undo this before returning. This allows things like easily walking a call stack, and looking at the local variables if you have debug info.
+The callee must undo this before returning. This allows things like easily walking a call stack, and looking at the local variables if we have debug info.
 The caller is expected to save eax, ecx and edx if they have values stored there. All other functions are expected to be maintained by the callee function if used.
 
 For x86_64 (64 bit), function calling is a little more complicated. 
@@ -123,11 +123,11 @@ This area is reserved by the compiler for *stuff*. What it does here is unspecif
 ### How to actually use this?
 There's 2 parts: 
 
-To call c functions from assembly, you'll need to make use of the above info, making sure the correct values are they need to be.
+To call c functions from assembly, we'll need to make use of the above info, making sure the correct values are they need to be.
 It's worth noting that a pointer argument is just an integer that contains the memory address of what it's pointing to. 
 These are passed as integer args (registers, than the first if not enough space).
 
-To call an assembly function from C is pretty straight forward. If your assembly function takes arguments in the way described above, you can define a c prototype marked as `extern`, 
+To call an assembly function from C is pretty straight forward. If our assembly function takes arguments in the way described above, we can define a c prototype marked as `extern`, 
 and call it like any other function. In this case it's worth respecting the calling convention, and creating a new stack frame (`enter/leave` instructions).
 Any value placed in `eax/rax` will be returned from the c-function if it has a return type. It is otherwise ignored.
 
@@ -139,13 +139,13 @@ I'm not interested in that, and instead will explain how I've found it a useful 
 ### The Why
 A bit of background on why it can be necessary first:
 
-Compilers treat your program's source code as a description of what you want the executable to do. As long as the final executable affects external resources in the way that your code describes, the compiler's job is done. It makes certain promises about data layouts in memory (fields are always laid out in the order declared in source), but not about others (what data is cached, stored in a register or stored in cold memory). The exact code that actually runs on the cpu can be as different the compiler deems necessary, as long as the end result is as expected.
+Compilers treat our program's source code as a description of what we want the executable to do. As long as the final executable affects external resources in the way that our code describes, the compiler's job is done. It makes certain promises about data layouts in memory (fields are always laid out in the order declared in source), but not about others (what data is cached, stored in a register or stored in cold memory). The exact code that actually runs on the cpu can be as different the compiler deems necessary, as long as the end result is as expected.
 
 Suddenly there's a lot of uncertainties about where data is actually stored at runtime. For example a local variable is likely loaded from ram into a register, and than only accessed in the register for the duration of that chunk of code, before finally being written back to memory when no longer needed. This is done because registers have access times orders of magnitude faster than memory.
 
 Some variables never even exist in memory, and are only stored in registers.
 
-Caching then adds more layers of complexity to this. Of course you can invalidate cache lines manually, however you'll pretty quickly find yourself fighting your compiler going this route. Best to stick to language constructs if you can.
+Caching then adds more layers of complexity to this. Of course we can invalidate cache lines manually, however we'll pretty quickly find ourselves fighting our compiler going this route. Best to stick to language constructs if we can.
 
 ## The How
 `volatile` tells the compiler 'this variable is now observable behaviour', meaning it can still do clever tricks around this variable, but *at any point* the variable must exist in the exact state as described by the source code, in the expected location (ram, not a cpu register). Meaning that updates to the variable are written to memory immediately.
@@ -182,7 +182,7 @@ void calibrate_apic_timer()]
 }
 ```
 
-The issue with this example is that `pit_ticks` is being constantly accessed inside the loop, and we never modify it inside the loop (its modified in unrelated code, the interrupt handler). With optmizations enabled the compiler will deduce that pit_ticks will always be its initial value, and will always be its initial value of 0, therefore the loop is infinite. If we change the variable declaration to be `volatile uint64_t pit_ticks` the compiler assumes nothing, and that this variable can be modified at *any time*.
+The issue with this example is that `pit_ticks` is being constantly accessed inside the loop, and we never modify it inside the loop (its modified in unrelated code, the interrupt handler). With optmizations enabled the compiler will deduce that `pit_ticks` will always be its initial value, and will always be its initial value of 0, therefore the loop is infinite. If we change the variable declaration to be `volatile uint64_t pit_ticks` the compiler assumes nothing, and that this variable can be modified at *any time*.
 
 Therefore it must do a valid read from memory each time it accesses the variable. This causes the above code to work as expected, although with increased latency, as memory must be accessed each cycle of the loop.
 
@@ -195,10 +195,10 @@ Another example would be an mmio based framebuffer on x86. Normally this results
 
 However in this case, the platform has a built in solution to this problem: write-combine cache mode.
 
-If you havent dealt with caching yet, each page can have a set of caching attributes applied to it. These are designed to greatly improve performance in certain situations, however they are specific in application.
+If unfamiliar with caching, each page can have a set of caching attributes applied to it. These are designed to greatly improve performance in certain situations, however they are specific in application.
 One of these is write-combine. It works by queueing up writes to nearby areas of memory, until a buffer is full, and then flushing them to main memory in a single access. This is much faster than accessing main memory each write.
 
-However if you're working with an older x86 cpu, or another platform, this solution is not available. Hence `volatile` would do the job.
+However if we're working with an older x86 cpu, or another platform, this solution is not available. Hence `volatile` would do the job.
 
 ### Useful Links
 
