@@ -20,7 +20,7 @@ We will cover the following topics:
 Each of the layers has a dedicated section below, however we'll start with a high level look at how they fit together. Before proceeding let's briefly define the concepts above: 
 
 | Memory Management Layer | Description |
-|-----------------------------------------|-------------|
+|---|---|
 | Physical Memory Manager | Responsible for keeping track of which parts of the available hardware memory (usually ram) are free/in-use. It usually allocates in fixed size blocks, the native page size. This is 4096 bytes on x86.|
 | Paging | It introduces the concepts of *virtual memory* and *virtual addresses*, providing the OS with a bigger address space, protection to the data and code in its pages, and isolation between programs. | 
 | Virtual memory manager | For a lot of projects, the VMM and paging will be the same thing. However the VMM should be seen as the virtual memory *manager*, and paging is just one tool that it uses to accomplish its job: ensuring that a program has memory where it needs it, when it needs it. Often this is just mapping physical ram to the requested virtual address (via paging or segmentation), but it can evolve into stealing pages from other processes. |
@@ -34,6 +34,7 @@ Each of the layers has a dedicated section below, however we'll start with a hig
 - Is responsible for protecting non-usable memory regions from being used as general memory (mmio, acpi or bootloader memory).
 
 ## VMM - Virtual Memory Manager
+
 - Exists per process/running program.
 - Sets up an environment where the program can happily run code at whatever addresses it needs, and access data where it needs too.
 - The VMM can be thought of a black-box to user programs, we ask it for an address and it 'just works', returning memory where needed. It can use several tools to accomplish this job:
@@ -45,6 +46,7 @@ Each of the layers has a dedicated section below, however we'll start with a hig
 - Can present other resources via virtual memory to simplify their interface, like memory mapping a file or inter-process communication.
 
 ## Heap Allocator
+
 - At least one per process/running program. 
 - Can be chained! Some designs are faster for specific tasks, and often will operate on top of each other.
 - Can exist in kernel or user space.
@@ -64,7 +66,7 @@ char *a = alloc(5);
 
 What happens under the hood? 
 
-1. The alloc request asks the heap for pointer to an area of 5 bytes.
+1. The alloc request the heap for pointer to an area of 5 bytes.
 2. The heap allocator searches for a region big enough for 5 bytes, if available in the current heap. If so, no need to dig down further, just return what was found. However if the current heap doesn't contain an area of 5 bytes that can be returned, it will need to expand. So it asks for more space from the VMM. Remember: the *addresses returned by the heap are all virtual*.
 3. The VMM will allocate a region of virtual memory big enough for the new heap expansion. It then asks the physical memory manager for a new physical page to map there.
 4. Lastly a new physical page from the PMM will be mapped to the VMM (using paging for example). Now the VMM will provide the heap with the extra space it needed, and the heap can return an address using this new space.
