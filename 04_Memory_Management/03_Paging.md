@@ -24,63 +24,63 @@ What are those directories and tables? Let's start from the tables:
 A special register, `CR3` contains the address of the root page directory. This register has the following format:
 
 * bits from 12 to 63 (31 if we are in running a 32 bit kernel) are the address of the root page directory.
-* bits 0 to 12 change their meaning depending on the value of bit 14 in CR4, but in this section and for our purpose are not relevant anyway, so they can be left as 0.
+* bits 0 to 12 change their meaning depending on the value of bit 14 in CR4, but in this chapter and for our purpose are not relevant anyway, so they can be left as 0.
 
-Sometimes CR3 (although technically it's just the data from bits 12+) are referred to as the PDBR, short for page directory base address.
+Sometimes CR3 (although technically it's just the data from bits 12+) are referred to as the PDBR, short for Page Directory Base address.
 
 ### Virtual (or Logical) Address
 
-A virtual address is what a running program sees. Thats any program: a driver, user application or the kernel itself. In the kernel, often a virtual address will map to the same physical address. This is called identity mapping. This is not always the case though.
+A virtual address is what a running program sees. Thats any program: a driver, user application or the kernel itself. In the kernel, often a virtual address will map to the same physical address, it is called `identity mapping`, but this is not always the case though, we can also have the same physical address that maps to different virtual addresses.
 
-A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows how address translation works: 
+A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows with an example how address translation works: 
 
 ![Address Translation](/Images/addrtranslation.png)
 
+The _memory page_ in the picture refers to a physical memory page. Using logical address and paging, we can introduce a whole new address space that can be much bigger of the available physical memory.
 
-Using logical address and paging, we can introduce a new address space that can be much bigger of the available physical memory.
 
-
-For example: 
-
-```c
-phys(0x12'3456) = virt(0xFFF'F234'5235)
-```
-
-In x86 this mapping is achieved through the usage of several hierarchical tables, with  each item in one level pointing to the next level table. 
-A virtual address is a composition of entry number for each level of the tables. So for example assume that we have 3 levels, and 32 bits a address assuming address translation used in the picture above:
+For example we can have that:
 
 ```c
-virtaddress = 0x2F88'0120
+phys(0x123'456) = virt(0xFFF'F234'5235)
 ```
 
-Now we know that the bits: 
+Meaning that the virtual address `0xFFFF2345235` refers to the phyisical address `0x123456`.
 
-* 0 to 5 are the offset.
-* 6 to 13 are the page table entry.
-* 14 to 21 are the page directory level 1 entry.
-* 21 to 31 are the page directory level 2 entry.
+This mapping is usually achieved through the usage of several hierarchical tables, with each item in one level pointing to the next level table. As already mentioned above a virtual address is a composition of _entry numbers_ for each level of the tables. Now let's assume for example that we have 3 levels paging, 32 bits addressing and the address translation mechanism used is the one in the picture above, and we have the virtual address below:
 
-We can translate the abbove address to: 
+```c
+virtaddress = 0x2F880120
+```
+
+Looking at the picture above we know that the bits:
+
+* _0 to 5_ represent the offset (for offset we mean what location we want to access within the physical memory page).
+* _6 to 13_ are the page table entry.
+* _14 to 21_ are the page directory level 1 entry.
+* _21 to 31_ are the page directory level 2 entry.
+
+We can translate the above address to: 
 
 * Offset:  0x20 bytes into page.
 * Page Table entry: number 0x4 (it points to the memory page).
 * Page Dir 1 entry: 0x20 (it points to a page table).
 * Page Dir 2 entry: 0xBE (it points to a page dir 1).
 
-The above example is just an imaginary translation mechanism, we'll discuss the actual x86_64 4-level paging below.
+The above example is just an imaginary translation mechanism, we'll discuss the actual `x86_64` 4-level paging below. If we are wondering how the first page directory can be accessed, this will be clear later, but the answer is that there is usually a special register that contains the base address of the root page directory (in this example page dir 1).
 
 ## Paging in Long Mode 
 
 In 64 bit mode we have up to 4 levels of page tables. The number depends on the size we want to assign to each page. 
-It's worth noting that newer cpus do support a feature called la57 (large addressing using 57-bits), this just adds another layer of page tables on top the existing 4 to allow for a larger address space. It's a cool feature, but not really required unless you're using crazy amounts of memory.
+It's worth noting that newer cpus do support a feature called _la57_ (large addressing using 57-bits), this just adds another layer of page tables on top the existing 4 to allow for a larger address space. It's a cool feature, but not really required unless we're using crazy amounts of memory.
 
 There are 3 possible scenarios: 
 
 * 4kib Pages: We are going to use all 4 levels, so the address will be composed of all the 4 table entries.
-* 2Mib Pages: in the case we only need 3 page levels.
+* 2Mib Pages: in this case we only need 3 page levels.
 * 1Gib Pages: Only 2 levels are needed.
 
-To implement paging, is strongly reccomended to have implemented interrupts too, specifically handling #PF (vcetor 0xd).
+To implement paging, is strongly reccomended to have already implemented interrupts too, specifically handling #PF (vector 0xd).
 
 The 4 levels of page directories/tables are: 
 
@@ -89,12 +89,12 @@ The 4 levels of page directories/tables are:
 * the Page-Directory Table (PD),
 * and the Page Table (PT).
 
-The number of levels depend on the size of the pages chosen. 
-If we are using 4kb pages then we will have: PML4, PDPR, PD, PT, while if we go for 2mb Pages we have only PML4, PDPR, PD. 1gb pages would only use the PML4 and PDPR.
+The number of levels depend on the size of the pages chosen.
+If we are using `4Kib` pages then we will have: PML4, PDPR, PD, PT, while if we go for `2Mib` Pages we have only PML4, PDPR, PD, and finally `1Gib` pages would only use the PML4 and PDPR.
 
 ## Page Directories and Table Structure
 
-As we have seen earlier in this section, when paging is enabled, a virtual address is translated into a set of entry numbers in different tables. In this paragraph we will see the different types available for them.
+As we have seen earlier in this chapter, when paging is enabled, a virtual address is translated into a set of entry numbers in different tables. In this paragraph we will see the different types available for them on the `x86_64` architecture.
 
 But before proceeding with the details let's see some of the characteristics common between all table/directory types: 
 
@@ -113,11 +113,40 @@ The hierarchy of the tables is:
 * Page table (PT): every entry in the page table points to a 4k memory page.
 
 Is important to note that the x86_64 architecture support mixing page sizes.
-Let's have a look at the common parts between all of the entries in these tables, and look at what they mean.
+
+In the following paragraphs we will have a look with more detail at how the paging is enabled and the common parts between all of the entries in these tables, and look at what they mean.
+
+### Loading the root table and enable paging
+
+Until now we have explained how address translation works now let's see how the Root Table is loaded (in `x86_64` is PML4), this is done by loading the special register `CR3`, also known as `PDBR`, we introduced it at the beginning of the chapter, and is contents is basically the base address of our PML4 table. This can be easily done with two lines of assembly:
+
+```x86asm
+   mov eax, PML4_BASE_ADDRESS
+   mov cr3, eax
+```
+
+The first `mov` is needed because cr3 can be loaded only from another register. Keep in mind that in order to enter long mode we should have already paging enabled, so the first page tables should be loaded very early in the boot process. Once enabled we can change the content of `CR3` to load a new addressing space.
+
+This can be done using inline assembly too: 
+
+```c
+void load_cr3( void* cr3_value ) {
+    asm volatile("mov %0, %%cr3" :: "r"((uint64_t)cr3_value) : "memory");
+}
+```
+
+The inline assembly syntax will be explained in one of the appendices chapter: [C Language Info](../99_Appendices/C_Language_Info.md). The `mov` into a register her is hidden, by the lable `"r"` in front of the variable `cr3_value`, this label indicate that the variable value should be put into a register. 
+
+The bits that we need to set in order to have paging enabled in long mode are in order the: `PAE` Page Address Extension, bit number 5 in CR4, the `LME` Long Mode Enable Bit (Bit 8 in EFER, and has to be loaded with the `rdmsr`/`wrmsr` instructions), and finally the `PG` Paging bit number 31 in `cr0`.
+
+Every time we need to change a value of a system register, `cr*`, and similar we must always load the current value first and update it's content, otherwise we can run into troubles. And finally the Paging bit must be the last to be enabled.
+
+Setting those bits must be done only once at early stages of boot process (probably one of the first thing we do).
+
 
 ### PML4 & PDPR & PD
 
-PML4 and PDPR entry structure are identical, while the PD one has few differences. Let's begin by looking at the structure of the first two types: 
+PML4 and PDPR entry structures are identical, while the PD one has few differences. Let's begin by looking at the structure of the first two types:
 
 |63     | 62        | 51 ... 40            | 39 ... 12              | 11  ...  9 |
 |-------|-----------|----------------------|------------------------|------------|
@@ -155,12 +184,12 @@ In this table there are 3 new bits (D, PAT, G) and the page base address, as alr
 
 In the next section we will go through the fields of an entry.
 
-### Page Table Entry Fields
+### Page Table/Directory Entry Fields
 
 Below is a list of all the fields present in the table entries, with an explanation of the most commonly used.
 
 * **P** (Present): If set this tells the CPU that this entry is valid, and can be used for translation. Otherwise translation stops here, and results in a page fault. 
-* **R/W** (Read/Write): Pages are always readable, setting this flag allows writing to memory via this virtual address. Otherwise an attempt to write to memory while this bit is cleared results in a page fault. Reminder that these bits also affect the child tables. So if you mark a pml4 entry as read-only, any address that gets translated through that will be read only, even if the entries in the tables below it have this bit set.
+* **R/W** (Read/Write): Pages are always readable, setting this flag allows writing to memory via this virtual address. Otherwise an attempt to write to memory while this bit is cleared results in a page fault. Reminder that these bits also affect the child tables. So if a pml4 entry is marked as read-only, any address that gets translated through that will be read only, even if the entries in the tables below it have this bit set.
 * **User/Supervisor**: It describes the privilege level required to access this address. If clear the page has the supervisor level, while if it is set the level is user. The cpu identifies supervisor/user level by checking the CPL (current protection level, set by the segment registers). If it is less than 3 then the accesses are made in supervisor mode, if it's equal to 3 they are made in user mode.
 * **PWT** (Page Level Write Through): Controls the caching policy (write-through or write-back). I usually leave it to 0, for more information refer to the Intel Developer Manuals.
 * **PCD** (Page Level Cache Disable): Controls the caching of individual pages or tables. I usually leave it to 0, for more information refer to the Intel Developer Manuals.
@@ -237,17 +266,73 @@ The meanings of these bits are expanded below:
 * Bit 1: set if the false was caused by a write, otherwise it was a read. 
 * Bit 0: set if a protection violation caused the fault, otherwise it means translation failed due to a non present page.
 
-## Recursion
+## Accessing Page Tables and Physical Memory
 
-There are few things to take in account when trying to access paging structures using the recursion technique for x86_64 architecture:
+### Recursive Paging
 
-* When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l).
-* Always remember to add the sign extension part (otherwise you will obtain a #GP).
+One of the problems that we face while enabling _paging_ is of how to access the page directories and table, in case we need to access them, and especially when we need to map a new physical address. 
 
-A few examples of recursive addresses: 
+There are two ways to achieve it: 
+
+* Having all the phyisical memory mapped somewhere in the virtual addressing space (probably in the _Higher Half_, in this case we should be able to retrieve all the tables easily, by just adding a prefix to the physical address of the table. 
+* Using a tecnique called _recursion_, where access the tables using special virtual addresses. 
+
+To use the recursion the only thing we need to do, is reserve an entry in the _root_ page directory (`PML4` in our case) and make its base address to point to the directory itsef.
+
+A good idea is to pick a number high enough, that will not interfer with other kernel/hardware special addresses. For example let's use the entry `510` for the recurisve item 
+
+Creating the self reference is pretty straightforward, we just need to use the directory physical address as the base address for the entry being created:
+
+```c
+pml4[510l] = pml4_physical_address | PRESENT | WRITE;
+```
+
+This should be done again when setting up paging, on early boot stages. 
+
+Now as we have seen above address translation will split the `virtual address` in entry numbers for the different tables, starting from the leftmost (the root). So now if we have for example the following address: 
+
+```c
+virt_addr = 0xff7f80005000
+```
+
+The entries in this address are: 510 for PML4, 510 for PDPR, 0 for PD and 5 for PT (we are using 4k pages for this example).  Now let's see what appens from the point of view of the address translation: 
+
+* First the `510th` PML4 entry is loaded, that is the pointer to the PDPR, and in this case its content is PML4 itself. 
+* Now it get the next entry from the address, to load the PD, that is again the `510th`, and is again PML4 itself, so it is loaded as PD too. 
+* It is time for the third entry the PT, and in this case we have `0`, so it loads the first entry from the Page Directory loaded, that in this case is still PML4, so it loads the PDPR table
+* Finally the PT entry is loaded, that is `5`, and since the current PD loaded for translation is actually a PDPR we are going to get the `5th` item of the page directory. 
+* Now the last part of the address is the offset, this can be used then to access the entries of the directory/table loaded. 
+
+This means that by carefully using the recursive item from PML4 we can access all the tables.
+
+Few more examples of address translation:
 
 * PML4: 511 (hex: 1ff) - PDPR: 510 (hex: 1fe) - PD 0 (hex: 0) using 2mb pages translates to: `0xFFFF'FFFF'8000'0000`.
 * Let's assume we mapped PML4 into itself at entry 510, 
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: _PML4: 510, PDPR: 510, PD: 510, PT: 510_, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT with page number equals to 510, and we got access to the PML4 table.
     - Now using a similar approach we can get acces to other tables, for example the following values: _PML4: 510, PDPR:510, PD: 1, PT: 256_, will give access at the Page Directory PD at entry number 256 in PDPR that is contained in the first PML4 entry.
 
+### Direct Map
+
+Another technique for modifying page tables is a 'direct map' (similar to an identity map). As we know an identity map is when a page's physical address is the same as it's virtual address, and we could describe it as: `paddr = vaddr`. A direct map is sometimes referred to as an _offset map_ because it introduces an offset, which gives us some flexibility. We're using to have a global variable containing the offset for our map called `dmap_base`. Typically we'll set this to some address in the higher half so that the lower half of the address space is completely free for userspace programs. This also makes other parts of the kernel easier later on.
+
+How does the direct map actually work though? It's simple enough, we just map all of physical memory at the same virtual address *plus the dmap_base offset*: `paddr = vaddr - dmap_base`. Now in order to access a physical page (from our PMM for example) we just add `dmap_base` to it and we can read and write to it as normal.
+
+The direct map does require a one-time setup early in your kernel, as you do need to map all usable physical memory starting at `dmap_base`. This is no more work than creating an identity map though.
+
+What address should you use for the base address of the direct map? Well you can put it at the lowest address in the higher half, which depends on how many levels of page tables you have. For 4 level paging this will `0xffff'8000'0000'0000`.
+
+While recursive paging only requires using a single page table entry at the highest level, a direct map consumes a decent chunk of address space. A direct map is also more flexible as it allows the kernel to access arbitrary parts of physical memory as needed. Direct mapping is only really possible in 64-bit kernels due to the large address space made available, 32-bit kernels should opt to use recursive mapping to reduce the amount of address space used.
+
+### Troubleshooting
+
+There are few things to take in account when trying to access paging structures using the recursion technique for `x86_64` architecture:
+
+
+* When specifying entries using constant numbers (not stored in variables) during conversion, always use the long version appending the "l" letter (i.e. 510th entry became: 510l). Especially when dealing with macros, because otherwise they could be converted to the wrong type, causing wrong result. Usually `gcc` show a warning message while compiling if this happens: 
+
+```gcc
+ warning: result of ‘510 << 30’ requires 40 bits to represent, but ‘int’ only has 32 bits
+ ```
+ 
+* Always remember to properly sign extend any addresses if we're creating them from nothing. We won't need to sign extend on every operation, as things are usually relative to a pointer we've already set up. The CPU will throw a page fault if it's a good address but something is wrong in the page tables, and a general protection fault if the virtual address is non-canonical (it's a bad address).

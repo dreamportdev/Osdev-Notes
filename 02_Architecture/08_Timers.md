@@ -13,7 +13,7 @@ At a high level, there a few things we might want from a timer:
 - Does the main clock count up or down?
 - What kind of accuracy, precision and latency does it have?
 
-At first most of these questions might seem unnecessary, as all we really need is a periodic timer to generate interrupts for the scheduler right? Well that can certainly work, but as you do more things with the timer you may want to accurately determine the length of time between two points of execution. This is hard to do with interrupts, and it's easier to do with polling. A periodic mode is also not always available, and sometimes you are stuck with a one-shot timer.
+At first most of these questions might seem unnecessary, as all we really need is a periodic timer to generate interrupts for the scheduler right? Well that can certainly work, but as we do more things with the timer we may want to accurately determine the length of time between two points of execution. This is hard to do with interrupts, and it's easier to do with polling. A periodic mode is also not always available, and sometimes we are stuck with a one-shot timer.
 
 For x86, the common timers are:
 
@@ -22,7 +22,7 @@ For x86, the common timers are:
 - The HPET: capable of polling with a massive 64-bit main counter, and can generate interrupts with a number of comparators. These comparators always support one-shot operation and may optionally support a periodic mode. It's main clock is count-up, and it is often cited as being high-latency. It's frequency can be determined by parsing an ACPI table, and thus it serves as a more accurate alternative to the PIT for calibrating other timers.
 - The TSC: the timestamp-counter is tied to the core clock of the cpu, and increments once per cycle. It can be polled and has a count-up timer. It can also be used with the local APIC to generate interrupts, but only one-shot mode is available. It is often the most precise and accurate timer out of the above options.
 
-We're going to focus on setting up the local APIC timer, and calibrating it with either the PIT or HPET. We'll also have a look at a how you could also use the TSC with the local APIC to generate interrupts.
+We're going to focus on setting up the local APIC timer, and calibrating it with either the PIT or HPET. We'll also have a look at a how we could also use the TSC with the local APIC to generate interrupts.
 
 ### Calibrating Timers
 
@@ -34,12 +34,12 @@ Actually calibrating a timer is straightforward. We'll refer to the timer we kno
 
 - Ensure both timers are stopped.
 - If the target timer is counts down, set it the maximum allowed value. If it counts up, set it to zero.
-- Choose how long you want to calibrate for. This should be long enough to allow a good number of ticks to pass on the reference timer, because more ticks passing will mean a more accurate calibration. This time shouldn't be too long however, because if one of the timer counters rolls over then we'll trouble determining the results. A good starting place is 5-10ms.
+- Choose how long we want to calibrate for. This should be long enough to allow a good number of ticks to pass on the reference timer, because more ticks passing will mean a more accurate calibration. This time shouldn't be too long however, because if one of the timer counters rolls over then we'll trouble determining the results. A good starting place is 5-10ms.
 - Start both timers, and poll the reference timer until the calibration time has passed.
 - Stop both timers, and we look at how many ticks has passed for the target timer. If it's a count-down timer, we can determine this by subtracting the current value from the maximum value for the counter.
 - Now we know that a certain amount of time (the calibration time) is equal to a certain number of ticks for our target timer.
 
-Sometimes running your kernel in a virtual machine, or on less-stable hardware can give varying results, so it can be useful to calibrate a timer multiple times and compare the results. If some results are odd, don't use them. It can also be helpful to continuously calibrate timers while you're using them, which will help correct small errors over time.
+Sometimes running our kernel in a virtual machine, or on less-stable hardware can give varying results, so it can be useful to calibrate a timer multiple times and compare the results. If some results are odd, don't use them. It can also be helpful to continuously calibrate timers while using them, which will help correct small errors over time.
 
 ## Programmable Interval Timer (PIT)
 
@@ -67,7 +67,7 @@ To access we PIT we use a handful of IO ports:
 
 As mentioned the PIT runs at a fixed frequency of 1.19318MHz. This is an awkward number but it makes sense in the context of the original PC. The PIT contains a pair of registers per channel: the count and reload count. When the PIT is started the count register is set to value of the reload count, and then every time the main clock ticks (at 1.19318MHz) the count is decremented by 1. When the count register reaches 0 the PIT sends an interrupt. Depending on the mode the PIT may then set the count register to the reload register again (in mode 2 - periodic operation), or simple stay idle (mode 0 - one shot operation).
 
-The PIT's counters are only 16-bits, this means that the PIT can't count up to 1 second. If you wish to have timers with a long duration like that, you will need some software assistance by chaining time-outs together.
+The PIT's counters are only 16-bits, this means that the PIT can't count up to 1 second. If we wish to have timers with a long duration like that, we will need some software assistance by chaining time-outs together.
 
 ### Example
 
@@ -76,17 +76,17 @@ As an example let's say we want the PIT to trigger an interrupt every 1ms (1ms =
 $$\frac{1,193,180 (clock frequency)}{1000 (duration wanted)} = 1193.18 (Hz for duration)$$
 
 
-One problem is that we can't use floating point numbers for these counters so we truncate the result to 1193. This does introduce some error, and you can correct for this over a long time if you want. However for our purposes it's small enough to ignore, for now.
+One problem is that we can't use floating point numbers for these counters so we truncate the result to 1193. This does introduce some error, and it can be corrected for this over a long time if we want. However for our purposes it's small enough to ignore, for now.
 
-To actually program the PIT with this value is pretty straightfoward, we first send a configuration byte to the command port (`0x43`) and then the reload value to the channel port (`0x40`).
+To actually program the PIT with this value is pretty straight-foward, we first send a configuration byte to the command port (`0x43`) and then the reload value to the channel port (`0x40`).
 
 The configuration byte is actually a bitfield with the following layout:
 
 | Bits   | Description                                                                                                          |
 |--------|----------------------------------------------------------------------------------------------------------------------|
-| 0      | Selects BCD/binary coded decimal (1) or binary (0) encoding. If you're unsure, leave this as zero. |
+| 0      | Selects BCD/binary coded decimal (1) or binary (0) encoding. If unsure, leave this as zero. |
 | 1 - 3  | Selects the mode to use for this channel. |
-| 4 - 5  | Select the access mode for the channel: generally you want 0b11 which means we send the low byte, then the high byte of the 16-bit register. |
+| 4 - 5  | Select the access mode for the channel: generally it should be  0b11 which means we send the low byte, then the high byte of the 16-bit register. |
 | 6 - 7  | Select the channel we want to use, we always want channel 0. |
 
 For our example we're going to use binary encoding, mode 2 and channel 0 with the low byte/high byte access mode. This results in the following config byte: `0b00110100`.
@@ -101,7 +101,7 @@ void set_pit_periodic(uint16_t count) {
 }
 ```
 
-Now we should be getting an interrupt from the PIT every millisecond! By default the PIT appears on irq0, which may be remapped to irq2 on modern (UEFI-based) systems. Also be aware that the PIT is system-wide device, and if you're using the APIC you will need to program the IO APIC to route the interrupt to one of the LAPICs.
+Now we should be getting an interrupt from the PIT every millisecond! By default the PIT appears on irq0, which may be remapped to irq2 on modern (UEFI-based) systems. Also be aware that the PIT is system-wide device, and if using the APIC  we will need to program the IO APIC to route the interrupt to one of the LAPICs.
 
 ## High Precision Event Timer (HPET)
 
@@ -109,7 +109,7 @@ The HPET was meant to be the successor to the PIT as a system-wide timer, with m
 
 ### Discovery
 
-To determine if the HPET is available you'll need access to the ACPI tables. Handling these is covered in a separate chapter, but we're after one particular SDT with the signature of 'HPET'. If you're not familiar with ACPI tables yet, feel free to come back to the HPET later.
+To determine if the HPET is available we'll need access to the ACPI tables. Handling these is covered in a separate chapter, but we're after one particular SDT with the signature of 'HPET'. If not familiar with ACPI tables yet, feel free to come back to the HPET later.
 
 This SDT has the standard header, followed by the following fields:
 
@@ -129,7 +129,7 @@ struct HpetSdt {
 
 We're mainly interested in the `address` field which gives us the physical address of the HPET registers. The other fields are explained in the HPET specification but are not needed for our purposes right now.
 
-As with any MMIO you will need to map this physical address into the virtual address space so we can access the registers with paging enabled.
+As with any MMIO we will need to map this physical address into the virtual address space so we can access the registers with paging enabled.
 
 ### Theory Of Operation
 
@@ -145,9 +145,9 @@ Each register is accessed by adding an offset to the base address we obtained be
 
 We can read the main counter at any time, which is measured in in timer ticks. We can convert these ticks into realtime by multiplying them with the timer period in the general capabilities register. Bits 63:32 of the general capabilities register contain the number of femtoseconds for each tick. A nanosecond is 1000 femtoseconds, and 1 second is 1'000'000'000 femtoseconds.
 
-We can also write to the main counter, usually you would write a 0 here when initializing the HPET in order to be able to determine uptime, but this is not really necessary.
+We can also write to the main counter, usually we would write a 0 here when initializing the HPET in order to be able to determine uptime, but this is not really necessary.
 
-The general capabilities register contains some other useful information, briefly summarized below. If you're after more detail, all of this is available in the public specification.
+The general capabilities register contains some other useful information, briefly summarized below. If interested in more details, all of this is available in the public specification.
 
 - *Bits 63:32*: This number of femtoseconds for each tick of the main clock.
 - *Bits 31:16*: This field contains the PCI vendor ID of the HPET manufacturer, not needed for operation.
@@ -158,7 +158,7 @@ The general capabilities register contains some other useful information, briefl
 
 In order for the main counter to actually begin counting, we need to enable it. This is done by setting bit 0 of the general configuration register. Once this bit is set, the main counter will increment by one every time it's internal clock ticks. The period of this clock is what's specified in the general capabilities register (bits 63:32).
 
-The general configuration register also contains one other interesting setting: bit 1. If this bit is set the HPET is in legacy replacement mode, where it pretends to be the PIT and RTC timer. This is the default setting, and if you intend to use the HPET as described above this bit should be cleared.
+The general configuration register also contains one other interesting setting: bit 1. If this bit is set the HPET is in legacy replacement mode, where it pretends to be the PIT and RTC timer. This is the default setting, and if we want to use the HPET as described above this bit should be cleared.
 
 ### Comparators
 
@@ -168,20 +168,20 @@ By default the first two comparators are set up to mimic the PIT and RTC clocks,
 
 It's worth noting that all comparators support one-shot mode, but periodic mode is optional. Testing if a comparator supports periodic mode can be done by checking if bit 4 is set in the capabilities register for that comparator.
 
-Speaking of which: each comparator has it's own set of registers to control it. These registers are accessed as an offset from the HPET base. There are two registers we're interested in: the comparator config and capability registger (accessed at offset `0x100 + N * 0x20`), and the comparator value register (at offset `0x108 + N * 0x20`). In those equations `N` is the comparator number you want. As an example to access the config and capability register for comparator 2, we would determine it's location as: `0x100 + 2 * 0x20 = 0x140`. Meaning we would access the register at offset `0x140` from the HPET mmio base address.
+Speaking of which: each comparator has it's own set of registers to control it. These registers are accessed as an offset from the HPET base. There are two registers we're interested in: the comparator config and capability register (accessed at offset `0x100 + N * 0x20`), and the comparator value register (at offset `0x108 + N * 0x20`). In those equations `N` is the comparator number we want. As an example to access the config and capability register for comparator 2, we would determine it's location as: `0x100 + 2 * 0x20 = 0x140`. Meaning we would access the register at offset `0x140` from the HPET mmio base address.
 
 The config and capabilities register for a comparator also contains some other useful fields to be aware of:
 
 - *Bits 63:32*: This is a bitfield indicating which interrupts this comparator can trigger. If a bit is set, the comparator can trigger that interrupt. This maps directly to GSIs, which are the inputs to the IO APIC. If there is only a single IO APIC in the system, then these interrupt numbers map directly to the IO APIC input pins. For example if bits 2/3/4 are set, then we could trigger the IO APIC pins 2/3/4 from this comparator.
-- *Bits 13:9*: Write the integer value of the interrupt you want this comparator to trigger here. It's recommended to read this register back after writing to verify the comparator accepted the interrupt number you wrote.
+- *Bits 13:9*: Write the integer value of the interrupt that should be triggered by  this comparator. It's recommended to read this register back after writing to verify the comparator accepted the interrupt number that has been set.
 - *Bits 4:3*: Bit 4 is set if the comparator supports periodic mode. Bit 3 is used to select periodic mode if it's supported. If either bit is cleared, the comparator operates as a one-shot.
 - *Bit 2*: Enables the comparator to generate interrupts. Even if this is cleared the comparator will still operate, and set the interrupt pending bit, but no interrupt will be sent to the IO APIC. This bit acts in reverse to how a mask bit would: if this bit is set, interrupts are generated.
 
 ### Example
 
-Let's look at two examples of using the HPET timer: polling the main counter and setting up a one-shot timer. If you want a periodic timer you'll have to do a bit more work, and check that a comparator supports periodic mode.
+Let's look at two examples of using the HPET timer: polling the main counter and setting up a one-shot timer. In case a periodic timer is needed, more work is needed, and check that a comparator supports periodic mode.
 
-We're going to assume you have the HPET registers mapped into virtual memory, and that address is stored in a variable `void* hpet_regs`.
+We're going to assume that the HPET registers are mapped into virtual memory, and that address is stored in a variable `void* hpet_regs`.
 
 Polling the main counter is very straightforward:
 
@@ -195,9 +195,9 @@ uint64_t poll_hpet() {
 }
 ```
 
-This function returns the main counter of the hpet as a number of femtoseconds since it was last reset. You may want to convert this to a more managemable unit like nano or even microseconds.
+This function returns the main counter of the hpet as a number of femtoseconds since it was last reset. You may want to convert this to a more manageable unit like nano or even microseconds.
 
-Next let's look at setting up an interrupt timer. This requires the use of a comparator, and a bit of logic. You'll also need the IO APIC set up, and we're going to use some dummy functions to show what you'd need to do. We're going to use comparator 0, but this could be any comparator.
+Next let's look at setting up an interrupt timer. This requires the use of a comparator, and a bit of logic. We'll also need the IO APIC set up, and we're going to use some dummy functions to show what we need to do. We're going to use comparator 0, but this could be any comparator.
 
 ```c
 #define COMPARATOR_0_REGS 0x100
@@ -217,7 +217,7 @@ void arm_hpet_interrupt_timer(size_t femtos) {
     *config_reg &= ~(0xFul << 9);
     *config_reg |= used_route << 9;
     *config_reg |= 1ul << 2;
-    //you should configure the io apic routing here.
+    //the io apic routing here should be configured here.
     //this interrupt will appear on the pin 'used_route'.
 
     volatile uint64_t* counter_reg = hpet_regs + 0xF0;
@@ -233,15 +233,15 @@ The next timer on our list is the local APIC timer. This timer is a bit special 
 
 However not all local APIC timers are created equal! There are a few feature flags to check for before using them:
 
-- ARAT/Always Running APIC Timer: cpuid leaf 6, eax bit 2. If the cpu hasn't set this bit the APIC timer may stop in lower power states. This is okay for a hobby OS, but if you do begin managing system power states later on, it's good to be aware of this.
+- ARAT/Always Running APIC Timer: cpuid leaf 6, eax bit 2. If the cpu hasn't set this bit the APIC timer may stop in lower power states. This is okay for a hobby OS, but if we do begin managing system power states later on, it's good to be aware of this.
 
 The timer is managed by registers within the local APIC MMIO area. The base address for this can be obtained from the lapic MSR (MSR `0x1B`). See the APIC chapter for more info on this. We're interested in three registers for the timer: the divisor (offset `0x3E0`), initial count (offset `0x380`) and timer entry in the LVT (offset `0x320`). There is also a current count register, but we don't need ot access that right now.
 
-Unfortunately we're not told the frequency of this timer (except for some very new cpus which include this in cpuid), so we'll need to calibrate this timer against one we already know the speed of. Other than this, using the local APIC is very simple: simply set the mode you want in the LVT entry, set the divisor and initial count and it should work.
+Unfortunately we're not told the frequency of this timer (except for some very new cpus which include this in cpuid), so we'll need to calibrate this timer against one we already know the speed of. Other than this, using the local APIC is very simple: simply set the mode needed in the LVT entry, set the divisor and initial count and it should work.
 
 ### Example
 
-Calibrating a timer is explained above, so we're going to assume you have a function called `lapic_ms_to_ticks` that converts a number of milliseconds into the number of local APIC timer ticks. You may not need this function yourself, but it serves for the example. We're also going to assume that you've set the divisor register to what you want. If you're not sure what this does, its divides the incoming clock pulses, reducing the rate the timer ticks. This is useful if you want longer clock durations. Starting with a value of 2 or 4 is recommended.
+Calibrating a timer is explained above, so we're going to assume there is a function called `lapic_ms_to_ticks` that converts a number of milliseconds into the number of local APIC timer ticks. This may not be necessary, but it serves for the example. We're also going to assume that the divisor register is set to the desired value. If not sure what this does, it divides the incoming clock pulses, reducing the rate the timer ticks. This is useful in case longer clock durations are needed. Starting with a value of 2 or 4 is recommended.
 
 Other than setting the initial count, we also have to set up the timer LVT entry. There's a few fields here, but we're mostly interested in the following:
 
@@ -249,7 +249,7 @@ Other than setting the initial count, we also have to set up the timer LVT entry
 - *Bit 16*: Acts as a mask bit, if set the timer won't generate an interrupt when expiring.
 - *Bits 18:17*: The mode field. Set this to *0b00* for one-shot operation, and *0b01* for periodic.
 
-The intel and AMD manuals contain the full description if you want to explore the other functionality offered.
+The intel and AMD manuals contain the full description if interested in exploring the other functionality offered.
 
 ```c
 void arm_lapic_interrupt_timer(size_t millis, uint8_t vector) {
@@ -273,20 +273,14 @@ There are some issues with this version of the TSC however: modern processors wi
 
 The I-TSC ticks at the base speed the processor is supposed to run at, not what it's actually running at, meaning the tick-rate is constant. Most processors support the I-TSC nowadays, and most emulators also do, even if they don't advertise it through cpuid (qemu has invariant TSC, but doesn't set the bit). To test if the TSC is invariant can be done via cpuid once again: leaf 7, edx bit 8.
 
-How about generating interrupts with the TSC? This is also an option feature (that's almost always supported) called TSC deadline. We can test for it's existence via cpuid leaf 1, ecx, bit 24. To use TSC deadline we write the absolute time (in TSC ticks) of when we want the interrupt to a special MSR, called IA_32_TSC_DEADLINE (MSR `0x6E0`).
+How about generating interrupts with the TSC? This is also an option feature (that's almost always supported) called TSC deadline. We can test for it's existence via cpuid leaf 1, ecx, bit 24. To use TSC deadline we write the absolute time (in TSC ticks) of when we want the interrupt to a special MSR, called `IA_32_TSC_DEADLINE` (MSR `0x6E0`).
 
 When the TSC passes the tick value in this MSR, it tells the local APIC, and if TSC deadline mode is selected in the timer LVT an interrupt is generated. Selecting TSC deadline mode can be done by using mode `0b10` instead of `0b00`/`0b01` in the timer LVT register.
 
 ## Useful Abstractions
 
-As we've seen there are lots of timers with varying capabilities. Some of these have analogies on other platforms, while some don't. If you intend to support all of these timers, or go cross-platform it can be worth implementing an abstract timer API, and then hiding the implementation of these timers behind it. You'll want to start with an API that at least provides the following:
+As we've seen there are lots of timers with varying capabilities. Some of these have analogies on other platforms, while some don't. If intend to support all of these timers, or go cross-platform it can be worth implementing an abstract timer API, and then hiding the implementation of these timers behind it. Start with an API that at least provides the following:
 
-- polled_sleep(): this functions spins until the requested time has passed.
-- poll_timer(): gets an absolute value of a timer, useful for timing short sections of code. Also useful for keeping track of time when an interrupt timer is not armed.
-- arm_interrupt_timer(): sets a timer to trigger an interrupt at a point in the future, immediately returns control to the calling function. Arguably the most of these functions, and what you'll use to impement scheduling or other clock-based functions.
-
-## Useful links
-
-* [Ehtereality osdev Notes - Apic/Timing/Context Switching](https//ethv.net/workshops/osdev/notes/notes-4.html)
-* [OSdev Wiki - Pit page](https://wiki.osdev.org/Programmable_Interval_Timer)
-* [Brokern Thron Osdev Series](http://www.brokenthorn.com/Resources/OSDev16.html)
+- `polled_sleep()`: this functions spins until the requested time has passed.
+- `poll_timer()`: gets an absolute value of a timer, useful for timing short sections of code. Also useful for keeping track of time when an interrupt timer is not armed.
+- `arm_interrupt_timer()`: sets a timer to trigger an interrupt at a point in the future, immediately returns control to the calling function. Arguably the most of these functions, and what will be used to impement scheduling or other clock-based functions.

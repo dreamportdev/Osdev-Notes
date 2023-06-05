@@ -1,12 +1,12 @@
 # Memory Protection
 
-This section is a collection of useful strategies for memory protection. This mainly serves as a reminder that these features exist, and are worth looking into!
+This appendix is a collection of useful strategies for memory protection. This mainly serves as a reminder that these features exist, and are worth looking into!
 
 ## WP bit
 
-On x86 platforms, we have the R/W bit in our page tables. This flag must be enabled in order for a page to be written to, otherwise the page is read-only (assuming the page is present at all).
+On `x86_*` platforms, we have the R/W bit in our page tables. This flag must be enabled in order for a page to be written to, otherwise the page is read-only (assuming the page is present at all).
 
-However this is not actually true! Supervisor accesses (rings 0/1/2 - not ring 3) *can* write to readonly pages by default. This is not as bad as it might seem, as the kernel is usually carefully crafted to only access the memory it needs. However when you allow user code to access the kernel (via system calls for example), the kernel can be 'tricked' into writing into areas it wouldn't normally, via software or hardware bugs.
+However this is not actually true! Supervisor accesses (rings 0/1/2 - not ring 3) *can* write to readonly pages by default. This is not as bad as it might seem, as the kernel is usually carefully crafted to only access the memory it needs. However when we allow user code to access the kernel (via system calls for example), the kernel can be 'tricked' into writing into areas it wouldn't normally, via software or hardware bugs.
 
 One helpful mitigation for this is to set the WP bit, which is bit 16 of cr0. Once written to cr0, *any* attempts to write to a read-only page will generate a page fault, like a user access would.
 
@@ -30,24 +30,24 @@ Once these features are known to be supported, they can be enabled like so:
 
 ## Page Heap
 
-Unlike the previous features which are simple feature flags, this is a more advanced solution. It's really focused on detecting buffer overruns: when too much data is written to a buffer, and the data ends up writing into the next area of memory. This section assumes you're comfortable writing your own allocators, and familiar with how virtual memory works. It's definitely an intermediate topic, one worth being aware of though!
+Unlike the previous features which are simple feature flags, this is a more advanced solution. It's really focused on detecting buffer overruns: when too much data is written to a buffer, and the data ends up writing into the next area of memory. This section assumes we're comfortable writing memory allocators, and familiar with how virtual memory works. It's definitely an intermediate topic, one worth being aware of though!
 
-Now while this technique is useful for tracking down a rogue memcpy or memset, it does waste quite a lot of physical memory and virtual address space, as you'll see below. Because of this it's useful to be able to swap this with a more traditional allocator for when you don't need the debugging features.
+Now while this technique is useful for tracking down a rogue memcpy or memset, it does waste quite a lot of physical memory and virtual address space, as will be shown. Because of this it's useful to be able to swap this with a more traditional allocator for when debugging featuresi are not needed.
 
 A page heap (named after the original Microsoft tool), is a heap where each allocator is rounded up to the nearest page. This entire memory region is dedicated to this allocation, and the two pages either side of the allocation are unmapped. The memory region is padded at the beginning, so that the last byte of the allocated buffer is the last byte of the last mapped page.
 
-This means that when we attempt to read or write beyond the end of the array, we cause a page fault! Now you can track any buffer overruns from inside your page fault handler. If your kernel dosn't have any page fault handling logic yet, you can simply panic and print the faulting address, and using this information to track down the overrun.
+This means that when we attempt to read or write beyond the end of the array, we cause a page fault! Now is possible to track any buffer overruns from inside the page fault handler. If the kernel doesn't have any page fault handling logic yet, it can simply panic and print the faulting address, and using this information to track down the overrun.
 
 What about buffer underruns? This is even easier!
 
-Instead of padding the memory region at the beginning, pad it at the end. The code will just end up returning the first byte of the first page, and now any attempts to access data before the buffer will trigger a page fault like before. Unfortunately you cannot detect underruns and overruns with a single page heap.
+Instead of padding the memory region at the beginning, pad it at the end. The code will just end up returning the first byte of the first page, and now any attempts to access data before the buffer will trigger a page fault like before. Unfortunately underruns and overruns cannot be detected with a single page heap.
 
 Now that's a lot of words, let's have a look at a quick example of how it might work:
 
 - A program wants to allocate 3500 bytes.
 - The heap gets called (via `malloc` or similar), and rounds this up to the nearest page: 4096 bytes.
 - Now we map these pages at an address of our choosing, selecting this address is outside the scope of this section.
-- If you're wanting to detect buffer underruns, simply return the base of the first page. Otherwise keep going.
+- If we're wanting to detect buffer underruns, simply return the base of the first page. Otherwise keep going.
 - To detect buffer overruns we need to pad at the beginning, so we could return the address of the first page + the difference from before.
 
 An example in c might look like (note these functions are made up for the example, and must be implemented yourself):

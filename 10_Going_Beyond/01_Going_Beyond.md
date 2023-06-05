@@ -51,7 +51,7 @@ Environment variables are just named bits of data used to store some information
 NAME_OF_VARIABLE=value
 ```
 
-an example is the output of the `env` command in linux. 
+An example of what environment variables look like is the output of the `env` command in most unix shells.
 
 ## Graphical User Interface
 
@@ -77,7 +77,7 @@ Ok it's a little more complex than that, but those are the key parts! You'll lik
 
 ### Private Framebuffers
 
-When it comes to rendering, we expect each client window to be able to render to a framebuffer specific to that window, and not access any other framebuffers it's not meant. This means we can't simply pass around the real framebuffer provided by the kernel. 
+When it comes to rendering, we expect each client window to be able to render to a framebuffer specific to that window, and not access any other framebuffers it's not meant to. This means we can't simply pass around the real framebuffer provided by the kernel. 
 
 Instead it's recommended to create a new framebuffer for each window. If you don't have hardware acceleration for your GPU (which is okay!) this can just be a buffer in memory big enough to hold the pixels. This buffer should be created by the server program but shared with the client program. The idea here is that the client can write as much data as it wants into the framebuffer, and then send a single IPC message to the server to tell it the window framebuffer has been updated. At this point the server would copy the updated region of the window's framebuffer onto the real framebuffer, taking into account the window's position and size (maybe part of the window is offsreen, so not visible).
 

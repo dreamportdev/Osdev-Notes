@@ -1,7 +1,9 @@
 # Troubleshooting
+
 A collection of unrelated potential issues.
 
 ## Unexpected UD/Undefined Opcode exception in x86_64
+
 This is a not a definitive solution, but it's an easy to run into.
 This can commonly be caused by the compiler generating sse (or sse2, 3dnow, or even mmx - I'm just going to refer to them as sse for now) instructions.
 If the cpu hasn't been setup to handle extended state, it will fault and trigger an #UD.
@@ -10,6 +12,7 @@ To determine if this is happening, step through your code with gdb, paying atten
 If you have the qemu logs of the crash, you can also examine the kernel binary near the address of the exception RIP.
 
 ### Why does this happen?
+
 These extensions existed before x86_64, but they were optional. The OS had to support them, and then initialize the hardware into a valid state for these
 instructions to run. This actually includes the x87 floating point unit as well, and any attempts to use it before executing `finit` will result in #UD.
 Now if you're used to programming with more recent cpu extensions, like avx512 for example, you normally have to enable these features explicitly before
@@ -21,10 +24,12 @@ which results in the #UD.
 Any operation that touches the extended cpu registers, extended control registers, or uses an extension opcode will result in #UD.
 
 ### The easy solution
+
 Tell your compiler not to generate these instructions, simply add these flags to your favourite gcc/clang compiler of choice:
 `-mno-80387 -mno-sse -mno-sse2 -mno-3dnow -mno-mmx`
 
 ### The hard solution
+
 Disclaimer here, I've never tested this, but I see no reason it *shouldnt* work.
 
 If your kernel begins in an assembly stub, you could setup the cpu for these extended states before executing any compiler-generated code.

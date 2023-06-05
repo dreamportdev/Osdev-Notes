@@ -10,7 +10,7 @@ To keep our design simple, the features of our VFS driver will be:
 * No extra features like permissions, uid and gid (although we are going to add those fields, they will not be used).
 * The path length will be limited.
 
-## How Does VFS Works
+## How The VFS Works
 
 The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver, as shown in the picture
 
@@ -33,10 +33,10 @@ When a filesystem is *mounted* in a folder it means that the folder is no longer
 
 Every mountpoint will contain the information on how to access the target file system, so the VFS every time it has to access a file or directory (i.e. a `open` function is called), it does the following:
 
-* Parse the file path to identify the mountpoint of the filesystem
-* Once we have the mountpoint struct, we can access a series of function pointers, one for each operation like opening/closing/reading/writing a file
-* It call the open function for that FS passing the path to the filename (in this case the path should be relative)
-* From this point everything is handled by the File System Driver and once the file is accessed is returned back to the vfs layer
+* Parse the file path to identify the mountpoint of the filesystem.
+* Once we have the mountpoint struct, we can access a series of function pointers, one for each operation like opening/closing/reading/writing a file.
+* It call the open function for that FS passing the path to the filename (in this case the path should be relative).
+* From this point everything is handled by the File System Driver and once the file is accessed is returned back to the vfs layer.
 
 The multi-root approach, even if it is different, it share the same behaviour, the biggest difference is that instead of having to parse the path searching for a mountpoint it has only to check the first item in the it to figure out which FS is attached to. 
 
@@ -51,7 +51,7 @@ Finally we are going to write our implementation of the virtual file system, fol
 * read/write it's content 
 * open, read and close a directory
 
-### Loading a file system
+### Mountiung a File System
 
 To be able to access the different filesystems currently lodaed (*mounted*) by the operating system it needs to keep track of where to access them (wheter it is a drive letter or a directory), and how to access them (implementation functions), to do that we need two things: 
 
@@ -160,7 +160,7 @@ But where should be the first file system mounted? That again is depending on th
 * Using a multi root approach, like windows os, we will have every fs that will have it's own root folder and it will be identified with a letter (A, B, C...)
 * Nothing prevent us to use different approaches, or a mix of them, we can have some file system to share the same root, while some other to have different root, this totally depends on design decision. 
 
-#### Finding the correct mountpoint
+#### Finding The Correct Mountpoint
 
 Now that we know how to handle the mountpoints, we need to understand how given a path find the correct route toward the right mountpoint. Depending on the approach how a path is defined can vary slightly: 
 
@@ -204,20 +204,15 @@ If the above function fail it should return  NULL to let the caller know that so
 
 #### Absolute vs Relative Path
 
-Even though the concept of absolue and relative path, should be alresady known, it could be a good idea to understand how it works from a fs point of view. 
+Even though these concepts should already be familiar, let's discuss how they work from the view of the VFS.
+An absolute path is easy to understand: it begins at the top of the filesystem tree and specifics exactly where to go. The one caveat is that in a multi-root design it will need to indicate which filesystem the root is, windows does this by prepending a device id like so: `C:` or `D:`.
+A relative path begins traversing the filesystem from the current directory. Sometimes this is indicated by starting the filepath with a single dot '.'. A relative path is also one that doesn't begin at the file system root.
 
-An absolute path, is a path that starts from the root folder ("/") and contains all the path toward the file, in a multi-root scenario it will always start with a device_id (i.e. C:\, D:\). While when we talk about relative paths it means that they are relative to the current working directory ( usually denoted with a "."), and they are represented in two ways: 
+It can be easier to design a design our VFS to only accept absolute paths, and handle relative paths by combing them with the current working directory, giving us an absolute path. This removes the idea of relative paths from the VFS code and can greatly simplify the cases we have to handle. 
 
-* with a leading dot: "./path/to/file"
-* without the leading dot, and without the leading "/": "path/to/file"
+As for how we track the current working directory of a program or user, that's information is usually stored in a process's control block, alongside things like privately mapped files (if support for those exists).
 
-So if for example the current working directory is: "/home/user/", the full path will become: "/home/user/path/to/file". Current Working Directory, depends on the process/thread/shell, but usually is the folder where the program is launched or the directory we are in a shell (that is a process) again. 
-
-Usually the VFS should worry only about absolute paths, and the relative path resolution should be done elsewhere in the kernel. When it come to the filesystem  driver, it doesn´t care about the mountpoint part of the path, and it cares only about what comes after the mountpoint. Obtaining a relative path should be pretty straightforward, if we have the full path and the mountpoint, we should just strip the frist from the second. The implementation of this function is pretty straightforward, and is left as exercise, but in the next sections we will assume that it is implemented with the following signature: 
-
-```c
-char *get_rel_path(char *mountpoint_part, char* full_path);
-```
+A filesystem driver also shouldn't need to worry about full filepaths, rather it should only care about the path that comes after it's root node.
 
 ### Accessing A File
 
@@ -243,7 +238,7 @@ The code snippet above is using the C stdlib file handling libraries, what the i
 * If we want to print the string read we need to append the EndOfLine symbol after the last byte read. 
 * Now we can close the file_pointer (destroying the file descriptor associated with the id if it is possible, otherwise -1 will be returned). 
 
-As you can see there are no instructions where we specify the file system type, or the driver to use this is all managed by the vfs layer. The above functions will avail of kernel system calls open/read/close, they usually sits somewhere above the kernel VFS layer, in our _naive_ implementation they we are not going to create new system calls, and let them to be our VFS layer, and where needed  make a simpler version of them.
+As we can see there are no instructions where we specify the file system type, or the driver to use this is all managed by the vfs layer. The above functions will avail of kernel system calls open/read/close, they usually sits somewhere above the kernel VFS layer, in our _naive_ implementation they we are not going to create new system calls, and let them to be our VFS layer, and where needed  make a simpler version of them.
 
 We can assume that any file system i/o operation consists of three basic steps: opening the file, reading/writing from/to it and then closing it. 
 
@@ -328,7 +323,7 @@ int open(const char *path, int flags){
 }
 ```
 
-The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as you can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
+The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as we can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item. 
 
 Let's now have a look at the `close` function, as suggested by name this will do the opposite of the open function: given a file descriptor id it will free all the resources related to it and remove the file descriptor from the list of opened files. The function signature is the following:
 
@@ -426,7 +421,7 @@ The above differences are valid for all of the vfs calls.
 
 Now that we have implemented the `read` function we should be able to code a simple version of the `write` function, the logic is more or less the same, and the two key differences are that we are saving data (so it will call the fs driver equivalent for write) and there probably be at least another addition to the file descriptor data structure, to keep track of the position we are writing in (yes better keep read and write pointers separated, even because files can be opened in R/W mode). This is left as an exercise. 
 
-### What About Directories
+### What About Directories?
 
 We have decided to not cover how to open and read directories, because the implementation will be similar to  the above cases, where we need to identify the mountpoint, call the filesystem driver equivalent of the vfs function called, and make it available to the caller. This means that most of its implementation will be a repetition of what has been done until now, but there are few extra things we need to be aware: 
 
@@ -440,8 +435,10 @@ Initially let's concentrate with the basic function for directory handling: `ope
 
 ### Conclusions And Suggestions
 
-In this chapter we tried to outline a naive `VFS` layer to access files on different file systems. The features implemented are very basic, we left some topics uncovered to keep it as simple as possible, but if all the functions above are implemented, it will represent a good start for the kernel vfs, and we can think to new features like permissions, implement the standardlib C function to access files (fopen, fread and friends), or add protection mechanism to handle concurrency (see the *Locks* chapter), etc.
+In this chapter we outlined a naive VFS that abstracts access to different filesystems. The current feature-set is very basic, but it serves as a good starting point. From here you begin to think about more features like memory mapping files and permissions.
 
-In the next section  we will implement one of the most basic fs: the `USTAR` file system and finally see our os reading the content of a file from memory. 
+We haven't added any locks to protect our VFS data structures in order to keep the design simple. However in a real implementation this should be done. Implementing a file-cache/page-cache is also a useful feature to have, and can be a nice way to make use of all the extra physical memory we've had sitting around until now.
+
+In the next section we're going to implement a basic tempfs, with files loaded from a USTAR archive. This will result in our kernel being able to read files into memory and access them via the VFS.
 
 

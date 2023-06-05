@@ -4,7 +4,7 @@
 
 APIC stands for *Advanced Programmable Interrupt Controller*, and it's the device used to manage incoming interrupts to a processor core. It replaces of the old PIC8259 (that remains still available), but it offers more functionality especially when dealing with SMP. In fact one of the limitations of the PIC was that it was able to deal with only one cpu at time, and this is also the main reason why the APIC was firstly introduced. 
 
-It's worth noting that Intel later developed a version of the APIC called the SAPIC for the Itanium platform. These are referred to collectively as the *xapic*, so if you see this term used in documentation know that it just means the local APIC.
+It's worth noting that Intel later developed a version of the APIC called the SAPIC for the Itanium platform. These are referred to collectively as the *xapic*, so if this term is used in documentation know that it just means the local APIC.
 
 ## Types of APIC
 
@@ -45,7 +45,7 @@ The old x86 architecture had two PIC processor, and they were called "master" an
 
 The ICW values are initialization commands (ICW stands for Initialization Command Words), every command word is one byte, and their meaning is: 
 
-* ICW_1 (value `0x11`) is a word that indicates a start of inizialization sequence, it is the same for both the master and slave pic. 
+* ICW_1 (value `0x11`) is a word that indicates a start of initialization sequence, it is the same for both the master and slave pic. 
 * ICW_2 (value `0x20` for master, and `0x28` for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
 * ICW_3 (value `0x2` for master, `0x4` for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be it's id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
 * ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode. 
@@ -66,7 +66,7 @@ This register contains the following information:
 * Bits 12:31: Contains the base address of the local APIC for this processor core.
 * Bits 32:63: reserved.
 
-Note that the registers are given as a *physical address*, so to access these you will need to map them somewhere in the virtual address space. This is true for the addresses of any IO APICs you obtain as well. When the system boots, the base address is usually `0xFEE0000` and often this is the value we read from `rdmsr`. 
+Note that the registers are given as a *physical address*, so to access these we will need to map them somewhere in the virtual address space. This is true for the addresses of any IO APICs we obtain as well. When the system boots, the base address is usually `0xFEE0000` and often this is the value we read from `rdmsr`. 
 
 A complete list of local APIC registers is available in the Intel/AMD software development manuals, but the important ones for now are:
 
@@ -77,7 +77,7 @@ A complete list of local APIC registers is available in the Intel/AMD software d
 
 ### Enabling the Local APIC, and The Spurious Vector
 
-The spurious vector register is also contains some miscellanious config for the local APIC, including the enable/disable flag. This register has the following format:
+The spurious vector register is also contains some miscellaneous config for the local APIC, including the enable/disable flag. This register has the following format:
 
 | Bits  | Value                        |
 |-------|------------------------------|
@@ -92,7 +92,7 @@ The functions of the fields in the registers are as follows:
 * Bit 8: This bit acts a software toggle for enabling the local APIC, if set the local APIC is enabled.
 * Bit 9: This is an optional feature not available on processors, but if set it indicates that some interrupts can be routed according to a list of priorities. This is an advanced topic and this bit can be safely left clear and ignored.
 
-The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the lapic we need to set bit 8, and set-up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between `0xF0` and `0xFF`. For compatibility it's best to place your spurious vector in that change. Of course we need to set-up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
+The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the lapic we need to set bit 8, and set-up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between `0xF0` and `0xFF`. For compatibility it's best to place the spurious vector in that range. Of course we need to set-up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
 
 ### Reading APIC Id and Version
 
@@ -112,7 +112,7 @@ There are 6 items in the LVT starting from offset `0x320` to `0x370`:
 * *LINT1*: Specifies the interrupt delivery when an interrupt is signaled on LINT1 pin. Offset: `0x360`.
 * *Error*: configures how the local APIC should report an internal error, Offset `0x370`.
 
-The `LINT0` and `LINT1` pins are mostly used for emulating the legacy PIC, but they may also be used as NMI sources. These are best left untouched until you have parsed the MADT, which will tell you how you should program the LVT for these pins.
+The `LINT0` and `LINT1` pins are mostly used for emulating the legacy PIC, but they may also be used as NMI sources. These are best left untouched until we have parsed the MADT, which will tell how the LVT for these pins should be programmed.
 
 Most LVT entries use the following format, with the timer LVT being the notable exception. It's format is explained in the timers chapter. The thermal sensor and performance entries ignore bits 15:13.
 
@@ -133,9 +133,9 @@ The delivery mode field determines how the the APIC should present the interrupt
 
 The X2APIC is an extension of the XAPIC (the local APIC in it's regular mode). The main difference is the registers are now accessed via MSRs and some the ID register is expanded to use a 32-bit value (previously 8-bits). While we're going to look at how to use this mode, it's perfectly fine to not support it.
 
-Checking whether the current processor supports the X2APIC or not can be done via `cpuid`. It will be under leaf 1, bit 21 in `ecx`. If this bit is set, your processor supoorts the X2APIC.
+Checking whether the current processor supports the X2APIC or not can be done via `cpuid`. It will be under leaf 1, bit 21 in `ecx`. If this bit is set, the processor supports the X2APIC.
 
-Enabling the X2APIC is done by setting bit 10 in the IA32_APIC_BASE MSR. It's important to note that once this bit is set, you cannot clear it to transition back to the regular APIC operation without resetting the system.
+Enabling the X2APIC is done by setting bit 10 in the IA32_APIC_BASE MSR. It's important to note that once this bit is set, we cannot clear it to transition back to the regular APIC operation without resetting the system.
 
 Once enabled, the local APIC registers are no longer memory mapped (trying to access them there is now an error) and can instead be accessed as a range of MSRs starting at `0x800`. Since each MSR is 64-bits wide, the offset used to access an APIC register is shifted right by 4 bits.
 
@@ -145,15 +145,15 @@ Since MSRs are 64-bits, the upper 32 bits are zero on reads and ignored on write
 
 ### Handling Interrupts
 
-Once an interrupt for the local APIC is served, it won't send any further interrupts until the end of interrupt signal is sent. To do this write a 0 to the EOI register, and the local APIC will resume sending interrupts to the processor. This is a separate mechanism to the interrupt flag (IF), which also disables interrupts being served to the processor. It is possible to send EOI to the local APIC while IF is cleared (disabling interrupts) and no futher interrupts will be served until IF is set again.
+Once an interrupt for the local APIC is served, it won't send any further interrupts until the end of interrupt signal is sent. To do this write a 0 to the EOI register, and the local APIC will resume sending interrupts to the processor. This is a separate mechanism to the interrupt flag (IF), which also disables interrupts being served to the processor. It is possible to send EOI to the local APIC while IF is cleared (disabling interrupts) and no further interrupts will be served until IF is set again.
 
 There are few exceptions where sending an EOI is not needed, this is mainly spurious interrupts and NMIs. 
 
-The EOI can be sent at any time when handling an interrupt, but it's important to do it before returning with `iret`. If you enable interrupts and only receive a single interrupt, forgetting to send EOI may be the reason.
+The EOI can be sent at any time when handling an interrupt, but it's important to do it before returning with `iret`. If we enable interrupts and only receive a single interrupt, forgetting to send EOI may be the reason.
 
 ### Sending An IPI
 
-If you want to support SMP (multiple cores) in your kernel, you will need a way to inform other cores that an event has occured. This is typically done by sending an IPI. Note that IPIs don't carry any information about what event occureed, they simply indicate that *something* has happened. To send data about what the event is a struct is usually placed in memory somewhere, sometimes called a *mailbox*.
+If we want to support SMP (multiple cores) in our kernel, we will need a way to inform other cores that an event has occurred. This is typically done by sending an IPI. Note that IPIs don't carry any information about what event occurred, they simply indicate that *something* has happened. To send data about what the event is a struct is usually placed in memory somewhere, sometimes called a *mailbox*.
 
 To send an IPI we need to know the local APIC ID of the core we wish to interrupt. We will also need a vector in the IDT set up for handling IPIs. With these two things we can use the ICR (interrupt command register).
 
@@ -182,7 +182,7 @@ There is also a shorthand field in the ICR which overrides the destination id. I
 
 ## IOAPIC
 
-The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the lapic timer, all external devices are going to use the IRQs provided by it (like it was done in the passt by the PIC8259).
+The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the lapic timer, all external devices are going to use the IRQs provided by it (like it was done in the past by the PIC).
 
 ### Configure the IO-APIC
 
@@ -194,7 +194,7 @@ To configure the IO-APIC we need to:
 
 ### Getting IO-APIC address
 
-Read IO-APIC information from MADT table (the MADT table is available within the RSDT data (please refer here: https://github.com/dreamos82/Osdev-Notes/blob/master/RSDP_and_RSDT.md), you need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
+Read IO-APIC information from MADT table (the MADT table is available within the RSDT data, we need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
 
 | Offset | Length | Description                  |
 |--------|--------|------------------------------|
@@ -203,7 +203,7 @@ Read IO-APIC information from MADT table (the MADT table is available within the
 | 4      | 4      | I/O Apic Address             |
 | 8      | 4      | Global System Interrupt Base |
 
-The IO APIC ID field is mostly fluff, as you'll be accessing the io apic by it's mmio address, not it's ID.
+The IO APIC ID field is mostly fluff, as we'll be accessing the io apic by it's mmio address, not it's ID.
 
 The Global System Interrupt Base is the first interrupt number that the I/O Apic handles. In the case of most systems, with only a single IO APIC, this will be 0. 
 
@@ -301,14 +301,4 @@ The content of each entry is:
     - Bits 17 to 55: are Reserved
     - Bits 56 to 63: are the Destitnation Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the IO-APIC datasheet.
 
-The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24. 
-
-#### Delivery modes
-
- Do we need it?
-
-## Useful Resources
-
-* Intel Software developer's manual Vol 3A APIC Chapter
-* IOAPIC Datasheet https://pdos.csail.mit.edu/6.828/2016/readings/ia32/ioapic.pdf
-* http://www.brokenthorn.com/Resources/OSDevPic.html 
+The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24.

@@ -1,7 +1,6 @@
-Physical Memory Manager
-=======================
+# Physical Memory Manager
 
-The physical memory manager will keep track of used physical memory in chunks of pages. The page size will depends on the configuration of VMM. 
+The physical memory manager is responsible for tracking which parts of physical memory are in use, or free for use. The PMM doesn't manage individual bytes of memory, rather it keeps track of *pages*. A page is a fixed size determined by the MMU: in the case of x86 this is 4096 (0x1000) bytes.
 
 There are different ways on how to handle a PMM, one of them is using a bitmap. Where every bit represent a page, if the bit is a 0 the page is available, if is 1 is taken. 
 
@@ -37,7 +36,7 @@ So marking a memory location as free or used is just matter of setting clearing 
 
 But how do we mark a page as taken or free? We need to translate row/column in an address, or the address in row/column. Let's assume that we asked fro a free page and we found the first available bit at row 0 and column 3, how we translate it to address, well for that we need few extra info: 
 
-* The page size (we should know what is the size of the page you are using), Let's call it `PAGE_SIZE`
+* The page size (we should know what is the size of the page we are using), Let's call it `PAGE_SIZE`
 * How many bits are in a row (it's up to us to decide it, in this example we are using an unsigned char, but most probably in real life it is going to be a `uint32_t` for 32bit OS or `uint64_t` for 64bit os) let's call it `BITS_PER_ROW`
 
 To get the address we just need to do: 

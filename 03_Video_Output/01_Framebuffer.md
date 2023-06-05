@@ -7,16 +7,16 @@ As per many other parts there are different way to produce output on the screen,
 There's a few ways we can get output on the screen. We're going to use a linear framebuffer (linear meaning all it's pixels are arranged directly after each other in memory), but historically there have been other ways to display output:
 
 * In real mode there were BIOS routines that could be called to print to the display. There were sometimes other extensions for hardware accelerated drawing of shapes or sprites too. This is not not implemented in modern systems, and even then it's only available to real mode software.
-* In legacy systems some display controllers supported something called 'text mode', where the screen was an array of characters like a terminal, rather than an array of pixels. This is long deprecated, and UEFI actually requires all displays to operate as pixel-based framebuffers. Often the text mode buffer lived around the 0xB800 address, if you see code accessing there, now you know why. This buffer is comprised of pairs of bytes, the first being the ascii character to display, and the second encodes the foreground and background colour.
+* In legacy systems some display controllers supported something called 'text mode', where the screen was an array of characters like a terminal, rather than an array of pixels. This is long deprecated, and UEFI actually requires all displays to operate as pixel-based framebuffers. Often the text mode buffer lived around the `0xB800` address. This buffer is comprised of pairs of bytes, the first being the ascii character to display, and the second encodes the foreground and background colour.
 * Modern systems provide some kind of linear framebuffer these days. Often this is obtained through BIOS routines on older systems, or by the Graphics Output Protocol (GOP) from UEFI. Most boot protocols will present these framebuffers in a uniform way to our kernel.
 
-In these chapters we're going to assume you're using a linear framebuffer, since it's the only framebuffer type reliably available to us on x86_64.
+In these chapters we're going to use a linear framebuffer, since it's the only framebuffer type reliably available on `x86_64` and other platforms.
 
-## Setting framebuffer (using grub)
+## Requesting a Framebuffer Mode (Using Grub)
 
 One way to enable framebuffer is asking grub to do it (this can be done also using uefi but it is not covered in this chapter). 
 
-To enable it, you need to add the relevant tag in the multiboot2 header. 
+To enable it, we need to add the relevant tag in the multiboot2 header. 
 Simply we just need to add in the tag section a new item, like the one below, to request to grub to enable the framebuffer if avaiable, with the requested configuration:
 
 ```assembly
@@ -32,10 +32,9 @@ framebuffer_tag_end:
 
 The comments are self explanatory. 
 
-## Accessing the framebuffer from the kernel
+## Accessing the Framebuffer
 
-Once the framebuffer is set in the multiboot header, when grub loads the kernel it should add  a new tag: the `framebuffer_info` tag. As explained in the Multiboot paragraph, if you are 
-using the header provided in the documentation, you should already have a *struct multiboot_tag_framebuffer*, otherwise you should create your own.  
+Once the framebuffer is set in the multiboot header, when grub loads the kernel it should add  a new tag: the `framebuffer_info` tag. As explained in the Multiboot paragraph, if using the header provided in the documentation, there should already be a *struct multiboot_tag_framebuffer*, otherwise we should create our own.  
 
 The basic structure of the framebuffer info tag is: 
 
@@ -54,32 +53,32 @@ The basic structure of the framebuffer info tag is:
         
 Where: 
 
-* *type* is the type of the tag being read, and 8 means that it is a Framebuffer info tag.
-* *size* it indicates the size of the tag (header info included)
-* *framebuffer_addr* it contains the current address of the framebuffer
-* *framebuffer_pitch* contains the pitch in bytes
-* *framebuffer_width* contains the fb width
-* *framebuffer_height* contains the fb height
-* *framebuffer_bpp* it contains the number of bits per pixel (is the depth in the multiboot request tag)
-* *framebuffer_type* it indicates the current type of FB, and the content of color_index
+* *type* is the type of the tag being read, and 8 means that it is a framebuffer info tag.
+* *size* it indicates the size of the tag (header info included).
+* *framebuffer_addr* it contains the current address of the framebuffer.
+* *framebuffer_pitch* contains the pitch in bytes.
+* *framebuffer_width* contains the fb width.
+* *framebuffer_height* contains the fb height.
+* *framebuffer_bpp* it contains the number of bits per pixel (is the depth in the multiboot request tag).
+* *framebuffer_type* it indicates the current type of FB, and the content of `color_index`.
 * *reserved* is always 0 and should be ignored.
 * *color_info*  it depends on the framebuffer type. 
 
-**Pitch** is the number of bytes on each row
-**bpp** is same as depths
+**Pitch** is the number of bytes on each row.
+**bpp** is same as depths.
 
-## Framebuffer type
+## Framebuffer Type
 
-Depending on the framebuffer_type value you have different values for color_info field.
+Depending on the `framebuffer_type` value there can be different values for `color_info` field.
 
-* If frambuffer_type is 0 this means indexed colors, and that the color-info field has the following values:
+* If framebuffer_type is 0 this means indexed colors, and that the `color-info` field has the following values:
 
 | Size    | Description                    |
 |---------|--------------------------------|
 | u32     | framebuffer_palette_num_colors |
 | varies  | framebuffer_palette            |
 
-The framebuffer_palette_num_colors is the number of colors available in the palette, and the framebuffer plaette is an array of colour descriptors, where every colour has the following structure:
+The `framebuffer_palette_num_colors` is the number of colors available in the palette, and the framebuffer palette is an array of colour descriptors, where every colour has the following structure:
 
 | Size    | Description                    |
 |---------|--------------------------------|
@@ -99,11 +98,11 @@ u8     | framebuffer_green_mask_size      |
 u8     | framebuffer_blue_field_position  |
 u8     | framebuffer_blue_mask_size       |
 
-Where framebuffer_XXX_field_position is the starting bit of the color XXX, and the framebuffer_XXX_mask_size is the size in bits of the color XXX. Usually the format is 0xRRGGBB (is the same format used in HTML).
+Where `framebuffer_XXX_field_position` is the starting bit of the color XXX, and the `framebuffer_XXX_mask_size` is the size in bits of the color XXX. Usually the format is 0xRRGGBB (is the same format used in HTML).
 
 * If it is 2, it means EGA text, so the width and height are specified in characters and not pixels, framebuffer-bpp = 16 and framebuffer_pitch is expressed in byte text per line.
 
-## Plotting a pixel
+## Plotting A Pixel
 
 Everything that we see on the screen with the framebuffer enabled will be done by the function that plot pixels. 
 
@@ -132,9 +131,9 @@ $$pixel_{position} = base_{address} + column + row$$
 
 This address is the location where we are going to write a colour value and it will be displayed on our screen. 
 
-**Please be aware that the framebuffer base_address is an absolute physical address, and on the early stages of our OS is totally fine, but remember that when/if we are going to enable virtual memory, the framebuffer address will need to be mapped somewhere. And the base_address could change, depending on design decisions, this will be explained later**
+Be aware that grub is giving us a physical address for the framebuffer_base. When enabling virtual memory be sure to map the framebuffer somewhere so that you can still access it!
 
-### Drawing an image
+### Drawing An Image
 
 Now that we have a plot pixel function is time to draw something nice on the screen. Usually to do this we should have a file system supported, and at least an image format implemented. But some graphic tools, like *The Gimp* provide an option to save an image into `C source code header`, or `C source code`. 
 
@@ -148,7 +147,7 @@ HEADER_PIXEL(logo_data, pixel)
 
 where `logo_data` is a pointer to the image content and `pixel` is an array of 4 chars, that will contain the pixel values.
 
-Now since each pixel is identified by 3 colors and we have 4 elements into an array, we know that the last element (`pixel[3]`) is always zero. The color is encoded in RGB format with Blue being the least significant byte, and to plot that pixel we need to fill a 32 bit address, so the array need to be converted into a `uint32_t` variable, this can easily be done with some bitwise operatory: 
+Now since each pixel is identified by 3 colors and we have 4 elements into an array, we know that the last element (`pixel[3]`) is always zero. The color is encoded in RGB format with Blue being the least significant byte, and to plot that pixel we need to fill a 32 bit address, so the array need to be converted into a `uint32_t` variable, this can easily be done with some bitwise operations: 
 
 ```c
 char *pixel[4];
@@ -161,12 +160,8 @@ uint32_t num = (uint32_t) pixel[0] << 24 |
 
 ```
 
-as you can see we are making sure that the value of `pixel[3]` is zero, since the `HEADER_PIXEL` function is not touching it. Now the value of `num` will be the colour of the pixel to be plotted. 
+In the code above we are making sure that the value of `pixel[3]` is zero, since the `HEADER_PIXEL` function is not touching it. Now the value of `num` will be the colour of the pixel to be plotted. 
 
 With this value we can call the function we have created to plot the pixel with the color indicated by `num`. 
 
 Using width and height given by the gimp header, and a given staring position x, y to draw an image we just need to iterate through the pixels using a nested for loop, to iterate through rows (x) and columns (y) using height and width as limits.
-
-### Useful resources
-
-* https://jmnl.xyz/window-manager/

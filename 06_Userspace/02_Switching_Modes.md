@@ -1,9 +1,11 @@
 # Switching Modes
 
-## Getting to User Mode
-There are a few ways to do this, but the most straight foward way is the use the `iret` instruction.
+In this chapter we are going to study how to get to userspace, and back. Although it is focused on `x86`, a lot of high level concepts apply to other platforms too.
 
-`iret` pops 5 arguments off of the stack, and then performs several operations atomically:
+## Getting to User Mode
+There are a few ways to do this, but the most straightforward way is to use the `iret` instruction.
+
+The `iret` instruction _pops_ five arguments off of the stack, and then performs several operations atomically:
 
 - It pops `rip` and `cs` from the stack, this is like a far jump/return. `cs` sets the mode for instruction fetches, and `rip` is the first instruction to run after `iret`.
 - It pops `rflags` into the flags register.
@@ -14,6 +16,7 @@ This is a very powerful instruction because it allows us to change the mode of b
 Changing the flags atomically like this means we can go from having interrupts disabled in supervisor mode, to interrupts enabled in user code. All without the risk of having an interrupt occuring while we change these values ourselves.
 
 ### What to Push Onto The Stack
+
 Now let's talk about what these values should be. `rflags` is an easy one: set it to 0x202. Bit 2 is a legacy feature and must always be set, the other bit (`0x200`) is the interrupt enable flag. This means all other flags are cleared, and is what C/C++ and other languages expect flags to look like when starting a program.
 
 For `ss` and `cs` it depends on the layout of your GDT. We'll assume that you have 5 entries in your GDT:
@@ -24,7 +27,7 @@ For `ss` and `cs` it depends on the layout of your GDT. We'll assume that you ha
 - 0x18, User Code (ring 3)
 - 0x20, User Data (ring 3)
 
-Now `ss` and `cs` are *selectors*, which you'll remember are not just a byte offset into the gdt, but the lowest two bits contain a field called RPL. Requested Privilege Level is a legacy feature, but it's still enforced by the cpu, so we have to use it. RPL is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring you want to jump to.
+Now `ss` and `cs` are *selectors*, which you'll remember are not just a byte offset into the gdt, but the lowest two bits contain a field called RPL (Requested Privilege Level) is a legacy feature, but it's still enforced by the cpu, so we have to use it. RPL is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring we want to jump to.
 
 So if we're going to ring 0 (supervisor), RPL can be left at 0. If going to ring 3 (user) we'd set it to 3.
 
@@ -37,18 +40,20 @@ user_cs   = 0x18 | 3;
 user_ss   = 0x20 | 3;
 ```
 
-As you might have noticed, the kernel/supervisor selectors don't need to have their RPL set explicitly, since it'll be zero by default. This is why you may not have dealt with this field before. 
+The kernel/supervisor selectors don't need to have their RPL set explicitly, since it'll be zero by default. This is why we may not have dealt with this field before.
 
-If RPL is not set correctly, you'll get a #GP.
+If RPL is not set correctly, it will throw #GP (General Protection) exception.
 
-As for the other two values? We're going to set `rip` to the instruction we want to execute after using `iret`, and `rsp` can be set to the stack you want to use. Remember that on x86 the stack grows downwards, so if you allocate memory this should be set to the *highest* address of that region. It's a good idea to run user and supervisor code on separate stacks. This way the supverisor stack can have the U/S bit cleared in the paging structure, and prevent user mode accessing supervisor data that may be stored on the stack.
+As for the other two values? We're going to set `rip` to the instruction we want to execute after using `iret`, and `rsp` can be set to the stack we wantto use. Remember that on `x86` the stack grows downwards, so if we allocate memory this should be set to the *highest* address of that region. It's a good idea to run user and supervisor code on separate stacks. This way the supverisor stack can have the `U/S` bit cleared in the paging structure, and prevent user mode accessing supervisor data that may be stored on the stack.
 
 ### Extra Considerations
-Since we have paging enabled, that means page-level protections are in effect. If we try to run code from a page that has the NX-bit set (bit 63), we'll page fault. The same is true for trying to run code or access a stack from a page with the U/S bit cleared. On x86 this bit must be set at every level in the paging structure.
+
+Since we have paging enabled, that means page-level protections are in effect. If we try to run code from a page that has the NX-bit set (bit 63), we'll page fault. The same is true for trying to run code or access a stack from a page with the U/S bit cleared. On `x86` this bit must be set at every level in the paging structure.
 
 *Authors Note: For my VMM, I always set write-enabled + present flags on every page entry that is present, and also the user flag if it's a lower-half address. The exception is the last level of the paging structure (pml1, or pml2 for 2mb pages) where I apply the flags I actually need. For example, for a read-only user data page I would set the R/W + U/S + NX + Present bits in the final entry. This keeps the rest of implementation simple. - DT.*
 
 ### Actually Getting to User Mode
+
 First we push the 5 values on to the stack, in this order:
 - `ss`, ring 3 data selector.
 - `rsp`, the stack we'll use after `iret`.
@@ -58,7 +63,7 @@ First we push the 5 values on to the stack, in this order:
 
 Then we execute `iret`, and we're off! Welcome to user mode!
 
-This is not how it should be done in practice, but for the purposes of an example, here is a function to switch to user mode. Here we're the example user cs of `0x1B` (`0x18 | 3`) and user ss of `0x23` (`0x20 | 3`).
+This is not how it should be done in practice, but for the purposes of an example, here is a function to switch to user mode. Here we're using the example user cs of `0x1B` (or `0x18 | 3`) and user ss of `0x23` (or `0x20 | 3`).
 
 ```c
 __attribute__((naked, noreturn))
@@ -81,12 +86,9 @@ In practice this should be done as part of a task-switch, usually as part of the
 Note the use of the `naked` and `noreturn` attributes. These are hints for the compiler that it can use certain behaviours. Not *necessary* here, but nice to have.
 
 ## Getting Back to Supervisor Mode
-This is trickier! Since you don't want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated chapter on system calls.
 
-The third way is inside of an interrupt handler. While you *can* run interrupts in user mode (an advanced topic for sure), most interrupts will result in supervisor code running, in the form of the interrupt handler. Any interrupt will work, for example a page fault or ps/2 keyboard irq, but the most common one is a timer. Since you can program a timer to tick at a fixed interval, you can ensure that supervisor code gets to run at a fixed interval. That code may return immediately, but it gives the kernel a chance to look at the program and machine states and see if anything needs to be done. Commonly the handler code for the timer also runs the scheduler tick, and can trigger a task switch.
+This is trickier! Since we don't want user programs to just execute kernel code, there are only certain ways for supervisor code to run. The first is to already be in supervisor mode, like when the bootloader gives control of the machine to the kernel. The second is to use a system call, which is a user mode program asking the kernel to do something for it. This is often done via interrupt, but there are specialized instructions for it too. We have a dedicated chapter on system calls.
 
-Handling interrupts while the cpu is in user mode is a surpringly big topic, and so it has a section of it's own. If you're here just for reference, the short of it is:
+The third way is inside of an interrupt handler. While is _possible_ to run interrupts in user mode (an advanced topic for sure), most interrupts will result in supervisor code running, in the form of the interrupt handler. Any interrupt will work, for example a page fault or ps/2 keyboard irq, but the most common one is a timer. Since the timer can be programmed to tick at a fixed interval, we can ensure that supervisor code gets to run at a fixed interval. That code may return immediately, but it gives the kernel a chance to look at the program and machine states and see if anything needs to be done. Commonly the handler code for the timer also runs the scheduler tick, and can trigger a task switch.
 
-- Populate and and load a TSS into the task register (TR).
-- Set `rsp0` stack to something valid.
-- Enter user mode and wait for a hardware interupt.
+Handling interrupts while not in supervisor mode on x86 is a surprisingly big topic, so we're going to cover it in a separate chapter. In fact, it's the next chapter!
