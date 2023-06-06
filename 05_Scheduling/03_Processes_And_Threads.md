@@ -65,7 +65,7 @@ Creating a process is pretty trivial. We need a place to store the new `process_
 size_t next_free_pid = 0;
 
 process_t* create_process(char* name, void(*function)(void*), void* arg) {
-    process_t* process = alloc(sizeof(process_t)); // We should have an allocation function available
+    process_t* process = alloc(sizeof(process_t)); 
 
     strncpy(process->name, name, NAME_MAX_LEN);
     process->pid = next_free_pid++;

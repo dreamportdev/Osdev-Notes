@@ -122,8 +122,8 @@ All the fields are 4 bytes in size, so creating a structure that can hold it is 
 Let's assume from now on that we have a data structure called PSF_font with all the fields specified above. The first thing that we need of course, is to access to this variable: 
 
 ```C
-// We have linked _binary_font_psf_start from another .o file so we must specify that we are dealing
-// with an external variable 
+// We have linked _binary_font_psf_start from another .o file so we must 
+// specify that we are dealing with an external variable.
 extern char _binary_font_psf_start; 
 PSF_font *default_font = (PSF_font *)&_binary_font_psf_start
 ```
@@ -157,15 +157,18 @@ Below an example of how a glyph is stored:
 The glyphs start right after the psf header, the address of the first character will be then: 
 
 ```C
-uint8_t* first_glyph = (uint8_t*) &_binary_font_psf_start + default_font->headersize
+uint8_t* first_glyph = (uint8_t*) &_binary_font_psf_start + 
+    default_font->headersize
 ```
 
 Since we know that every glyph has the same size, and this is available in the PSF_Header, if we want to access the *i-th* character, we just need to do the following: 
 
 ```C
-uint8_t* selected_glyph_v1 = (uint8_t*) &_binary_font_psf_start + sizeof(PSFv1_Header_Struct) + (i * default_font->bytesperglyph); //psf_v1
+uint8_t* selected_glyph_v1 = (uint8_t*) &_binary_font_psf_start + 
+    sizeof(PSFv1_Header_Struct) + (i * default_font->bytesperglyph);
 
-uint8_t* selected_glyph_v2 = (uint8_t*) &_binary_font_psf_start + default_font->headersize + (i * default_font->bytesperglyph); //psf_v2
+uint8_t* selected_glyph_v2 = (uint8_t*) &_binary_font_psf_start + 
+    default_font->headersize + (i * default_font->bytesperglyph);
 ```
 
 Where in  the v1 case, `PSFv1_Header_Struct` is just the name of the struct containing the PSFv1 definition.

@@ -36,11 +36,11 @@ As already mentioned there are two different version of RSDP, basic data structu
 
 ```c
 struct RSDPDescriptor {
- char Signature[8];
- uint8_t Checksum;
- char OEMID[6];
- uint8_t Revision;
- uint32_t RsdtAddress;
+    char Signature[8];
+    uint8_t Checksum;
+    char OEMID[6];
+    uint8_t Revision;
+    uint32_t RsdtAddress;
 } __attribute__ ((packed));
 ```
 
@@ -55,13 +55,12 @@ Where the fields are:
 The structure for the v2 header is an extension of the previous one, so the fields above are still valid, but in addition it has also the following extra-fields: 
 
 ```c
-struct RSDP2Descriptor
-{
-  //v1 fields
-  uint32_t Length;
-  uint64_t XSDTAddress;
-  uint8_t ExtendedChecksum;
-  uint8_t Reserved[3];
+struct RSDP2Descriptor {
+    //v1 fields
+    uint32_t Length;
+    uint64_t XSDTAddress;
+    uint8_t ExtendedChecksum;
+    uint8_t Reserved[3];
 };
 ```
 
@@ -75,11 +74,11 @@ Before proceeding let's explain little bit better the validation. For both versi
 
 ```c
 bool validate_RSDP(char *byte_array, size_t size) {
- uint32_t sum = 0;
- for(int i = 0; i < size; i++) {
-    sum += byte_array[i];
- }
- return (sum & 0xFF) == 0;
+    uint32_t sum = 0;
+    for(int i = 0; i < size; i++) {
+        sum += byte_array[i];
+    }
+    return (sum & 0xFF) == 0;
 }
 ```
 
@@ -101,15 +100,15 @@ Since every SDT table contains different type of information, they are all diffe
 
 ```c
 struct ACPISDTHeader {
-  char Signature[4];
-  uint32_t Length;
-  uint8_t Revision;
-  uint8_t Checksum;
-  char OEMID[6];
-  char OEMTableID[8];
-  uint32_t OEMRevision;
-  uint32_t CreatorID;
-  uint32_t CreatorRevision;
+    char Signature[4];
+    uint32_t Length;
+    uint8_t Revision;
+    uint8_t Checksum;
+    char OEMID[6];
+    char OEMTableID[8];
+    uint32_t OEMRevision;
+    uint32_t CreatorID;
+    uint32_t CreatorRevision;
 };
 ```
 * The second part is the table itself, every SDT has it's own table
@@ -123,16 +122,14 @@ The RSDT is an SDT header followed by an array of `uint32_t`s, representing the 
 The XSDT is the same, except the array is of `uint64_t`s.
 
 ```c
-struct RSDP
-{
-  ACPISDTHeader sdtHeader; //signature "RSDP"
-  uint32_t sdtAddresses[];
+struct RSDP {
+    ACPISDTHeader sdtHeader; //signature "RSDP"
+    uint32_t sdtAddresses[];
 };
 
-struct XSDT
-{
-  ACPISDTHeader sdtHeader; //signature "XSDT"
-  uint64_t sdtAddresses[];
+struct XSDT {
+    ACPISDTHeader sdtHeader; //signature "XSDT"
+    uint64_t sdtAddresses[];
 };
 ```
 

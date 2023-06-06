@@ -1,7 +1,5 @@
 # The Virtual File System
 
-## Overview
-
 Nowadays there are many OSes available for many different hardware architectures, and probably there are even more file systems. One of the problems for the OS is to provide a generic enough interface to support as many file systems as possible, and making it easy to implement new ones, in the future. This is where the VFS layer comes to aid, in this chapter we are going to see in detail how it works, and make a basic implementation of it. 
 To keep our design simple, the features of our VFS driver will be: 
 

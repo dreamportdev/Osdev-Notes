@@ -43,8 +43,6 @@ If we want to store just the scancode we don't need much more, so we can already
 ```c
 
 void keyboard_driver_irq_handler() {
-
-    
     uint8_t scancode = inb(0x60); // Read byte from the Keyboard data port
     
     keyboard_buffer[buf_position] = scancode;
@@ -113,7 +111,9 @@ Now by changing the `current_state` variable, we can change how the code will tr
 uint8_t current_state;
 
 void init_keyboard() {
-    // Do other initialization stuff like: clean the keyboard buffer, identify the scancode set, enable the IRQ etc.
+    // You'll want to do other setup here in your own driver:
+    // ensure the input buffer of the keyboard is empty, check which scancode
+    // set is in use, enable irqs.
     current_state = NORMAL_STATE;
 }
 
@@ -121,12 +121,11 @@ void keyboard_driver_irq_handler() {
     int scancode = inb(0x60); // Read byte from the Keyboard data port
     if (scancode == 0xE0) {
         current_state = PREFIX_STATE
-        // We have read a prefix, so let's update the state and finish here
-        // this is a very simple scenario, there could be more needed depending on the design
+        // We have read a prefix, so update the state and exit.
         return;
     }
     if (current_state == PREFIX_STATE) {
-        // Do what you need to store the key_code and eventually translate it to the kernel_code and return to the normal state
+        // Store the next part of the scancode, then return to normal state.
         current_state = NORMAL_STATE;
     }
 }
@@ -214,10 +213,11 @@ We could use the following:
 
 ```c
 
-//an example of our kernel-specific scancodes
+//an example of our kernel-specific scancodes:
+//note that these are totally arbitrary and can be whatever you want.
 typedef enum kernel_scancodes {
     [ ... ]
-    F1 = 0xAABBCCDD, //this can be defined to whatever value you want, the exact value is totally arbitrary.
+    F1 = 0xAABBCCDD, 
     [ ... ]
 };
 
