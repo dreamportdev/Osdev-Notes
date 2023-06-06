@@ -90,7 +90,8 @@ What we have so far is already an allocation algorithm, that's easy to implement
 Its implementation is very simple: 
 
 ```c 
-uint8_t *cur_heap_position = 0; //This is just pseudocode in real world this will be a memory location 
+uint8_t *cur_heap_position = 0; //Just an example, in the real world you would use
+                                //a virtual address allocated from the VMM.
 void *first_alloc(size_t size) {
   uint8_t *addr_to_return = cur_heap_position;
   cur_heap_position= cur_heap_position + size;

@@ -53,8 +53,7 @@ Now that's a lot of words, let's have a look at a quick example of how it might 
 An example in c might look like (note these functions are made up for the example, and must be implemented yourself):
 
 ```c
-void* page_heap_alloc(size_t size, bool detect_overrun)
-{
+void* page_heap_alloc(size_t size, bool detect_overrun) {
     const size_t pages_required = (size / PAGE_SIZE_IN_BYTES) + 1;
     void* pages = pmm_alloc_pages(pages_required);
     uint64_t next_alloc_address = get_next_addr();

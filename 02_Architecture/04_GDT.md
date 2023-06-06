@@ -260,18 +260,18 @@ If not familiar with inline assembly, check the appendix on using inline assembl
 void flush_gdt()
 {
     asm volatile("\
-                mov $0x10, %ax \n\
-                mov %ax, %ds \n\
-                mov %ax, %es \n\
-                mov %ax, %fs \n\
-                mov %ax, %gs \n\
-                mov %ax, %ss \n\
-                \n\
-                pop %rdi \n\
-                push $0x8 \n\
-                push %rdi \n\
-                lretq \n\
-            ");
+        mov $0x10, %ax \n\
+        mov %ax, %ds \n\
+        mov %ax, %es \n\
+        mov %ax, %fs \n\
+        mov %ax, %gs \n\
+        mov %ax, %ss \n\
+        \n\
+        pop %rdi \n\
+        push $0x8 \n\
+        push %rdi \n\
+        lretq \n\
+    ");
 }
 ```
 

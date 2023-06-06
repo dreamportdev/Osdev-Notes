@@ -41,8 +41,7 @@ We're going to implement a wrapper function for system calls in C, purely for co
 
 ```c
 __attribute__((naked))
-void do_syscall(uint64_t num, uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3)
-{
+void do_syscall(uint64_t num, uint64_t a0, uint64_t a1, uint64_t a2, uint64_t a3) {
     asm ("int $0x50" ::: "rdi", "rsi", "rdx", "rcx", "r8", "memory");
 }
 ```
@@ -54,8 +53,7 @@ This function also uses the `naked` attribute. If unfamiliar with attributes, th
 Now, let's combine our wrapper function with our example system call from above. We're going to write a `memcpy` function that could be called by another code, but uses the system call internally:
 
 ```c
-void memcpy(void* src, void* dest, size_t count)
-{
+void memcpy(void* src, void* dest, size_t count) {
     return do_syscall(3, (uint64_t)src, (uint64_t)dest, (uint64_t)count, 0, 0);
 }
 ```
