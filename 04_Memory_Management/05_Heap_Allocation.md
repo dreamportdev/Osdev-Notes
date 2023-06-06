@@ -90,7 +90,8 @@ What we have so far is already an allocation algorithm, that's easy to implement
 Its implementation is very simple: 
 
 ```c 
-uint8_t *cur_heap_position = 0; //This is just pseudocode in real world this will be a memory location 
+uint8_t *cur_heap_position = 0; //Just an example, in the real world you would use
+                                //a virtual address allocated from the VMM.
 void *first_alloc(size_t size) {
   uint8_t *addr_to_return = cur_heap_position;
   cur_heap_position= cur_heap_position + size;
@@ -401,7 +402,7 @@ if (prev_node != NULL && prev_node->status == FREE) {
 ```
 What we're describing here is the left node being "swallowed" by the right one, and growing in size. The memory that the left node owns and is responsible for is now part of the right oneTo make it easier to understand, consider the portion of a hypothetical heap in the picture below: 
 
-![heap_example_start](/Images/heapexample.png)
+![Heap initial status](/Images/heapexample.png)
 
 
 Basically the heap starts from address 0, the first node is marked as free and the next two nodes are both used. Now imagine that `free()` is called on the second address (for this exammple we consider size of the heap node structure to be just of 2 bytes): 
@@ -413,7 +414,7 @@ free(0x27); //Remember the overhead
 
 This means that the allocator (before marking this location as free and returning) will check if it is possible to merge first to the left (YES) and then to the right (NO since the next node is still in use) and then will proceed with a merge only on the left side. The final result will be: 
 
-![heap_example_after_merge](/Images/heap_example_after_merge.png)
+![The heap status after the merge](/Images/heap_example_after_merge.png)
 
 The fields in bold are the fields that are changed. The exact implementation of this code is left to the reader.
 

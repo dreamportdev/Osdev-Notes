@@ -1,6 +1,8 @@
 # Executable Linker Format
 
-The *executable and linker file* (ELF) is an open standard for programs, libraries and shards of code and data that are waiting to linked. It's the most common format used by linux and BSD operating systems, and sees some use elsewhere. It's also the most common format for programs in hobby as it's quite simple to implement and it's public specification is feature-complete.
+## ELF Overview
+
+The *executable and linker file* (ELF) is an open standard for programs, libraries and shards of code and data that are waiting to be linked. It's the most common format used by linux and BSD operating systems, and sees some use elsewhere. It's also the most common format for programs in hobby operating systems as it's quite simple to implement and it's public specification is feature-complete.
 
 That's not to say ELF is the *only* format for these kinds of files (there are others like PE/portable execute, a.out or even mach-o), but the ELF format is the best for our purposes. A majority of operating systems have come to a similar to conclusion. We could also use our own format, but be aware this requires a compiler capable of outputting it (meaning either write our own compiler, or modify an existing one - a lot of work!).
 
@@ -25,7 +27,7 @@ typedef uint8_t Elf64_UnsignedChar;
 
 All structs in the base ELF spec are defined using these types, and so we will use them too. Note that their exact definitions *will* change depending on the target platform.
 
-# Layout Of An ELF
+## Layout Of An ELF
 
 The format has four main sections:
 

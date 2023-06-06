@@ -34,6 +34,6 @@ How do we combine the output of all these different filesystems in a uniform way
 
 How the VFS presents itself is another design decision, but the two common ways to do it are:
 
-* Each mounted filesystem is distinct filesystem, with a separate root. Typically each root is given a single letter to identify it. This is the MS-DOS/Windows approach. This is called the *multi-root* approach.RREADME.md
+* Each mounted filesystem is distinct filesystem, with a separate root. Typically each root is given a single letter to identify it. This is the MS-DOS/Windows approach. This is called the *multi-root* approach.
 * Each mounted filesystem exists within a single global tree, under a single root. This is the usual unix approach, where a directory can actually a window into another filesystem.
 
