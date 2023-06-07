@@ -204,6 +204,37 @@ From here you can send commands directly to the emulator, below a list of useful
 * **x/cf address** where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address
 * **xp/cf address** same as above, but for physical memory
 
+#### Info mem & Info tlb
+
+These commands are very useful when we need to debug memory related issues, the first command `info mem` will print the list of active virtual memory mappings, the output format depends on the architecture, for exmple on `x86-64`, it will be similar to the following: 
+
+```
+info mem
+ffff800000000000-ffff800100491000 0000000100491000 -rw
+ffff800100491000-ffff800100498000 0000000000007000 -r-
+ffff800100498000-ffff80010157a000 00000000010e2000 -rw
+ffffffff80000000-ffffffff80057000 0000000000057000 -r-
+ffffffff80057000-ffffffff8006b000 0000000000014000 -rw
+```
+
+Where every line contain represent a single virtual memory mapping, and contains in order: _base, limit, size and flags_. 
+
+the `info tlb` shows the virtual to physical memory mappings. An example output is: 
+
+```
+info tlb
+ffffffff80062000: 000000000994a000 XG------W
+ffffffff80063000: 000000000994b000 XG------W
+ffffffff80064000: 000000000994c000 XG--A---W
+ffffffff80065000: 000000000994d000 XG-DA---W
+ffffffff80066000: 000000000994e000 XG-DA---W
+ffffffff80067000: 000000000994f000 XG-DA---W
+ffffffff80068000: 0000000009950000 XG-DA---W
+ffffffff80069000: 0000000009951000 XG-DA---W
+ffffffff8006a000: 0000000009952000 XG-DA---W
+```
+
+In this case the line contains: _virtualaddress: physicaladdress flags_. The command is not available on all architecture, so if developing on an architecture different from `x86-64` it could not be available. 
 
 ### Debugcon
 

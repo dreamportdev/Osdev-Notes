@@ -1,4 +1,4 @@
-# Architecture and Drivers
+# Architecture And Drivers
 
 Before going beyond a basic "hello world" and implementing the first real parts of our kernel, there are some key concepts about how the CPU operates that we have to understand. What is an interrupt, and how do we handle it? What does it mean to mask them? What is the GDT and what is it's purpose?
 
