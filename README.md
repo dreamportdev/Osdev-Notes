@@ -12,6 +12,8 @@ Currently these notes are a work in progress, but many chapters are functionally
 
 We hope you enjoy, and find something interesting here!
 
+Now you can order a printed copy too from Lulu: [Click here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/paperback/product-mpzp5v.html?q=osdev+notes&page=1&pageSize=4)
+
 ## Current Chapters:
 
 * [Part 0: Introduction](00_Introduction/README.md)
