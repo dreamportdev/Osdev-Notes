@@ -1,8 +1,10 @@
 ---
 title: 'Osdev Notes'
-author:
-  - Ivan G.
-  - Dean T.
+author: |
+   | Ivan G.
+   | Dean T.
+   |
+   | cover art by Koobin Bingku
 header-includes:
  - \usepackage{fvextra}
  - \usepackage{geometry}
