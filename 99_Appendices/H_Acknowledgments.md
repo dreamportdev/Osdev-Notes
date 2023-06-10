@@ -10,4 +10,5 @@ In no particular order:
 - @Pigmy-penguin ([https://github.com/Pigmy-penguin](https://github.com/Pigmy-penguin))
 - @Zenails ([https://github.com/zenails](https://github.com/zenails))
 - @qvjp ([https://github.com/qvjp](https://github.com/qvjp))
+- @leecannon ([https://github.com/leecannon](https://github.com/leecannon))
 

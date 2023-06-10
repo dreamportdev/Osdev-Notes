@@ -6,4 +6,4 @@ It will present them with a high level explanation of the steps and the prerequi
 
 Below the list of chapters: 
 
-* [Going Beyond](01_Going_Beyond) Congratulations, this chapter marks the end of the course, and will present some ideas for the future! 
+* [Going Beyond](01_Going_Beyond.md) Congratulations, this chapter marks the end of the course, and will present some ideas for the future! 
