@@ -79,7 +79,7 @@ PHDRS
 
 This example is actually missing the flags field that sets the permissions, but modern linkers will see these common names like `text` and `rodata` and give them default permissions.
 
-Of course, they can (and in best practice, should) be set them manually:
+Of course, they can (and in best practice, should) be set them manually using the keyword `FLAGS`:
 
 ```
 PHDRS
@@ -90,6 +90,8 @@ PHDRS
     data   PT_LOAD FLAGS((1 << 1) | (1 << 2));
 }
 ```
+
+The flags sets  `p_flags` field of the program header, for more detail on it refer to to the [Executable Linker Format](../09_Loading_Elf/01_Elf_Theory.md) chapter.
 
 ## Sections
 
