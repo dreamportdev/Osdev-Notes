@@ -57,11 +57,11 @@ A program header can be seen as a block of *stuff* that the program loader will 
 
 Modern linkers are quite clever, and will often deduce which program headers are needed, but it never hurts to specify these. A freestanding kernel will need at least three program headers, all of type `PT_LOAD`:
 
-- text, with execute and read permissions.
-- rodata, with only the read permission.
-- data, with both read and write permissions.
+- _text_, with execute and read permissions.
+- _rodata_, with only the read permission.
+- _data_, with both read and write permissions.
 
-*But what about the bss, and other zero-initialized data?* Well that's stored in the data program header. Program headers have two variables for their size, one is the file size and the other is their memory size. If the memory size is bigger than the file size, that memory is expected to be zeroed (as per the elf spec), and thus the bss can be placed there! It could be useful to place it in the script too.
+*But what about the bss, and other zero-initialized data?* Well that's stored in the data program header. Program headers have two variables for their size, one is the file size and the other is their memory size. If the memory size is bigger than the file size, that memory is expected to be zeroed (as per the elf spec), and thus the bss can be placed there!
 
 ### Example
 
@@ -149,6 +149,16 @@ Next up we have a number of lines describing the input sections, with the format
 
 After the closing brace is where we tell the linker what program header this section should be in, in this case its the `text` phdr. The program header name is prefixed with a colon in this case.
 
+Similarly to the program headers we should specify ithe following sections in in our script: 
+
+* _.text_
+* _.rodata_
+* _.data_
+
+and even if not mandatory a good practice is to add a _.bss_ section too, it should include also the `COMMON` symbol. For more details have a look at the complete example at the end of the chapter. 
+
+Keep in mind that the order is not important on how you declare them, but it affects how they are placed in memory. 
+
 ## Common Options
 
 `ENTRY()`: Tells the linker which symbol should be used as the entry point for the program. This defaults to `_start`, but can be set to whatever function or label we want our program to start.
@@ -220,3 +230,7 @@ SECTIONS
     KERNEL_SIZE = . - 0xFFFFFFFF80000000;
 }
 ```
+
+So in the script above we are configuring the required sections `.text`, `.rodata`, `.data`, and `.bss` , for every section include all the symbols that start with the secion name (consider that `.bss` and `.bss.debug` are two different symbols, but we want them to be included in the same section. We also create two  extra symbols, that will be available to the kernel at runtime as variables, the content will be the start and address of the section. 
+
+We also create another symbol to contain the kernel size, where `.` is the memory address when the script has reached that point, and `0xFFFFFFFF80000000` is the starting address as you can see at the beginning of `SECTIONS`.
