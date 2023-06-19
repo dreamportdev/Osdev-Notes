@@ -61,7 +61,7 @@ Modern linkers are quite clever, and will often deduce which program headers are
 - rodata, with only the read permission.
 - data, with both read and write permissions.
 
-*But what about the bss, and other zero-initialized data?* Well that's stored in the data program header. Program headers have two variables for their size, one is the file size and the other is their memory size. If the memory size is bigger than the file size, that memory is expected to be zeroed (as per the elf spec), and thus the bss can be placed there!
+*But what about the bss, and other zero-initialized data?* Well that's stored in the data program header. Program headers have two variables for their size, one is the file size and the other is their memory size. If the memory size is bigger than the file size, that memory is expected to be zeroed (as per the elf spec), and thus the bss can be placed there! It could be useful to place it in the script too.
 
 ### Example
 
@@ -101,7 +101,7 @@ While program headers are a fairly course mechanism for telling the program load
 
 When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll potentially need to update the linker script every time the code or data sections change in size. Instead, we can use the dot operator (`.`). It represents the current VMA (remember this is the runtime address), and allows us to perform certain operations on it, without specifying exactly what the address is. 
 
-We can align it to certain values, add relative offsets based on it's current address and a few other things. Linker scripts accept 
+We can align it to certain values, add relative offsets based on it's current address and a few other things. 
 
 The linker will automatically increment the VMA when placing sections. The current VMA is read/write, so we have complete control over this process if we want.
 
