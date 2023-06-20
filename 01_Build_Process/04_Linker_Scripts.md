@@ -57,9 +57,9 @@ A program header can be seen as a block of *stuff* that the program loader will 
 
 Modern linkers are quite clever, and will often deduce which program headers are needed, but it never hurts to specify these. A freestanding kernel will need at least three program headers, all of type `PT_LOAD`:
 
-- text, with execute and read permissions.
-- rodata, with only the read permission.
-- data, with both read and write permissions.
+- _text_, with execute and read permissions.
+- _rodata_, with only the read permission.
+- _data_, with both read and write permissions.
 
 *But what about the bss, and other zero-initialized data?* Well that's stored in the data program header. Program headers have two variables for their size, one is the file size and the other is their memory size. If the memory size is bigger than the file size, that memory is expected to be zeroed (as per the elf spec), and thus the bss can be placed there!
 
@@ -101,7 +101,7 @@ While program headers are a fairly course mechanism for telling the program load
 
 When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll potentially need to update the linker script every time the code or data sections change in size. Instead, we can use the dot operator (`.`). It represents the current VMA (remember this is the runtime address), and allows us to perform certain operations on it, without specifying exactly what the address is. 
 
-We can align it to certain values, add relative offsets based on it's current address and a few other things. Linker scripts accept 
+We can align it to certain values, add relative offsets based on it's current address and a few other things. 
 
 The linker will automatically increment the VMA when placing sections. The current VMA is read/write, so we have complete control over this process if we want.
 
@@ -148,6 +148,16 @@ Note that in the above examples the VMA is undefined. Again, unless we know we n
 Next up we have a number of lines describing the input sections, with the format `FILES(INPUT_SECTIONS)`. In this case we want all files, so we use the wildcard `*`, and then all sections from those files that begin with `.text`, so we make use of the wildcard again.
 
 After the closing brace is where we tell the linker what program header this section should be in, in this case its the `text` phdr. The program header name is prefixed with a colon in this case.
+
+Similarly to the program headers we should specify ithe following sections in in our script: 
+
+* _.text_
+* _.rodata_
+* _.data_
+
+It is a good practice, even if not mandatory, to add a _.bss_ section too, it should include also the `COMMON` symbol. For more details have a look at the complete example at the end of the chapter. 
+
+Keep in mind that the order is not important on how you declare them, but it affects how they are placed in memory. 
 
 ## Common Options
 
@@ -220,3 +230,7 @@ SECTIONS
     KERNEL_SIZE = . - 0xFFFFFFFF80000000;
 }
 ```
+
+In the script above we are configuring the required sections `.text`, `.rodata`, `.data`, and `.bss` , for every section include all the symbols that start with the secion name (consider that `.bss` and `.bss.debug` are two different symbols, but we want them to be included in the same section. We also create two  extra symbols, that will be available to the kernel at runtime as variables, the content will be the start and address of the section. 
+
+We also create another symbol to contain the kernel size, where `.` is the memory address when the script has reached that point, and `0xFFFFFFFF80000000` is the starting address as you can see at the beginning of `SECTIONS`.
