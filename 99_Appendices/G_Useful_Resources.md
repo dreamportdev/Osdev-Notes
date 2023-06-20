@@ -83,9 +83,14 @@ This appendix is a collection of links we found useful developing our own kernel
 - Osdev Wiki Page ELF Tutorial: [https://wiki.osdev.org/ELF_Tutorial](https://wiki.osdev.org/ELF_Tutorial)
 - x86-64 psABI: [https://gitlab.com/x86-psABIs/x86-64-ABI](https://gitlab.com/x86-psABIs/x86-64-ABI)
 
+## Nasm
+
+* Nasm Struct Section: [https://www.nasm.us/xdoc/2.15/html/nasmdoc5.html#section-5.9.1](https://www.nasm.us/xdoc/2.15/html/nasmdoc5.html#section-5.9.1)
+* Nasm String section: [https://www.nasm.us/xdoc/2.15/html/nasmdoc3.html#section-3.4.2](https://www.nasm.us/xdoc/2.15/html/nasmdoc3.html#section-3.4.2)
+
 ## Debugging
 
-* Osdev Wiki Page for kernel debugiggin: [https://wiki.osdev.org/Kernel_Debugging](https://wiki.osdev.org/Kernel_Debugging)
+* Osdev Wiki Page for kernel debugging: [https://wiki.osdev.org/Kernel_Debugging](https://wiki.osdev.org/Kernel_Debugging)
 * Osdev Wiki Page for Serial ports: [https://wiki.osdev.org/Serial_Ports](https://wiki.osdev.org/Serial_Ports)
 * Debugging with Qemu at Wikibooks: [https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU](https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU)
     

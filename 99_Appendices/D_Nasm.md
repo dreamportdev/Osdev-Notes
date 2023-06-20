@@ -304,8 +304,3 @@ istruc task
     at task.name    db 'hello123'
 iend
 ```
-
-### Useful links
-
-[Nasm String section](https://www.nasm.us/xdoc/2.15/html/nasmdoc3.html#section-3.4.2)
-[Nasm Struct Section](https://www.nasm.us/xdoc/2.15/html/nasmdoc5.html#section-5.9.1)
