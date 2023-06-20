@@ -11,4 +11,5 @@ In no particular order:
 - @Zenails ([https://github.com/zenails](https://github.com/zenails))
 - @qvjp ([https://github.com/qvjp](https://github.com/qvjp))
 - @leecannon ([https://github.com/leecannon](https://github.com/leecannon))
+- @seekbytes ([https://github.com/seekbytes](https://github.com/seekbytes))
 
