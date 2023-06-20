@@ -170,7 +170,7 @@ void pit_interrupt_handler()
     send_eoi();
 }
 
-void calibrate_apic_timer()]
+void calibrate_apic_timer()
 {
     [ ... ] //setup apic timer to max value, and setup pit to known frequency.
 
