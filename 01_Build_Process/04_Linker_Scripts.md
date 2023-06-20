@@ -155,7 +155,7 @@ Similarly to the program headers we should specify ithe following sections in in
 * _.rodata_
 * _.data_
 
-and even if not mandatory a good practice is to add a _.bss_ section too, it should include also the `COMMON` symbol. For more details have a look at the complete example at the end of the chapter. 
+It is a good practice, even if not mandatory, to add a _.bss_ section too, it should include also the `COMMON` symbol. For more details have a look at the complete example at the end of the chapter. 
 
 Keep in mind that the order is not important on how you declare them, but it affects how they are placed in memory. 
 
@@ -231,6 +231,6 @@ SECTIONS
 }
 ```
 
-So in the script above we are configuring the required sections `.text`, `.rodata`, `.data`, and `.bss` , for every section include all the symbols that start with the secion name (consider that `.bss` and `.bss.debug` are two different symbols, but we want them to be included in the same section. We also create two  extra symbols, that will be available to the kernel at runtime as variables, the content will be the start and address of the section. 
+In the script above we are configuring the required sections `.text`, `.rodata`, `.data`, and `.bss` , for every section include all the symbols that start with the secion name (consider that `.bss` and `.bss.debug` are two different symbols, but we want them to be included in the same section. We also create two  extra symbols, that will be available to the kernel at runtime as variables, the content will be the start and address of the section. 
 
 We also create another symbol to contain the kernel size, where `.` is the memory address when the script has reached that point, and `0xFFFFFFFF80000000` is the starting address as you can see at the beginning of `SECTIONS`.
