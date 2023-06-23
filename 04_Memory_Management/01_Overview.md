@@ -73,5 +73,5 @@ What happens under the hood?
 
 The picture below identifies the various components of a basic memory management setup and show how they interact in this example scenario.
 
-![Memory management](/Images/memorymanager_example.jpg)
+![Memory management Workflow Example](/Images/memorymanager_example.jpg)
 
