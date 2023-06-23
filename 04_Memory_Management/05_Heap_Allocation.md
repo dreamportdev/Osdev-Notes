@@ -132,9 +132,9 @@ Of course the cons are probably pretty clear and make this algorithm pretty usel
 
 The main problem with this algorithm is that we don't keep track of what we have allocated in the past, so we are not able to free that memory in the future, when it's no longer used.
 
-Now we're going to build a new allocator based on the one we just implemented. The first thing to do is try to figure out what are the information we need to keep track of the previous allocations:
+Now we're going to build a new allocator based on the one we just implemented. The first thing to do is try to figure out what are the information we need to keep track of from the previous allocations:
 
-* Whenever we make an allocation we require x bytes of memory, so when we return the address, we know that the next free one will be at least at: `returned_address + x`  so we need to keep track of the allocation size.
+* Whenever we make an allocation we require `x` bytes of memory, so when we return the address, we know that the next free one will be at least at: `returned_address + x`  so we need to keep track of the allocation size.
 * Then we need a way to traverse to the previously allocated addresses, for this we need just a pointer to the start of the heap, if we decide to keep track of the sizes. 
 
 Now the problem is: how do we keep track of this information? 
