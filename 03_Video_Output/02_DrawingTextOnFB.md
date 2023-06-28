@@ -42,6 +42,7 @@ objcopy -O elf64-x86-64 -B i386 -I binary font.psf font.o
 
 The `objcopy` command is a tool that copy a source file into another, and can change its format. 
 The parameters used in the example above are: 
+
 * -O the output format (in this case is elf64-x86-64) 
 * -B is the binary architecture 
 * -I the inpurt target
@@ -93,7 +94,7 @@ The magic number is stored from the least significant byte (0) to the more signi
 For version 1 of the psf, the data structure is pretty simple and contains only three fields: 
 
 * *magic* number: the value as already seen above, that is 0x0436 
-* *mode*: they are flags. If the value is 0x01 it means that the font will have 512 characters (there are few other values that can be checked here https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html)
+* *mode*: they are flags. If the value is 0x01 it means that the font will have 512 characters (there are few other values that can be checked here [https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html](https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html))
 * *charsize* The character size in bytes
 
 All the fields above are declared as `unsigned char` variables, except for the magic number that is an array of 2 unsigned char. For version 1 fonts there are few values that are always the same:
@@ -119,7 +120,7 @@ The psf structure header has a fixed size of 32 bytes, with the following inform
 
 All the fields are 4 bytes in size, so creating a structure that can hold it is pretty trivial, except for the magic number that is an array of 4 usnigned char.
 
-Let's assume from now on that we have a data structure called PSF_font with all the fields specified above. The first thing that we need of course, is to access to this variable: 
+Let's assume from now on that we have a data structure called `PSF_font` with all the fields specified above. The first thing that we need of course, is to access to this variable: 
 
 ```C
 // We have linked _binary_font_psf_start from another .o file so we must 
@@ -130,8 +131,8 @@ PSF_font *default_font = (PSF_font *)&_binary_font_psf_start
 
 ## Glyph
 
-Now that we have access to our PSF font, we can work with "Glyphs"
-Every character (Glyph) is stored in a bitmap. Each bitmap is *WidthxHeight* pixel . If for example the glyph is 8x16, it will be 16 bytes long, every byte encode a row of the glyph. 
+Now that we have access to our PSF font, we can work with "Glyphs".
+Every character (Glyph) is stored in a bitmap. Each bitmap is `WIDTH x HEIGHT` pixel . If for example the glyph is 8x16, it will be 16 bytes long, every byte encode a row of the glyph. 
 Below an example of how a glyph is stored:
 
 ```
@@ -161,7 +162,7 @@ uint8_t* first_glyph = (uint8_t*) &_binary_font_psf_start +
     default_font->headersize
 ```
 
-Since we know that every glyph has the same size, and this is available in the PSF_Header, if we want to access the *i-th* character, we just need to do the following: 
+Since we know that every glyph has the same size, and this is available in the `PSF_Header`, if we want to access the *i-th* character, we just need to do the following: 
 
 ```C
 uint8_t* selected_glyph_v1 = (uint8_t*) &_binary_font_psf_start + 
@@ -179,7 +180,7 @@ If we want to write a function to display a character on the framebuffer, what p
 * The position in the screen where we want to place the character (x and y), 
 * The foreground color and the character color
 
-Before proceeding let's talk about the position parameters. Now what they are depends also if we are implementing a gui or not, but let's assume that for now we want only to print text on the screen, in this case X and Y do not represent the pixel coordinates, but characters for example x=0 y=1 it goes to the column 0 (x) and to the row y is down 1 * font->height pixel
+Before proceeding let's talk about the position parameters. Now what they are depends also if we are implementing a gui or not, but let's assume that for now we want only to print text on the screen, in this case X and Y do not represent the pixel coordinates, but characters for example x=0 y=1 it goes to the column 0 (x) and to the row y is down `1 * font->height pixel`
 
 So our function header will be something like that: 
 
