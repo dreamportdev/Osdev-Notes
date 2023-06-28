@@ -12,4 +12,5 @@ In no particular order:
 - @qvjp ([https://github.com/qvjp](https://github.com/qvjp))
 - @leecannon ([https://github.com/leecannon](https://github.com/leecannon))
 - @seekbytes ([https://github.com/seekbytes](https://github.com/seekbytes))
+- @Flukas88 ([https://github.com/Flukas88](https://github.com/Flukas88))
 
