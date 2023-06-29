@@ -1,7 +1,7 @@
 #!/bin/bash
 
 get_entries() {
-    echo $(find $1 -maxdepth 1 -regextype egrep -regex '.*\/[0-9]{2}_[A-Za-z_.]*' | sort)
+    echo $(find $1 -maxdepth 1 -regextype egrep -regex '.*\/[0-9A-Z]{1,2}_[A-Za-z_.]*' | sort)
 }
 
 pandoc_filename="osdev-notes-$(date +%F).pdf"
