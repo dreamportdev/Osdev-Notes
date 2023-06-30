@@ -100,7 +100,7 @@ u8     | framebuffer_blue_mask_size       |
 
 Where `framebuffer_XXX_field_position` is the starting bit of the color XXX, and the `framebuffer_XXX_mask_size` is the size in bits of the color XXX. Usually the format is 0xRRGGBB (is the same format used in HTML).
 
-* If it is 2, it means EGA text, so the width and height are specified in characters and not pixels, framebuffer-bpp = 16 and framebuffer_pitch is expressed in byte text per line.
+* If it is 2, it means EGA text, so the width and height are specified in characters and not pixels, `framebuffer-bpp = 16` and `framebuffer_pitch` is expressed in byte text per line.
 
 ## Plotting A Pixel
 
