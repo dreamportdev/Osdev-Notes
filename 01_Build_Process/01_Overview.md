@@ -65,7 +65,7 @@ For `x86_64` the target triplet  would be `--target=x86_64-elf`. Target triplets
 
 Setting up a GCC cross compiler is a little more hands on, but still very simple. The first approach is to simply download a pre-compiled toolchain (see the link above). This is super simple, with the only major disadvantage being that we may not be getting the latest version.
 
-The other approach is to compile GCC. This takes more time, but it's worth understanding the process. The osdev wiki has a great guide on this, a link is available at the start of this chapter.
+The other approach is to compile GCC. This takes more time, but it's worth understanding the process. The osdev wiki has a great guide on this, a link is available in the appendices section.
 
 The following sections will use the common shorthands to keep things simple:
 
