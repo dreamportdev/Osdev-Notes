@@ -18,7 +18,7 @@ In this part we're going to look at the subsystem that handles all of this, and 
 It will be divided into two main topics: 
 
 * [The Virtual File System (VFS)](02_VirtualFileSystem.md): will introduce the basic VFS concepts and describe how implement a very simple version of it. For now it can be defined simply as a layer that works as an abstraction for the different file systems supported by our os, in this way the application and the kernel use a unified interface of functions to interact with files and directories on different fs, it offers functions like `open, write, opendir`
-* In the [TAR File System] chapter we will see how the theory within a VFS interface works by implementing the Tar File System.
+* In the [TAR File System](03_TarFileSystem.md) chapter we will see how the theory within a VFS interface works by implementing the Tar File System.
 
 ## A Quick Recap
 
@@ -34,6 +34,6 @@ How do we combine the output of all these different filesystems in a uniform way
 
 How the VFS presents itself is another design decision, but the two common ways to do it are:
 
-* Each mounted filesystem is distinct filesystem, with a separate root. Typically each root is given a single letter to identify it. This is the MS-DOS/Windows approach. This is called the *multi-root* approach.
-* Each mounted filesystem exists within a single global tree, under a single root. This is the usual unix approach, where a directory can actually a window into another filesystem.
+* Each mounted filesystem is a distinct filesystem, with a separate root. Typically each root is given a single letter to identify it. This is the MS-DOS/Windows approach and is called the *multi-root* approach.
+* Each mounted filesystem exists within a single global tree, under a single root. This is the usual unix approach, where a directory can actually be a window into another filesystem.
 
