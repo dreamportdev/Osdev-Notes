@@ -12,7 +12,7 @@ Currently these notes are a work in progress, but many chapters are functionally
 
 We hope you enjoy, and find something interesting here!
 
-Now you can order a printed copy too from Lulu: [Click here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/paperback/product-mpzp5v.html?q=osdev+notes&page=1&pageSize=4)
+Physical copies can be order via Lulu: [Click here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/paperback/product-mpzp5v.html?q=osdev+notes&page=1&pageSize=4)
 
 ## Current Chapters:
 
@@ -71,10 +71,11 @@ Now you can order a printed copy too from Lulu: [Click here](https://www.lulu.co
     * [Tips and Tricks](99_Appendices/B_Tips_And_Tricks.md)
     * [C Language](99_Appendices/C_Language_Info.md)
     * [Working With NASM](99_Appendices/D_Nasm.md)
-    * [Debugging](99_Appendices/E_Debugging.md)
-    * [Memory Protection](99_Appendices/F_Memory_Protection.md)
-    * [Useful Resources](99_Appendices/G_Useful_Resources.md)
-    * [Acknowledgments](99_Appendices/H_Acknowledgments.md)
+    * [All About Cross Compilers](99_Appendices/E_Cross_Compilers.md)
+    * [Debugging](99_Appendices/F_Debugging.md)
+    * [Memory Protection](99_Appendices/G_Memory_Protection.md)
+    * [Useful Resources](99_Appendices/H_Useful_Resources.md)
+    * [Acknowledgments](99_Appendices/I_Acknowledgments.md)
 
 ## Our Projects
 

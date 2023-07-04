@@ -1,38 +1,38 @@
-# Cross Compilation Build
+# Cross Platform Building
 
-Even if it is not our purpose to go in depth with the building of a cross-compiler toolchain, it can be useful to know what we need to build and what are  the minimum necessary build flags required for them. 
+This appendix looks at how and why we might want to build a cross compilation toolchain, and how to build some other tools like gdb and qemu. These tools include:
 
-Usually when building a  cros-compiler for every architecture we want to support we need the following: 
+- binary utils like a linker, readelf, objdump, addr2line.
+- a compiler for our chosen language.
+- a debugger, like gdb.
+- an emulator for testing, like qemu.
 
-* binutils 
-* a compiler (we will focus on gcc and clang)
-* a debugger (gdb in our case)
-* an emulator
+For most of these tools (except clang/LLVM) we'll need to build them specifically for the target architecture we want to support. The building processes covered below are intended to be done on a unix-style system, if developing in a windows environment this will likely be different and is not covered here.
 
-they need to be buit with the support for the target architecture. The next sections will explain what are some configuration flags that we want to enable.
+For the binary utils and compiler there are two main vendors: the GNU toolchain consisting of GCC and binutils, and the LLVM toolchain of the same name which uses clang as a frontend for the compiler.
 
-## Prerequisites
+## Why Use A Cross Compiler?
 
-In order to build the cross-compiler and the other tools, there is also a set of dependencies that needs to be satisfied,  this depends on the linux distribution/operating system we are using. So they may be already installed. 
+A fair question to ask! If we're building our kernel for x86_64 and our host is the same architecture, why not use our host compiler and linker? Well it's very doable, but your distribution may ship modified versions of these tools (that have been optimized to target this distribution or architecture). Our compiler may also choose the wrong file if conflicting names are chosen: if we create our own `stdint.h` (not recommended) the host compiler may keep including the ones for the host system. This could be fine, until we move to another system or target a different architecture - at which point things may break in unexpected ways.
 
-The list below is the common dependencies that are needed, but again it is not complete and depends highly on the host operating systems: 
+It's also considered good practice to take a `clean room` approach to building software for bare metal environments.
 
-* configure
-* make
-* build-essential (on debian derivatives)
-* bison
-* flex
-* libgmp3-dev
-* libmpc-dev
-* libmpfr-dev
-* texinfo
-* libcloog
+## Binutils and Compilers
 
-This appendix built process is  focused on a unix-like operating system.
+### Prerequisites
 
-## Where To Put The Cross-compiler
+In order to build GNU binutils and GCC there are a few dependencies that need to be satisfied. The exact names of these packages depend on the distribution we're using. The minimal set of dependencies is listed below:
 
-We can let them be installed it in the default location, somewhere in `/usr` probably. But it could be useful to wrap all of them in a custom folder, so in case we decide to remove one, we just need to delete the folder. To do that we can define the following three env variables for the build process: 
+- autotools and make. Often these are provided via the build-essential package for debian based distros.
+- bison.
+- flex.
+- libgmp3-dev, sometimes called libgmp3-devel depending on distro. Same applies to other libraries below.
+- libmpc-dev.
+- libmpfr-dev.
+- texinfo.
+- libcloog.
+
+There's three environment variables we're going to use during the build process:
 
 ```
 export PREFIX="/your/path/to/cross/compiler"
@@ -40,64 +40,66 @@ export TARGET="riscv64-elf"
 export PATH="$PREFIX/bin:$PATH"
 ```
 
-replace the `TARGET` variable with the architecture needed to support. Now to install all the tools in the same folder (declared in the env variable `PREFIX`) we just need to add the following flag during the `configure` command: `--prefix=$PREFIX`
+The `PREFIX` environment variable stores the directory we want to install the toolchain into after building, `TARGET` is the target triplet of our target and we also modify the shell path to include the prefix directory. As for where to install to it's up to you, but if unsure somewher in `/usr/` can work or in a directory for tools under your home directory.
 
-## Binutils
+The process of building binutils and GCC follows a pattern:
 
-They are a set of tool to create and manage binary programs, they include a lof of commands like the most importants are `ld` (the linker0, `as` (an assembly compiler, unless we are using nasm), `objcopy`(useful if we need to include other binaries to our kernel), `readelf` (to read the content off an elf file), etc. 
+- first we'll create a directory to hold all the temporary build files and change into it.
+- next is to generate the build system files using a script.
+- then we can build the targets we want, before installing them.
 
-For the binutils the flags that we need to pass to the configure command are: 
+### Binutils
 
-* `--prefix=$PREFIX` :  this flags indicate the folder where we want the binaries to be installed. If omitted it will use the default path (in which case we also need to be authenticated as root to finish it)
-*`--target=$TARGET`: this is the target platform we want to build for, for example `x86_64-elf`for supporting the `x86_64` architecture, or `riscv64-elf` if we want to support  the riscv64 architecture.
-* `--with-sysroot`: tells binutils to enable sysroot support in the cross-compile by pointing it to a default empty directory.
-* `--disable-nls` : this is added more to reduce the size of the binaries generated, since it disable the national  language support. 
-* `--disable-werror`: explanation to add 
+These are a set of tools create and manage programs, including the linker (`ld`), the GNU assembler (`as`, referred to as GAS), objcopy (useful for inserting non-code files into binaries) and readelf.
 
-The first thing to do is obtain a copy of the binutils sources (wheter we are cloning their source repository or just downloading latest version from the official site)
+The flags we'll need to pass to the configure script are:
 
-Before starting the build process let's create a an empty folder where to put the binaries and move into it: 
+- `--prefix=$PREFIX`: this tells the script where we want to install programs after building. If omitted this will use a default value, but this is not recommended.
+- `--target=$TARGET`: tells the script which target triplet we want to use.
+- `--with-sysroot`: the build process needs a system root to include any system headers from. We don't want it to use the host headers so by just using the flag we point the system root to an empty directory, disabling this functionality - which is we want for a freestanding toolchain.
+- `--disable-nls`: this helps reduce the size of the generated binaries by disabling native language support. If you want these tools to support non-english languages you may want to omit this option (and keep nls enabled).
+- `--disable-werror`: tells the configure script not to add `-Werror` to the compile commands generated. This option may be needed depending on if you have any missing dependencies.
+
+Before we can do this however we'll need to obtain a copy of the source code for GNU binutils. This should be available on their website of can be downloaded from the ftp mirror: https://ftp.gnu.org/gnu/binutils/.
+
+Once downloaded extract the source into a directory, then create a new directory for holding the temporary build files and enter it. If unsure of where to put this, a sibling directory to where the source code was extracted works well. An example might be:
 
 ```bash
 mkdir binutils_build
 cd binutils_build
 ```
 
-Now form there we can launch the configure command with the flags above: 
+From this temporary directory we can use the configure script to generate the build files, like so:
 
 ```bash
 /path/to/binutils_src/configure --target=$TARGET --with-sysroot --disable-nls --disable-werror
 ```
 
-After the command is complete we just need to build them using the "usual" make commands
+At this point the configure script has generate a makefile for us with our requested options, now we can do the usual series of commands:
 
 ```bash
 make
 make install
 ```
 
-And that's it, now `binutils`are installed in `$PREFIX` and ready to be used  if we have added it to our path.
+That's it! Now all the binutils tools are installed in the `PREFIX` directory and ready to be used.
 
-## Compilers
+### GCC
 
-This step depends on the compiler used
+The process for building GCC is very similar to binutils. Note that we need to have a version of binutils for our target triplet before trying to build GCC. These binaries must also be in the path, which we did before. Let's create a new folder for the build files (`build_gcc`) and move into it.
 
-### Gcc
-
-The process is very similar, once we obtained the sources downloaded , let's create a new folder for the built files (i.e. `build_gcc`), and move into it. 
-
-Now we can launch the configure command similar to the above one: 
+Now we can use the configure script like before:
 
 ```bash
-/path/gcc_sources/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers 
+/path/to/gcc_sources/configure --target=$TARGET --prefix=$PREFIX --disable-nls --enable-languages=c,c++, --without-headers
 ```
 
-Some of the flags are the same as above with the same purpose. The other two are: 
+For brevity we'll only exlain the new flags:
 
-* `--enable-languages=c,c++` : specify the languages we want to be enabled by the compiler
-* `--without-headers`: is telling to not rely on any headers or library present on the target machine. 
+- `--enable-languages=c,c++`: select which language frontends to enable, these two are the default. We can disable c++ but if we plan to cross compile more things than our kernel this can be nice to have.
+- `--without-headers`: tells the compiler not to rely on any headers from the host and instead generate it's own.
 
-Once the configure has been completed, the `make` commands are slightly different from the standard ones: 
+Once the script is finished we can run a few make targets to build the compiler and it's support libraries. By default running `make`/`make all` is not recommended as this builds everything for a full userspace compiler. We don't need all that and it can take a lot of time. For a freestanding program like a kernel we only need the compiler and libgcc.
 
 ```bash
 make all-gcc
@@ -106,15 +108,23 @@ make install-gcc
 make install-target-libgcc
 ```
 
-Again the two install steps, will install the compiler in the `$PREFIX` folder.
+Libgcc contains code the compiler might add calls to for certain operations. This happens mainly when an operation the compiler tries to perform isn't supported by the target hardware and has to be emulated in software. GCC states that it can emit calls to libgcc functions anywhere and that we should *always* link to it. The linker can remove the unused parts of the code if they're not called. This set up is specific to GCC.
 
-### Clang
+In practice we can get away with not linking to libgcc, but this can result in unexpected linker errors. Best practice here is to build and link with libgcc.
 
-@DT
-  
+### Clang and LLVM
+
+Building LLVM from source is a much more significant task than building the gcc/binutils toolchain. It takes a fair amount more time to build all the required tools from scratch. However there is an upside to this, LLVM (which clang is just one frontend to) is designed to be modular and ships with backend modules for most supported architectures. This means a default install of clang (from your distribution's package manager) can be used as a cross compiler.
+
+To tell clang to cross compile, there is a special flag you'll need to pass it: `--target`. It takes the target triplet for the target. Most LLVM tools like lld (the llvm linker) support it and will switch their modules to use ones that match the target triplet.
+
+As an example lets say you wanted to use clang as a cross compiler for `x86_64-elf` triplet or `x86_64-unknown-elf` you would invoke clang like `clang --target=x86_64-elf` or `--target=x86_64-unknown-elf`. Let's say you wanted to build your kernel for riscv64 you would do something like `clang --target=riscv64`.
+
+Since clang and lld are compatible with the gcc/binutils versions of these tools you can pass the same flags and compilation should go as exepected.
+
 ## Emulator (QEmu)
 
-Of course we can use any emultaro we want, but in our example we rely on qemu. This tool to be compiled requires some extra dependencies: 
+Of course we can use any emulator we want, but in our example we rely on qemu. This tool to be compiled requires some extra dependencies: 
 
 * ninja-build
 * python3-sphinx 
@@ -128,12 +138,10 @@ As usual let's create a new folder called `build_qemu` and move into it. The con
 ```
 where: 
 
-* `--target-list=riscv64-softmmu,x86_64`: is a comma separated list of platforms we want to support. 
+* `--target-list=riscv64-softmmu,x86_64`: is a comma separated list of platforms we want to support.
 * `--enable-tools`: will build support utilities that comes with qemu
 * `--enable-gtk`: it will enable the gtk+ interface
 * `--enable-vhos-net` : it will enable the vhost-net kernel acceleration support
-
-@DT: what other parameters can we add? 
 
 After the configuration has finished, to build qemu the commands to install it: 
 
@@ -141,29 +149,25 @@ After the configuration has finished, to build qemu the commands to install it:
 make -j $(nproc)
 make install
 ```
+
+Qemu is quite a large program, so it's recommended to make use of all cores when building it.
  
 ## GDB
 
-Let's create a build folder for it too, i.e. `build_gdb` and move into it. 
-
-GDB can require extra dependencies: 
+The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need:
 
 * libncurses-dev
 * libsource-highligh-dev
 
-if we want to enable the `tui`(Text User Interface) 
-
 ```bash
-../gdb.x.y.z/configure --target=$TARGET  --host=x86_64-linux-gnu  --prefix="$PREFIX" --disable-werror --enable-tui --enable-source-highlight
+path/to/gdb_sources/configure --target=$TARGET  --host=x86_64-linux-gnu  --prefix="$PREFIX" --disable-werror --enable-tui --enable-source-highlight
 ```
 
-where: 
+The last two options enable compiling the text-user-interface (`--enable-tui`) and source code highlighting (`--enable-source-highlight) which are nice-to-haves. These flags can be safely omitted if these aren't features we want.
 
-* `--enable-tui`: will enable the Text User Interface (it's useful to navigate through the sources while debugging)
-* `--enable-source-highlight` : it enables source highlight
-As usual `TARGET` and `PREFIX` are the same used for the previous tools.  be already set from the previous steps (if not make sure to have them set, if we don't want to risk to overwrite the default installation of gdb).
+The `--target=` flag is special here in that it can also take an option `all` which builds gdb with support for every single architecture it can support. If we're going to develop on one machine but test on multiple architectures (via qemu or real hardware) this is nice. It allows a single instance of gdb to debug multiple architectures without needing different versions of gdb. Often this is how the 'gdb-multiarch' package is created for distros that have it.
 
-Now we can build and install it:
+After running the configure script, we can build and install our custom gdb like so:
 
 ```bash
 make all-gdb
