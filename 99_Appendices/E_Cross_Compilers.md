@@ -40,7 +40,7 @@ export TARGET="riscv64-elf"
 export PATH="$PREFIX/bin:$PATH"
 ```
 
-The `PREFIX` environment variable stores the directory we want to install the toolchain into after building, `TARGET` is the target triplet of our target and we also modify the shell path to include the prefix directory. As for where to install to it's up to you, but if unsure somewher in `/usr/` can work or in a directory for tools under your home directory.
+The `PREFIX` environment variable stores the directory we want to install the toolchain into after building, `TARGET` is the target triplet of our target and we also modify the shell `PATH` variable  to include the prefix directory. To permantly add the cross compiler to your path, you may want to add this last line (where we updated `PATH`) to your shell's configuration. If you're unsure what shell you use, it's probably bash and you will want to edit your `.bashrc`. As for where to install this up to personal preference, but if unsure a 'tools' directory under our home folder should work. This is nice because the install process doesn't require root permissons. If we want all users on the system to be able to access it, we could install somewhere under `/usr/` too.
 
 The process of building binutils and GCC follows a pattern:
 
@@ -50,17 +50,17 @@ The process of building binutils and GCC follows a pattern:
 
 ### Binutils
 
-These are a set of tools create and manage programs, including the linker (`ld`), the GNU assembler (`as`, referred to as GAS), objcopy (useful for inserting non-code files into binaries) and readelf.
+These are a set of tools to create and manage programs, including the linker (`ld`), the GNU assembler (`as`, referred to as GAS), objcopy (useful for inserting non-code files into binaries) and readelf.
 
 The flags we'll need to pass to the configure script are:
 
 - `--prefix=$PREFIX`: this tells the script where we want to install programs after building. If omitted this will use a default value, but this is not recommended.
 - `--target=$TARGET`: tells the script which target triplet we want to use.
-- `--with-sysroot`: the build process needs a system root to include any system headers from. We don't want it to use the host headers so by just using the flag we point the system root to an empty directory, disabling this functionality - which is we want for a freestanding toolchain.
+- `--with-sysroot`: the build process needs a system root to include any system headers from. We don't want it to use the host headers so by just using the flag we point the system root to an empty directory, disabling this functionality - which is what we want for a freestanding toolchain.
 - `--disable-nls`: this helps reduce the size of the generated binaries by disabling native language support. If you want these tools to support non-english languages you may want to omit this option (and keep nls enabled).
 - `--disable-werror`: tells the configure script not to add `-Werror` to the compile commands generated. This option may be needed depending on if you have any missing dependencies.
 
-Before we can do this however we'll need to obtain a copy of the source code for GNU binutils. This should be available on their website of can be downloaded from the ftp mirror: https://ftp.gnu.org/gnu/binutils/.
+Before we can do this however we'll need to obtain a copy of the source code for GNU binutils. This should be available on their website or can be downloaded from the ftp mirror: https://ftp.gnu.org/gnu/binutils/.
 
 Once downloaded extract the source into a directory, then create a new directory for holding the temporary build files and enter it. If unsure of where to put this, a sibling directory to where the source code was extracted works well. An example might be:
 
@@ -75,7 +75,7 @@ From this temporary directory we can use the configure script to generate the bu
 /path/to/binutils_src/configure --target=$TARGET --with-sysroot --disable-nls --disable-werror
 ```
 
-At this point the configure script has generate a makefile for us with our requested options, now we can do the usual series of commands:
+At this point the configure script has generated a makefile for us with our requested options, now we can do the usual series of commands:
 
 ```bash
 make
@@ -91,10 +91,10 @@ The process for building GCC is very similar to binutils. Note that we need to h
 Now we can use the configure script like before:
 
 ```bash
-/path/to/gcc_sources/configure --target=$TARGET --prefix=$PREFIX --disable-nls --enable-languages=c,c++, --without-headers
+/path/to/gcc_sources/configure --target=$TARGET --prefix=$PREFIX --disable-nls --enable-languages=c,c++ --without-headers
 ```
 
-For brevity we'll only exlain the new flags:
+For brevity we'll only explain the new flags:
 
 - `--enable-languages=c,c++`: select which language frontends to enable, these two are the default. We can disable c++ but if we plan to cross compile more things than our kernel this can be nice to have.
 - `--without-headers`: tells the compiler not to rely on any headers from the host and instead generate it's own.
