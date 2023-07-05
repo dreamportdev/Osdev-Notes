@@ -120,7 +120,7 @@ To tell clang to cross compile, there is a special flag you'll need to pass it: 
 
 As an example lets say you wanted to use clang as a cross compiler for `x86_64-elf` triplet or `x86_64-unknown-elf` you would invoke clang like `clang --target=x86_64-elf` or `--target=x86_64-unknown-elf`. Let's say you wanted to build your kernel for riscv64 you would do something like `clang --target=riscv64`.
 
-Since clang and lld are compatible with the gcc/binutils versions of these tools you can pass the same flags and compilation should go as exepected.
+Since `clang` and `lld` are compatible with the `gcc/binutils` versions of these tools you can pass the same flags and compilation should go as exepected.
 
 ## Emulator (QEmu)
 
