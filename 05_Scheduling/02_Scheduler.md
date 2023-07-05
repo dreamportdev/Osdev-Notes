@@ -83,7 +83,7 @@ All that remains is to initialize the pointers to NULL, since we don't have any 
 
 ### Triggering the Scheduler
 
-As mentioned above we're going to have the scheduler run in response to the timer interrupt, but it can be triggered however we want. There's nothing to stop us only have the scheduler run when a big red button is pushed, if wanted. Having the scheduler attached to the timer interrupt like this is a good first effort to ensuring it gives each process a fair share of cpu time.
+As mentioned above we're going to have the scheduler run in response to the timer interrupt, but it can be triggered however we want. There's nothing to stop us only running the scheduler when a big red button is pushed, if we want. Having the scheduler attached to the timer interrupt like this is a good first effort to ensuring it gives each process a fair share of cpu time.
 
 For the following sections we assume the interrupt handlers look like the ones described in the interrupt handling chapter, and all route to a single function. We're going to have a function called `scheduler()` that will do process selection for us. Patching that into our interrupt routing function would look something like:
 

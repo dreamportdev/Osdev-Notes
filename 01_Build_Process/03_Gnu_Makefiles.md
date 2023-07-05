@@ -53,7 +53,7 @@ build/%.S.o: %.S
     $(AS) $< -c -o $@
 ```
 
-Okay! So there's a lot going on there. This is just how I like to organise my makefiles, and by no means a definitive guide.
+Okay! So there's a lot going on there. This is just a way to organise makefiles, and by no means a definitive guide.
 Since we may be using a cross compiler or changing compilers (it's a good idea to test with both gcc and clang) we've declared some variables representing the various programs we'll call when compiling. `CXX` is not used here, but if using c++ it's the common name for the compiler.
 
 Following that we have our inputs, `C_SRCS` is a list of our source files. Anytime we want to compile a new file, we'll add it here. The same goes for `ASM_SRCS`. Why do we have two lists of sources? Because they're going to be processed by different tools (c files -> c compiler, assembly files -> assembly compiler/assembler). `TARGET` is the output location and name of the file we're going to compile.
