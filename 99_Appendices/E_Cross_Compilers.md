@@ -141,7 +141,7 @@ where:
 * `--target-list=riscv64-softmmu,x86_64`: is a comma separated list of platforms we want to support.
 * `--enable-tools`: will build support utilities that comes with qemu
 * `--enable-gtk`: it will enable the gtk+ interface
-* `--enable-vhos-net` : it will enable the vhost-net kernel acceleration support
+* `--enable-vhost-net` : it will enable the vhost-net kernel acceleration support
 
 After the configuration has finished, to build qemu the commands to install it: 
 
