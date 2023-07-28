@@ -61,11 +61,11 @@ Setting up a proper build environment can be broken down into a few steps:
 The easiest approach here is to simply use clang. Clang is designed to be a cross compiler, and so any install of clang can compile to any supported platform.
 To compile for another platform simply invoke clang as normally would, additionally passing `--target=xyz`, where xyz is the target triplet for the target platform.
 
-For `x86_64` the target triplet  would be `--target=x86_64-elf`. Target triplets describe the hardware instruction set + operating system + file format of what we want to compile for. In this case we are the operating system so that part can be omitted.
+For `x86_64` the target triplet  would be `--target=x86_64-elf`. Target triplets describe the _hardware instruction set + operating system + file format_ of what we want to compile for. In this case we are the operating system so that part can be omitted.
 
 Setting up a GCC cross compiler is a little more hands on, but still very simple. The first approach is to simply download a pre-compiled toolchain (see the link above). This is super simple, with the only major disadvantage being that we may not be getting the latest version.
 
-The other approach is to compile GCC. This takes more time, but it's worth understanding the process. The osdev wiki has a great guide on this, a link is available in the appendices section.
+The other approach is to compile GCC. This takes more time, but it's worth understanding the process (it is explained in the appendices section). The osdev wiki has a great guide on this, a link is available in the appendices section.
 
 The following sections will use the common shorthands to keep things simple:
 
