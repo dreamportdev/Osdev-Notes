@@ -2,11 +2,11 @@
 
 A boot protocol defines the machine state when the kernel is given control by the bootloader. It also makes several services available to the kernel, like a memory map of the machine, a framebuffer and sometimes other utilities like uart or kernel debug symbols.
 
-This chapter covers 2 protocols: multiboot 2 and stivale 2.
+This chapter covers 2 protocols _Sultiboot 2_ and _Stivale 2_:
 
-Multiboot 2 supercedes multiboot 1, both of which are the native protocols of grub. This means that anywhere grub is installed, a multiboot kernel can be loaded. This means testing will be easy on most linux machines. Multiboot 2 is quite an old, but very robust protocol.
+* _Multiboot 2_ supercedes multiboot 1, both of which are the native protocols of grub. Meaning that anywhere grub is installed, a multiboot kernel can be loaded. making testing easy on most linux machines. _Multiboot 2_ is quite an old, but very robust protocol.
 
-Stivale 2 (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. Stivale 2 is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
+* _Stivale 2_ (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. _Stivale 2_ is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
 Recently limine has added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
 
@@ -37,7 +37,7 @@ Regardless of what kind of elf is loaded, multiboot 2 is well defined and will a
 One of the major differences between the two protocols is how info is passed between the kernel and bootloader:
 
 - _Multiboot 1_ has a fixed size header within the kernel, that is read by the bootloader. This limits the number of options available, and wastes space if not all options are used.
-- _Multiboot 2_ uses a fixed sized header that includes a `size` field, which contains the number of bytes of the header + all of the following requests. Each request contains an `identifier` field and then some request specific fields. This has slightly more overhead, but is more flexible. The requests are terminated with a special `null request` (see the specs on this).
+- _Multiboot 2_ uses a fixed sized header that includes a `size` field, which contains the _number of bytes of the header + all of the following requests_. Each request contains an `identifier` field and then some request specific fields. This has slightly more overhead, but is more flexible. The requests are terminated with a special `null request` (see the specs on this).
 
 - _Multiboot 1_ returns info to the kernel via a single large structure, with a bitmap indicating which sections of the structure are considered valid.
 - _Multiboot 2_ returns a pointer to a series of tags. Each tag has an `identifier` field, used to determine it's contents, and a size field that can be used to calculate the address of the next tag. This list is also terminated with a special `null` tag.
