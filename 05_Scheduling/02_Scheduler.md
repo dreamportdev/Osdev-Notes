@@ -10,9 +10,9 @@ The primitives used (thread and process) have various names in other kernels and
 
 There are many selection algorithms out there, ranging from general purpose to special purpose. A real-time kernel might have a selection algorithm that focuses on meeting hard deadlines (required for real-time software), where as a general purpose algorithm might focus on flexibility (priority levels and being extensible).
 
-Our scheduler is going to operate on a first-come first-served (FCFS) bases, commonly known as round-robin. 
+Our scheduler is going to operate on a first-come first-served (FCFS) bases, commonly known as round-robin.
 
-## Overview 
+## Overview
 
 Before we start describing the workflow in detail, let's answer a few questions:
 
@@ -22,7 +22,7 @@ Before we start describing the workflow in detail, let's answer a few questions:
 The main part of our scheduler is going to be thread selection. Let's breakdown how we're going to implement it:
 
 * When called, the first thing the scheduler needs to do is check whether the current thread should be pre-empted or not. Some critical sections of kernel code may disable pre-emption for various reasons, or a thread may simply be running for more than one quantum. The scheduler can choose to simply return here if it decides it's not time to reschedule.
-* Next it must save the current thread's context so that we can resume it later. 
+* Next it must save the current thread's context so that we can resume it later.
 * Then we select the next thread to run. For a round robin scheduler we will search the list of threads that are available to run, starting with the current thread. We stop searching when we find the first thread that can run.
 * Optionally, while iterating through the list of threads we may want to do some house-keeping. This is a good time to do things like check wakeup-timers for sleeping threads, or remove dead threads from the list. If this concept is unfamiliar, we'll discuss this more later don't worry.
 * Now we load the context for the selected thread and mark it as the current thread.
@@ -38,7 +38,7 @@ The basic scheduler we are going to implement will have the following characteri
 
 As said above we are going to use a linked list, the implementation of the functions to add, remove and search for processes in the list are left as an exercise, since their implemenation is trivial, and doesn't have any special requirement. For our purposes we assume that the functions: `add_process`, `delete_process`, `get_next_process` are present.
 
-For our scheduler to work correctly it will need to keep track of some information. The first thing will be a list of the currently active processes (by *active* we mean that the process has not finished executing yet). This is our linked list, so for it we need a pointer to its root: 
+For our scheduler to work correctly it will need to keep track of some information. The first thing will be a list of the currently active processes (by *active* we mean that the process has not finished executing yet). This is our linked list, so for it we need a pointer to its root:
 
 ```c
 process_t* processes_list;
@@ -55,7 +55,7 @@ typedef struct process_t {
 } process_t;
 ```
 
-If `cpu_status_t` looks familiar, it's the struct we created in the interrupts chapter. This represents a snapshot of the cpu when it was interrupted, which conviniently contains everything we need to resume the process properly. This is our processes's `context`.
+If `cpu_status_t` looks familiar, it's because the struct we created in the interrupts chapter. This represents a snapshot of the cpu when it was interrupted, which conviniently contains everything we need to resume the process properly. This is our processes's `context`.
 
 As for `status_t`, it's a enum representing one of the possible states a process can be in. This could also be represented by a plain integer, but this is nicer to read and debug. For now our processes are just going to have three statuses:
 
@@ -79,7 +79,7 @@ The scheduler will also need to keep track of which process is currently being e
 process_t *current_process;
 ```
 
-All that remains is to initialize the pointers to NULL, since we don't have any process running yet and the linked list is empty.  
+All that remains is to initialize the pointers to `NULL`, since we don't have any process running yet and the linked list is empty.
 
 ### Triggering the Scheduler
 
@@ -122,9 +122,9 @@ void schedule() {
 }
 ```
 
-Of course it is not going to work like that, and if executed like this the kernel will most likely end up in running garbage, but don't worry it is going to work later on, the code snippet above is just the foundation of our scheduler. 
+Of course it is not going to work like that, and if executed like this the kernel will most likely end up in running garbage, but don't worry it is going to work later on, the code snippet above is just the foundation of our scheduler.
 
-There are few problems with this implementation, the first is that it doesn't check if it has reached the end of the list, to fix this we just need to add an if statement: 
+There are few problems with this implementation, the first is that it doesn't check if it has reached the end of the list, to fix this we just need to add an if statement:
 
 ```c
 void schedule() {
@@ -136,13 +136,13 @@ void schedule() {
 }
 ```
 
-The else statement is in case we reached the end, where we want to move back to the first item. This can vary depending on the data structure used. The second problem is that this function is not checking if the current_process is NULL or not, it will be clear shortly why this shouldn't happen. 
+The `else` statement is in case we reached the end, where we want to move back to the first item. This can vary depending on the data structure used. The second problem is that this function is not checking if the `current_process` is `NULL` or not, it will be clear shortly why this shouldn't happen.
 
 The last problem is: what if there are no processes to be run? In our case our selection function would probably run into garbage, unless we explicitly check that the current_process and/or the list are empty. But there is a more useful and elegant solution used by modern operating systems: having a special process that the kernel run when there are no others. This is called the idle process, and will be looked at later.
 
 ### Saving and Restoring Context
 
-Now we have the next process to run, and are ready to load it's context and begin executing it. Before we can do that though, we need to save the context for the current process. 
+Now we have the next process to run, and are ready to load it's context and begin executing it. Before we can do that though, we need to save the context of the current process.
 
 In our case, we're storing all the state we need on the stack, meaning we only need to keep track of one pointer for each process: the stack we pushed all of the registers onto. We can also return this pointer to the interrupt stub and it will swap the stack for us, and then load the saved registers.
 
@@ -171,7 +171,7 @@ cpu_status_t* schedule(cpu_status_t* context) {
 
 This whole process is referred to as a *context switch*, and perhaps now it should be clearer why it can be a slow operation.
 
-### The States of a Process
+### The States Of A Process
 
 While some programs can run indefinitely, most will do some assigned work and then terminate. Our scheduler needs to handle a process terminating, because if it attempts to load the context of a finished program, the cpu will start executing whatever memory comes next as code. This is often garbage and can result in anything happening. Therefore the scheduler needs to know that a process has finished, and shouldn't be scheduled again.
 
@@ -203,7 +203,7 @@ cpu_status_t* schedule(cpu_status_t* context) {
 
         if (current_process != NULL && current_process->STATUS == DEAD) {
             // We need to delete dead processes
-            delete_process(prev_process, current_process); 
+            delete_process(prev_process, current_process);
         } else {
             current_process->status = RUNNING;
             break;
@@ -217,7 +217,7 @@ We'll look at the DEAD state more in the next chapter, but for now we can set a 
 
 ### The Idle Process
 
-We mentioned the idle process before. When there are no processes in the `READY` state, we'll run the idle process. It's purpose is to do nothing, and in a priority-based scheduler it's always the lowest priority. 
+We mentioned the idle process before. When there are no processes in the `READY` state, we'll run the idle process. It's purpose is to do nothing, and in a priority-based scheduler it's always the lowest priority.
 
 The main function for the idle process is very simple. It can be just three lines of assembly!
 
@@ -246,7 +246,7 @@ A common issue is that Interrupts stop working after context switch, in this cas
 
 This chapter has covered everything needed to have a basic scheduler up and running. In the next chapter we'll look at creating and destroying processes. As mentioned this scheduler was written to be simple, not feature-rich. There are a number of ways you could improve upon it in your own design:
 
-* Replace the statically-sized array with a dynamic data structure, allowing as many threads as you want.
+* Use a more optimized algorithm.
 * Add more states for a process to be in. We're going to add one more in the next chapter.
 * Implement priority queues, where the scheduler runs threads from a higher priority first if they're available, otherwise it selects background processes.
 * Add support for multiple processor cores. This can be very tricky, so some thought needs to go into how you design for this.

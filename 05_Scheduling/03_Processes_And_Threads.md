@@ -11,8 +11,10 @@ With these definitions is possible to create a cross-section of scheduler config
 
 - *Single Process - Single Thread*: This is how the kernel starts. We have a single set of resources and address space, and only one running thread.
 - *Single Process - Multi Thread*: In reality this is not very useful, but it can be a good stepping stone when developing a scheduler. Here we would have multiple threads running, but all within the same address space.
-- *Multi Process - Single Thread*: This is what our example scheduler is going to look like. Here each process contains only a single thread (at that point the distinction between thread and process isn't needed), but we do have multiple address spaces and resources.
+- *Multi Process - Single Thread*: Here each process contains only a single thread (at that point the distinction between thread and process isn't needed), but we do have multiple address spaces and resources.
 - *Multi Process - Multi Thread*: This is where most kernels live. It's similar to the previous case, but we can now have multiple threads per process. We won't be implementing this, but it's an easy next step.
+
+In this chapter we will explore a basic _Multi Process - Multi Thread_ approach.
 
 ## Processes
 
@@ -53,9 +55,9 @@ typedef struct {
 } process_t;
 ```
 
-Decide what value to assign to  `NAME_MAX_LEN`, a good starting place is 64. We've taken the approach of storing the name inside of the control block, but we could also store a pointer to a string on the heap. Using the heap would require more care when using this struct, as we'd have to be sure the memory is managed properly. 
+Decide what value to assign to  `NAME_MAX_LEN`, a good starting place is 64. We've taken the approach of storing the name inside of the control block, but we could also store a pointer to a string on the heap. Using the heap would require more care when using this struct, as we'd have to be sure the memory is managed properly.
 
-How do we assign pids? We're using to use a bump allocator:  is just a pointer that increases (that should sound familiar). The next section covers the details of this. It's worth noting that since we're on a 64-bit architecture and using `size_t`, we don't really have to worry about overflowing this simple allocator, as we have 18446744073709551615 possible ids. That's a lot!
+How do we assign _pids_? We're going to use a bump allocator:  is just a pointer that increases (that should sound familiar). The next section covers the details of this. It's worth noting that since we're on a 64-bit architecture and using `size_t`, we don't really have to worry about overflowing this simple allocator, as we have 18446744073709551615 possible ids. That's a lot!
 
 ### Creating A New Process
 
@@ -65,7 +67,7 @@ Creating a process is pretty trivial. We need a place to store the new `process_
 size_t next_free_pid = 0;
 
 process_t* create_process(char* name, void(*function)(void*), void* arg) {
-    process_t* process = alloc(sizeof(process_t)); 
+    process_t* process = alloc(sizeof(process_t));
 
     strncpy(process->name, name, NAME_MAX_LEN);
     process->pid = next_free_pid++;
@@ -90,15 +92,15 @@ Most of what happens in the above function should be familiar, but let's look at
 
 We also set `rbp` to 0. This is not strictly required, but it can make debugging easier. If we choose to load and run elf files later on this is the expected set up. Zero is a special value that indicates we have reached the top-most stack frame.
 
-The `alloc_stack()` function is a left an exercise to the reader, but it should allocate some memory, and return a pointer to *the top* of the allocated region. 16KiB (4 pages) is a good starting place, although we can always go bigger. Modern systems will allocate around 1MiB per stack.
+The `alloc_stack()` function is left  as an exercise to the reader, but it should allocate some memory, and return a pointer to *the top* of the allocated region. 16KiB (4 pages) is a good starting place, although we can always go bigger. Modern systems will allocate around 1MiB per stack.
 
 ### Virtual Memory Allocator
 
-One of the most useful features of modern processors is paging. This allows us to isolate each process in a different virtual address space, preventing them from interfering with each other. This is great for security and lets us do some memory management tricks like copy-on-write or demand paging. 
+One of the most useful features of modern processors is paging. This allows us to isolate each process in a different virtual address space, preventing them from interfering with each other. This is great for security and lets us do some memory management tricks like copy-on-write or demand paging.
 
 Now we have the issue of how these isolated processes communicate with each other? This is called IPC (Inter-Process Communication) and is not covered in this chapter, but it is worth being aware of.
 
-One thing to note with this, is that while each process has it's own address space, the kernel exists in *all* address spaces. This is where a higher half kernel is useful: since the kernel lives entirely in the higher half, the higher half of any address space can be the same. 
+One thing to note with this, is that while each process has it's own address space, the kernel exists in *all* address spaces. This is where a higher half kernel is useful: since the kernel lives entirely in the higher half, the higher half of any address space can be the same.
 
 Keeping track of an address space is fairly simple, it requires an extra field in the process control block to hold the root page table:
 
@@ -123,7 +125,7 @@ Don't forget to load the new process's page tables before leaving the `schedule(
 
 #### The Heap
 
-Let's talk about the heap for a moment. With each process being isolated, they can't really share any data, meaning they can't share a heap, and will need to bring their own. The way this usually works is programs link with a standard library, which includes a heap allocator. This heap is exposed through the familiar `malloc()`/`free()` functions, but behind the scenes this heap is calling the VMM and asking for more memory when needed. 
+Let's talk about the heap for a moment. With each process being isolated, they can't really share any data, meaning they can't share a heap, and will need to bring their own. The way this usually works is programs link with a standard library, which includes a heap allocator. This heap is exposed through the familiar `malloc()`/`free()` functions, but behind the scenes this heap is calling the VMM and asking for more memory when needed.
 
 Of course the kernel is the exception, because it doesn't live in it's own process, but instead lives in *every* process. Its heap is available in every process, but can only be used by the kernel.
 
@@ -131,11 +133,11 @@ What this means is when we look at loading programs in userspace, these programs
 
 ### Resources
 
-Resources are typically implemented as an opaque handle: a resource is given an id by the subsystem it interacts with, and that id is used to represent the resource outside of the subsystem. Other kernel subsystems or programs can use this id to perform operations with the resource. These resources are usually tracked per process. 
+Resources are typically implemented as an opaque handle: a resource is given an id by the subsystem it interacts with, and that id is used to represent the resource outside of the subsystem. Other kernel subsystems or programs can use this id to perform operations with the resource. These resources are usually tracked per process.
 
 As an example, let's look at opening a file. We wont go over the code for this, as it's beyond the scope of this chapter, but it serves as a familiar example.
 
-When a program goes to open a file, it asks the kernel's VFS (virtual file system) to locate a file by name. Assuming the file exists and can be accessed, the VFS loads the file into memory and keeps track of the buffer holding the loaded file. Let's say this is the 23rd file the VFS has opened, it might be assigned the id 23. We could simply use this id as the resource id, however that is a system-wide id, and not specific to the current process. 
+When a program goes to open a file, it asks the kernel's VFS (virtual file system) to locate a file by name. Assuming the file exists and can be accessed, the VFS loads the file into memory and keeps track of the buffer holding the loaded file. Let's say this is the 23rd file the VFS has opened, it might be assigned the id 23. We could simply use this id as the resource id, however that is a system-wide id, and not specific to the current process.
 
 Commonly each process holds a table that maps process-specific resource ids to system resource ids. A simple example would be an array, which might look like the following:
 
@@ -161,7 +163,7 @@ size_t open_file(process_t* proc, char* name) {
 }
 ```
 
-Now any further operations on this file can use the returned id to reference this resource. 
+Now any further operations on this file can use the returned id to reference this resource.
 
 ### Priorities
 
@@ -171,7 +173,7 @@ There are many ways to implement priorities, the easiest way to get started is w
 
 Let's talk about how threads fit in with the current design. Currently each process is both a process and a thread. We'll need to move some of the fields of the `process_t` struct into a `thread_t` struct, and then maintain a list a threads per-process.
 
-As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can be composed by one or multiple threads, but a thread always belongs to a single process. 
+As for what a thread is (and what fields we'll need to move): A thread is commonly the smallest unit the scheduler will interact with. A process can be composed by one or multiple threads, but a thread always belongs to a single process.
 
 Threads within the same process share a lot of things:
 
@@ -261,9 +263,9 @@ process_t* create_process(char* name) {
 }
 ```
 
-The `vmm_create` function is just a placeholder, but it should create a new vmm instance for our new process. The details of this function are described more in the chapter on the virtual memory manager itself. Ultimately this function should set up some new page tables for the new process, and then map the existing kernel into the higher half of these new tables. You may wish to do some other things here as well. 
+The `vmm_create` function is just a placeholder, but it should create a new vmm instance for our new process. The details of this function are described more in the chapter on the virtual memory manager itself. Ultimately this function should set up some new page tables for the new process, and then map the existing kernel into the higher half of these new tables. You may wish to do some other things here as well.
 
-The last part is we'll need to update the scheduler to deal with threads instead of processes. A lot of the things the scheduler was interacting with are now contained per-thread, rather than per-process. 
+The last part is we'll need to update the scheduler to deal with threads instead of processes. A lot of the things the scheduler was interacting with are now contained per-thread, rather than per-process.
 
 That's it! Our scheduler now supports multiple threads and processes. As always there are a number of improvements to be made:
 
@@ -285,7 +287,7 @@ void thread_execution_wrapper(void (*function)(void*), void* arg) {
 }
 ```
 
-Now we'll need to modify `create_thread` to make use of our wrapper to make use of the wrapper function. Since we're targeting x86_64 we're using the appropriate calling convention which tells us which registers to use for passing arguments. 
+Now we'll need to modify `create_thread` to make use of the wrapper function. Since we're targeting `x86_64` we're using the appropriate calling convention which tells us which registers to use for passing arguments.
 
 ```c
 thread->context.rip = (uint64_t)thread_execution_wrapper;
@@ -294,7 +296,7 @@ thread->context.rdi = (uint64_t)function;
 thread->context.rsi = (uint64_t)arg;
 ```
 
-The implementation of `thread_exit` can look very different depending on what we want to do. In our case we're going to change the thread's status to DEAD. 
+The implementation of `thread_exit` can look very different depending on what we want to do. In our case we're going to change the thread's status to DEAD.
 
 ```c
 void thread_exit() {
@@ -303,7 +305,7 @@ void thread_exit() {
 }
 ```
 
-At this point the thread can exit succesfully, but the thread's resources are still around. The big ones are the thread control block and the stack. They can be freed in the `thread_exit` but be careful we're not exiting the current thread. If we do, we'll free the stack being currently used. We could switch to a kernel-only stack here, and then safely free the stack. 
+At this point the thread can exit succesfully, but the thread's resources are still around. The big ones are the thread control block and the stack. They can be freed in the `thread_exit` but be careful we're not exiting the current thread. If we do, we'll free the stack being currently used. We could switch to a kernel-only stack here, and then safely free the stack.
 
 Alternatively the thread could be placed into a 'cleanup queue' that is processed by a special thread that frees the resources associated with threads. Since the cleanup thread has it's own stack and resources, we can safely free those in the queued threads.
 
@@ -313,7 +315,7 @@ Note that we use an infinite loop at the end of `thread_exit` since that functio
 
 #### Last Thread Standing
 
-What about freeing processes? As always there are a few approaches, but the easiest is the check if the thread that is about to be freed is the last in the process. If it is, the process should be deleted too. 
+What about freeing processes? As always there are a few approaches, but the easiest is the check if the thread that is about to be freed is the last in the process. If it is, the process should be deleted too.
 
 Cleaning up a process requires significantly more work, tearing down page tables properly, freeing other resources, sometimes there is buffered data to flush. This should be approached with some care, so as not the delete the currently page tables in use.
 
@@ -352,7 +354,7 @@ void thread_sleep(thread_t* thread, size_t millis) {
 
 ### Advanced Designs
 
-We've discussed the common approach to writing a scheduler using a periodic timer. There is another more advanced design: the tickless scheduler. While we won't implement this here, it's worth being aware of. 
+We've discussed the common approach to writing a scheduler using a periodic timer. There is another more advanced design: the tickless scheduler. While we won't implement this here, it's worth being aware of.
 
 The main difference is how the scheduler interacts with the timer. A periodic scheduler tells the timer to trigger at a fixed interval, and runs in response to the timer interrupt. A tickless scheduler instead uses a one-shot timer, and set the timer to send an interrupt when the next task switch is due.
 
