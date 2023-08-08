@@ -4,14 +4,15 @@ Here you can find all changes across book editions/revisions
 
 ## First edition
 
-### Rev 0
+### Revision 0
 
+Release date: Jun, 2023
 First book release.
-Release date: Jun 7, 2023
 
 ### Rev 1
 
-Second book release (August, 2023)
+Release date: (August, 2023)
+Second book release.
 
 * Add Cross Compiling appendix chapter
 * Linker chapter improvements
