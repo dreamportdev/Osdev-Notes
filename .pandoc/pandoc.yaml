@@ -27,7 +27,7 @@ header-includes:
   }
   ```
  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
-geometry: 
+geometry:
  - tmargin=2.5cm
  - bmargin=2.5cm
  - lmargin=2.5cm
