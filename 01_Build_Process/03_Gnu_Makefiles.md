@@ -10,6 +10,8 @@ If we want to use gnu make extensions, we now have a makefile that wont run unde
 
 ## Simple Makefile Example
 
+Below is an example of a basic Makefile.
+
 ```makefile
 #toolchain
 CC = x86_64-elf-gcc
@@ -27,7 +29,7 @@ CC_FLAGS = -g -ffreestanding
 LD_FLAGS = -T linker_script.lds -ffreestanding
 
 #auto populated variables
-OBJS = $(patsubst %.c, build/%.c.o, $(C_SRCS)) 
+OBJS = $(patsubst %.c, build/%.c.o, $(C_SRCS))
 OBJS += $(patsubst %.S, build/%.S.o, %(ASM_SRCS))
 
 .PHONY: all clean
@@ -58,13 +60,13 @@ Since we may be using a cross compiler or changing compilers (it's a good idea t
 
 Following that we have our inputs, `C_SRCS` is a list of our source files. Anytime we want to compile a new file, we'll add it here. The same goes for `ASM_SRCS`. Why do we have two lists of sources? Because they're going to be processed by different tools (c files -> c compiler, assembly files -> assembly compiler/assembler). `TARGET` is the output location and name of the file we're going to compile.
 
-*Authors Note: In this example I've declared each input file in C_SRCS manually, but you could also make use the builtin function `$(shell)` to use a program like find to search for you source files automatically, based on their file extension. Another level of automation! An example of what this might look like, when searching for all files with the extension '.c', is given below:* 
+*Authors Note: In this example I've declared each input file in C_SRCS manually, but you could also make use the builtin function `$(shell)` to use a program like find to search for you source files automatically, based on their file extension. Another level of automation! An example of what this might look like, when searching for all files with the extension '.c', is given below:*
 
 ```makefile
 C_SRCS = $(shell find -name "*.c")
 ```
 
-Next up we have flags for the c compiler (`CC_FLAGS`) and the linker (`LD_FLAGS`). If we wanted flags for the assembler, we could a variable here for those too. After the flags we have our first example of where make can be really useful. 
+Next up we have flags for the c compiler (`CC_FLAGS`) and the linker (`LD_FLAGS`). If we wanted flags for the assembler, we could create a variable here for those too. After the flags we have our first example of where make can be really useful.
 
 The linker wants a list of compiled object files, from the c compiler or assembler, not a list of the source files they came from. We already maintain a list of source files as inputs, but we don't have a list of the produced object files that the linker needs to know what to link in the final binary. We could create a second list, and keep that up to date, but that's more things to keep track off. More room for error as well.
 Make has built in search and replace functionality, in the form of the `patsubst` (pattern substitution) function. `patsubst` uses the wildcard (`%`) symbol to indicate the section of text we want to keep. Anything specified outside of the wildcard is used for pattern matching. It takes the following arguments:
@@ -115,7 +117,7 @@ For the following, the example used is a file path:
 
 ## Complex Makefile Example (with recursion!)
 
-What about bigger projects? Well we aren't limited to a single makefile, one makefile can include another one (essentially copy-pasting it into the current file) using the `include` keyword. 
+What about bigger projects? Well we aren't limited to a single makefile, one makefile can include another one (essentially copy-pasting it into the current file) using the `include` keyword.
 For example, to include `extras.mk` (.mk is a common extension for non-primary makefiles) into `Makefile` we would add the line somewhere:
 
 ```makefile
@@ -178,10 +180,10 @@ Whew, there's a lot going on there! Let's look at why the various parts exist:
 
 - When the user runs `make` in the shell, the root makefile is run. This file is mostly configuration, specifying the toolchain and the options it'll use.
 
-- This makefile then recursively calls make on each of the sub-projects. 
+- This makefile then recursively calls make on each of the sub-projects.
     - For example, the kernel makefile will be run, and it will have all of the make variables specified in the root makefile in it's environment.
     - This means if we decide to change the toolchain, or want to add debug symbols to *all* projects, we can do it in a single change.
-    - Libraries and userland apps work in a similar way, but there is an extra layer. What I've called the glue makefile. It's very simple, it just passes through the make commands from above to each sub project. 
+    - Libraries and userland apps work in a similar way, but there is an extra layer. What I've called the glue makefile. It's very simple, it just passes through the make commands from above to each sub project.
     - This means we don't need to update the root makefile every time a new userland app is updated, or a new library.
     - It also allows us to override some variables for every library or every userspace app, instead of globally. Useful!
 
