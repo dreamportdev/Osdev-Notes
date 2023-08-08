@@ -1,17 +1,17 @@
-# Updates to the printed edition
+# Updates to the Printed Edition
 
-Here you can find all changes across book editions/revisions
+Here you can find all changes across book editions/revisions.
 
 ## First edition
 
 ### Revision 0
 
-Release date: Jun, 2023
+Release date: Jun, 2023.
 First book release.
 
-### Rev 1
+### Revision 1
 
-Release date: (August, 2023)
+Release date: August, 2023.
 Second book release.
 
 * Add Cross Compiling appendix chapter
