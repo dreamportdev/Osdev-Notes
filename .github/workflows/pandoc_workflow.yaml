@@ -1,0 +1,42 @@
+name: Pandoc Automation
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+
+ # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+jobs:
+  # This workflow contains a single job called "build"
+  build:  
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+      # WE need to manually install pandoc, because the version carried with ubuntu 22.04 is affected by a bug that cause the build to fail
+        run: |
+          sudo apt-get install texlive-latex-base texlive texlive-xetex texlive-fonts-recommended librsvg2-2 liblua5.3-0 librsvg2-bin librsvg2-common    
+          wget http://mirrors.kernel.org/ubuntu/pool/main/g/gmp/libgmp10_6.2.1+dfsg1-1ubuntu2_amd64.deb
+          wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pandoc/pandoc_2.17.1.1-1ubuntu2_amd64.deb
+          wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pandoc/pandoc-data_2.17.1.1-1ubuntu2_all.deb
+          sudo dpkg -i libgmp10_6.2.1+dfsg1-1ubuntu2_amd64.deb
+          sudo dpkg -i pandoc-data_2.17.1.1-1ubuntu2_all.deb
+          sudo dpkg -i pandoc_2.17.1.1-1ubuntu2_amd64.deb
+      - name: Rund build script
+        run: |
+          pandoc -v 
+          chmod +x build.sh
+          ls -l
+          ./build.sh
+          ls -l
+      - uses: pyTooling/Actions/releaser@r0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: Development
+          rm: true
+          files: |
+            *.pdf
