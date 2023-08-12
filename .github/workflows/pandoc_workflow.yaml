@@ -1,6 +1,8 @@
+# This workflow is triggered everytime a push is made on master.
+# It will trigger the pdf build and publish it on the "Development" release
 name: Pandoc Automation
 
-# Controls when the workflow will run
+# It will run on every push on master
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
@@ -11,9 +13,8 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:  
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    # It will run on ubuntu-latest image
+    runs-on: ubuntu-latest    
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
@@ -26,7 +27,7 @@ jobs:
           sudo dpkg -i libgmp10_6.2.1+dfsg1-1ubuntu2_amd64.deb
           sudo dpkg -i pandoc-data_2.17.1.1-1ubuntu2_all.deb
           sudo dpkg -i pandoc_2.17.1.1-1ubuntu2_amd64.deb
-      - name: Rund build script
+      - name: Run build script
         run: |
           pandoc -v 
           chmod +x build.sh
