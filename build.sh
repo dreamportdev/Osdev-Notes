@@ -35,5 +35,6 @@ for dir in $chapter_dirs; do
 done
 
 cmd_body+="LICENSE.md"
-$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $pandoc_filename)
+awk -v HASH=`git rev-parse HEAD`  '!found && /header-includes/ { print "   |\n   | based on commit: " HASH ; found=1 } 1' .pandoc/pandoc.yaml | tee .pandoc/pandoc_1.yaml
+$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc_1.yaml -o $pandoc_filename)
 
