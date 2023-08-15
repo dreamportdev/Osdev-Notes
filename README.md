@@ -14,6 +14,8 @@ We hope you enjoy, and find something interesting here!
 
 Physical copies can be order via Lulu: [Click here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/paperback/product-mpzp5v.html?q=osdev+notes&page=1&pageSize=4)
 
+The [latest-master](https://github.com/dreamos82/Osdev-Notes/releases/tag/latest-master) release contains the PDF built from master.
+
 ## Current Chapters:
 
 * [Part 0: Introduction](00_Introduction/README.md)
