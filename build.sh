@@ -5,7 +5,7 @@ get_entries() {
 }
 
 pandoc_filename="osdev-notes-$(date +%F).pdf"
-pandoc_flags="--resource-path=$(pwd) --toc --top-level-division=chapter -f markdown+raw_tex -t pdf --pdf-engine=pdflatex -N --lua-filter .pandoc/makerelative.lua"
+pandoc_flags="-s --resource-path=$(pwd) --toc --top-level-division=chapter -f markdown+raw_tex -t pdf --pdf-engine=pdflatex -N --lua-filter .pandoc/makerelative.lua"
 
 echo "Building pandoc command line. Structure of the final pdf is based on the directory structure."
 echo "Each directory in the format \"XX_Name\" (where XX is two digits) is included."
@@ -35,6 +35,5 @@ for dir in $chapter_dirs; do
 done
 
 cmd_body+="LICENSE.md"
-awk -v HASH=`git rev-parse HEAD`  '!found && /header-includes/ { print "   |\n   | based on commit: " HASH ; found=1 } 1' .pandoc/pandoc.yaml | tee .pandoc/pandoc_1.yaml
-$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc_1.yaml -o $pandoc_filename)
-
+awk -v HASH=`git rev-parse HEAD`  '!found && /header-includes/ { print "   |\n   | based on commit: " HASH ; found=1 } 1' .pandoc/pandoc.yaml | tee .pandoc/pandoc_1.yaml | mv .pandoc/pandoc_1.yaml .pandoc/pandoc.yaml
+$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $pandoc_filename)
