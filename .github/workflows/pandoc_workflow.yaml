@@ -6,6 +6,7 @@ name: Pandoc Automation
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
+    paths-ignore: [ '**/README.md',  '**/FUNDING.yml', '**/sync-gh-pages.yaml' ]
     branches: [ master ]
 
  # Allows you to run this workflow manually from the Actions tab
