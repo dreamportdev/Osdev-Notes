@@ -18,7 +18,7 @@ The [latest-master](https://github.com/dreamos82/Osdev-Notes/releases/tag/latest
 
 ## Current Chapters:
 
-* [Part 0: Introduction](00_Introduction/README.md)
+* [Part 0: Introduction](00_Introduction/01_README.md)
     * [Assumed Knowledge](00_Introduction/02_AssumedKnowledge.md)
     * [About The Authors](00_Introduction/03_AboutTheAuthors.md)
 * [Part 1: Building & Boot Protocols](01_Build_Process/README.md)
