@@ -342,7 +342,7 @@ To actually put a thread to sleep, we'd need to do the following:
 
 We will need to modify the scheduler to check the wake time of any sleeping threads it encounters. If the wake time is in the past, then we can change the thread's state back to `READY`.
 
-As an example of how the sleep function might be implemented is shown below:
+An example of how the sleep function might be implemented is shown below:
 
 ```c
 void thread_sleep(thread_t* thread, size_t millis) {
