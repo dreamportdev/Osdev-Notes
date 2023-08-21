@@ -37,7 +37,7 @@ While this is functional, there are few problems:
 
 We're not going to look at how to solve all of these, but we'll cover the important ones.
 
-### Indentifying A Process
+### Identifying A Process
 
 How do we tell which process is which? We're going to use a unique number as our process id (`pid`). This will let us refer to any process by passing this number around. This `pid` can be used for programs like `ps`, `kill` and others.
 
@@ -337,12 +337,12 @@ We will also need a new status for the thread:  `SLEEPING`.
 To actually put a thread to sleep, we'd need to do the following:
 
 - Change the thread's status to `SLEEPING`. Now the scheduler will not run it since it's not in the `READY` state.
-- Set the `wake_time` variable to the requested amount of time in the future.
+- Set the `wake_time` variable to the wakeup time, that is: `current_time + requested_sleep_time`
 - Force the scheduler to change tasks, so that the sleep function does not immediately return, and then sleep on the next task switch.
 
 We will need to modify the scheduler to check the wake time of any sleeping threads it encounters. If the wake time is in the past, then we can change the thread's state back to `READY`.
 
-As an example of how this might be implemented is shown below:
+As an example of how the sleep function might be implemented is shown below:
 
 ```c
 void thread_sleep(thread_t* thread, size_t millis) {
@@ -351,6 +351,10 @@ void thread_sleep(thread_t* thread, size_t millis) {
     scheduler_yield();
 }
 ```
+
+The function `current_uptime_ms()` is a simple function that return the kernel uptime in ms. How to compute the kernel uptime is very simple and is left as exercise, if don't know where to start, remember that we have the timer enabled and that is configured to interrupt the kernel regularly.
+
+The function `scheduler_yield()`, function that is just informing the kernel that the current thread wants to be interrupted, for example by firing the timer interrupt manually (asm instruction `int interrupt_number`.
 
 ### Advanced Designs
 
