@@ -17,6 +17,7 @@ Second book release.
 * Add Cross Compiling appendix chapter
 * Linker chapter improvements
 * Various typos fix
+* Add more details on the Thread Sleep section
 * Improve readability of Virtual Memory Management illustration.
 * Fix broken links
 * Fix Cover Alignment
