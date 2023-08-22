@@ -354,7 +354,7 @@ void thread_sleep(thread_t* thread, size_t millis) {
 
 The function `current_uptime_ms()` is a simple function that return the kernel uptime in ms. How to compute the kernel uptime is very simple and is left as exercise, if don't know where to start, remember that we have the timer enabled and that is configured to interrupt the kernel regularly.
 
-The function `scheduler_yield()`, function that is just informing the kernel that the current thread wants to be interrupted, for example by firing the timer interrupt manually (asm instruction `int interrupt_number`.
+The function `scheduler_yield()` is just informing the kernel that the current thread wants to be interrupted, for example by firing the timer interrupt manually (asm instruction `int interrupt_number`.
 
 ### Advanced Designs
 
