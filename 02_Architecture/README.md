@@ -2,7 +2,7 @@
 
 In this part we are going to cover the most Architecture specific topic, and some basic drivers that are needed in early stages of development. Below the list of chapters: 
 
-* [Part Overview](01_README.md) An Overview on most of the topics covered by 
+* [Overview](01_Overview.md) An overview on most of the topics covered by 
 * [Hello World](02_Hello_World.md) The kernel says it's first words...
 * [Higher Half](03_HigherHalf.md) We are moving everything done so far where it usually belong, the higher half of the memory
 * [The GDT](04_GDT.md) One of the architetcture specific chapters, the Global Descriptor Table, used to "describe" the behaviour of different part of memory
