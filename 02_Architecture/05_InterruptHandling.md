@@ -10,7 +10,7 @@ The `x86` architecture makes a distinction between *hardware interrupts* and *so
 
 ### The Interrupt Flag and Cli/Sti
 
-There will be situations where we don't want to be interrupted, usually in some kind of critical section. In this case, `x86 actually provides a flag that can be used to disable almost all interrupts. Bit 9 of the `flags` register is the interrupt flag, and like other flag bits it has dedicated instructions for clearing/setting it:
+There will be situations where we don't want to be interrupted, usually in some kind of critical section. In this case, `x86` actually provides a flag that can be used to disable almost all interrupts. Bit 9 of the `flags` register is the interrupt flag, and like other flag bits it has dedicated instructions for clearing/setting it:
 
 - `cli`: Clears the interrupt flag, preventing the cpu from serving interrupts.
 - `sti`: Sets the interrupt flag, letting the cpu serve interrupts.
