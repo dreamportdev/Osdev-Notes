@@ -6,7 +6,7 @@ We hope you enjoy, and find something interesting here!
 
 ## Structure Of The Book
 
-The book is divided in parts and every part is composed by one or more capter. Each numbered chapter adds a new layer to the kernel, expanding it's capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones.
+The book is divided in parts and every part is composed by one or more capter. Each numbered chapter adds a new layer to the kernel, expanding its capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones.
 
 There is also a series of appendices at the end of the book, covering some extra topics that may be useful along the way. The appendices are intended to be used a reference, and can be read at any time. 
 
