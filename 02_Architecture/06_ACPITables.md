@@ -84,11 +84,11 @@ bool validate_RSDP(char *byte_array, size_t size) {
 
 Having last byte means that `result mod 0x100` is 0. Now there are two ways to test it:
 
-* Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored
-* Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with `0xFF` value (`0xFF` is equivalent to the 0b11111111 byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
+* Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored.
+* Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with `0xFF` value (`0xFF` is equivalent to the `0b11111111` byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
 
 The function above works perfectly with both versions of descriptors. 
-In the XSDT since it has more fields, the previous checksum field wont offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
+In the XSDT, since it has more fields, the previous checksum field won't offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
 
 ### RSDT Data structure and fields
 
