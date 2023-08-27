@@ -29,7 +29,7 @@ Now we know the theory behind interrupts, let's take a look at how we interact w
 - _Interrupt Descriptor Table_: An array of interrupt descriptors, usually referred to as the _IDT_.
 - _Interrupt Descriptor Table Register_: Usually called the _IDTR_, this is the register within the cpu that holds the address of the IDT. Similar to the GDTR.
 - _Interrupt Vector_: Refers to the interrupt number. Each vector is unique, and vectors 0-32 are reserved for special purposes (which we'll cover below). The x86 platform supports 256 vectors.
-- _Interrupt Request_: A term used to describe interrupts that are sent to the Programmable Interrupt Controller. The PIC was deprecated long ago and has since been replaced by the APIC. An IRQ refers to the pin number used on the PIC: for example, IRQ2 would be pin #2. The APIC has [a chapter](07_APIC.md) of it's own.
+- _Interrupt Request_: A term used to describe interrupts that are sent to the Programmable Interrupt Controller. The PIC was deprecated long ago and has since been replaced by the APIC. An IRQ refers to the pin number used on the PIC: for example, IRQ2 would be pin #2. The APIC has [a chapter](07_APIC.md) of its own.
 - _Interrupt Service Routine_: Similar to IRQ, this is an older term, used to describe the handler function for IRQ. Often shortened to ISR.
 
 To handle interrupts, we need to create a table of descriptors, called the *Interrupt Descriptor Table*. We then load the address of this IDT into the IDTR, and if the entries of the table are set up correctly we should be able to handle interrupts.
@@ -185,7 +185,7 @@ iret
 
 You'll notice we added 16 bytes to the stack before the `iret`. This is because there will be an error code (real or dummy) and the vector number that we need to remove, so that the iret frame is at the top of the stack. If we don't do this, `iret` will use the wrong data and likely trigger a general protection fault.
 
-As for the general purpose registers, the order they're pushed doesn't really matter, as long as they're popped in reverse. You can skip storing `%rsp`, as it's value is already preserved in the `iret` frame. That's the generic part of our interrupt stub, now we just need the handlers for each vector. They're very simple!
+As for the general purpose registers, the order they're pushed doesn't really matter, as long as they're popped in reverse. You can skip storing `%rsp`, as its value is already preserved in the `iret` frame. That's the generic part of our interrupt stub, now we just need the handlers for each vector. They're very simple!
 
 We're also going to align each handler's function to 16 bytes, as this will allow us to easily install all 256 handlers using a loop, instead of installing them individually.
 
@@ -241,7 +241,7 @@ If we don't send the EOI, the cpu will return from the interrupt handler and exe
 
 *Authors Note: This chapter is biased towards how I usually implement my interrupt handling. I like it because it lets me collect all interrupts in one place, and if something fires an interrupt I'm not ready for, I can log it for debugging. As always, there are other ways to go about this, but for the purposes of this chapter and the chapters to follow, it's assumed that your interrupt handling looks like the following (for simplicity of the explanations). -DT*
 
-We introduced the `interrupt_dispatch` function before, and had *all* of our interrupts call it. The `dispatch` part of the name hints at it's function, but for clarity it's purpose it to call other functions within the kernel, based on the interrupt vector. There is also a hidden benefit here that we don't have to route one interrupt to one kernel function. An intermediate design could maintain a list for each vector of functions that wish to be called when something occurs. For example there might be multiple parts of the kernel that wish to know when a timer fires. This design is not covered here, but it's something to think about for future uses. For now we'll stick with a simple design which just calls a single kernel function directly. 
+We introduced the `interrupt_dispatch` function before, and had *all* of our interrupts call it. The `dispatch` part of the name hints that its purpose is to call other functions within the kernel, based on the interrupt vector. There is also a hidden benefit here that we don't have to route one interrupt to one kernel function. An intermediate design could maintain a list for each vector of functions that wish to be called when something occurs. For example there might be multiple parts of the kernel that wish to know when a timer fires. This design is not covered here, but it's something to think about for future uses. For now we'll stick with a simple design which just calls a single kernel function directly. 
 
 ```c
 void interrupt_dispatch()
@@ -368,7 +368,7 @@ While some of these vectors are unused, they are still reserved and might be use
 
 A number of the reserved interrupts will not be fired by default, they require certain flags to be set. For example the x87 FPU error only occurs if `CR0.NE` is set, otherwise the FPU will silently fail. The SIMD error will only occur if the cpu has been told to enable SSE. Others like bound range exceeded or device not available can only occur on specific instructions, and are generally unseen. 
 
-A Page Fault will push a bitfield as it's error code. This is not a complete description of all the fields, but it's all the common ones. The others are specific to certain features of the cpu.
+A Page Fault will push a bitfield as its error code. This is not a complete description of all the fields, but it's all the common ones. The others are specific to certain features of the cpu.
 
 | Bit | Name      | Description                            |
 |-----|-----------|----------------------------------------|
