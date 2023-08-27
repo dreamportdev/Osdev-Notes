@@ -29,7 +29,7 @@ Now we know the theory behind interrupts, let's take a look at how we interact w
 - _Interrupt Descriptor Table_: An array of interrupt descriptors, usually referred to as the _IDT_.
 - _Interrupt Descriptor Table Register_: Usually called the _IDTR_, this is the register within the cpu that holds the address of the IDT. Similar to the GDTR.
 - _Interrupt Vector_: Refers to the interrupt number. Each vector is unique, and vectors 0-32 are reserved for special purposes (which we'll cover below). The x86 platform supports 256 vectors.
-- _Interrupt Request_: A term used to describe interrupts that are sent to the Programmable Interrupt Controller. The PIC was deprecated long ago and has since been replaced by the APIC. An IRQ refers to the pin number used on the pic: IRQ2 would be pin #2 for example. The APIC has a chapter of it's own.
+- _Interrupt Request_: A term used to describe interrupts that are sent to the Programmable Interrupt Controller. The PIC was deprecated long ago and has since been replaced by the APIC. An IRQ refers to the pin number used on the PIC: for example, IRQ2 would be pin #2. The APIC has [a chapter](07_APIC.md) of it's own.
 - _Interrupt Service Routine_: Similar to IRQ, this is an older term, used to describe the handler function for IRQ. Often shortened to ISR.
 
 In order for us to be able to handle interrupts, we're going to need to create an array of descriptors (or rather a table, called the *Interrupt Descriptor Table*). We then load the address of this IDT into the IDTR, and if the entries of the table are set up correctly we should be able to handle interrupts.
