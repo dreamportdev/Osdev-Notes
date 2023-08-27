@@ -372,7 +372,7 @@ A Page Fault will push a bitfield as its error code. This is not a complete desc
 
 | Bit | Name      | Description                            |
 |-----|-----------|----------------------------------------|
-| 0   | Present   | If set, means all the page table entries were present, but translation failed due to a protection violation. If cleared, a page table entry was not present |
+| 0   | Present   | If set, means all the page table entries were present, but translation failed due to a protection violation. If cleared, a page table entry was not present. |
 | 1   | Write     | If set, page fault was triggered by a write attempt. Cleared if it was a read attempt. |
 | 2   | User      | Set if the CPU was in user mode (CPL = 3). |
 | 3   | Reserved Bit Set | If set, means a reserved bit was set in a page table entry. Best to walk the page tables manually and see what's happening. |
@@ -382,7 +382,7 @@ The other interrupts that push an error code (excluding the always-zero ones) us
 
 | Bits | Name     | Description                            |
 |------|----------|----------------------------------------|
-| 0    | External | If set, means it was a hardware interrupt. Cleared for software interrupts |
+| 0    | External | If set, means it was a hardware interrupt. Cleared for software interrupts. |
 | 1    | IDT      | Set if this error code refers to the IDT. If cleared it refers to the GDT or LDT (Local Descriptor Table - mostly unused in long mode). |
 | 2    | Table Index | Set if the error code refers to the LDT, cleared if referring to the GDT. |
 | 31:3 | Index    | The index into the table this error code refers to. This can be seen as a byte offset into the table, much like a GDT selector would. |
