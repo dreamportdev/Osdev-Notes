@@ -92,7 +92,7 @@ The functions of the fields in the registers are as follows:
 * Bit 8: This bit acts a software toggle for enabling the local APIC, if set the local APIC is enabled.
 * Bit 9: This is an optional feature not available on processors, but if set it indicates that some interrupts can be routed according to a list of priorities. This is an advanced topic and this bit can be safely left clear and ignored.
 
-The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the lapic we need to set bit 8, and set-up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between `0xF0` and `0xFF`. For compatibility it's best to place the spurious vector in that range. Of course we need to set-up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
+The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the LAPIC we need to set bit 8, and set-up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between `0xF0` and `0xFF`. For compatibility it's best to place the spurious vector in that range. Of course we need to set-up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
 
 ### Reading APIC Id and Version
 
@@ -177,12 +177,12 @@ There is also a shorthand field in the ICR which overrides the destination id. I
 
 - 0b00: no shorthand, use the destination id.
 - 0b01: send this IPI to ourselves, no one else.
-- 0b10: send this IPI to all lapics, including ourselves.
-- 0b11: send this IPI to all lapics, but not ourselves.
+- 0b10: send this IPI to all LAPICs, including ourselves.
+- 0b11: send this IPI to all LAPICs, but not ourselves.
 
 ## IOAPIC
 
-The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the lapic timer, all external devices are going to use the IRQs provided by it (like it was done in the past by the PIC).
+The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the LAPIC timer, all external devices are going to use the IRQs provided by it (like it was done in the past by the PIC).
 
 ### Configure the IO-APIC
 
