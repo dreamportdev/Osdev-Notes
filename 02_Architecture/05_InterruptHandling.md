@@ -149,7 +149,7 @@ There is also one other thing: when an interrupt is served the cpu will store so
 Optionally, for some vectors the cpu will push a 64-bit error code (see the table below for specifics).
 This structure is known as an *iret frame*, because to return from an interrupt we use the `iret` instruction, which pops those five values from the stack. 
 
-Hopefully the flow of things is clear at this point: the cpu serves the interrupt, pushes those five values onto the stack. Our handler function runs, and then executes the `iret` instruction to pop the previously pushed values off the stack, and return to the interrupted code.
+Hopefully the flow of things is clear at this point: the cpu serves the interrupt, pushes those five values onto the stack. Our handler function runs, and then executes the `iret` instruction to pop the previously pushed values off the stack, and returns to the interrupted code.
 
 ### An Example Stub
 
