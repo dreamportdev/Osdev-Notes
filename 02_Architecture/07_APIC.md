@@ -292,7 +292,7 @@ Flags are defined as follows:
 
 ### IO Redirection Table (IOREDTBL)
 
-They can be accessed vie memory mapped registers. Each entry is composed of 2 registers (starting from offset 10h). So for example the first entry will be composed by registers 10h and 11h.
+They can be accessed via memory-mapped registers. Each entry is composed of 2 registers (starting from offset 10h). So for example the first entry will be composed by registers 10h and 11h.
 
 The content of each entry is:
 
