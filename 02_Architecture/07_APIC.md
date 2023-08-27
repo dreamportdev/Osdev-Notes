@@ -131,7 +131,7 @@ The delivery mode field determines how the the APIC should present the interrupt
 
 ### X2 APIC
 
-The X2APIC is an extension of the XAPIC (the local APIC in it's regular mode). The main difference is the registers are now accessed via MSRs and some the ID register is expanded to use a 32-bit value (previously 8-bits). While we're going to look at how to use this mode, it's perfectly fine to not support it.
+The X2APIC is an extension of the XAPIC (the local APIC in its regular mode). The main difference is the registers are now accessed via MSRs and some the ID register is expanded to use a 32-bit value (previously 8-bits). While we're going to look at how to use this mode, it's perfectly fine to not support it.
 
 Checking whether the current processor supports the X2APIC or not can be done via `cpuid`. It will be under leaf 1, bit 21 in `ecx`. If this bit is set, the processor supports the X2APIC.
 
