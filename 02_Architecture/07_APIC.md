@@ -203,7 +203,7 @@ Read I/O APIC information from MADT table (the MADT table is available within th
 | 4      | 4      | I/O APIC Address             |
 | 8      | 4      | Global System Interrupt Base |
 
-The I/O APIC ID field is mostly fluff, as we'll be accessing the I/O APIC by it's mmio address, not it's ID.
+The I/O APIC ID field is mostly fluff, as we'll be accessing the I/O APIC by its MMIO address, not its ID.
 
 The Global System Interrupt Base is the first interrupt number that the I/O APIC handles. In the case of most systems, with only a single I/O APIC, this will be 0. 
 
