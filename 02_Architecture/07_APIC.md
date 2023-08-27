@@ -77,7 +77,7 @@ A complete list of local APIC registers is available in the Intel/AMD software d
 
 ### Enabling the Local APIC, and The Spurious Vector
 
-The spurious vector register is also contains some miscellaneous config for the local APIC, including the enable/disable flag. This register has the following format:
+The spurious vector register also contains some miscellaneous config for the local APIC, including the enable/disable flag. This register has the following format:
 
 | Bits  | Value                        |
 |-------|------------------------------|
