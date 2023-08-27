@@ -96,7 +96,7 @@ RSDT (Root System Description Table) is a data structure used in the ACPI progra
 
 Since every SDT table contains different type of information, they are all different from each other, we can define an RSDT table by the composition of two parts:
 
-* the first part is the header, common between all the SDTs with the following structure:
+* The first part is the header, common between all the SDTs with the following structure:
 
 ```c
 struct ACPISDTHeader {
