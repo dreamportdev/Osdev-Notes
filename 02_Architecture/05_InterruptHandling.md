@@ -58,7 +58,7 @@ The selector field is the *code selector* the cpu will load into `%cs` before ru
 
 The `ist` field can safely be left at zero to disable the IST mechanism. For the curious, this is used in combination with the TSS to force the cpu to switch stacks when handling a specific interrupt vector. This feature can be useful for certain edge cases like handling NMIs. ISTs and the TSS are covered later on when we go to userspace. 
 
-The `flags` field is a little more complex, and is actually a bitfield. It's format is as follows:
+The `flags` field is a little more complex, and is actually a bitfield. Its format is as follows:
 
 | Bits   | Name      | Description                                     |
 |--------|-----------|-------------------------------------------------|
