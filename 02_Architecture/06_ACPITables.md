@@ -1,18 +1,18 @@
 # Acpi Tables
 
-ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like amount of power on each device, thermal zones, fan control, IRQs, battery levels etc. 
+ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like the amount of power on each device, thermal zones, fan control, IRQs, battery levels, etc. 
 
-We need to access the ACPI Tables in order to read the IO-Apic information, used to receive hardware interrupts (it will be explained later)
+We need to access the ACPI Tables in order to read the IO-APIC information, used to receive hardware interrupts (it will be explained later).
 
 ## RSDP and RSDT/XSDT
 
-Many of the information are organized and accessible through different data structures, but since the ACPI specs are quite big, and cover so many different components, we focus only on what we just need to get the information we need about the APIC.
+Most of the information is organized and accessible through different data structures, but since the ACPI spec is quite big, and covers so many different components, we focus only on what we need to get the information about the APIC.
 
-Before proceeding let's keep in mind that all address described below are physical, so if we will enable paging, keep in mind that we need to ensure they are properly mapped in the virtual memory space.
+Before proceeding, let's keep in mind that all address described below are physical, so if we we have enabled paging, we need to ensure they are properly mapped in the virtual memory space.
 
 ### RSDP
 
-The RSDP (Root System Description Pointer) used in the ACPI programming interface  is the pointer to the RSDT (Root System Descriptor Table) the full structure is depending if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
+The RSDP (Root System Description Pointer) used in the ACPI programming interface is the pointer to the RSDT (Root System Descriptor Table), the full structure depends if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
 
 The newer version is backward compatible with the older.
 
@@ -70,7 +70,7 @@ struct RSDP2Descriptor {
 
 #### RSDP Validation
 
-Before proceeding let's explain little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just mutter of cycling a byte array. Here the example code: 
+Before proceeding let's explain little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just matter of cycling a byte array. Here the example code: 
 
 ```c
 bool validate_RSDP(char *byte_array, size_t size) {
