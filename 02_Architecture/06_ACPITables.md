@@ -1,4 +1,4 @@
-# Acpi Tables
+# ACPI Tables
 
 ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like the amount of power on each device, thermal zones, fan control, IRQs, battery levels, etc. 
 
