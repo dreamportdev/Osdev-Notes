@@ -249,7 +249,7 @@ void interrupt_dispatch()
     switch (vector_number)
     {
         case 13:
-            log("general protection fault.);
+            log("general protection fault.");
             break;
         case 14:
             log("page fault.");
@@ -303,7 +303,7 @@ void interrupt_dispatch(cpu_status_t* context)
     switch (vector_number)
     {
         case 13:
-            log("general protection fault.);
+            log("general protection fault.");
             break;
         case 14:
             log("page fault.");
