@@ -17,7 +17,7 @@ Both types of APIC are accessed by memory mapped registers, with 32-bit wide reg
 
 ## Local APIC
 
-When a system boots up, the cpu starts in PIC8259A emulation mode for legacy reasons. This simply means that instead of having the LAPIC/IO-APIC up and running, we have them working to emulate the old interrupt controller, so before we can use them properly we should to disable the PIC8259 emulation.
+When a system boots up, the cpu starts in PIC8259A emulation mode for legacy reasons. This simply means that instead of having the LAPIC/I/O APIC up and running, we have them working to emulate the old interrupt controller, so before we can use them properly we should to disable the PIC8259 emulation.
 
 ### Disabling The PIC8259
 
@@ -184,28 +184,28 @@ There is also a shorthand field in the ICR which overrides the destination id. I
 
 The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the LAPIC timer, all external devices are going to use the IRQs provided by it (like it was done in the past by the PIC).
 
-### Configure the IO-APIC
+### Configure the I/O APIC
 
-To configure the IO-APIC we need to: 
+To configure the I/O APIC we need to: 
 
-1. Get the IO-APIC base address from the MADT
-2. Read the IO-APIC Interrupt Source Override table
+1. Get the I/O APIC base address from the MADT
+2. Read the I/O APIC Interrupt Source Override table
 3. Initialize the IO Redirection table entries for the interrupt we want to enable
 
-### Getting IO-APIC address
+### Getting I/O APIC address
 
-Read IO-APIC information from MADT table (the MADT table is available within the RSDT data, we need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
+Read I/O APIC information from MADT table (the MADT table is available within the RSDT data, we need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
 
 | Offset | Length | Description                  |
 |--------|--------|------------------------------|
-| 2      | 1      | I/O Apic ID's                |
+| 2      | 1      | I/O APIC ID's                |
 | 3      | 1      | Reserved (should be 0)       |
-| 4      | 4      | I/O Apic Address             |
+| 4      | 4      | I/O APIC Address             |
 | 8      | 4      | Global System Interrupt Base |
 
 The IO APIC ID field is mostly fluff, as we'll be accessing the io apic by it's mmio address, not it's ID.
 
-The Global System Interrupt Base is the first interrupt number that the I/O Apic handles. In the case of most systems, with only a single IO APIC, this will be 0. 
+The Global System Interrupt Base is the first interrupt number that the I/O APIC handles. In the case of most systems, with only a single IO APIC, this will be 0. 
 
 To check the number of inputs an IO APIC supports:
 
@@ -217,9 +217,9 @@ size_t number_of_inputs = ((ioapicver >> 16) & 0xFF) + 1;
 The number of inputs is encoded as bits 23:16 of the IOAPICVER register, minus one. 
 
 
-### IO-APIC Registers
+### I/O APIC Registers
 
-The IO-APIC has 2 memory mapped registers for accessing the other IO-APIC registers: 
+The I/O APIC has 2 memory mapped registers for accessing the other I/O APIC registers: 
 
 | Memory Address | Mnemonic Name | Register Name      | Description                                  |
 |----------------|---------------|--------------------|----------------------------------------------|
@@ -236,7 +236,7 @@ And then there are 4 I/O Registers that can be accessed using the two above:
 | IOREDTBL  | 03h-3fh  | The redirection tables (see the IOREDTBL paragraph)    |  RW       |
 
 
-### Reading data from IO-APIC
+### Reading data from I/O APIC
 
 There are basically two addresses that we need to use in order to write/read data from apic registers and they are: 
 
@@ -259,9 +259,9 @@ The actual read or write operation is performed when IOWIN is accessed.
 Accessing IOREGSEL has no side effects.
 
 ### Interrupt source overrides
-They contain differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first IO-APIC sources, but most of the time there will be at least one exception. This table contains those exceptions. 
+They contain differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first I/O APIC sources, but most of the time there will be at least one exception. This table contains those exceptions. 
 
-An example is the PIT Timer is connected to ISA IRQ 0, but when apic is enabled it is connected to the IO-APIC interrupt input pin 2, so in this case we need an interrupt source override where the Source entry (bus source) is 0 and the global system interrupt is 2
+An example is the PIT Timer is connected to ISA IRQ 0, but when apic is enabled it is connected to the I/O APIC interrupt input pin 2, so in this case we need an interrupt source override where the Source entry (bus source) is 0 and the global system interrupt is 2
 The values stored in the IO Apic Interrupt source overrides in the MADT are:
 
 | Offset | Length | Description                  |
@@ -299,6 +299,6 @@ The content of each entry is:
 * The lower double word is basically an LVT entry, for their definition check the LVT entry definition
 * The upper double word contains:
     - Bits 17 to 55: are Reserved
-    - Bits 56 to 63: are the Destitnation Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the IO-APIC datasheet.
+    - Bits 56 to 63: are the Destitnation Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the I/O APIC datasheet.
 
-The number of items is stored in the IO-APIC MADT entry, but usually on modern architectures is 24.
+The number of items is stored in the I/O APIC MADT entry, but usually on modern architectures is 24.
