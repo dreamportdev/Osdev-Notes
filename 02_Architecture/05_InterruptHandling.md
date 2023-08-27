@@ -397,9 +397,9 @@ Fortunately the PICs allow us to offset the vectors they issue to the cpu. They 
 
 ### Halt not Halting
 
-If a `hlt` call has been placed  at the end of the kernel, and are suddenly getting errors after successfully handling an interrupt, read on. There's a caveat to the halt instruction that's easily forgotten: this instruction works by telling the cpu to stop fetching instructions, and when an interrupt is served the cpu fetches the instructions required for the interrupt handler function. Now since the cpu is halted, it must un-halt itself in order for the interrupt handler instructions to be executed. This is what we expect, and fine so far. 
-However when we return from the interrupt, we have already run the `hlt` instruction, so we return to the *next instruction*. See the issue? There's usually nothing after we halt, in fact that memory is probably data instead of code. Therefore we end up executing *something*, and ultimately trigger some sort of error.
-The solution is the use the halt instruction within a loop, so that after each instruction we run `hlt` again, like so:
+If a `hlt` call has been placed  at the end of the kernel, and are suddenly getting errors after successfully handling an interrupt, read on. There's a caveat to the halt instruction that's easily forgotten: this instruction works by telling the cpu to stop fetching instructions, and when an interrupt is served the cpu fetches the instructions required for the interrupt handler function. Now, since the cpu is halted, it must un-halt itself to execute the interrupt handler. This is what we expect, and we are fine so far. 
+However, when we return from the interrupt, we have already run the `hlt` instruction, so we return to the *next instruction*. See the issue? There's usually nothing after we halt, in fact that memory is probably data instead of code. Therefore we end up executing *something*, and ultimately trigger some sort of error.
+The solution is to use the halt instruction within a loop, so that after each instruction we run `hlt` again, like so:
 
 ```c
 //this is what you want
