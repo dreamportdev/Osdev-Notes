@@ -2,41 +2,46 @@
 
 ## What is Paging?
 
-Paging is a memory management scheme that introduces the concept of **_logical addresses_** (virtual address) and **_virtual memory_**. On x86_\* architectures this is achieved via hardware. Paging enables a layer of translation between virtual and physical address, and virtual and physical address spaces, as well as adding a few extra features (like access protection, priviledge level protection).
+Paging is a memory management scheme that introduces the concept of **_logical addresses_** (virtual address) and **_virtual memory_**. On x86_\* architectures this is achieved via hardware. Paging enables a layer of translation between virtual and physical addresses, and virtual and physical address spaces, as well as adding a few extra features (like access protection, priviledge level protection).
 
-Paging introduces a few new concepts that are explained below.
+It introduces a few new concepts that are explained below.
 
 ### Page
-A _page_ is a contiguous block of memory, of fixed size. On x86 a page is 0x1000 bytes. It represents the smallest unit the hardware memory management unit can work with, and therefore the smallest unit we can work with! Each entry in a page table describes one page.
+A _page_ is a contiguous block of memory, of fixed size. The size depends on what the architecture supports (usually more than one).  On _x86\_64_ a page minum size is 0x1000 bytes. It represents the smallest unit the hardware memory management unit can work with, and therefore the smallest unit we can work with! Each entry in a page table describes one page.
 
 ### Page Directories and Tables
 
 These are the basic blocks of paging. Depending on the architecture (and requested page size) there can be a different number of them.
 
 - For example if we are running in 32 bit mode with 4k pages we have page directory and page table.
-- If we are running in 64 bits with 4k pages we have four levels of page tables, 3 directories and 3 tables.
+- If we are running in 64 bits with 4k pages we have four levels of page tables, 3 directories and 1 table.
 
 What are those directories and tables? Let's start from the tables:
 
 * **Page Table** contains the information about a single page of memory, an entry in a page table represents the starting physical memory addresss for this page.
-* **Page Directory** an entry in a page directory can point to: another page directory (depending on what type of paging we have enabled) or a page table.
+* **Page Directory** an entry in a page directory can point to depending on the page size selected:
+    - another page directory
+    - a page table
+    - or memory
 
 A special register, `CR3` contains the address of the root page directory. This register has the following format:
 
 * bits from 12 to 63 (31 if we are in running a 32 bit kernel) are the address of the root page directory.
 * bits 0 to 12 change their meaning depending on the value of bit 14 in CR4, but in this chapter and for our purpose are not relevant anyway, so they can be left as 0.
 
-Sometimes CR3 (although technically it's just the data from bits 12+) are referred to as the PDBR, short for Page Directory Base address.
+Sometimes CR3 (although technically it's just the data from bits 12+) is referred to as the PDBR, short for Page Directory Base address.
 
 ### Virtual (or Logical) Address
 
-A virtual address is what a running program sees. Thats any program: a driver, user application or the kernel itself. In the kernel, often a virtual address will map to the same physical address, it is called `identity mapping`, but this is not always the case though, we can also have the same physical address that maps to different virtual addresses.
+A virtual address is what a running program sees. Thats any program: a driver, user application or the kernel itself.
 
-A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows with an example how address translation works:
+Sometime in the kernel, a virtual address will map to the same physical address, this scenario it is called `identity mapping`, but this is not always the case though, we can also have the same physical address that maps to different virtual addresses.
+
+A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows, with an example, how address translation works:
 
 ![Address Translation](/Images/addrtranslation.png)
 
-The _memory page_ in the picture refers to a physical memory page. Using logical address and paging, we can introduce a whole new address space that can be much bigger of the available physical memory.
+The _memory page_ in the picture refers to a physical memory page (the picture above doesn't refer to any existing hardware paging, is just an example scenario). Using logical address and paging, we can introduce a whole new address space that can be much bigger of the available physical memory.
 
 
 For example we can have that:
@@ -125,7 +130,7 @@ Until now we have explained how address translation works now let's see how the 
    mov cr3, eax
 ```
 
-The first `mov` is needed because cr3 can be loaded only from another register. Keep in mind that in order to enter long mode we should have already paging enabled, so the first page tables should be loaded very early in the boot process. Once enabled we can change the content of `CR3` to load a new addressing space.
+The first `mov` is needed because `cr3` can be loaded only from another register. Keep in mind that in order to enter long mode we should have already paging enabled, so the first page tables should be loaded very early in the boot process. Once enabled we can change the content of `cr3` to load a new addressing space.
 
 This can be done using inline assembly too:
 
@@ -135,9 +140,9 @@ void load_cr3( void* cr3_value ) {
 }
 ```
 
-The inline assembly syntax will be explained in one of the appendices chapter: [C Language Info](../99_Appendices/C_Language_Info.md). The `mov` into a register her is hidden, by the lable `"r"` in front of the variable `cr3_value`, this label indicate that the variable value should be put into a register.
+The inline assembly syntax will be explained in one of the appendices chapter: [C Language Info](../99_Appendices/C_Language_Info.md). The `mov` into a register here is hidden, by the label `"r"` in front of the variable `cr3_value`, this label indicates that the variable value should be put into a register.
 
-The bits that we need to set in order to have paging enabled in long mode are in order the: `PAE` Page Address Extension, bit number 5 in CR4, the `LME` Long Mode Enable Bit (Bit 8 in EFER, and has to be loaded with the `rdmsr`/`wrmsr` instructions), and finally the `PG` Paging bit number 31 in `cr0`.
+The bits that we need to set to have paging enabled in long mode are, in order, the: `PAE` Page Address Extension, bit number 5 in CR4, the `LME` Long Mode Enable Bit (Bit 8 in EFER, and has to be loaded with the `rdmsr`/`wrmsr` instructions), and finally the `PG` Paging bit number 31 in `cr0`.
 
 Every time we need to change a value of a system register, `cr*`, and similar we must always load the current value first and update it's content, otherwise we can run into troubles. And finally the Paging bit must be the last to be enabled.
 
