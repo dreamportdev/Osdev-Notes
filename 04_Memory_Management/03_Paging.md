@@ -7,7 +7,7 @@ Paging is a memory management scheme that introduces the concept of **_logical a
 It introduces a few new concepts that are explained below.
 
 ### Page
-A _page_ is a contiguous block of memory, of fixed size. The size depends on what the architecture supports (usually more than one).  On _x86\_64_ a page minum size is 0x1000 bytes. It represents the smallest unit the hardware memory management unit can work with, and therefore the smallest unit we can work with! Each entry in a page table describes one page.
+A page is a contiguous block of memory, with the exact size depending on what the architecture supports. On x86_64 we have page sizes of 4K, 2M and optionally 1G. The smallest page size is also called a page frame as it represents the smallest unit the memory management unit can work with, and therefore the smallest unit unit we can work with! Each entry in a page table describes one page.
 
 ### Page Directories and Tables
 
