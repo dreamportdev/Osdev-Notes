@@ -217,9 +217,9 @@ ffffffff80000000-ffffffff80057000 0000000000057000 -r-
 ffffffff80057000-ffffffff8006b000 0000000000014000 -rw
 ```
 
-Where every line contain represent a single virtual memory mapping, and contains in order: _base, limit, size and flags_. 
+Where every line describes a single virtual memory mapping. The fields are (ordered left to right): base address, limit, size and the three common flags (user, read, write).
 
-the `info tlb` shows the virtual to physical memory mappings. An example output is: 
+The other command, `info tlb`, shows the state of the translation lookaside buffer. In qemu this is shown as individual address translations, and can be quite verbose. An example of what the output might look like is shown below:
 
 ```
 info tlb
