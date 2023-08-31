@@ -13,9 +13,9 @@ on:
   workflow_dispatch:
 jobs:
   # This workflow contains a single job called "build"
-  build:  
+  build:
     # It will run on ubuntu-latest image
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
@@ -23,7 +23,7 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get -y upgrade
-          sudo apt-get -y install texlive-latex-base texlive texlive-xetex texlive-fonts-recommended librsvg2-2 liblua5.3-0 librsvg2-bin librsvg2-common    
+          sudo apt-get -y install texlive-latex-base texlive texlive-xetex texlive-fonts-recommended librsvg2-2 liblua5.3-0 librsvg2-bin librsvg2-common
           wget http://mirrors.kernel.org/ubuntu/pool/main/g/gmp/libgmp10_6.2.1+dfsg1-1ubuntu2_amd64.deb
           wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pandoc/pandoc_2.17.1.1-1ubuntu2_amd64.deb
           wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pandoc/pandoc-data_2.17.1.1-1ubuntu2_all.deb
@@ -32,11 +32,11 @@ jobs:
           sudo dpkg -i pandoc_2.17.1.1-1ubuntu2_amd64.deb
       - name: Run build script
         run: |
-          pandoc -v 
+          pandoc -v
           echo "Updating permissions on build script"
           chmod +x build.sh
           echo "Bulding"
-          ./build.sh
+          ADD_COMMIT=1 ./build.sh
           echo "Next step: creating release"
       - uses: pyTooling/Actions/releaser@r0
         with:
