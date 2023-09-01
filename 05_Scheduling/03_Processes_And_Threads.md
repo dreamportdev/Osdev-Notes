@@ -115,7 +115,9 @@ typedef struct {
 } process_t;
 ```
 
-When creating a new process we'll need to populate these new page tables: make sure the process stack is mapped, as well as the program's code and any data are also mapped. We'll also copy the higher half of the current process's tables into the new tables, so that the kernel is mapped into the new process. Doing this is quite simple: we just copy entries 256-511 of the pml4 (the top half of the page table). These pml4 entries will point to the same pml3 entries used by the kernel tables in other processes, and so on.
+When creating a new process we'll need to populate these new page tables: make sure the process stack is mapped, as well as the program's code and any data are also mapped. We'll also copy the higher half of the current process's tables into the new tables, so that the kernel is mapped into the new process. Doing this is quite simple: we just copy entries 256-511 of the `PML4` (the top half of the page table). These pml4 entries will point to the same pml3 entries used by the kernel tables in other processes, and so on.
+
+If we are using the recursion techcnique to access entries on page directories one of them will be the pointer to `PML4` itself (in our case the entry 510), in this case we don't want to copy the current `PML4` value, but assign to it the physical address of the new table contained in `root_page_table`, with the PRESENT and WRITE flags set (don't forget that the physical address has to be page aligned).
 
 Copying the higher half page tables like this can introduce a subtle issue: If the kernel modifies a pml4 entry in one process the changes won't be visible in any of the other processes. Let's say the kernel heap expands across a 512 GiB boundary, this would modify the next pml4 (since each pml4 entry is responsible for 512 GiB of address space). The current process would be able to see the new part of the heap, but upon switching processes the kernel could fault when trying to access this memory.
 

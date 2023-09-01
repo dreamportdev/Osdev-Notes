@@ -35,6 +35,9 @@ for dir in $chapter_dirs; do
 done
 
 cmd_body+="LICENSE.md"
-awk -v HASH=`git rev-parse HEAD`  '!found && /header-includes/ { print "   |\n   | based on commit: " HASH ; found=1 } 1' .pandoc/pandoc.yaml | tee .pandoc/pandoc_1.yaml
-mv .pandoc/pandoc_1.yaml .pandoc/pandoc.yaml
+if [ -v ADD_COMMIT ]; then
+    awk -v HASH=`git rev-parse HEAD`  '!found && /header-includes/ { print "   |\n   | based on commit: " HASH ; found=1 } 1' .pandoc/pandoc.yaml | tee .pandoc/pandoc_1.yaml
+    mv .pandoc/pandoc_1.yaml .pandoc/pandoc.yaml
+fi
+
 $(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $pandoc_filename)
