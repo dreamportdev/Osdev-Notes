@@ -21,3 +21,5 @@ Second book release.
 * Improve readability of Virtual Memory Management illustration.
 * Fix broken links
 * Fix Cover Alignment
+* Add paragraph about lockfree queues in IPC chapter
+* Add more details in the VMM Section of _Process and Threads_ chapter
