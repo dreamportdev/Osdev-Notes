@@ -192,13 +192,13 @@ To configure the I/O APIC we need to:
 2. Read the I/O APIC Interrupt Source Override table
 3. Initialize the IO Redirection table entries for the interrupt we want to enable
 
-### Getting I/O APIC address
+### Getting the I/O APIC address
 
-Read I/O APIC information from MADT table (the MADT table is available within the RSDT data, we need to search for the MADT Table item type 1). The content of the MADT Table for the IO_APIC type is: 
+Read I/O APIC information from the MADT (the MADT is available within the RSDT data, we need to search for the MADT item type 1). The contents of the MADT for the I/O APIC type are: 
 
 | Offset | Length | Description                  |
 |--------|--------|------------------------------|
-| 2      | 1      | I/O APIC ID's                |
+| 2      | 1      | I/O APIC ID                  |
 | 3      | 1      | Reserved (should be 0)       |
 | 4      | 4      | I/O APIC Address             |
 | 8      | 4      | Global System Interrupt Base |
@@ -210,7 +210,7 @@ The Global System Interrupt Base is the first interrupt number that the I/O APIC
 To check the number of inputs an I/O APIC supports:
 
 ```c
-uint32_t I/O APICver = read_io_apic_register(I/O APICVER);
+uint32_t I/O APICver = read_I/O APIC_register(I/O APICVER);
 size_t number_of_inputs = ((I/O APICver >> 16) & 0xFF) + 1;
 ```
 
@@ -240,8 +240,8 @@ And then there are 4 I/O Registers that can be accessed using the two above:
 
 There are basically two addresses that we need to use in order to write/read data from apic registers and they are: 
 
-* IO_APIC_BASE address, that is the base address of the I/O APIC, called *register select* (or IOREGSEL)  and used to select the offset of the register we want to read
-* IO_APIC_BASE + 0x10, called *i/o window register* (or IOWIN), is the memory location mapped to the register we intend to read/write specified by the contents of the *Register Select*
+* I/O APIC_BASE address, that is the base address of the I/O APIC, called *register select* (or IOREGSEL)  and used to select the offset of the register we want to read
+* I/O APIC_BASE + 0x10, called *i/o window register* (or IOWIN), is the memory location mapped to the register we intend to read/write specified by the contents of the *Register Select*
 
 The format of the IOREGSEL is: 
 
