@@ -180,9 +180,9 @@ There is also a shorthand field in the ICR which overrides the destination id. I
 - 0b10: send this IPI to all LAPICs, including ourselves.
 - 0b11: send this IPI to all LAPICs, but not ourselves.
 
-## IOAPIC
+## I/O APIC
 
-The IOAPIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local apic as interrupt messages, with the exception of the LAPIC timer, all external devices are going to use the IRQs provided by it (like it was done in the past by the PIC).
+The I/O APIC primary function is to receive external interrupt events from the systems, and is associated with I/O devices, and relay them to the local APIC as interrupt messages. With the exception of the LAPIC timer, all external devices are going to use the IRQs provided by it (like it was done in the past by the PIC).
 
 ### Configure the I/O APIC
 
@@ -210,11 +210,11 @@ The Global System Interrupt Base is the first interrupt number that the I/O APIC
 To check the number of inputs an I/O APIC supports:
 
 ```c
-uint32_t ioapicver = read_io_apic_register(IOAPICVER);
-size_t number_of_inputs = ((ioapicver >> 16) & 0xFF) + 1;
+uint32_t I/O APICver = read_io_apic_register(I/O APICVER);
+size_t number_of_inputs = ((I/O APICver >> 16) & 0xFF) + 1;
 ```
 
-The number of inputs is encoded as bits 23:16 of the IOAPICVER register, minus one. 
+The number of inputs is encoded as bits 23:16 of the I/O APICVER register, minus one. 
 
 
 ### I/O APIC Registers
@@ -230,9 +230,9 @@ And then there are 4 I/O Registers that can be accessed using the two above:
 
 | Name      | Offset   | Description                                            | Attribute | 
 |:------------:|----------|--------------------------------------------------------|-----------|
-| IOAPICID  | 00h      | Identification register for the IOAPIC                 |  R/W      |
-| IOAPICVER | 01h      | I/O APIC Version                                        |  RO       |
-| IOAPICARB | 02h      | It contains the BUS arbitration priority for the IOAPIC|  RO       |
+| I/O APICID  | 00h      | Identification register for the I/O APIC                 |  R/W      |
+| I/O APICVER | 01h      | I/O APIC Version                                        |  RO       |
+| I/O APICARB | 02h      | It contains the BUS arbitration priority for the I/O APIC|  RO       |
 | IOREDTBL  | 03h-3fh  | The redirection tables (see the IOREDTBL paragraph)    |  RW       |
 
 
@@ -240,7 +240,7 @@ And then there are 4 I/O Registers that can be accessed using the two above:
 
 There are basically two addresses that we need to use in order to write/read data from apic registers and they are: 
 
-* IO_APIC_BASE address, that is the base address of the IOAPIC, called *register select* (or IOREGSEL)  and used to select the offset of the register we want to read
+* IO_APIC_BASE address, that is the base address of the I/O APIC, called *register select* (or IOREGSEL)  and used to select the offset of the register we want to read
 * IO_APIC_BASE + 0x10, called *i/o window register* (or IOWIN), is the memory location mapped to the register we intend to read/write specified by the contents of the *Register Select*
 
 The format of the IOREGSEL is: 
@@ -248,9 +248,9 @@ The format of the IOREGSEL is:
 | Bit     | Description                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------|
 | 31:8    | Reserved                                                                                                             |
-| 7:0     | APIC Register Address, they specifies the IOAPIC Registers to be read or written via the IOWIN Register              |
+| 7:0     | APIC Register Address, they specifies the I/O APIC Registers to be read or written via the IOWIN Register              |
 
-So basically if we want to read/write a register of the IOAPIC we need to: 
+So basically if we want to read/write a register of the I/O APIC we need to: 
 
 1. write the register index in the IOREGSEL register
 2. read/write the content of the register selected in IOWIN register
