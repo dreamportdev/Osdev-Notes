@@ -56,6 +56,7 @@ Since we have paging enabled, that means page-level protections are in effect. I
 ### Actually Getting to User Mode
 
 First we push the 5 values on to the stack, in this order:
+
 - `ss`, ring 3 data selector.
 - `rsp`, the stack we'll use after `iret`.
 - `rflags`, what the flags register will look like.
