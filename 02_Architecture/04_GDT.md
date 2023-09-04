@@ -50,17 +50,12 @@ The various segment registers:
 
 When using a selector to refer to a GDT descriptor, we'll also need to specify the ring we're trying to access. This exists for legacy reasons to solve a few edge cases that have been solved in other ways. If we will need to use these mechanisms, we'll know, otherwise the default (setting to zero) is fine.
 
-A segment register contains the following information:
+A _segment selector_ contains the following information:
 
-| 15 ... 3 | 2  | 1 0  |
-|-----------|-----|-------|
-| index   | TI  | RPL |
+* `index` bits 15-3: is the GDT selector.
+* `TI` bit 2: is the Table Indicator if clear it means GDT, if set it means LDT, in our case we can leave it to 0.
+* `RPL` bits 1 and 0:  is the Requested Priivlege Level, it will be explained later.
 
-Where:
-
-* `index`: is the GDT selector.
-* `TI`: is the Table Indicator if clear it means GDT, if set it means LDT, in our case we can leave it to 0.
-* `RPL`: is the Requested Priivlege Level, it will be explained later.
 
 Constructing a segment selector is done like so:
 
