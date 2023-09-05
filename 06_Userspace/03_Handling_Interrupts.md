@@ -2,17 +2,17 @@
 
 This is not a complete guide on how to handle interrupts. It assumes we already have an IDT setup and working in supervisor mode, if don't refer the earlier chapter that covers how to set up an IDT and the basics of handling interrupts. This chapter is focused on handling interrupts when user mode programs are executing.
 
-On `x86_64` there are two main structures involved in handling interrupts. The first is the IDT, which we should already be familiar with. The second is the task state segment (TSS). While the TSS is not technically mandatory for handling interrupts, once we leave ring 0 it's functionally impossible to handle interrupts without it. 
+On `x86_64` there are two main structures involved in handling interrupts. The first is the IDT, which we should already be familiar with. The second is the task state segment (TSS). While the TSS is not technically mandatory for handling interrupts, once we leave ring 0 it's functionally impossible to handle interrupts without it.
 
 ### The Why
 
-*Why is getting back into supervisor mode on x86_64 so long-winded?* It's an easy question to ask. The answer is a combination of two things: legacy compatibility, and security. The security side is easy to understand. The idea with switching stacks on interrupts is to prevent leaking kernel data to user programs. Since the kernel may process sensitive data inside of an interrupt, that data may be left on the stack. Of course a user program can't really know when it's been interrupted and there might be valuable kernel data on the stack to scan for, but it's not impossible. There have already been several exploits that work like this. So switching stacks is an easy way to prevent a whole class of security issues. 
+*Why is getting back into supervisor mode on x86_64 so long-winded?* It's an easy question to ask. The answer is a combination of two things: legacy compatibility, and security. The security side is easy to understand. The idea with switching stacks on interrupts is to prevent leaking kernel data to user programs. Since the kernel may process sensitive data inside of an interrupt, that data may be left on the stack. Of course a user program can't really know when it's been interrupted and there might be valuable kernel data on the stack to scan for, but it's not impossible. There have already been several exploits that work like this. So switching stacks is an easy way to prevent a whole class of security issues.
 
 As for the legacy part? `X86` is an old architecture, oringinally it had no concept of rings or protection of any kind. There have been many attempts to introduce new levels of security into the architecture over time, resulting in what we have now. However for all that, it does leave us with a process that is quite flexible, and provides a lot of possibilities in how interrupts can be handled.
 
 ### The How
 
-The TSS served a different purpose on `x86` (protected mode, not `x86_64`), and was for *hardware task switching*. Since this proved to be slower than *software task switching*, this functionality was removed in long-mode. The 32 and 64 bit TSS structures are very different and not compatible. Note that example below uses the `packed` attribute. As is always a good idea when using structures that are dealing with hardware directly. We want to ensure our compiler lays out the memory as we expect. A C version of the long mode TSS is given below:
+The TSS served a different purpose on `x86` (protected mode, not `x86_64`), and was for *hardware task switching*. Since this proved to be slower than *software task switching*, this functionality was removed in long-mode. The 32 and 64 bit TSS structures are very different and not compatible. Note that the example below uses the `packed` attribute, as is always a good idea when using structures that are dealing with hardware directly. We want to ensure our compiler lays out the memory as we expect. A `C` version of the long mode TSS is given below:
 
 ```c
 __attribute__((packed))
@@ -38,19 +38,19 @@ struct tss
 
 As per the manual, the reserved fields should be left as zero. The rest of the fields can be broken up into three groups:
 
-- `rspX`: where `X` represents a cpu ring (0 = supervisor). When an interrupt occurs, the cpu switches the code selector to the selector in the IDT entry. Remember the CS register is what determines the current prilege level. If the new CS is a lower ring (lower value = more privileged), the cpu will switch to the stack in `rspX` before pushing the `iret` frame.
-- `istX`: where `X` is a non-zero identifier. These are the IST (Interrupt Stack Table) stacks, and are used by the IST field in the IDT descriptors. If an IDT descriptor has non-zero IST field, the cpu will always load the stack in the corresponding IST field in the TSS. This overrides the loading of a stack from an `rspX` field. This is useful for some interrupts that can occur at any time, like a machine check or NMI, or if you do sensitive work in a specific interrupt and don't want to leak data afterwards.
+- `rspX`: where `X` represents a cpu ring (0 = supervisor). When an interrupt occurs, the cpu switches the code selector to the selector in the _IDT_ entry. Remember the _CS_ register is what determines the current prilege level. If the new CS is a lower ring (lower value = more privileged), the cpu will switch to the stack in `rspX` before pushing the `iret` frame.
+- `istX`: where `X` is a non-zero identifier. These are the _IST_ (Interrupt Stack Table) stacks, and are used by the IST field in the IDT descriptors. If an IDT descriptor has non-zero IST field, the cpu will always load the stack in the corresponding IST field in the TSS. This overrides the loading of a stack from an `rspX` field. This is useful for some interrupts that can occur at any time, like a machine check or NMI, or if you do sensitive work in a specific interrupt and don't want to leak data afterwards.
 - `io_bitmap_offset`: Works in tandem with the `IOPL` field in the flags register. If `IOPL` is less than the current privilege level, IO port access is not allowed (results in a #GP). Otherwise IO port accesses can allowed by setting a bit in a bitmap (cleared bits deny access). This field in the tss specifies where this bitmap is located in memory, as an offset from the base of the tss. If `IOPL` is zero, ring 0 can implicitly access all ports, and `io_bitmap_offset` will be ignored in all rings.
 
-With the exception of the IO permissions bitmap, the TSS is all about switching stacks for interrupts. It's worth noting that if an interrupt doesn't use an IST, and occurs while the cpu is in ring 0, no stack switch will occur. Remember that the `rspX` stacks only used when the cpu switches from a less privileged mode. Setting the IST field in an IDT entry will always force a stack switch, if that's needed. 
+With the exception of the IO permissions bitmap, the TSS is all about switching stacks for interrupts. It's worth noting that if an interrupt doesn't use an IST, and occurs while the cpu is in ring 0, no stack switch will occur. Remember that the `rspX` stacks only used when the cpu switches from a less privileged mode. Setting the _IST_ field in an _IDT_ entry will always force a stack switch, if that's needed.
 
 ### Loading a TSS
 
-Loading a TSS has three major steps. First we need to create an instance of the above structure in memory somewhere. Second we'll need to create a new GDT descriptor that points to our TSS structure. Third we'll use that GDT descriptor to load our TSS into the task register (`TR`).
+Loading a TSS has three major steps. First we need to create an instance of the above structure in memory somewhere. Second we'll need to create a new _GDT_ descriptor that points to our TSS structure. Third we'll use that GDT descriptor to load our TSS into the task register (`TR`).
 
-The first step should be self explanatory, so we'll jump into the second step. 
+The first step should be self explanatory, so we'll jump into the second step.
 
-The GDT descriptor we're going to create is a *system descriptor* (as opposed to the *segment descriptors* normally used). In long mode these are expanded to be 16 bytes long, however they're essentially the same 8-byte descriptor as protected mode, just with the upper 4 bytes of the address tacked on top. The last 4 bytes of system descriptors are reserved. 
+The GDT descriptor we're going to create is a *system descriptor* (as opposed to the *segment descriptors* normally used). In long mode these are expanded to be 16 bytes long, however they're essentially the same 8-byte descriptor as protected mode, just with the upper 4 bytes of the address tacked on top. The last 4 bytes of system descriptors are reserved.
 The layout of the TSS system descriptor is broken down below in the following table:
 
 | Bits  | Should Be Set To | Description                         |
@@ -71,7 +71,7 @@ The `ltr` instruction (load task register) takes the byte offset into the GDT we
 ltr $0x28
 ```
 
-It's that simple! Now the cpu knows where to find our TSS. It's worth noting that you only need to reload the task register if the TSS has moved in memory. Ideally your TSS should never move, and so should only be loaded once. If the fields of the TSS are ever updated, the CPU will use the new values the next time it needs them, no need to reload TR. 
+It's that simple! Now the cpu knows where to find our TSS. It's worth noting that you only need to reload the task register if the TSS has moved in memory. Ideally your TSS should never move, and so should only be loaded once. If the fields of the TSS are ever updated, the CPU will use the new values the next time it needs them, no need to reload TR.
 
 ### Putting It All Together
 
@@ -80,7 +80,7 @@ Now that we have a TSS, lets review what happens when the cpu is in user mode, a
 - The cpu receives the interrupt, and finds the entry in the IDT.
 - The cpu switches the CS register to the selector field in the IDT entry.
 - If the new ring is less than the previous ring (lower = more privileged), the cpu loads the new stack from the corresponding `rsp` field. E.g. if switching to ring 0, `rsp0` is loaded. Note that the stack selector has not been updated.
-- The cpu pushes the iret frame onto the new stack. 
+- The cpu pushes the iret frame onto the new stack.
 - The cpu now jumps to the handler function stored in the IDT entry.
 - The interrupt handler runs on the new stack.
 
