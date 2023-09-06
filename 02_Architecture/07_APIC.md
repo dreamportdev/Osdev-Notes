@@ -151,9 +151,9 @@ There are few exceptions where sending an EOI is not needed, this is mainly spur
 
 The EOI can be sent at any time when handling an interrupt, but it's important to do it before returning with `iret`. If we enable interrupts and only receive a single interrupt, forgetting to send EOI may be the reason.
 
-### Sending An IPI
+### Sending An Inter-processor Interrupt
 
-If we want to support SMP (multiple cores) in our kernel, we will need a way to inform other cores that an event has occurred. This is typically done by sending an IPI. Note that IPIs don't carry any information about what event occurred, they simply indicate that *something* has happened. To send data about what the event is a struct is usually placed in memory somewhere, sometimes called a *mailbox*.
+If we want to support symmetric multiprocessing (SMP) in our kernel, we need to inform other cores that an event has occurred. This is typically done by sending an inter-processor interrupt (IPI). Note that IPIs don't carry any information about what event occurred, they simply indicate that *something* has happened. To send data about what the event is a struct is usually placed in memory somewhere, sometimes called a *mailbox*.
 
 To send an IPI we need to know the local APIC ID of the core we wish to interrupt. We will also need a vector in the IDT set up for handling IPIs. With these two things we can use the ICR (interrupt command register).
 
