@@ -165,7 +165,7 @@ These are further distinguished with the `type` field, as outlined below.
 
 For system-type descriptors, it's best to consult the manual, the Intel SDM volume 3A chapter 3.5 has the relevent details.
 
-For non-system descriptor types, the MSB (bit 3) is set for code descriptors, and cleared for data descriptors.
+The _Selector Type_ is a multibit field, for non-system descriptor types, the MSB (bit 3) is set for code descriptors, and cleared for data descriptors.
 The LSB (bit 0) is a flag for the cpu to communicate to the OS that the descriptor has been accessed in someway, but this feature is mostly abandoned, and should not be used.
 
 For a data selector, the remaining two bits are: expand-down (bit 2) - causes the limit to grow downwards, instead of up. Useful for stack selectors. Write-allow (bit 1), allows writing to this region of memory. Region is read-only if cleared.
