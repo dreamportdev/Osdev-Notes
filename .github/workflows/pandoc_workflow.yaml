@@ -28,7 +28,7 @@ jobs:
           wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pandoc/pandoc_2.17.1.1-1.1ubuntu1_amd64.deb  
           wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pandoc/pandoc-data_2.17.1.1-3ubuntu1_all.deb 
           sudo dpkg -i libgmp10_6.3.0+dfsg-2ubuntu4_amd64.deb
-          sudo dpkg -i pandoc-data_2.17.1.1-1ubuntu2_all.deb
+          sudo dpkg -i pandoc-data_2.17.1.1-3ubuntu1_all.deb
           sudo dpkg -i pandoc_2.17.1.1-1.1ubuntu1_amd64.deb
       - name: Run build script
         run: |
