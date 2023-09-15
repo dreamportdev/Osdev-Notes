@@ -29,7 +29,7 @@ jobs:
           wget http://archive.ubuntu.com/ubuntu/pool/universe/p/pandoc/pandoc-data_2.17.1.1-3ubuntu1_all.deb 
           sudo dpkg -i libgmp10_6.2.1+dfsg1-1.1ubuntu1_amd64.deb
           sudo dpkg -i pandoc-data_2.17.1.1-3ubuntu1_all.deb
-          sudo dpkg -i pandoc_2.17.1.1-1.1ubuntu1_amd64.deb
+          sudo dpkg -i pandoc_2.17.1.1-3ubuntu1_amd64.deb
       - name: Run build script
         run: |
           pandoc -v
