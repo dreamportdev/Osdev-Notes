@@ -33,6 +33,7 @@ The basic scheduler we are going to implement will have the following characteri
 2. The threads will be kept in a linked list. This was done to keep the implementation simple, and keep the focus on the scheduling code.
 3. Each thread will only run for a single quantum (i.e. each timer interrupt will trigger the thread to reschedule).
 4. While we have explained the difference between a thread and process, for now we're going to combine them both into the same structure for simplicity. We'll be referring to this structure as just a process from now on.
+5. For context switching we are going to use the interrupt stub we have created in the [Interrupt Handling](../02_Architecture/05_InterruptHandling.md) chapter, of course this is not the only method available, but we found it useful for learning purposes.
 
 ### Prerequisites and Initialization
 

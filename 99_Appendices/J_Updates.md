@@ -23,3 +23,4 @@ Second book release.
 * Fix Cover Alignment
 * Add paragraph about lockfree queues in IPC chapter
 * Add more details in the VMM Section of _Process and Threads_ chapter
+* Explain content of Segment Selectors in GDT chapter
