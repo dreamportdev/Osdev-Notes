@@ -49,11 +49,19 @@ The various segment registers:
 - _GS_: G selector, no specific purpose. Sys V ABI uses it for process local storage, commonly used for cpu-local storage in kernels due to `swapgs` instruction.
 
 When using a selector to refer to a GDT descriptor, we'll also need to specify the ring we're trying to access. This exists for legacy reasons to solve a few edge cases that have been solved in other ways. If we will need to use these mechanisms, we'll know, otherwise the default (setting to zero) is fine.
+
+A _segment selector_ contains the following information:
+
+* `index` bits 15-3: is the GDT selector.
+* `TI` bit 2: is the Table Indicator if clear it means GDT, if set it means LDT, in our case we can leave it to 0.
+* `RPL` bits 1 and 0:  is the Requested Priivlege Level, it will be explained later.
+
+
 Constructing a segment selector is done like so:
 
 ```c
-uint8_t is_ldt_selector = 0; 
-uint8_t target_cpu_ring = 0; 
+uint8_t is_ldt_selector = 0;
+uint8_t target_cpu_ring = 0;
 uint16_t selector = byte_offset_of_descriptor & ~(uint16_t)0b111;
 selector |= (target_cpu_ring & 0b11);
 selector |= ((is_ldt_selector & 0b1) << 2);
@@ -92,14 +100,14 @@ Segments can also be explicitly referenced. To load something at offset 0x100 in
 
 ### Segment Registers
 
-The various segment registers and their uses are outlined below. There are some tricks to load a descriptor from the GDT into a segment register. They can't be mov'd into directly, so we'll need to use a scratch register to change their value. The cpu will also automatically reload segment registers on certain events (see the manual for these). 
+The various segment registers and their uses are outlined below. There are some tricks to load a descriptor from the GDT into a segment register. They can't be mov'd into directly, so we'll need to use a scratch register to change their value. The cpu will also automatically reload segment registers on certain events (see the manual for these).
 
 To load any of the data registers, use the following:
 
 ```x86asm
 #example: load ds with the first descriptor
 #any register will do, ax is used for the example here
-mov $0x8, %ax       
+mov $0x8, %ax
 mov %ax, %ds
 
 #example: load ss with second descriptor
@@ -114,7 +122,7 @@ reload_cs:
     pop %rdi
     push $0x8
     push %rdi
-    retfq 
+    retfq
 ```
 
 In the above example we take advantage of the `call` instruction pushing the return address onto the stack before jumping. To reload `%cs` we'll need an address to jump to, so we'll use the saved address on the stack. We need to place the selector we want to load into `%cs` onto the stack *before* the return address though, so we'll briefly store it in `%rdi`, push our example code selector (0x8 in this - the implementation may differ), then push the return address back onto the stack.
@@ -157,7 +165,7 @@ These are further distinguished with the `type` field, as outlined below.
 
 For system-type descriptors, it's best to consult the manual, the Intel SDM volume 3A chapter 3.5 has the relevent details.
 
-For non-system descriptor types, the MSB (bit 3) is set for code descriptors, and cleared for data descriptors.
+The _Selector Type_ is a multibit field, for non-system descriptor types, the MSB (bit 3) is set for code descriptors, and cleared for data descriptors.
 The LSB (bit 0) is a flag for the cpu to communicate to the OS that the descriptor has been accessed in someway, but this feature is mostly abandoned, and should not be used.
 
 For a data selector, the remaining two bits are: expand-down (bit 2) - causes the limit to grow downwards, instead of up. Useful for stack selectors. Write-allow (bit 1), allows writing to this region of memory. Region is read-only if cleared.
@@ -166,7 +174,7 @@ For a code selector, the remaining bits are: Conforming (bit 2) - a tricky subje
 
 ## Using the GDT
 
-All the theory is great, but how to apply it? 
+All the theory is great, but how to apply it?
 A simple example is outline just below, for a simple 64-bit long mode setup we'd need
 
 - Selector 0x00: null
@@ -229,7 +237,7 @@ A more complex example of a GDT is the one used by the stivale2 boot protocol:
 - Selector 0x28: kernel code (64-bit, ring 0)
 - Selector 0x30: kernel data (64-bit)
 
-To load a new GDT, use the `lgdt` instruction. It takes the address of a GDTR struct, a complete example can be seen below. Note the use of the packed attribute on the GDTR struct. If not used, the compiler will insert padding meaning the layout in memory won't be what we expected. 
+To load a new GDT, use the `lgdt` instruction. It takes the address of a GDTR struct, a complete example can be seen below. Note the use of the packed attribute on the GDTR struct. If not used, the compiler will insert padding meaning the layout in memory won't be what we expected.
 
 ```c
 //populate these as you will.
@@ -242,7 +250,7 @@ struct GDTR
     uint64_t address;
 } __attribute__((packed));
 
-GDTR example_gdtr = 
+GDTR example_gdtr =
 {
     .limit = num_gdt_entries * sizeof(uint64_t) - 1;
     .address = (uint64_t)gdt_entries;
@@ -254,7 +262,7 @@ void load_gdt()
 }
 ```
 
-If not familiar with inline assembly, check the appendix on using inline assembly in C. The short of it is we use the "m" constraint to tell the compiler that `example_gdtr` is a memory address. The `lgdt` instruction loads the new GDT, and all that's left is to reload the current selectors, since they're using cached information from the previous GDT.
+If not familiar with inline assembly, check the appendix on using inline assembly in C. The short of it is we use the "m" constraint to tell the compiler that `example_gdtr` is a memory address. The `lgdt` instruction loads the new GDT, and all that's left is to reload the current selectors, since they're using cached information from the previous GDT. This is done in the function below:
 
 ```c
 void flush_gdt()
