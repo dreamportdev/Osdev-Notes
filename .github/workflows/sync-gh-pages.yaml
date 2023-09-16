@@ -2,6 +2,7 @@ name: Sync gh-pages branch with master branch
 
 on:
   push:
+    paths-ignore: [ '**/pandoc_workflow.yaml' ]
     branches: [ master, feature-sync-pages ]
   
 jobs:
