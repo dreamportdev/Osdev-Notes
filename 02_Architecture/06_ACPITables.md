@@ -1,18 +1,18 @@
-# Acpi Tables
+# ACPI Tables
 
-ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like amount of power on each device, thermal zones, fan control, IRQs, battery levels etc. 
+ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like the amount of power on each device, thermal zones, fan control, IRQs, battery levels, etc. 
 
-We need to access the ACPI Tables in order to read the IO-Apic information, used to receive hardware interrupts (it will be explained later)
+We need to access the ACPI Tables in order to read the IO-APIC information, used to receive hardware interrupts (it will be explained later).
 
 ## RSDP and RSDT/XSDT
 
-Many of the information are organized and accessible through different data structures, but since the ACPI specs are quite big, and cover so many different components, we focus only on what we just need to get the information we need about the APIC.
+Most of the information is organized and accessible through different data structures, but since the ACPI spec is quite big, and covers so many different components, we focus only on what we need to get the information about the APIC.
 
-Before proceeding let's keep in mind that all address described below are physical, so if we will enable paging, keep in mind that we need to ensure they are properly mapped in the virtual memory space.
+Before proceeding, let's keep in mind that all address described below are physical, so if we we have enabled paging, we need to ensure they are properly mapped in the virtual memory space.
 
 ### RSDP
 
-The RSDP (Root System Description Pointer) used in the ACPI programming interface  is the pointer to the RSDT (Root System Descriptor Table) the full structure is depending if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
+The RSDP (Root System Description Pointer) used in the ACPI programming interface is the pointer to the RSDT (Root System Descriptor Table), the full structure depends if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
 
 The newer version is backward compatible with the older.
 
@@ -70,7 +70,7 @@ struct RSDP2Descriptor {
 
 #### RSDP Validation
 
-Before proceeding let's explain little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just mutter of cycling a byte array. Here the example code: 
+Before proceeding, let's explain a little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just matter of cycling a byte array. Here the example code: 
 
 ```c
 bool validate_RSDP(char *byte_array, size_t size) {
@@ -84,11 +84,11 @@ bool validate_RSDP(char *byte_array, size_t size) {
 
 Having last byte means that `result mod 0x100` is 0. Now there are two ways to test it:
 
-* Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored
-* Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with `0xFF` value (`0xFF` is equivalent to the 0b11111111 byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
+* Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored.
+* Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with `0xFF` value (`0xFF` is equivalent to the `0b11111111` byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
 
 The function above works perfectly with both versions of descriptors. 
-In the XSDT since it has more fields, the previous checksum field wont offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
+In the XSDT, since it has more fields, the previous checksum field won't offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
 
 ### RSDT Data structure and fields
 
@@ -96,7 +96,7 @@ RSDT (Root System Description Table) is a data structure used in the ACPI progra
 
 Since every SDT table contains different type of information, they are all different from each other, we can define an RSDT table by the composition of two parts:
 
-* the first part is the header, common between all the SDTs with the following structure:
+* The first part is the header, common between all the SDTs with the following structure:
 
 ```c
 struct ACPISDTHeader {
