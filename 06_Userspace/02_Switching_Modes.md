@@ -18,7 +18,7 @@ Changing the flags atomically like this means we can go from having interrupts d
 
 ### What to Push Onto The Stack
 
-Now let's talk about what these values should be. `rflags` is an easy one: set it to `0x202`. Bit 1 is a legacy feature and must always be set, the ninth bit (`0x200`) is the `IF` interrupt enable flag. This means all other flags are cleared, and is what C/C++ and other languages expect flags to look like when starting a program.
+Now let's talk about what these values should be: `rflags` is an easy one, set it to `0x202`. Bit 1 is a legacy feature and must always be set, the ninth bit (`0x200`) is the `IF` interrupt enable flag. This means all other flags are cleared, and is what C/C++ and other languages expect flags to look like when starting a program.
 
 For `ss` and `cs` it depends on the layout of your GDT. We'll assume that there are 5 entries in the GDT:
 
@@ -28,7 +28,7 @@ For `ss` and `cs` it depends on the layout of your GDT. We'll assume that there 
 - 0x18, User Code (ring 3)
 - 0x20, User Data (ring 3)
 
-Now `ss` and `cs` are *selectors*, which you'll remember are not just a byte offset into the gdt, but the lowest two bits contain a field called _RPL_ (Requested Privilege Level) is a legacy feature, but it's still enforced by the cpu, so we have to use it. RPL is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring we want to jump to.
+Now `ss` and `cs` are *selectors*, which you'll remember are not just a byte offset into the gdt, the lowest two bits contain a field called _RPL_ (Requested Privilege Level) that is a legacy feature, but it's still enforced by the cpu, so we have to use it. _RPL_  is a sort of 'override' for the target ring, it's useful in some edge cases, but otherwise is best set to the ring we want to jump to.
 
 So if we're going to ring 0 (supervisor), RPL can be left at 0. If going to ring 3 (user) we'd set it to 3.
 

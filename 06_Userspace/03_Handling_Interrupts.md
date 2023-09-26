@@ -54,14 +54,17 @@ The GDT descriptor we're going to create is a *system descriptor* (as opposed to
 The layout of the TSS system descriptor is broken down below in the following table:
 
 | Bits  | Should Be Set To | Description                         |
-|-------|------------------|-------------------------------------|
-| 15:0  | 0xFFFF           | Represents the limit field for this segment. Ignored in long mode, but best set to max value in case we support compatibility mode in the future. |
+|--------|------------------|-------------------------------------|
+| 15:0   | 0xFFFF           | Represents the limit field for this segment. Ignored in long mode, but best set to max value in case we support compatibility mode in the future. |
 | 31:16 | TSS address bits 15:0 | Contains the lowest 16 bits of the tss address. |
-| 39:32 | TSS address bits 23:16 | Contains the next 8 bits of the tss address. |
-| 47:40 | 0b10001001 | Sets the type of GDT descriptor, this magic value indicates it's a valid TSS descriptor. If curious as to how this value was created, see the manual or the section on the GDT. |
-| 55:48 | 0b10000 | Additional fields for the TSS entry. This bit means the TSS is `available`, it's generally unused in long mode, but has some side effects if compatibility mode is enabled. |
-| 63:56 | TSS address bits 31:24 | Contains the next 8 bits of the tss address. |
-| 95:64 | TSS address bits 63:32 | Contains the upper 32 bits of the tss address. |
+| 39:32  | TSS address bits 23:16 | Contains the next 8 bits of the tss address. |
+| 47:40  | 0b10001001 | Sets the type of GDT descriptor, it's DPL (bits 45:46) to 0, marks it as present (bit 47). The rest of this magic value indicates it's a valid TSS descriptor. If curious as to how this value was created, see the  manual or our section about the GDT.|
+| 55:48  | 0b10000 | Additional fields for the TSS entry. This bit means the TSS is `available`, it's generally unused in long mode, but has some side effects if compatibility mode is enabled. |
+| 63:56  | TSS address bits 31:24 | Contains the next 8 bits of the tss address. |
+| 95:64  | TSS address bits 63:32 | Contains the upper 32 bits of the tss address. |
+| 96:127 | Reserved | They should be left as 0. |
+
+Yes, it's right a TSS descriptor for the GDT is 128 bits. This because we need to specify the 64 bit address containing the TSS data structure.
 
 Now for the third step, we need to load the task register. This is similar to the segment registers, in that it has visible and invisible parts. It's loaded in a similar manner, although we use a dedicated instruction instead of a simple `mov`.
 
