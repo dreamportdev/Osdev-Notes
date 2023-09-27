@@ -26,7 +26,7 @@ jobs:
           sudo apt-get -y install texlive-latex-base texlive texlive-xetex texlive-fonts-recommended librsvg2-2 liblua5.3-0 librsvg2-bin librsvg2-common
           wget http://launchpadlibrarian.net/620071728/libgmp10_6.2.1+dfsg1-1ubuntu2_amd64.deb
           wget https://blueprints.launchpad.net/ubuntu/+archive/primary/+files/pandoc_2.17.1.1-1ubuntu2_amd64.deb
-          wget http://launchpadlibrarian.net/621653025/pandoc-data_2.17.1.1-3ubuntu1_all.deb 
+          wget http://launchpadlibrarian.net/682858273/pandoc-data_2.17.1.1-3ubuntu1_all.deb
           sudo dpkg -i libgmp10_6.2.1+dfsg1-1ubuntu2_amd64.deb
           sudo dpkg -i pandoc-data_2.17.1.1-3ubuntu1_all.deb
           sudo dpkg -i pandoc_2.17.1.1-3ubuntu1_amd64.deb
