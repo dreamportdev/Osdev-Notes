@@ -58,7 +58,7 @@ The layout of the TSS system descriptor is broken down below in the following ta
 | 15:0   | 0xFFFF           | Represents the limit field for this segment. |
 | 31:16 | TSS address bits 15:0 | Contains the lowest 16 bits of the tss address. |
 | 39:32  | TSS address bits 23:16 | Contains the next 8 bits of the tss address. |
-| 47:40  | 0b10001001 | Sets the type of GDT descriptor, it's DPL (bits 45:46) to 0, marks it as present (bit 47). The rest of this magic value indicates it's a valid TSS descriptor. If curious as to how this value was created, see the  intel SDM manual or our section about the GDT.|
+| 47:40  | 0b10001001 | Sets the type of GDT descriptor, it's DPL (bits 45:46) to 0, marks it as present (bit 47). Bit 44 (S) along with bits 40 to 43 indicate the type of descriptor. If curious as to how this value was created, see the  intel SDM manual or our section about the GDT.|
 | 48:51 | Limit 16:9 | The higher part of the limit field, bits 9 to 16 |
 | 55:52  | 0bG000A | Additional fields for the TSS entry. Where G (bit 55) is the granularity bit and A (bit 52) is a bit left available to the operating system. The other bits must be left as 0 |
 | 63:56  | TSS address bits 31:24 | Contains the next 8 bits of the tss address. |
