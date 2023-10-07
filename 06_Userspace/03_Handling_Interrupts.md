@@ -55,11 +55,12 @@ The layout of the TSS system descriptor is broken down below in the following ta
 
 | Bits  | Should Be Set To | Description                         |
 |--------|------------------|-------------------------------------|
-| 15:0   | 0xFFFF           | Represents the limit field for this segment. Ignored in long mode, but best set to max value in case we support compatibility mode in the future. |
+| 15:0   | 0xFFFF           | Represents the limit field for this segment. |
 | 31:16 | TSS address bits 15:0 | Contains the lowest 16 bits of the tss address. |
 | 39:32  | TSS address bits 23:16 | Contains the next 8 bits of the tss address. |
-| 47:40  | 0b10001001 | Sets the type of GDT descriptor, it's DPL (bits 45:46) to 0, marks it as present (bit 47). The rest of this magic value indicates it's a valid TSS descriptor. If curious as to how this value was created, see the  manual or our section about the GDT.|
-| 55:48  | 0b10000 | Additional fields for the TSS entry. This bit means the TSS is `available`, it's generally unused in long mode, but has some side effects if compatibility mode is enabled. |
+| 47:40  | 0b10001001 | Sets the type of GDT descriptor, it's DPL (bits 45:46) to 0, marks it as present (bit 47). Bit 44 (S) along with bits 40 to 43 indicate the type of descriptor. If curious as to how this value was created, see the  intel SDM manual or our section about the GDT.|
+| 48:51 | Limit 16:9 | The higher part of the limit field, bits 9 to 16 |
+| 55:52  | 0bG000A | Additional fields for the TSS entry. Where G (bit 55) is the granularity bit and A (bit 52) is a bit left available to the operating system. The other bits must be left as 0 |
 | 63:56  | TSS address bits 31:24 | Contains the next 8 bits of the tss address. |
 | 95:64  | TSS address bits 63:32 | Contains the upper 32 bits of the tss address. |
 | 96:127 | Reserved | They should be left as 0. |
@@ -74,7 +75,7 @@ The `ltr` instruction (load task register) takes the byte offset into the GDT we
 ltr $0x28
 ```
 
-It's that simple! Now the cpu knows where to find our TSS. It's worth noting that you only need to reload the task register if the TSS has moved in memory. Ideally your TSS should never move, and so should only be loaded once. If the fields of the TSS are ever updated, the CPU will use the new values the next time it needs them, no need to reload TR.
+It's that simple! Now the cpu knows where to find our TSS. It's worth noting that we only need to reload the task register if the TSS has moved in memory. Ideally it should never move, and so should only be loaded once. If the fields of the TSS are ever updated, the CPU will use the new values the next time it needs them, no need to reload TR.
 
 ### Putting It All Together
 
@@ -101,7 +102,7 @@ There's a few ways to go about this:
 
 ### Software Interrupts
 
-On `x86(_64)` IDT entries have a 2-bit DPL field. The DPL (Descriptor Privilege Level) represents the highest ring that is allowed to call that interrupt from software. This is usually left to zero as default, meaning that ring 0 can use the `int` instruction to trigger an interrupt from software, but all rings higher than 0 will cause a a general protection fault. This means that user mode software (ring 3) will always trigger a #GP instead of being able to call an interrupt handler.
+On `x86(_64)` IDT entries have a 2-bit DPL field. The DPL (Descriptor Privilege Level) represents the highest ring that is allowed to call that interrupt from software. This is usually left to zero as default, meaning that ring 0 can use the `int` instruction to trigger an interrupt from software, but all rings higher than 0 will cause a general protection fault. This means that user mode software (ring 3) will always trigger a #GP instead of being able to call an interrupt handler.
 
 While this is a good default behaviour, as it stops a user program from being able to call the page fault handler for example, it presents a problem: without the use of dedicated instructions (which may not exist), how do we issue a system call?
 
