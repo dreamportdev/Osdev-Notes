@@ -30,7 +30,7 @@ Each of the layers has a dedicated chapter, however we'll start with a high leve
 
 As said at the beginning of this chapter the  Memory Management Unit, is a big area in the kernel, but this is not the only characteristic. Another important one is that it is going to be used directly and/or indirectly virtually everywhere. So while designing it we should take extra care on all its implication and ramification. It mostly depends on how we design our kernel, and what features we want to have, so spending some time now thinking of what we want to achieve, can save us a lot of headaches, and rewrites/changes to mmu in the future.
 
-__Authors note__: Yeah this is based on our own personal experiences.
+*__Authors note__: Yeah this is based on our own personal experiences.*
 
 ## PMM - Physical Memory Manager
 
@@ -49,9 +49,8 @@ Although Paging and VMM are strongly tied, let's split this topic into two parts
 
 While writing the support for paging, independently there are few future choices we need to think about now:
 
-* Are we going to have a single or mulitple address spaces (i.e. every task will have it's own address space)? If yes in this case we need to keep in mind that when mapping addresses we need to make sure they are done on the right Virtual Memory Space. So usually a good idea is to add an extra parameter to the mapping/unmapping functions that contains the pointr to the root page table (for _x86\_64 architecture is the PML4 table).
-* Are we going to support User and Supervisor mode? In this case we need to make sure that the correct flags are set.
-
+* Are we going to have a single or mulitple address spaces (i.e. every task will have it's own address space)? If yes in this case we need to keep in mind that when mapping addresses we need to make sure they are done on the right Virtual Memory Space. So usually a good idea is to add an extra parameter to the mapping/unmapping functions that contains the pointer to the root page table (for _x86\_64 architecture is the PML4 table).
+* Are we going to support User and Supervisor mode? In this case we need to make sure that the correct flag is set in the table entries.
 
 ## VMM - Virtual Memory Manager
 
@@ -70,7 +69,7 @@ The VMM works tight with paging, but it's a layer above, usually it's main featu
 Similarly to paging there are some things we need to consider depending on our future decisions:
 
 * If we are going to support multiple address spaces, we need to initialize a different VMM for every task, so all the initialization/allocation/free function should be aware of which is the VMM that needs to be updated.
-* In case we want to implement user and supervisor support, a good idea is to have separate address space for the user processes/threads and the supervisor one. Usually the supervisor address space is in the higher half (starting from: 0xFFFF800000000000)
+* In case we want to implement User and Supervisor support, a good idea is to have separate address space for the user processes/threads and the supervisor one. Usually the supervisor address space is in the higher half (starting from: 0xFFFF800000000000)
 
 ## Heap Allocator
 
