@@ -317,6 +317,8 @@ Few more examples of address translation:
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: _PML4: 510, PDPR: 510, PD: 510, PT: 510_, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT with page number equals to 510, and we got access to the PML4 table.
     - Now using a similar approach we can get acces to other tables, for example the following values: _PML4: 510, PDPR:510, PD: 1, PT: 256_, will give access at the Page Directory PD at entry number 256 in PDPR that is contained in the first PML4 entry.
 
+This tecnique make access to page tables in current address space, but if we to navigate data that resides in other address spaces, it is not possible, unless we switch to that address space.
+
 ### Direct Map
 
 Another technique for modifying page tables is a 'direct map' (similar to an identity map). As we know an identity map is when a page's physical address is the same as it's virtual address, and we could describe it as: `paddr = vaddr`. A direct map is sometimes referred to as an _offset map_ because it introduces an offset, which gives us some flexibility. We're using to have a global variable containing the offset for our map called `dmap_base`. Typically we'll set this to some address in the higher half so that the lower half of the address space is completely free for userspace programs. This also makes other parts of the kernel easier later on.
@@ -328,6 +330,8 @@ The direct map does require a one-time setup early in your kernel, as you do nee
 What address should you use for the base address of the direct map? Well you can put it at the lowest address in the higher half, which depends on how many levels of page tables you have. For 4 level paging this will `0xffff'8000'0000'0000`.
 
 While recursive paging only requires using a single page table entry at the highest level, a direct map consumes a decent chunk of address space. A direct map is also more flexible as it allows the kernel to access arbitrary parts of physical memory as needed. Direct mapping is only really possible in 64-bit kernels due to the large address space made available, 32-bit kernels should opt to use recursive mapping to reduce the amount of address space used.
+
+The real potential of this tecnique will unveil when we have multiple address spaces to handle. Where the kernel may need to update data in different address spaces (especially the paging data structures), in this case using the direct map it can access any data in any address space, by only knowing it's physical address
 
 ### Troubleshooting
 
