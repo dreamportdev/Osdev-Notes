@@ -331,7 +331,7 @@ What address should you use for the base address of the direct map? Well you can
 
 While recursive paging only requires using a single page table entry at the highest level, a direct map consumes a decent chunk of address space. A direct map is also more flexible as it allows the kernel to access arbitrary parts of physical memory as needed, . Direct mapping is only really possible in 64-bit kernels due to the large address space made available, 32-bit kernels should opt to use recursive mapping to reduce the amount of address space used.
 
-The real potential of this tecnique will unveil when we have multiple address spaces to handle, when the kernel may need to update data in different address spaces (especially the paging data structures), in this case using the direct map it can access any data in any address space, by only knowing its physical address.
+The real potential of this technique will unveil when we have multiple address spaces to handle, when the kernel may need to update data in different address spaces (especially the paging data structures), in this case using the direct map it can access any data in any address space, by only knowing its physical address. It will also help when we will start to work on device drivers (out of the scope of this book) where the kernel may need to access the DMA buffers, that are stored by their physical addresses.
 
 ### Troubleshooting
 

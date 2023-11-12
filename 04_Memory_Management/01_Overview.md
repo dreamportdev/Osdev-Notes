@@ -30,8 +30,6 @@ Each of the layers has a dedicated chapter, however we'll start with a high leve
 
 As said at the beginning of this chapter the  Memory Management Unit, is a big area in the kernel, but this is not the only characteristic. Another important one is that it is going to be used directly and/or indirectly virtually everywhere. So while designing it we should take extra care on all its implication and ramification. It mostly depends on how we design our kernel, and what features we want to have, so spending some time now thinking of what we want to achieve, can save us a lot of headaches, and rewrites/changes to mmu in the future.
 
-*__Authors note__: Yeah this is based on our own personal experiences.*
-
 ## PMM - Physical Memory Manager
 
 The main features of a PMM are:
@@ -69,7 +67,7 @@ The VMM works tight with paging, but it's a layer above, usually its main featur
 Similarly to paging there are some things we need to consider depending on our future decisions:
 
 * If we are going to support multiple address spaces, we need to initialize a different VMM for every task, so all the initialization/allocation/free function should be aware of which is the VMM that needs to be updated.
-* In case we want to implement User and Supervisor support, a good idea is to have separate address space for the user processes/threads and the supervisor one. Usually the supervisor address space is in the higher half (starting from: 0xFFFF800000000000)
+* In case we want to implement User and Supervisor support, a good idea is to have separate address space for the user processes/threads and the supervisor one. Usually the supervisor address space is in the higher half and , as in it starts at the lowest address of the higher half of the address space (in x86_64 and ricsv it is starting from: 0xFFFF800000000000)
 
 ## Heap Allocator
 
