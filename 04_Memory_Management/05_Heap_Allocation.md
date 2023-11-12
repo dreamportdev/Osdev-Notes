@@ -32,7 +32,7 @@ With the above assumptions, what happens under the hood when we want to allocate
 
 ## Allocating and Freeing
 
-As with other OS components there are many different algorithms out there for managing memory, each with it's pros and cons. Here we'll explain a simple and efficient algorithm based on linked lists. Another common algorithm used for a heap is the slab allocator. This is a very fast, but potentially more wasteful algorithm. This is not covered here and exploring slab allocators is left as an exercise for the reader.
+As with other OS components there are many different algorithms out there for managing memory, each with its pros and cons. Here we'll explain a simple and efficient algorithm based on linked lists. Another common algorithm used for a heap is the slab allocator. This is a very fast, but potentially more wasteful algorithm. This is not covered here and exploring slab allocators is left as an exercise for the reader.
 
 ### Overview
 
@@ -41,7 +41,7 @@ A heap allocator exposes two main functions:
 * `void *alloc(size_t size);` To request memory of size bytes.
 * `void free(void *ptr);` To free previously allocated memory.
 
-In user space these are the well known `malloc()/free()` functions. However the kernel will also need it's own heap (we don't want to put data where user programs can access it!). The kernel heap usually exposes functions called `kmalloc()/kfree()`. Functionally these heaps can be the same.
+In user space these are the well known `malloc()/free()` functions. However the kernel will also need its own heap (we don't want to put data where user programs can access it!). The kernel heap usually exposes functions called `kmalloc()/kfree()`. Functionally these heaps can be the same.
 
 So let's get started with describing the allocation algorithm.
 
@@ -297,7 +297,7 @@ Now we have a decent and working function that can free previously allocated mem
 
 Another thing worth doing to improve readability of the code is replace the direct pointer access with a more elegant data structure. This lets us add more fields (as we will in the next paragraph) as needed.
 
-So far our allocator needs to keep track of just the size of the block returned and it's status The data structure for this could look like the following:
+So far our allocator needs to keep track of just the size of the block returned and its status The data structure for this could look like the following:
 
 ```c
 struct {
@@ -380,7 +380,7 @@ As mentioned earlier using the double linked list the check for mergeability is 
 
 Referring to the next node:
 
-* Update it's `prev` pointer to point to the previous node above (cur_node->prev)
+* Update its `prev` pointer to point to the previous node above (cur_node->prev)
 
 Of course merging with the right node is the opposite (update the size and the prev pointer of cur_node->next and update the next pointer of cur_node->next).
 
@@ -442,7 +442,7 @@ The workflow will be the following:
 * Find the first node that is big enough to contain the incoming request.
 * Create a new node at the address `(uintptr_t)cur_node + requested_bytes`. Set this node's size to `cur_node->size - requested_bytes - sizeof(Heap_Node)`, we're substracting the size of the Heap_Node struct here because we're going to use some memory in the heap to store this new node. This is the process of inserting into the heap.
 * `cut_node->size` should now be the requested size.
-* In our example we're using a doubly-linked list (i.e. both forward and back), so we'll need to update the current node and the next node's pointers to include this new node (update it's pointers too).
+* In our example we're using a doubly-linked list (i.e. both forward and back), so we'll need to update the current node and the next node's pointers to include this new node (update its pointers too).
 * One edge case to be aware of here is if node that was split was the last node of the heap, The `heap_tail` variable should be updated as well, if it is being used (this depend on design decisions).
 
 

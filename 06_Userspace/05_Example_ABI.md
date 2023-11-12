@@ -12,7 +12,7 @@ The reason we selected five registers is to allow four registers for passing dat
 
 We'll also be using those same four data registers to return data from the system call, and we'll use the system call number register to return an error (or success) code.
 
-Something that was alluded to before was the idea of treating the data registers as a single big block. This would let us pass more than 4 values, and could even pass through more complex structs or unions. 
+Something that was alluded to before was the idea of treating the data registers as a single big block. This would let us pass more than 4 values, and could even pass through more complex structs or unions.
 
 The last piece is how we're going to trigger a system call. We're going to use an interrupt, specificially vector 0x50 for our example ABI. You can use whatever you like, as long as it doesn't conflict with other interrupts.
 

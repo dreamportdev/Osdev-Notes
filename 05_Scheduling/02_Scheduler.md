@@ -143,7 +143,7 @@ The last problem is: what if there are no processes to be run? In our case our s
 
 ### Saving and Restoring Context
 
-Now we have the next process to run, and are ready to load it's context and begin executing it. Before we can do that though, we need to save the context of the current process.
+Now we have the next process to run, and are ready to load its context and begin executing it. Before we can do that though, we need to save the context of the current process.
 
 In our case, we're storing all the state we need on the stack, meaning we only need to keep track of one pointer for each process: the stack we pushed all of the registers onto. We can also return this pointer to the interrupt stub and it will swap the stack for us, and then load the saved registers.
 
@@ -214,11 +214,11 @@ cpu_status_t* schedule(cpu_status_t* context) {
 }
 ```
 
-We'll look at the DEAD state more in the next chapter, but for now we can set a processes state to DEAD to signal it's termination. When a thread is in the DEAD state, it will be removed from the queue the next time the scheduler encounters it.
+We'll look at the DEAD state more in the next chapter, but for now we can set a processes state to DEAD to signal its termination. When a thread is in the DEAD state, it will be removed from the queue the next time the scheduler encounters it.
 
 ### The Idle Process
 
-We mentioned the idle process before. When there are no processes in the `READY` state, we'll run the idle process. It's purpose is to do nothing, and in a priority-based scheduler it's always the lowest priority.
+We mentioned the idle process before. When there are no processes in the `READY` state, we'll run the idle process. Its purpose is to do nothing, and in a priority-based scheduler it's always the lowest priority.
 
 The main function for the idle process is very simple. It can be just three lines of assembly!
 

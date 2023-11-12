@@ -2,11 +2,11 @@
 
 ## Introduction
 
-Now that we have a scheduler, we can run multiple threads at the same time. This introduces a new problem though: shared resources and synchronization. 
+Now that we have a scheduler, we can run multiple threads at the same time. This introduces a new problem though: shared resources and synchronization.
 
-Imagine we have a shared resource that can be accessed at a specific address. This resource could be anything from MMIO, a buffer or some variable, the important part is that multiple threads *can* access it at the same time. 
+Imagine we have a shared resource that can be accessed at a specific address. This resource could be anything from MMIO, a buffer or some variable, the important part is that multiple threads *can* access it at the same time.
 
-For our example we're going to say this resouce is a NS16550 uart at address `0xDEAD'BEEF`. If not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms. 
+For our example we're going to say this resouce is a NS16550 uart at address `0xDEAD'BEEF`. If not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms.
 
 The key things to know are that if we write a byte at that address, it will be sent over the serial port to whatever is on the other end. So if to send a message, we must send it one character at a time, at the address specified (`0xDEADBEEF`).
 
@@ -43,10 +43,10 @@ void thead_two() {
 ```
 
 What would we expect to see on the serial output? We don't know! It's essentially non-deterministic, since we can't know how these will be scheduled. Each thread may get to write the full string before the other is scheduled, but more likely they will get in the way of each other.
- 
+
 ![Tasks execution sequence](/Images/taskssequence.png)
 
-The image above is an example of threads being scheduled, assuming there are only three of them in the system (labeled as _A, B, C_). 
+The image above is an example of threads being scheduled, assuming there are only three of them in the system (labeled as _A, B, C_).
 Imagine that A is `thread_one` and B is `thread_two`, while C does not interact with the serial. One example of what we could see then is `Iwh aI ammi  lethe secfionrsd t stristngring`. This contains all the right characters but it's completely unreadable. The image below shows what a scenario that could happen:
 
 ![Shared Resource Sequence](/Images/sharedressequence.png)
@@ -61,7 +61,7 @@ A _lock_ provides us with something called mutual exclusion: only one thread can
 
 We'll need a few things to achieve that:
 
-- A variable that represents the lock's state: locked or unlocked. 
+- A variable that represents the lock's state: locked or unlocked.
 - Two functions called `acquire` (taking the lock) and `release` (freeing the lock).
 
 While we only need one variable per lock, we're going to create a new struct for it so it can be expanded in the future.
@@ -86,7 +86,7 @@ void serial_log(const char* msg) {
     volatile char* resource = (char*)0xDEADBEEF;
     for (size_t i = 0; msg[i] != 0; i++)
         *resource = msg[i];
-    
+
     release(&serial_lock);
 }
 ```
@@ -127,16 +127,16 @@ Consider the previous example of threads being sequenced, and let's see what hap
 
 * The lock is created and starts out free.
 * Thread A calls `serial_log` which calls the `acquire` function, so the lock is taken.
-* Process A writes the first few characters of it's message to the uart.
+* Process A writes the first few characters of its message to the uart.
 * Process A is preempted and C starts running. C is not using the shared resource, so it continues on as normal.
 * Process C is preempted and then B start running. Thread B calls `serial_log`, which again calls `acquire`, but this time the lock is already taken. So B will do nothing but check the state of the lock.
 * Then thread B is preempted and thread C begins to run, it continues on as normal.
 * Thread C is preempted and thread B runs again. It's still in the `acquire` function waiting for the lock to be freed, so it will continue to wait. Thread B will spin until it's preempted again.
-* Thread B is preempted and now thread A runs again. It will continue writing it's message.
-* This cycle will continue until A has written all of it's message. At this point thread A will release the lock and continue on.
+* Thread B is preempted and now thread A runs again. It will continue writing its message.
+* This cycle will continue until A has written all of its message. At this point thread A will release the lock and continue on.
 * Now thread A is preempted, and B will start running. Since the lock is now free, thread B will be able to take it. `acquire` will take the lock and return, and then write thread B's message to the uart.
 
-Now we can see how locks can be used to keep two threads from interfering with each other. 
+Now we can see how locks can be used to keep two threads from interfering with each other.
 
 Unfortunately this implementation has some issues, and can fail to ensure mutual exclusion in several ways:
 
@@ -162,7 +162,7 @@ We'll also be using two constants (these are provided by the compiler as well): 
 - `__ATOMIC_ACQUIRE`: Less restrictive, it communicates that operations after this point in the code cannot be reordered to happen before it. It allows the reverse though (writes that happened before this may complete after it).
 - `__ATOMIC_RELEASE`: This is the reverse of acquire, this constraint says that any memory operations before this must complete before this point in the code. Operations after this point may be reordered before this point however.
 
-Using these constraints we can be specific enough to achieve what we want while leaving room for the compiler and cpu to optimize for us. We won't use it here, but there is another ordering constraint to be aware of: `__ATOMIC_RELAXED`. Relaxed ordering is useful when in case a memory operation is deisred to be atomic, but not interact with the memory operations surrounding it. 
+Using these constraints we can be specific enough to achieve what we want while leaving room for the compiler and cpu to optimize for us. We won't use it here, but there is another ordering constraint to be aware of: `__ATOMIC_RELAXED`. Relaxed ordering is useful when in case a memory operation is deisred to be atomic, but not interact with the memory operations surrounding it.
 
 Both of the previously mentioned atomic functions take a pointer to either a `bool` or `char` that's used as the lock variable, and the memory order. The `__atomic_test_and_set` function returns the *previous* state of the lock. So if it returns true, the lock was already taken. A return of falses indicates we successfully took the lock.
 

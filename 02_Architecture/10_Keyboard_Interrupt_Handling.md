@@ -6,14 +6,14 @@ To keep the examples below simple, we'll assume only a single IOAPIC is present 
 
 ## IRQ and IOAPIC
 
-* The ps/2 keyboard is irq 1, this corresponds to pin 1 on the IOAPIC meaning we'll be accessing redirect entry 1. 
-* Redirection entries are accessed as 2x 32-bit registers, where the register number is defined as follows: 
+* The ps/2 keyboard is irq 1, this corresponds to pin 1 on the IOAPIC meaning we'll be accessing redirect entry 1.
+* Redirection entries are accessed as 2x 32-bit registers, where the register number is defined as follows:
 
 ```
 redtbl_offset = 0x10 + (entry_number * 2)
 ```
 
-In this case then we have the offset for our entry at: `0x12` and `0x13` (called IOREDTBL1 in the spec), where `0x12` is the lower 32-bits of the table entry. 
+In this case then we have the offset for our entry at: `0x12` and `0x13` (called IOREDTBL1 in the spec), where `0x12` is the lower 32-bits of the table entry.
 
 Before unmasking the keyboard interrupt, we need an entry in the IDT, and a function (we can leave it empty for now) for the IDT entry to call. We will call the function `keyboard_irq_handler`:
 
@@ -22,19 +22,19 @@ void keyboard_irq_handler() {
 
 }
 ```
- 
+
 Once we have a valid IDT entry, we can clear the mask bit in the IOAPIC redirect entry for the ps/2 keyboard. Be sure that the destination LAPIC id is set to the cpu we want to handle the keyboard interrupts.
 This id can be read from the LAPIC registers.
 
 
 ## Driver Information
 
-The ps2 keyboard uses two IO ports for communication: 
+The ps2 keyboard uses two IO ports for communication:
 
 | IO Port | Access Type | Purpose                                                         |
 |---------|-------------|-----------------------------------------------------------------|
-|  0x60   | R/W         | Data Port                                                       | 
-|  0x64   | R/W         | On read: status register. On Write: command register            | 
+|  0x60   | R/W         | Data Port                                                       |
+|  0x64   | R/W         | On read: status register. On Write: command register            |
 
 Since there are three different scancode sets, it's a good idea to check what set the keyboard is currently using.
 
@@ -84,9 +84,9 @@ The command has to be sent to the device port (`0x60`), and reply will be compos
 
 ### About Scancodes
 
-The scancode can be one of the following types: 
+The scancode can be one of the following types:
 
-* A MAKE code, generated when a key is pressed. 
+* A MAKE code, generated when a key is pressed.
 * A BREAK code, generated when a key is released.
 
 The value of those code depends on the set in use.

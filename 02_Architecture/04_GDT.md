@@ -92,7 +92,7 @@ When a descriptor is loaded into the appropriate segment register, it creates a 
 
 The idea is to place code in one region of memory, and then create a descriptor with a base and limit that only expose that region of memory to the cpu. Any attempts to fetch instructions from outside that region will result in a #GP fault being triggered, and the kernel will intervene.
 
-Accessing memory inside a segment is done relative to it's base. Lets say we have a segment with a base of `0x1000`,
+Accessing memory inside a segment is done relative to its base. Lets say we have a segment with a base of `0x1000`,
 and some data in memory at address `0x1100`.
 The data would be accessed at address `0x100` (assuming the segment is the active DS), as addressed are translated as `segment_base + offset`. In this case the segment base is `0x1000`, and the offset is `0x100`.
 
@@ -115,7 +115,7 @@ mov $0x10, %ax
 mov %ax, %ss
 ```
 
-Changing CS (code segment) is a little trickier, as it can't be written to directly, instead it requires a far jump. Or in this case, a far return which performs the same job, it just get it's values from the stack instead of from immediate operands.
+Changing CS (code segment) is a little trickier, as it can't be written to directly, instead it requires a far jump. Or in this case, a far return which performs the same job, it just get its values from the stack instead of from immediate operands.
 
 ```x86asm
 reload_cs:

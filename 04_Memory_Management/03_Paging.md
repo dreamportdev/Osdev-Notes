@@ -110,7 +110,7 @@ But before proceeding with the details let's see some of the characteristics com
 
 The hierarchy of the tables is:
 
-* PML4 is the root table (this is the one that is contained in the PDBR register) and is loaded for the actual address translation (see the next paragraph). Each of it's entries point a PDPR table.
+* PML4 is the root table (this is the one that is contained in the PDBR register) and is loaded for the actual address translation (see the next paragraph). Each of its entries point a PDPR table.
 * PDPR, the next level down. Each entry points to a single page directory.
 * Page directory (PD): depending of the value of the PS bit (page size) an entry in this table can point to:
    * a page table if the PS bit is clear (this means we are using 4k pages)
@@ -144,7 +144,7 @@ The inline assembly syntax will be explained in one of the appendices chapter: [
 
 The bits that we need to set to have paging enabled in long mode are, in order, the: `PAE` Page Address Extension, bit number 5 in CR4, the `LME` Long Mode Enable Bit (Bit 8 in EFER, and has to be loaded with the `rdmsr`/`wrmsr` instructions), and finally the `PG` Paging bit number 31 in `cr0`.
 
-Every time we need to change a value of a system register, `cr*`, and similar we must always load the current value first and update it's content, otherwise we can run into troubles. And finally the Paging bit must be the last to be enabled.
+Every time we need to change a value of a system register, `cr*`, and similar we must always load the current value first and update its content, otherwise we can run into troubles. And finally the Paging bit must be the last to be enabled.
 
 Setting those bits must be done only once at early stages of boot process (probably one of the first thing we do).
 
@@ -199,7 +199,7 @@ Below is a list of all the fields present in the table entries, with an explanat
 * **PWT** (Page Level Write Through): Controls the caching policy (write-through or write-back). I usually leave it to 0, for more information refer to the Intel Developer Manuals.
 * **PCD** (Page Level Cache Disable): Controls the caching of individual pages or tables. I usually leave it to 0, for more information refer to the Intel Developer Manuals.
 * **A** (Accessed): This value is set by the CPU, if is 0 it means the page hasn't been accessed yet. It's set when the page (or page teble) has been accessed since this bit was last cleared.
-* **D** (Dirty): If set, indicates that a page has been written to since last cleared. This flag is supposed to only apply to page tables, but some emulators will set it on other levels as well. This flag and the accessed flag are provided for being use by the memory management software, the CPU only set it when it's value is 0. Otherwise is up to the operating system's memory manager to decide if it has to be cleared or not. Ignoring them is also fine.
+* **D** (Dirty): If set, indicates that a page has been written to since last cleared. This flag is supposed to only apply to page tables, but some emulators will set it on other levels as well. This flag and the accessed flag are provided for being use by the memory management software, the CPU only set it when its value is 0. Otherwise is up to the operating system's memory manager to decide if it has to be cleared or not. Ignoring them is also fine.
 * **PS** (Page Size): Reserved in the pml4, if set on the PDPR it means address translation stops at this level and is mapping a 1GB page. Check for 1gb page support before using this. More commonly this can be set on the PD entry to stop translation at that level, and map a 2MB page.
 * **PAT** (Page Attribute Table Index) only for the page table: It selects the PAT entry (in combination with the PWT and PCD bits above), refer to the Intel Manual for a more detailed explanation.
 * **G** (Global): If set it indicates that when CR3 is loaded or a task switch occurs that this particular entry should not be ejected. This feature is not architectural, and should be checked for before using.
@@ -321,7 +321,7 @@ This tecnique make access to page tables in current address space, but if we to 
 
 ### Direct Map
 
-Another technique for modifying page tables is a 'direct map' (similar to an identity map). As we know an identity map is when a page's physical address is the same as it's virtual address, and we could describe it as: `paddr = vaddr`. A direct map is sometimes referred to as an _offset map_ because it introduces an offset, which gives us some flexibility. We're using to have a global variable containing the offset for our map called `dmap_base`. Typically we'll set this to some address in the higher half so that the lower half of the address space is completely free for userspace programs. This also makes other parts of the kernel easier later on.
+Another technique for modifying page tables is a 'direct map' (similar to an identity map). As we know an identity map is when a page's physical address is the same as its virtual address, and we could describe it as: `paddr = vaddr`. A direct map is sometimes referred to as an _offset map_ because it introduces an offset, which gives us some flexibility. We're using to have a global variable containing the offset for our map called `dmap_base`. Typically we'll set this to some address in the higher half so that the lower half of the address space is completely free for userspace programs. This also makes other parts of the kernel easier later on.
 
 How does the direct map actually work though? It's simple enough, we just map all of physical memory at the same virtual address *plus the dmap_base offset*: `paddr = vaddr - dmap_base`. Now in order to access a physical page (from our PMM for example) we just add `dmap_base` to it and we can read and write to it as normal.
 
@@ -329,9 +329,9 @@ The direct map does require a one-time setup early in your kernel, as you do nee
 
 What address should you use for the base address of the direct map? Well you can put it at the lowest address in the higher half, which depends on how many levels of page tables you have. For 4 level paging this will `0xffff'8000'0000'0000`.
 
-While recursive paging only requires using a single page table entry at the highest level, a direct map consumes a decent chunk of address space. A direct map is also more flexible as it allows the kernel to access arbitrary parts of physical memory as needed. Direct mapping is only really possible in 64-bit kernels due to the large address space made available, 32-bit kernels should opt to use recursive mapping to reduce the amount of address space used.
+While recursive paging only requires using a single page table entry at the highest level, a direct map consumes a decent chunk of address space. A direct map is also more flexible as it allows the kernel to access arbitrary parts of physical memory as needed, . Direct mapping is only really possible in 64-bit kernels due to the large address space made available, 32-bit kernels should opt to use recursive mapping to reduce the amount of address space used.
 
-The real potential of this tecnique will unveil when we have multiple address spaces to handle. Where the kernel may need to update data in different address spaces (especially the paging data structures), in this case using the direct map it can access any data in any address space, by only knowing it's physical address
+The real potential of this tecnique will unveil when we have multiple address spaces to handle, when the kernel may need to update data in different address spaces (especially the paging data structures), in this case using the direct map it can access any data in any address space, by only knowing its physical address.
 
 ### Troubleshooting
 

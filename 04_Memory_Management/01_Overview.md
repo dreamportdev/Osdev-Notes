@@ -2,7 +2,7 @@
 
 Welcome to the first challenge of our osdev adventure! Memory management in a kernel is a big area, and it can easily get very complex. This chapter aims to breakdown the various layers you might use in your kernel, and explain how each of them is useful.
 
-The design and complexity of a memory manger can vary greatly, a lot depends on what the operating system is designed, and it's specific goals. For example if only want mono-tasking os, with paging disabled and no memory protection, it will probably be fairly simple to implement.
+The design and complexity of a memory manger can vary greatly, a lot depends on what the operating system is designed, and its specific goals. For example if only want mono-tasking os, with paging disabled and no memory protection, it will probably be fairly simple to implement.
 
 In this part we will try to cover a more common use case that is probably what nearly all modern operating system uses, that is a 32/64 operating system with paging enabled, and various forms of memory allocators for the kernel and one for user space.
 
@@ -49,12 +49,12 @@ Although Paging and VMM are strongly tied, let's split this topic into two parts
 
 While writing the support for paging, independently there are few future choices we need to think about now:
 
-* Are we going to have a single or mulitple address spaces (i.e. every task will have it's own address space)? If yes in this case we need to keep in mind that when mapping addresses we need to make sure they are done on the right Virtual Memory Space. So usually a good idea is to add an extra parameter to the mapping/unmapping functions that contains the pointer to the root page table (for _x86\_64 architecture is the PML4 table).
+* Are we going to have a single or mulitple address spaces (i.e. every task will have its own address space)? If yes in this case we need to keep in mind that when mapping addresses we need to make sure they are done on the right Virtual Memory Space. So usually a good idea is to add an extra parameter to the mapping/unmapping functions that contains the pointer to the root page table (for _x86\_64 architecture is the PML4 table).
 * Are we going to support User and Supervisor mode? In this case we need to make sure that the correct flag is set in the table entries.
 
 ## VMM - Virtual Memory Manager
 
-The VMM works tight with paging, but it's a layer above, usually it's main features are:
+The VMM works tight with paging, but it's a layer above, usually its main features are:
 
 - Exists per process/running program.
 - Sets up an environment where the program can happily run code at whatever addresses it needs, and access data where it needs too.
@@ -74,7 +74,7 @@ Similarly to paging there are some things we need to consider depending on our f
 ## Heap Allocator
 
 There is a disntiction to be made here, between the kernel heap and the program heap. Many characteristic are similar between each other, although different algorithm can be used.
-Usually there is just one kernel heap, while every program will have it's own userspace heap.
+Usually there is just one kernel heap, while every program will have its own userspace heap.
 
 - At least one per process/running program, and one for the kernel.
 - Can be chained! Some designs are faster for specific tasks, and often will operate on top of each other.
@@ -88,7 +88,7 @@ Usually there is just one kernel heap, while every program will have it's own us
 The heap is implemented above the VMM, for the kernel one:
 
 * Even when using more than one address space per process/thread this heap should be shared across all the address spaces.
-* The userspace heap, can be implemented separately, as a library, it doesn't matter. Every task/thread will have it's own one in it's own address space.
+* The userspace heap, can be implemented separately, as a library, it doesn't matter. Every task/thread will have its own one in its own address space.
 
 ## An Example Workflow
 

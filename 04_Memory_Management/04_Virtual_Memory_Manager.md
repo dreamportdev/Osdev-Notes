@@ -53,7 +53,7 @@ typedef struct {
 
 The `flags` field is actually a bitfield, and we've defined some macros to use with it.
 
-These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convenient for oddities like `x86` and it's ` nx-bit`, where all memory is executable by default, and it must specified if the memory *don't* want to be executable.
+These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convenient for oddities like `x86` and its ` nx-bit`, where all memory is executable by default, and it must specified if the memory *don't* want to be executable.
 
 Having it like this allows that to be abstracted away from the rest of our kernel. For `x86_64` our translation function would look like the following:
 
@@ -76,7 +76,7 @@ We're going to store these *vm objects* as a linked list, which is the purpose o
 
 ### How Many VMMs Is Enough?
 
-Since a virtual memory manager only handles a single address space, we'll need one per address space we wish to have. This roughly translates to one VMM per running program, since each program should live in it's own address space. Later on when we implement scheduling we'll see how this works.
+Since a virtual memory manager only handles a single address space, we'll need one per address space we wish to have. This roughly translates to one VMM per running program, since each program should live in its own address space. Later on when we implement scheduling we'll see how this works.
 
 The kernel is a special case since it should be in all address spaces, as it always needs to be loaded to manage the underlying hardware of the system.
 
@@ -90,7 +90,7 @@ This is where design and reality collide, because our high level VMM needs to pr
 void* vmm_pt_root;
 ```
 
-This variable can be placed anywhere, this depend on our design decisions, there is not correct answer, but a good idea is to reserve some space in the VM space to be used by the VMM to store it's data. Usually a good idea is to place this space somewhere in the higher half area probably anywhere below the kernel.
+This variable can be placed anywhere, this depend on our design decisions, there is not correct answer, but a good idea is to reserve some space in the VM space to be used by the VMM to store its data. Usually a good idea is to place this space somewhere in the higher half area probably anywhere below the kernel.
 
 Once we got the address, this needs to be mapped to an existing physical address, so we will need to do two things:
 
@@ -255,7 +255,7 @@ Usually this is used by the heap allocator to get the memory it needs, and it wi
 
 ### Example 2: Accessing MMIO
 
-The local APIC is a device accessed via MMIO. It's registers are *usually* located at the physical address `0xFEE00000`, and that's what we're going to use for this example. **In the real world this address should be obtained from the model specific register (MSR) instead of hardcoding it (in x86 architectures).**
+The local APIC is a device accessed via MMIO. Its registers are *usually* located at the physical address `0xFEE00000`, and that's what we're going to use for this example. **In the real world this address should be obtained from the model specific register (MSR) instead of hardcoding it (in x86 architectures).**
 
 If not familiar with what the local APIC is, it's a device for handling interrupts on x86, see the relevant chapter for more detail. All needed to know for this example  is that it has a 4K register space at the specified physical address.
 

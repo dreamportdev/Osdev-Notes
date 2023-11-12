@@ -10,7 +10,7 @@ With a higher half kernel we take advantage of this, and place our kernel at a v
 
 The address that the kernel is loaded at depends on the size of the address space. For example if it's a 32-bit address space we might load the kernel at `0xC0000000` (3GiB), or -1GiB (because it is 1GiB below the top of the address space). For a 64-bit address space this is typically `0xFFFFFFFF80000000` or -2GiB.
 
-This doesn't mean the kernel will be physically loaded here, in fact it can be loaded anywhere. If using multiboot it will probably be around 1-2MiB, but with virtual memory we don't have to care about it's physical address.
+This doesn't mean the kernel will be physically loaded here, in fact it can be loaded anywhere. If using multiboot it will probably be around 1-2MiB, but with virtual memory we don't have to care about its physical address.
 
 ## Loading a Higher Half Kernel
 

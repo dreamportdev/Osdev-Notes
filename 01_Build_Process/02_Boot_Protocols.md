@@ -20,7 +20,7 @@ Both protocols have their earlier versions (_multiboot 1 & stivale 1_), but thes
 
 It's a fair question. In the world of testing on qemu/bochs/vmware/vbox, its easy to write a bootloader directly against UEFI or BIOS. Things get more complicated on real hardware though.
 
-Unlike CPUs, where the manufacturers follow the spec exactly and everything works as described, manufacturers of PCs generally follow *most* of the specs, with every machine having its minor caveats. Some assumptions can't be assumed everywhere, and some machines sometimes outright break spec. This leads to a few edge cases on some machines, and more or less on some others. It's a big mess. 
+Unlike CPUs, where the manufacturers follow the spec exactly and everything works as described, manufacturers of PCs generally follow *most* of the specs, with every machine having its minor caveats. Some assumptions can't be assumed everywhere, and some machines sometimes outright break spec. This leads to a few edge cases on some machines, and more or less on some others. It's a big mess.
 
 This is where a bootloader comes in: a layer of abstraction between the kernel and the mess of PC hardware. It provides a boot protocol (often many we can choose from), and then ensures that everything in the hardware world is setup to allow that protocol to function. This is until the kernel has enough drivers set up to take full control of the hardware itself.
 
@@ -40,7 +40,7 @@ One of the major differences between the two protocols is how info is passed bet
 - _Multiboot 2_ uses a fixed sized header that includes a `size` field, which contains the _number of bytes of the header + all of the following requests_. Each request contains an `identifier` field and then some request specific fields. This has slightly more overhead, but is more flexible. The requests are terminated with a special `null request` (see the specs on this).
 
 - _Multiboot 1_ returns info to the kernel via a single large structure, with a bitmap indicating which sections of the structure are considered valid.
-- _Multiboot 2_ returns a pointer to a series of tags. Each tag has an `identifier` field, used to determine it's contents, and a size field that can be used to calculate the address of the next tag. This list is also terminated with a special `null` tag.
+- _Multiboot 2_ returns a pointer to a series of tags. Each tag has an `identifier` field, used to determine its contents, and a size field that can be used to calculate the address of the next tag. This list is also terminated with a special `null` tag.
 
 One important note about multiboot 2: the memory map is essentially the map given by the bios/uefi. The areas used by bootloader memory (like the current gdt/idt), kernel and info structure given to the kernel are all allocated in *free* regions of memory. The specification does not say that these regions must then be marked as *used* before giving the memory map to the kernel. This is actually how grub handles this, so should definitely do a sanity check on the memory map.
 
@@ -62,10 +62,10 @@ Since we have enabled paging, we'll also need to populate `cr3` with a valid pag
 
 We will be operating in compatibility mode, a subset of long mode that pretends to be a protected mode cpu. This is to allow legacy programs to run in long mode. However we can enter full 64-bit long mode by reloading the CS register with a far jump or far return. See the [GDT notes](../GDT.md) for details on doing that.
 
-It's worth noting that this boot shim will need it's own linker sections for code and data, since until we have entered long mode the higher half sections used by the rest of the kernel won't be available, as we have no memory at those addresses yet.
+It's worth noting that this boot shim will need its own linker sections for code and data, since until we have entered long mode the higher half sections used by the rest of the kernel won't be available, as we have no memory at those addresses yet.
 
 ### Creating a Multiboot 2 Header
-Multiboot 2 has a header available at the bottom of it's specification that we're going to use here.
+Multiboot 2 has a header available at the bottom of its specification that we're going to use here.
 
 We'll need to modify our linker script a little since we boot up in protected mode, with no virtual memory:
 
@@ -77,7 +77,7 @@ SECTIONS
     KERNEL_START = .;
     KERNEL_VIRT_BASE = 0xFFFFFFFF8000000;
 
-    .mb2_hdr : 
+    .mb2_hdr :
     {
         /* Be sure that the multiboot2 header is at the beginning */
         KEEP(*(.mb2_hdr))
@@ -111,7 +111,7 @@ SECTIONS
 }
 ```
 
-This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xFFFF'FFFF'8000'0000` lower than it's virtual address. 
+This is very similar to a default linker script, but we make use of the `AT()` directive to set the LMA (load memory address) of each section. What this does is allow us to have the kernel loaded at a lower memory address so we can boot (in this case we set `. = 1M`, so 1MiB), but still have most of our kernel linked as higher half. The higher half kernel will just be loaded at a physical memory address that is `0xFFFF'FFFF'8000'0000` lower than its virtual address.
 
 However the first two sections are both loaded and linked at lower memory addresses. The first is our multiboot header, this is just static data, it doesn't really matter where it's loaded, as long as it's in the final file somewhere. The second section contains our protected mode boot shim: a small bit of code that sets up paging, and boots into long mode.
 
@@ -145,7 +145,7 @@ mb2_framebuffer_end:
 mb2_hdr_end:
 ```
 
-A full boot shim is left as an exercise to the reader, we may want to do extra things before moving into long mode. Or may not, but a skeleton of what's required is provided below. 
+A full boot shim is left as an exercise to the reader, we may want to do extra things before moving into long mode. Or may not, but a skeleton of what's required is provided below.
 
 ```x86asm
 .section .data
@@ -155,7 +155,7 @@ boot_stack_base:
 # backup the address of mb2 info struct, since ebx may be clobbered
 .section .mb_text
     mov %ebx, %edi
-    
+
     # setup a stack, and reset flags
     mov $(boot_stack_base + 0x1000), %esp
     pushl $0x2
@@ -197,7 +197,7 @@ After performing the long-return (`lret`) we'll be running `target_function` in 
 
 Some of the things were glossed there, like paging and setting up a gdt, are explained in their own chapters.
 
-We'll also want to pass the multiboot info structure to the kernel's main function. 
+We'll also want to pass the multiboot info structure to the kernel's main function.
 
 The interface between a higher level language like C and assembly (or another high level language) is called the ABI (application binary interface). This is discussed more in the chapter about C, but for now to pass a single `uint64_t` (or a pointer of any kind, which the info structure is) simply move it to `rdi`, and it'll be available as the first argument in C.
 
@@ -240,7 +240,7 @@ Stivale 2 also provides some more advanced features:
 The limine bootloader not only supports x86, but tentatively supports aarch64 as well (uefi is required). There is also a stivale2-compatible bootloader called Sabaton, providing broader support for ARM platforms.
 
 ### Creating a Stivale2 Header
-The limine bootloader provides a `stivale2.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file. 
+The limine bootloader provides a `stivale2.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file.
 
 *Authors Note: I like to place my limine header tags in a separate file, for organisation purposes, but as long as they appear in the final binary, they can be anywhere. You can also implement this in assembly if you really want.*
 
@@ -264,7 +264,7 @@ Next we'll need to create space for our stack (stivale2 requires us to provide o
 static uint8_t init_stack[0x2000];
 
 __attribute__((section(".stivale2hdr)))
-static stivale2_header stivale2_hdr = 
+static stivale2_header stivale2_hdr =
 {
     .entry_point = 0,
     .stack = (uintptr_t)init_stack + 0x2000,
@@ -285,9 +285,9 @@ Next we set some fields in the stivale2 header:
 In the example above we actually set the first tag to a framebuffer request, so lets see what that would look like:
 
 ```c
-static stivale2_header_tag_framebuffer framebuffer_tag = 
+static stivale2_header_tag_framebuffer framebuffer_tag =
 {
-    .tag = 
+    .tag =
     {
         .identifier = STIVALE2_HEADER_TAG_FRAMEBUFFER,
         .next = 0,
@@ -325,10 +325,10 @@ void* multiboot2_find_tag(uint32_t type)
     {
         if (tag->type == 0 && size == 8)
             return NULL; //we've reached the terminating tag
-        
+
         if (tag->type == type)
             return tag;
-        
+
         uintptr_t next_addr = (uintptr_t)tag + tag->size;
         next_addr = (next_addr / 8 + 1) * 8;
         tag = (multiboot_tag*)next_addr;

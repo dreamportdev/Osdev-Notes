@@ -4,7 +4,7 @@ If never done any kind of low level programming before, it's unlikely we've had 
 
 A linker script is just a description of the final linked binary. It tells the linker how we want the various bits of code and data from our compiled source files (currently they're unlinked object files) to be laid out in the final executable.
 
-For the rest of this chapter we'll assume we're using *elf* as the file format. If building a UEFI binary we'll need to use PE/COFF+ instead, and that's a separate beast of it's own. There's nothing `x86` specific here, but it was written with `x86` in mind, other architectures may have slight differences. We also reference some fields of structs, these are described very plainly in the `elf64` base specification.
+For the rest of this chapter we'll assume we're using *elf* as the file format. If building a UEFI binary we'll need to use PE/COFF+ instead, and that's a separate beast of its own. There's nothing `x86` specific here, but it was written with `x86` in mind, other architectures may have slight differences. We also reference some fields of structs, these are described very plainly in the `elf64` base specification.
 
 ## Anatomy of a Script
 
@@ -24,18 +24,18 @@ Since the memory section doesn't see too much use on x86, it's not explained her
 Within the sections area of the linker script, sections are described using two address. They're defined as:
 
 - Load Memory Address: This is where the section is to be loaded.
-- Virtual Memory Address: This is where the code is expected to be when run. Any jumps or branches in our code, any variable references are linked using this address. 
+- Virtual Memory Address: This is where the code is expected to be when run. Any jumps or branches in our code, any variable references are linked using this address.
 
 Most of the time these are the same, however this is not always true. One use case of setting these to separate values would be creating a higher half kernel that uses the multiboot boot protocol. Since mb leaves us in protected mode with paging disabled, we can't load a higher half kernel, as no one would have enough physical memory to have physical addresses in the range high enough.
 
-So instead, we load the kernel at a lower physical memory address (by setting LMA), run a self-contained assembly stub that is linked in it's own section at a lower VMA. This stub sets up paging, and jumps to the higher half region of code once paging and long mode are setup. Now the code is at the address it expects to be in, and will run correctly, all done within the same kernel file.
+So instead, we load the kernel at a lower physical memory address (by setting LMA), run a self-contained assembly stub that is linked in its own section at a lower VMA. This stub sets up paging, and jumps to the higher half region of code once paging and long mode are setup. Now the code is at the address it expects to be in, and will run correctly, all done within the same kernel file.
 
 ### Adding Symbols
 
-If not familiar with the idea of a symbol, it's a lower level concept that simply represents *a thing* in a program. 
+If not familiar with the idea of a symbol, it's a lower level concept that simply represents *a thing* in a program.
 A symbol has an address, and some extra details to describe it. These details tell us if the symbol is a variable, the start of a function, maybe a label from assembly code, or even something else. It's important to note that when being used in code, a symbol **is** the address associated with it.
 
-A symbol can be seen as a pointer. 
+A symbol can be seen as a pointer.
 
 Why is this useful though? Well we can add symbols to the linker script, and the linker will ensure any references to that symbol in our code point to the same place. That means we can now access info that is only known by the linker, such as where the code will be stored in memory, or how big the read-only data section in our kernel is.
 
@@ -99,9 +99,9 @@ While program headers are a fairly course mechanism for telling the program load
 
 ### The '.' Operator
 
-When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll potentially need to update the linker script every time the code or data sections change in size. Instead, we can use the dot operator (`.`). It represents the current VMA (remember this is the runtime address), and allows us to perform certain operations on it, without specifying exactly what the address is. 
+When working with sections, we'll want to control where sections are placed in memory. We can use absolute addresses, however this means we'll potentially need to update the linker script every time the code or data sections change in size. Instead, we can use the dot operator (`.`). It represents the current VMA (remember this is the runtime address), and allows us to perform certain operations on it, without specifying exactly what the address is.
 
-We can align it to certain values, add relative offsets based on it's current address and a few other things. 
+We can align it to certain values, add relative offsets based on its current address and a few other things.
 
 The linker will automatically increment the VMA when placing sections. The current VMA is read/write, so we have complete control over this process if we want.
 
@@ -131,7 +131,7 @@ Let's consider the following example:
 } :text
 ```
 
-First we give this output section a name, in this case it's `.text`. To the right of the colon is where we would place any extra attributes for this section or override the LMA. By default the LMA will be the same as the VMA, but if required it can be overriden here using the `AT()` syntax. Two examples are provided below: the first sets the LMA of a section to an absolute address, and the second shows the use of another operator (`ADDR()`) in combination with `AT()` to get the VMA of a section, and then use it for calculating where to place the LMA. This results in a section with an LMA relative to it's VMA.
+First we give this output section a name, in this case its `.text`. To the right of the colon is where we would place any extra attributes for this section or override the LMA. By default the LMA will be the same as the VMA, but if required it can be overriden here using the `AT()` syntax. Two examples are provided below: the first sets the LMA of a section to an absolute address, and the second shows the use of another operator (`ADDR()`) in combination with `AT()` to get the VMA of a section, and then use it for calculating where to place the LMA. This results in a section with an LMA relative to it's VMA.
 
 ```
 /* absolute LMA, set to 0x1234 */
@@ -149,15 +149,15 @@ Next up we have a number of lines describing the input sections, with the format
 
 After the closing brace is where we tell the linker what program header this section should be in, in this case its the `text` phdr. The program header name is prefixed with a colon in this case.
 
-Similarly to the program headers we should specify ithe following sections in in our script: 
+Similarly to the program headers we should specify ithe following sections in in our script:
 
 * _.text_
 * _.rodata_
 * _.data_
 
-It is a good practice, even if not mandatory, to add a _.bss_ section too, it should include also the `COMMON` symbol. For more details have a look at the complete example at the end of the chapter. 
+It is a good practice, even if not mandatory, to add a _.bss_ section too, it should include also the `COMMON` symbol. For more details have a look at the complete example at the end of the chapter.
 
-Keep in mind that the order is not important on how you declare them, but it affects how they are placed in memory. 
+Keep in mind that the order is not important on how you declare them, but it affects how they are placed in memory.
 
 ## Common Options
 
@@ -187,7 +187,7 @@ SECTIONS
 {
     /* start linking at the -2GB address. */
     . = 0xFFFFFFFF80000000;
-    
+
     /* text output section, to go in 'text' phdr */
     .text :
     {
@@ -203,7 +203,7 @@ SECTIONS
     /* page so we can use different page protection flags (r/w/x). */
     . += CONSTANT(MAXPAGESIZE);
 
-    .rodata : 
+    .rodata :
     {
         RODATA_BEGIN = .;
         *(.rodata*)
@@ -212,7 +212,7 @@ SECTIONS
 
     . += CONSTANT(MAXPAGESIZE);
 
-    .data : 
+    .data :
     {
         DATA_BEGIN = .;
         *(.data*)
@@ -220,7 +220,7 @@ SECTIONS
 
     .bss :
     {
-        /* COMMON is where the compiler places it's internal symbols */
+        /* COMMON is where the compiler places its internal symbols */
         *(COMMON)
         *(.bss*)
         DATA_END = .;
@@ -231,8 +231,8 @@ SECTIONS
 }
 ```
 
-In the script above we are configuring the required sections `.text`, `.rodata`, `.data`, and `.bss` , for every section include all the symbols that start with the secion name (consider that `.bss` and `.bss.debug` are two different symbols, but we want them to be included in the same section. We also create two  extra symbols, that will be available to the kernel at runtime as variables, the content will be the start and address of the section. 
+In the script above we are configuring the required sections `.text`, `.rodata`, `.data`, and `.bss` , for every section include all the symbols that start with the secion name (consider that `.bss` and `.bss.debug` are two different symbols, but we want them to be included in the same section. We also create two  extra symbols, that will be available to the kernel at runtime as variables, the content will be the start and address of the section.
 
 We also create another symbol to contain the kernel size, where `.` is the memory address when the script has reached that point, and `0xFFFFFFFF80000000` is the starting address as you can see at the beginning of `SECTIONS`.
 
-This example doesn't explicitly set the LMAs of any sections, and assumes that each section can be loaded at it's requested VMA (or relocated if we can't do that). For userspace programs or maybe loadable kernel modules (if we support these) this is usually no problem, but if this is a linker script for the kernel we must be careful as paging may not be enabled yet. In this case we need the sections to be loaded somewhere in physical memory. This is where setting the LMA can come in handy - it allows us to still link parts of the kernel as higher half (based on their VMA), but have them loaded at a known physical address. For more details about a scenario like this see how we boot using multiboot 2, as it starts the kernel with paging disabled. If you do this, don't forget to set the VMA to the higher half before the higher half sections of the kernel.
+This example doesn't explicitly set the LMAs of any sections, and assumes that each section can be loaded at its requested VMA (or relocated if we can't do that). For userspace programs or maybe loadable kernel modules (if we support these) this is usually no problem, but if this is a linker script for the kernel we must be careful as paging may not be enabled yet. In this case we need the sections to be loaded somewhere in physical memory. This is where setting the LMA can come in handy - it allows us to still link parts of the kernel as higher half (based on their VMA), but have them loaded at a known physical address. For more details about a scenario like this see how we boot using multiboot 2, as it starts the kernel with paging disabled. If you do this, don't forget to set the VMA to the higher half before the higher half sections of the kernel.

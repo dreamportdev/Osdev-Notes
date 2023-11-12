@@ -1,6 +1,6 @@
 # IPC via Message Passing
 
-Compared to shared memory, message passing is slightly more complex but does offer more features. It's comparable to networking where there is a receiver that must be ready for an incoming message, and a sender who creates the full message ahead of time, ready to send all at once. 
+Compared to shared memory, message passing is slightly more complex but does offer more features. It's comparable to networking where there is a receiver that must be ready for an incoming message, and a sender who creates the full message ahead of time, ready to send all at once.
 
 Unlike shared memory, which can have many processes all communicating with one initial process (or even many), message passing is usually one-to-one.
 
@@ -42,7 +42,7 @@ struct ipc_endpoint {
 };
 ```
 
-To save some space we'll use `NULL` as the message address to represent that there is no message available. 
+To save some space we'll use `NULL` as the message address to represent that there is no message available.
 
 If you're wondering about the `next` field, that's because we're going to store these in a linked list. You'll want a variable to store the head of the list, and a lock to protect the list anytime it's modified.
 
@@ -57,7 +57,7 @@ At this point we have all we need to implement a function to create a new endpoi
 void create_endpoint(const char* name) {
     ipc_endpoint* ep = malloc(sizeof(ipc_endpoint));
     ep->name = malloc(strlen(name) + 1);
-    strcpy(ep->name, name); 
+    strcpy(ep->name, name);
 
     ep->msg_buffer = NULL;
 
@@ -112,7 +112,7 @@ if (target == NULL)
     return;
 ```
 
-You may want to return an error here if the endpoint couldn't be found, however in our case we're simply discarding the message. 
+You may want to return an error here if the endpoint couldn't be found, however in our case we're simply discarding the message.
 
 Now we'll need to allocate a buffer to store a copy of the message in, and copy the original message into this buffer.
 
@@ -145,11 +145,11 @@ In theory this works, but we've overlooked one huge issue: what if there's alrea
 
 The first option is recommended, as it's likely there will be some processes that handle a lot of messages. Implementing this is left as an exercise to the user, but a simple implemenation might use a struct to hold each message (the buffer address and length) and a next field. Yes, more linked lists!
 
-Sending messages would now mean appending to the list instead of writing the buffer address as before. 
+Sending messages would now mean appending to the list instead of writing the buffer address as before.
 
 ## Receiving
 
-We have seen how to send messages, now let's take a look at how to receive them. We're going to use a basic (and inefficient) example, but it shows how it could be done. 
+We have seen how to send messages, now let's take a look at how to receive them. We're going to use a basic (and inefficient) example, but it shows how it could be done.
 
 The theory behind this is simple: when we're in the receiving process, we allocate a buffer to hold the message, and copy the messge data stored at the endpoint into our local buffer. Now we can set the endpoint's `msg_buffer` field to `NULL` to indicate that there is no longer a message to be received. Note that setting the buffer to `NULL` is specific to our example code, and your implementation may be different.
 
