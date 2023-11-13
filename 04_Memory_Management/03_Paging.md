@@ -317,7 +317,7 @@ Few more examples of address translation:
     - If we want to access the content of the PML4 page itself, using the recursion we need to build a special address using the entries: _PML4: 510, PDPR: 510, PD: 510, PT: 510_, now keep in mind that the 510th entry of PML4 is PML4 itself, so this means that when the processor loads that entry, it loads PML4 itself instead of PDPR, but now the value for the PDPR entry is still 510, that is still PML4 then, the table loaded is PML4 again, repat this process for PD and PT with page number equals to 510, and we got access to the PML4 table.
     - Now using a similar approach we can get acces to other tables, for example the following values: _PML4: 510, PDPR:510, PD: 1, PT: 256_, will give access at the Page Directory PD at entry number 256 in PDPR that is contained in the first PML4 entry.
 
-This tecnique make access to page tables in current address space, but if we to navigate data that resides in other address spaces, it is not possible, unless we switch to that address space.
+This technique makes it easy to access page tables in the current address space, but it falls apart for accessing data in other address spaces. For that purpose, we'll need to either use a different technique or switch to that address space, which can be quite costly.
 
 ### Direct Map
 

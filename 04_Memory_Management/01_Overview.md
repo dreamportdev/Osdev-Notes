@@ -28,7 +28,7 @@ Each of the layers has a dedicated chapter, however we'll start with a high leve
 
 ## A Word of Wisdom
 
-As said at the beginning of this chapter the  Memory Management Unit, is a big area in the kernel, but this is not the only characteristic. Another important one is that it is going to be used directly and/or indirectly virtually everywhere. So while designing it we should take extra care on all its implication and ramification. It mostly depends on how we design our kernel, and what features we want to have, so spending some time now thinking of what we want to achieve, can save us a lot of headaches, and rewrites/changes to mmu in the future.
+As said at the beginning of this chapter Memory management is one of the most important parts of a kernel, as every other part of the kernel will interact with it in some way. It's worth taking the extra time to consider what features we want our PMM and VMM to have, and the ramifications. A little planning now can save us a lot of heacaches and rewriting code later!
 
 ## PMM - Physical Memory Manager
 
@@ -39,7 +39,7 @@ The main features of a PMM are:
 - Keeps track of whether a page is currently in use, or free.
 - Is responsible for protecting non-usable memory regions from being used as general memory (mmio, acpi or bootloader memory).
 
-usually this is the lowest level of allocation, and only the kernel should access/use it.
+Usually this is the lowest level of allocation, and only the kernel should access/use it.
 
 ## Paging
 
@@ -67,7 +67,7 @@ The VMM works tight with paging, but it's a layer above, usually its main featur
 Similarly to paging there are some things we need to consider depending on our future decisions:
 
 * If we are going to support multiple address spaces, we need to initialize a different VMM for every task, so all the initialization/allocation/free function should be aware of which is the VMM that needs to be updated.
-* In case we want to implement User and Supervisor support, a good idea is to have separate address space for the user processes/threads and the supervisor one. Usually the supervisor address space is in the higher half and , as in it starts at the lowest address of the higher half of the address space (in x86_64 and ricsv it is starting from: 0xFFFF800000000000)
+* In case we want to implement User and Supervisor support, a good idea is to have separate address space for the user processes/threads and the supervisor one. Usually the supervisor address space is in the higher half and the user space is in the lower half, as it starts at the lowest address of the higher half of the address space (in x86_64 and ricsv it is starting from: 0xFFFF800000000000)
 
 ## Heap Allocator
 
