@@ -6,7 +6,7 @@ On `x86_64` there are a few ways to perform a system call. The first is to dedic
 There are other obscure ways to perform syscalls. For example, executing a bad instruction will cause the cpu to trigger a #UD exception. This transfers control to supervisor code, and could be used as an entry to a system call. While not recommended for beginners, there was one hobby OS kernel that used this method.
 
 ## The System Call ABI
-A stable ABI is always a good thing, but especially in the case of system calls. If we start to write user code that uses your system calls, and then the ABI changes later, all of the previous code will break. Therefore it's recommended to take some time to design the core of the ABI before implementing it. 
+A stable ABI is always a good thing, but especially in the case of system calls. If we start to write user code that uses your system calls, and then the ABI changes later, all of the previous code will break. Therefore it's recommended to take some time to design the core of the ABI before implementing it.
 
 Some common things to consider include:
 
@@ -27,9 +27,9 @@ We've probably heard of `int 0x80` before. That's the interrupt vector used by L
 
 ### Using Software Interrupts
 
-Now we've selected which interrupt vector to use for system calls, we can install an interrupt handler. On `x86`, this is done via the IDT like any other interrupt handler. The only different is the DPL field. 
+Now we've selected which interrupt vector to use for system calls, we can install an interrupt handler. On `x86`, this is done via the IDT like any other interrupt handler. The only different is the DPL field.
 
-As mentioned before, the DPL field is the highest ring that is allowed to call this interrupt from software. By default it was left as 0, meaning only ring 0 can trigger software interrupts. Other rings trying to do this will trigger a general protection fault. However since we want ring 3 code to call this vector, we'll need to set it's DPL to 3.
+As mentioned before, the DPL field is the highest ring that is allowed to call this interrupt from software. By default it was left as 0, meaning only ring 0 can trigger software interrupts. Other rings trying to do this will trigger a general protection fault. However since we want ring 3 code to call this vector, we'll need to set its DPL to 3.
 
 Now we have an interrupt that can be called from software in user mode, and a handler that will be called on the supervisor side.
 
@@ -59,8 +59,8 @@ Now on the user side, we can use `int $0xFE` to trigger a software interrupt. If
 __attribute__((naked))
 size_t do_syscall(size_t syscall_num, size_t arg)
 {
-    asm("int $0xFE" 
-        : "S"(arg) 
+    asm("int $0xFE"
+        : "S"(arg)
         : "D"(syscall_enum), "S"(arg));
 
     return arg;
@@ -107,7 +107,7 @@ cpu_status_t* syscall_handler(cpu_status_t* regs)
 
 On `x86_64` there exists a pair of instructions that allow for a "fast supervisor entry/exit". The reason these instructions are considered fast is they bypass the whole interrupt procedure. Instead, they are essentially a pair of far-jump/far-return instructions, with the far-jump to kernel code using a fixed entry point.
 
-This is certainly faster as the instruction only needs to deal with a handful of registers, however it leaves the rest of the context switching up to the kernel code. 
+This is certainly faster as the instruction only needs to deal with a handful of registers, however it leaves the rest of the context switching up to the kernel code.
 
 Upon entering the kernel, you will be running with ring 0 privileges and certain flags will be cleared, and that's it. You must perform the stack switch yourself, as well as collecting any information the kernel might need (like the user rip, stack, ss/cs).
 
@@ -127,11 +127,11 @@ Before using these instructions we'll need to perform a bit of setup first. They
 
 Let's assume that our kernel CS is 0x8: to use `syscall` the kernel SS **must** be the next GDT entry, at offset 0x10.
 
-For `sysret`, which returns to user mode, things are a little more complex. This instruction allows for going to both compatibility mode (32-bit long mode) and long mode (64-bit long mode proper). So the instruction actually requires three GDT selectors to be placed immedately following each other: user CS (32-bit mode), user SS, user CS (64-bit mode). As an example if our 32-bit CS was 0x18, our user SS **must** be at 0x20, and our 64-bit user CS **must** be at 0x28. 
+For `sysret`, which returns to user mode, things are a little more complex. This instruction allows for going to both compatibility mode (32-bit long mode) and long mode (64-bit long mode proper). So the instruction actually requires three GDT selectors to be placed immedately following each other: user CS (32-bit mode), user SS, user CS (64-bit mode). As an example if our 32-bit CS was 0x18, our user SS **must** be at 0x20, and our 64-bit user CS **must** be at 0x28.
 
 If support compatibility mode is not supported, we can simply omit the 32-bit user code selector, and set use the offset 8 bytes below the user SS. This will work as long as we never try to `sysret` back to compatibility mode.
 
-As an aside, the `sysret` instruction determines which mode to return to based on the operand size. By default all operands are 32-bit, to specify a 64-bit operand (i.e. return to 64-bit long mode) just add the `q` suffix in GNU as, or the `o64` prefix in NASM. 
+As an aside, the `sysret` instruction determines which mode to return to based on the operand size. By default all operands are 32-bit, to specify a 64-bit operand (i.e. return to 64-bit long mode) just add the `q` suffix in GNU as, or the `o64` prefix in NASM.
 
 ```x86asm
 //GNU as

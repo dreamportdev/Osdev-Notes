@@ -25,3 +25,11 @@ Second book release.
 * Add more details in the VMM Section of _Process and Threads_ chapter
 * Explain content of Segment Selectors in GDT chapter
 * Improve readability of some parts inside Userspace chapters
+
+### Revision 2
+
+Release date: November 2023.
+Third Book Release
+
+* Add more information on the Memory protection chapter, abouit its future implications
+* Emergency grammar fix!

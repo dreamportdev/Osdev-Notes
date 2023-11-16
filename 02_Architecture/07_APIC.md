@@ -1,8 +1,8 @@
-# APIC 
+# APIC
 
 ## What is APIC
 
-APIC stands for *Advanced Programmable Interrupt Controller*, and it's the device used to manage incoming interrupts to a processor core. It replaces the old PIC8259 (that remains still available), and it offers more functionalities, especially when dealing with SMP. In fact one of the limitations of the PIC was that it was able to deal with only one cpu at time, and this is also the main reason why the APIC was introduced. 
+APIC stands for *Advanced Programmable Interrupt Controller*, and it's the device used to manage incoming interrupts to a processor core. It replaces the old PIC8259 (that remains still available), and it offers more functionalities, especially when dealing with SMP. In fact one of the limitations of the PIC was that it was able to deal with only one cpu at time, and this is also the main reason why the APIC was introduced.
 
 It's worth noting that Intel later developed a version of the APIC called the SAPIC for the Itanium platform. These are referred to collectively as the *xapic*, so if this term is used in documentation know that it just means the local APIC.
 
@@ -21,7 +21,7 @@ When a system boots up, the cpu starts in PIC8259A emulation mode for legacy rea
 
 ### Disabling The PIC8259
 
-This part should be pretty straightforward, and we will not go deep into explaining the meaning of all command sent to it. The sequence of commands is: 
+This part should be pretty straightforward, and we will not go deep into explaining the meaning of all command sent to it. The sequence of commands is:
 
 ```c
 void disable_pic() {
@@ -38,17 +38,17 @@ void disable_pic() {
 }
 ```
 
-The old x86 architecture had two PIC processor, and they were called "master" and "slave", and each of them has it's own data port and command port:
+The old x86 architecture had two PIC processor, and they were called "master" and "slave", and each of them has its own data port and command port:
 
 * Master PIC command port: `0x20` and data port: `0x21`.
 * Slave PIC command port: `0xA0` and data port `0xA1`.
 
-The ICW values are initialization commands (ICW stands for Initialization Command Words), every command word is one byte, and their meaning is: 
+The ICW values are initialization commands (ICW stands for Initialization Command Words), every command word is one byte, and their meaning is:
 
-* ICW_1 (value `0x11`) is a word that indicates a start of initialization sequence, it is the same for both the master and slave pic. 
+* ICW_1 (value `0x11`) is a word that indicates a start of initialization sequence, it is the same for both the master and slave pic.
 * ICW_2 (value `0x20` for master, and `0x28` for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
-* ICW_3 (value `0x2` for master, `0x4` for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be it's id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
-* ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode. 
+* ICW_3 (value `0x2` for master, `0x4` for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be its id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
+* ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode.
 * Finally `0xFF` is used to mask all interrupts for the pic.
 
 ### Discovering the Local APIC
@@ -57,7 +57,7 @@ The first step needed to configure the LAPIC is getting access to it. The APIC r
 
 In our case the MSR that we need to read is called IA32_APIC_BASE and its value is `0x1B`.
 
-This register contains the following information: 
+This register contains the following information:
 
 * Bits 0:7: reserved.
 * Bit 8: if set, it means that the processor is the Bootstrap Processor (BSP).
@@ -66,7 +66,7 @@ This register contains the following information:
 * Bits 12:31: Contains the base address of the local APIC for this processor core.
 * Bits 32:63: reserved.
 
-Note that the registers are given as a *physical address*, so to access these we will need to map them somewhere in the virtual address space. This is true for the addresses of any I/O APICs we obtain as well. When the system boots, the base address is usually `0xFEE0000` and often this is the value we read from `rdmsr`. 
+Note that the registers are given as a *physical address*, so to access these we will need to map them somewhere in the virtual address space. This is true for the addresses of any I/O APICs we obtain as well. When the system boots, the base address is usually `0xFEE0000` and often this is the value we read from `rdmsr`.
 
 A complete list of local APIC registers is available in the Intel/AMD software development manuals, but the important ones for now are:
 
@@ -82,7 +82,7 @@ The spurious vector register also contains some miscellaneous config for the loc
 | Bits  | Value                        |
 |-------|------------------------------|
 | 0-7   | Spurious vector              |
-|  8    | APIC Software enable/disable | 
+|  8    | APIC Software enable/disable |
 |  9    | Focus Processor checking     |
 | 10-31 | Reserved                     |
 
@@ -102,7 +102,7 @@ The version register contains some useful (if not really needed) information. Ex
 
 ### Local Vector Table
 
-The local vector table allows the software to specify how the local interrupts are delivered. 
+The local vector table allows the software to specify how the local interrupts are delivered.
 There are 6 items in the LVT starting from offset `0x320` to `0x370`:
 
 * *Timer*: used for controlling the local APIC timer. Offset: `0x320`.
@@ -147,7 +147,7 @@ Since MSRs are 64-bits, the upper 32 bits are zero on reads and ignored on write
 
 Once an interrupt for the local APIC is served, it won't send any further interrupts until the end of interrupt signal is sent. To do this write a 0 to the EOI register, and the local APIC will resume sending interrupts to the processor. This is a separate mechanism to the interrupt flag (IF), which also disables interrupts being served to the processor. It is possible to send EOI to the local APIC while IF is cleared (disabling interrupts) and no further interrupts will be served until IF is set again.
 
-There are few exceptions where sending an EOI is not needed, this is mainly spurious interrupts and NMIs. 
+There are few exceptions where sending an EOI is not needed, this is mainly spurious interrupts and NMIs.
 
 The EOI can be sent at any time when handling an interrupt, but it's important to do it before returning with `iret`. If we enable interrupts and only receive a single interrupt, forgetting to send EOI may be the reason.
 
@@ -159,7 +159,7 @@ To send an IPI we need to know the local APIC ID of the core we wish to interrup
 
 The ICR is 64-bits wide and therefore we access it as two registers (a higher and lower half). The IPI is sent when the lower register is written to, so we should set up the destination in the higher half first, before writing the vector in the lower half.
 
-This register contains a few fields but most can be safely ignored and left to zero. We're interested in bits 63:56 which is the ID of the target local APIC (in X2APIC mode it's bits 63:32) and bits 7:0 which contain the interrupt vector that will be served on the target core.
+This register contains a few fields but most can be safely ignored and left to zero. We're interested in bits 63:56 which is the ID of the target local APIC (in X2APIC mode it is bits 63:32) and bits 7:0 which contain the interrupt vector that will be served on the target core.
 
 An example function might look like the following:
 
@@ -186,7 +186,7 @@ The I/O APIC primary function is to receive external interrupt events from the s
 
 ### Configure the I/O APIC
 
-To configure the I/O APIC we need to: 
+To configure the I/O APIC we need to:
 
 1. Get the I/O APIC base address from the MADT
 2. Read the I/O APIC Interrupt Source Override table
@@ -194,7 +194,7 @@ To configure the I/O APIC we need to:
 
 ### Getting the I/O APIC address
 
-Read I/O APIC information from the MADT (the MADT is available within the RSDT data, we need to search for the MADT item type 1). The contents of the MADT for the I/O APIC type are: 
+Read I/O APIC information from the MADT (the MADT is available within the RSDT data, we need to search for the MADT item type 1). The contents of the MADT for the I/O APIC type are:
 
 | Offset | Length | Description                  |
 |--------|--------|------------------------------|
@@ -205,7 +205,7 @@ Read I/O APIC information from the MADT (the MADT is available within the RSDT d
 
 The I/O APIC ID field is mostly fluff, as we'll be accessing the I/O APIC by its MMIO address, not its ID.
 
-The Global System Interrupt Base is the first interrupt number that the I/O APIC handles. In the case of most systems, with only a single I/O APIC, this will be 0. 
+The Global System Interrupt Base is the first interrupt number that the I/O APIC handles. In the case of most systems, with only a single I/O APIC, this will be 0.
 
 To check the number of inputs an I/O APIC supports:
 
@@ -214,21 +214,21 @@ uint32_t ioapicver = read_ioapic_register(IOAPICVER);
 size_t number_of_inputs = ((ioapicver >> 16) & 0xFF) + 1;
 ```
 
-The number of inputs is encoded as bits 23:16 of the IOAPICVER register, minus one. 
+The number of inputs is encoded as bits 23:16 of the IOAPICVER register, minus one.
 
 
 ### I/O APIC Registers
 
-The I/O APIC has 2 memory mapped registers for accessing the other I/O APIC registers: 
+The I/O APIC has 2 memory mapped registers for accessing the other I/O APIC registers:
 
 | Memory Address | Mnemonic Name | Register Name      | Description                                  |
 |----------------|---------------|--------------------|----------------------------------------------|
 |   FEC0 0000h   | IOREGSEL      | I/O Register Select| Is used to select the I/O Register to access |
 |   FEC0 0010h   | IOWIN         | I/O Window (data)  | Used to access data selected by IOREGSEL     |
 
-And then there are 4 I/O Registers that can be accessed using the two above: 
+And then there are 4 I/O Registers that can be accessed using the two above:
 
-| Name      | Offset   | Description                                            | Attribute | 
+| Name      | Offset   | Description                                            | Attribute |
 |:------------:|----------|--------------------------------------------------------|-----------|
 | IOAPICID  | 00h      | Identification register for the I/O APIC                 |  R/W      |
 | IOAPICVER | 01h      | I/O APIC Version                                        |  RO       |
@@ -238,19 +238,19 @@ And then there are 4 I/O Registers that can be accessed using the two above:
 
 ### Reading data from I/O APIC
 
-There are basically two addresses that we need to use in order to write/read data from apic registers and they are: 
+There are basically two addresses that we need to use in order to write/read data from apic registers and they are:
 
 * APICBASE address, that is the base address of the I/O APIC, called *register select* (or IOREGSEL)  and used to select the offset of the register we want to read
 * APICBASE + 0x10, called *i/o window register* (or IOWIN), is the memory location mapped to the register we intend to read/write specified by the contents of the *Register Select*
 
-The format of the IOREGSEL is: 
+The format of the IOREGSEL is:
 
 | Bit     | Description                                                                                                          |
 |---------|----------------------------------------------------------------------------------------------------------------------|
 | 31:8    | Reserved                                                                                                             |
 | 7:0     | APIC Register Address, they specifies the I/O APIC Registers to be read or written via the IOWIN Register              |
 
-So basically if we want to read/write a register of the I/O APIC we need to: 
+So basically if we want to read/write a register of the I/O APIC we need to:
 
 1. write the register index in the IOREGSEL register
 2. read/write the content of the register selected in IOWIN register
@@ -259,7 +259,7 @@ The actual read or write operation is performed when IOWIN is accessed.
 Accessing IOREGSEL has no side effects.
 
 ### Interrupt source overrides
-They contain differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first I/O APIC sources, but most of the time there will be at least one exception. This table contains those exceptions. 
+They contain differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first I/O APIC sources, but most of the time there will be at least one exception. This table contains those exceptions.
 
 An example is the PIT Timer is connected to ISA IRQ 0, but when apic is enabled it is connected to the I/O APIC interrupt input pin 2, so in this case we need an interrupt source override where the Source entry (bus source) is 0 and the global system interrupt is 2
 The values stored in the I/O APIC Interrupt source overrides in the MADT are:
@@ -271,11 +271,11 @@ The values stored in the I/O APIC Interrupt source overrides in the MADT are:
 | 4      | 4      | Global System Interrupt      |
 | 8      | 2      | Flags                        |
 
-* Bus source usually is constant and is 0 (is the ISA irq source), starting from ACPI v2 it is also a reserved field. 
+* Bus source usually is constant and is 0 (is the ISA irq source), starting from ACPI v2 it is also a reserved field.
 * Irq source is the source IRQ pin
 * Global system interrupt is the target IRQ on the APIC
 
-Flags are defined as follows: 
+Flags are defined as follows:
 
 * Polarity (*Lenght*: **2 bits**, *Offset*: *0*  of the APIC/IO input signals, possible values are:
     * 00 Use the default settings is active-low for level-triggered interrupts)

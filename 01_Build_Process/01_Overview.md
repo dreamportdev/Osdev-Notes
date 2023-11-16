@@ -34,7 +34,7 @@ Both C and C++ have several freestanding headers. The common ones are `stdint.h`
 
 ## Cross Compilation
 
-Often this is not necessary for hobby os projects, as we are running our code on the same cpu architecture that we're compiling on. However it's still recommended to use one as we can configure the cross compiler to the specs we want, rather than relying on the one provided by the host os. 
+Often this is not necessary for hobby os projects, as we are running our code on the same cpu architecture that we're compiling on. However it's still recommended to use one as we can configure the cross compiler to the specs we want, rather than relying on the one provided by the host os.
 
 A cross compiler is always required when building the os for a different cpu architecture. Building code for a `risc-v` cpu, while running on an `x86` cpu would require a cross compiler for example.
 
@@ -81,7 +81,7 @@ If using clang be sure to remember to pass `--target=xyz` with each command. Thi
 
 ### Building C Source Files
 Now that we have a toolchain setup we can test it all works by compiling a C file.
-Create a C source file, it's contents don't matter here as we wont be running it, just telling it compiles.
+Create a C source file, its contents don't matter here as we wont be running it, just telling it compiles.
 
 Run the following to compile the file into an object file, and then to link that into the final executable.
 
@@ -131,21 +131,21 @@ The GCC Linker (`ld`) and the compatible clang linker (`lld.ld`) can accept link
 These describe the layout of the final executable to the linker: what things go where, with what alignment and permissions.
 This is incredibly important for a kernel, as it's the file that will be loaded by the bootloader, which may impose certain restrictions or provide certain features.
 
-These are their own topic, and have a full chapter  dedicated to them later in this chapter. We likely haven't used these when building userspace programs, as our compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) now we need to be explicit about these things. 
+These are their own topic, and have a full chapter  dedicated to them later in this chapter. We likely haven't used these when building userspace programs, as our compiler/os installation provides a default one. However since we're building a freestanding program (the kernel) now we need to be explicit about these things.
 
 A linker script can be simply added appending the `-T script_name_here.ld` to the linker command.
 
 Outside of linker scripts, the linking process goes as following:
 
 ```sh
-$(LD) $(OBJS) -o output_filename_here.elf 
+$(LD) $(OBJS) -o output_filename_here.elf
     -nostdlib -static -pie --no-dynamic-linker
 ```
 
 For an explanation of the above linker flags used:
 
 - `-nostdlib`: this is crucial for building a freestanding program, as it stops the linker automatically including the default libraries for the host platform. Otherwise the program will contain a bunch of code that wants to make syscalls to the host OS.
-- `-static`: A safeguard for linking against other libraries. The linker will error if we try to dynamically link with anything (i.e static linking only). Because again there is no runtime, there is no dynamic linker. 
+- `-static`: A safeguard for linking against other libraries. The linker will error if we try to dynamically link with anything (i.e static linking only). Because again there is no runtime, there is no dynamic linker.
 - `-pie` and `--no-dynamic-linker`: Not strictly necessary, but forces the linker to output a relocatable program with a very narrow set of relocations. This is useful as it allows some bootloaders to perform relocations on the kernel.
 
 One other linker option to keep in mind is `-M`, which displays the link map that was generated. This is a description of how and where the linker allocated everything in the final file. It can be seen as a manual symbol table.
@@ -156,13 +156,13 @@ Now compiling and building one file isn't so bad, but the same process for multi
 
 _Make_ is a common tool used for building many pieces of software due to how easy and common `make` is. Specifically GNU make. GNU make is also chosen as it comes installed by default in many linux distros, and is almost always available if it's not already installed.
 
-There are other make-like tools out there (xmake, nmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make, which is discussed later on in it's chapter.
+There are other make-like tools out there (xmake, nmake) but these are less popular, and therefore less standardized. For the lowest common denominator we'll stick with the original GNU make, which is discussed later on in its chapter.
 
 ## Quick Addendum: Easily Generating a Bootable Iso
 
 There are more details to this, however most bootloaders will provide a tool that lets us create a bootable iso, with the kernel, the bootloader itself and any other files we might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
-While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in it's own chapter.
+While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in its own chapter.
 
 If just here for a quick reference, grub uses `grub-mkrescue` and a `grub.cfg` file, limine reqiures us to build the iso by yourselves with a `limine.cfg` on it, and then run `limine-deploy`.
 
@@ -202,7 +202,7 @@ There are a few other qemu flags we might want to be aware of:
 
 We'll never know when we need to debug your kernel, especially when running in a virtualized environment. Having debug symbols included in the kernel will increase the file size, but can be useful. If we want to remove them from an already compiled kernel the `strip` program can be used to strip excess info from a file.
 
-Including debug info in the kernel is the same as any other program, simply compile with the `-g` flag. 
+Including debug info in the kernel is the same as any other program, simply compile with the `-g` flag.
 
 There are different versions of DWARF (the debugging format used by elf files), and by default the compiler will use the most recent one for our target platform. However this can be overridden and the compiler can be forced to use a different debug format (if needed). Sometimes there can be issues if the debugger is from a different vendor to our compiler, or is much older.
 
@@ -235,7 +235,7 @@ Next we'll want to find the `.symtab` section header, who's contents are an arra
 
 Now to get the name of a section, we'll need to find the matching symbol entry, which will give us the offset of the associated string in the string table. With that we can now access mostly human-readable names for our kernel.
 
-Languages built around the C model will usually perform some kind of name mangling to enable features like function overloading, namespaces and so on. This is a whole topic on it's own. Name mangling can be through of as a translation that takes place, to allow things like function overloading and templates to work in the C naming model.
+Languages built around the C model will usually perform some kind of name mangling to enable features like function overloading, namespaces and so on. This is a whole topic on its own. Name mangling can be through of as a translation that takes place, to allow things like function overloading and templates to work in the C naming model.
 
 ### Locating The Symbol Table
 
@@ -263,7 +263,7 @@ const char* name = strtab_data[example_shdr->sh_name];
 
 Now all that's left is a function that parses the symbol table. It's important to note that some symbols only occupy a single address, like a label or a variable, while others will occupy a range of addresses. Fortunately symbols have a size field.
 
-An example function is included below, showing how a symbol can be looked up by it's address. The name of this symbol is then printed, using a fictional `print` function.
+An example function is included below, showing how a symbol can be looked up by its address. The name of this symbol is then printed, using a fictional `print` function.
 
 ```c
 Elf64_Shdr* sym_tab;
@@ -280,7 +280,7 @@ void print_symbol(uint64_t addr)
 
         if (addr < syms[i].st_value || addr > sym_top)
             continue;
-        
+
         //addr is inside of syms[i], let's print the symbol name
         print(strtab_data[syms[i].st_name]);
         return;
@@ -288,4 +288,4 @@ void print_symbol(uint64_t addr)
 }
 ```
 
-A quick note about getting the symbol table data address: On multiboot `sym_tab->sh_offset` will be the physical address of the data, while stivale2 will return the original value, which is an offset from the beginning of the file. This means for stivale 2 we would add `file_tag->kernel_base` to this address to get it's location in memory.
+A quick note about getting the symbol table data address: On multiboot `sym_tab->sh_offset` will be the physical address of the data, while stivale2 will return the original value, which is an offset from the beginning of the file. This means for stivale 2 we would add `file_tag->kernel_base` to this address to get its location in memory.

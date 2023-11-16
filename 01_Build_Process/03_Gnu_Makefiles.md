@@ -181,7 +181,7 @@ Whew, there's a lot going on there! Let's look at why the various parts exist:
 - When the user runs `make` in the shell, the root makefile is run. This file is mostly configuration, specifying the toolchain and the options it'll use.
 
 - This makefile then recursively calls make on each of the sub-projects.
-    - For example, the kernel makefile will be run, and it will have all of the make variables specified in the root makefile in it's environment.
+    - For example, the kernel makefile will be run, and it will have all of the make variables specified in the root makefile in its environment.
     - This means if we decide to change the toolchain, or want to add debug symbols to *all* projects, we can do it in a single change.
     - Libraries and userland apps work in a similar way, but there is an extra layer. What I've called the glue makefile. It's very simple, it just passes through the make commands from above to each sub project.
     - This means we don't need to update the root makefile every time a new userland app is updated, or a new library.

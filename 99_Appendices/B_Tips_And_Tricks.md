@@ -8,7 +8,7 @@ Rather than reading a `uint64_t`, and then breaking it up into the various field
 
 Let's look at some examples and see how they can be useful. While this technique is useful, it has to be used carefully. If accessing MMIO using a `volatile` instance of a union, be sure to read about access requirements for the underlying hardware. For example a device may expose a 64-bit register, consisting of 8 8-bit fields. However the device may *require* that perform 64-bit reads and writes to the register, in which we will have to read the whole register, and create the union from that value. If the device doesn't have such a requirement, we could instead use a `volatile` union and access it normally.
 
-Imagine we have a function that reads a register and returns it's value as `uint64_t`:
+Imagine we have a function that reads a register and returns its value as `uint64_t`:
 
 ```c
 uint64_t read_register();
