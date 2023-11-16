@@ -2,12 +2,12 @@
 
 ## Pointer arithmetic
 
-Memory Addresses are expressed using numbers, so pointers are basically numbers, that means that we can 
-do some basic arithmetic with them. 
+Memory Addresses are expressed using numbers, so pointers are basically numbers, that means that we can
+do some basic arithmetic with them.
 
-With pointers we have 4 basic operations that can be done: `++, +, --` and `-` 
+With pointers we have 4 basic operations that can be done: `++, +, --` and `-`
 
-For example let's say that we have a variable **ptr** that points to an **uint32_t** location. 
+For example let's say that we have a variable **ptr** that points to an **uint32_t** location.
 
 ```C
 uint32_t *ptr;
@@ -17,7 +17,7 @@ Now for our example let's assume that the base address of ptr is `0x2000`.
 
 This means that we have a 32 bit integer, which is 4 bytes, stored at the address `0x2000`.
 
-Let's see now how does the arithmetic operations above works: 
+Let's see now how does the arithmetic operations above works:
 
 * **ptr++**: increment the pointer to its next value, that is `1 * sizeof(uint32_t) = 4` bytes. That because the pointer is an `uint32_t`. If the pointer is a `char`, the next location is given by: `1 * sizeof(char) = 1` byte
 * **ptr+a**, it increment the pointer of `a * sizeof(uint32_t) = a * 4` bytes
@@ -29,14 +29,14 @@ The result of the arithmetic operation depends on the size of the variable the p
 x * sizeof(variable_type)
 ```
 
-Pointers can be compared too, with the operators: `==, <=, >=, <, >`, of course the comparison is based  on the address contained in the pointer. 
+Pointers can be compared too, with the operators: `==, <=, >=, <, >`, of course the comparison is based  on the address contained in the pointer.
 
-## Inline assembly  
+## Inline assembly
 
-The inline assembly instruction has the following format: 
+The inline assembly instruction has the following format:
 
 ```C
-asm("assembly_template" 
+asm("assembly_template"
     : output_operand
     : input_operand
     : list of clobbered registers
@@ -47,32 +47,32 @@ asm("assembly_template"
 * Clobbered registers can usually be left empty. However if we use an instruction like `rdmsr` which places data in registers without the compiler knowing, we'll want to mark those are clobbered. If we specify eax/edx as output operands, the compiler is smart enough to work this out.
 * One special clobber exists: "memory". This is a read/write barrier. It tells the compiler we've accessed memory other than what was specified as input/ouput operands. The cause of many optimization issues!
 * For every operand type there can be more than one, in this case they must be comma separated.
-* Every operand consists of a constraint and c expression pair. A constrait can also have a modifier itself 
+* Every operand consists of a constraint and c expression pair. A constrait can also have a modifier itself
 * Operands parameters are indicated with an increasing number prefixed by a %, so the first operand declared is %0, the second is %1, etc. And the order they appears in the output/input operands section represent their numbering
 
-Below is the list of the constraint modifiers: 
+Below is the list of the constraint modifiers:
 
 | Symbol |   Meaning               |
 |--------|-------------------------|
-|   =    | Indicates that this is an output operand, whatever was the previous value, it will be discarded and replaced with something else | 
-|   +    | It indicates that the operand is both read and written by the instruction. | 
-|   &    | It indicates that the opreand can be modified before the instruction completion. | 
-|   %    | It means that the instruction is commutative for this operand and the following, so the copiler may interchange the two opreands | 
+|   =    | Indicates that this is an output operand, whatever was the previous value, it will be discarded and replaced with something else |
+|   +    | It indicates that the operand is both read and written by the instruction. |
+|   &    | It indicates that the opreand can be modified before the instruction completion. |
+|   %    | It means that the instruction is commutative for this operand and the following, so the copiler may interchange the two opreands |
 
-The constraints are many and they depends the architecture too. Usually they are used to specify where the value should be stored, if in registers or memory, for more details see the useful links section. 
+The constraints are many and they depends the architecture too. Usually they are used to specify where the value should be stored, if in registers or memory, for more details see the useful links section.
 
 The list below contains some constraints that are worth an explanation:
 
-* 0, 1, ..., 9 - when a constraint is a nuber, it is called a *matching_constraint*, and this means that the same use the same register in output as the corresponding input registers. 
-* m - this constraint indicates to use a memory operand supported by the architecture. 
-* a, b, c, etc. - The etters usually indicate the registers we want to use, so for example a it means rax (or eax or ax depending on the mode), b means rbx (or ebx or bx), etc. 
+* 0, 1, ..., 9 - when a constraint is a nuber, it is called a *matching_constraint*, and this means that the same use the same register in output as the corresponding input registers.
+* m - this constraint indicates to use a memory operand supported by the architecture.
+* a, b, c, etc. - The etters usually indicate the registers we want to use, so for example a it means rax (or eax or ax depending on the mode), b means rbx (or ebx or bx), etc.
 * g - this consrtaint indicates that a general register, memory or immediate operand is used.
 * r - it indicates that it is a register operand is allowed, provided that it is a general purpose register.
 
-An example of an inline assembly instruction of this type is: 
+An example of an inline assembly instruction of this type is:
 
 ```C
-asm("movl %2, %%rcx;" 
+asm("movl %2, %%rcx;"
         "rdmsr;"
         : "=a" (low), "=d" (high)
         : "g" (address)
@@ -81,16 +81,16 @@ asm("movl %2, %%rcx;"
 
 *Note here how eax and ecx are clobbered here, but since they're specified as outputs the compiler implicitly knows this.*
 
-Let's dig into the syntax: 
+Let's dig into the syntax:
 
 * First thing to know is that the order of operands is source, destination
-* When a %% is used to identify a register, it means that it is an operand (it's value is provided in the operand section), otherwise a single % is used.
+* When a %% is used to identify a register, it means that it is an operand (its value is provided in the operand section), otherwise a single % is used.
 * Every operand has it's own constraint, that is the letter in front of the variable referred in the oprand section
 * If an operand is output then it will have a "=" in front of constraint (for example "=a")
 * The operand variable is specified next to the constraint between bracket
 * Even if the example above has only %2, we can say that: %0 is the low varible, %1 is high, and %2 is address.
 
-It is worth mentioning that inline assembly syntax is the At&t syntax, so the usual rules for that apply, for example if we want to use immediate values in an instruction we must prefix them with the `$`, symbol so for example if we want to mov 5 into rcx register: 
+It is worth mentioning that inline assembly syntax is the At&t syntax, so the usual rules for that apply, for example if we want to use immediate values in an instruction we must prefix them with the `$`, symbol so for example if we want to mov 5 into rcx register:
 
 ```C
 asm("movl $5, %rcx;");
@@ -101,18 +101,18 @@ asm("movl $5, %rcx;");
 Different C compilers feature a number of [calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions),
 with different ones having different defaults. GCC and clang follow the system V abi (which includes the calling convention).
 This details things like how arguments are passed to functions, how the stack is organised and other requirements.
-Other compilers can follow different conventions (MSVC has it's own one - not recommended for osdev though), and the calling convention
+Other compilers can follow different conventions (MSVC has its own one - not recommended for osdev though), and the calling convention
 can be overriden for a specific function using attributes. Although this is not recommended as it can lead to strange bugs!
 
 For x86 (32 bit), function calling convention is pretty simple. All arguments are passed on the stack, with the right-most (last arg),
 being pushed first. Stack pushes are 32 bits wide, so smaller values are sign extended. Larger values are pushed as multiple 32 bit components.
-Return values are left in `eax`, and functions are expected to be called with the `call` instruction, which pushes the current `rip` onto the stack, 
+Return values are left in `eax`, and functions are expected to be called with the `call` instruction, which pushes the current `rip` onto the stack,
 so the callee can use `ret` to pop the saved instruction pointer, and return to caller function.
 The callee function also usually creates a new 'stack frame' by pushing `ebp` onto the stack, and then setting `ebp = esp`.
 The callee must undo this before returning. This allows things like easily walking a call stack, and looking at the local variables if we have debug info.
 The caller is expected to save eax, ecx and edx if they have values stored there. All other functions are expected to be maintained by the callee function if used.
 
-For x86_64 (64 bit), function calling is a little more complicated. 
+For x86_64 (64 bit), function calling is a little more complicated.
 64 bit arguments (or smaller, signed extended values) are passed using `rdi, rsi, rdx, rcx, r8, r9` in that order (left to right).
 Floating point or sse sized arguments have their own registers they get passed in, see the sys x x86_64 spec for that.
 Any arguments that don't fit in the above registers are passed on the stack, right to left - like in 32 bit x86.
@@ -121,13 +121,13 @@ Like in x86, functions are expected to run by using the `call` instruction, whic
 This area is reserved by the compiler for *stuff*. What it does here is unspecified, but its usually for efficiency purposes: i.e running smaller functions in this space without the need for a new stack frame. However this is best disabled in the compiler (using `-mno-red-zone`) as the cpu is unaware of this, and will run interrupt handlers inside of the red zone by accident.
 
 ### How to actually use this?
-There's 2 parts: 
+There's 2 parts:
 
 To call c functions from assembly, we'll need to make use of the above info, making sure the correct values are they need to be.
-It's worth noting that a pointer argument is just an integer that contains the memory address of what it's pointing to. 
+It's worth noting that a pointer argument is just an integer that contains the memory address of what it's pointing to.
 These are passed as integer args (registers, than the first if not enough space).
 
-To call an assembly function from C is pretty straight forward. If our assembly function takes arguments in the way described above, we can define a c prototype marked as `extern`, 
+To call an assembly function from C is pretty straight forward. If our assembly function takes arguments in the way described above, we can define a c prototype marked as `extern`,
 and call it like any other function. In this case it's worth respecting the calling convention, and creating a new stack frame (`enter/leave` instructions).
 Any value placed in `eax/rax` will be returned from the c-function if it has a return type. It is otherwise ignored.
 
@@ -191,7 +191,7 @@ Therefore it must do a valid read from memory each time it accesses the variable
 ----
 
 Another example would be an mmio based framebuffer on x86. Normally this results in a lot of smaller accesses, all nearby (think about drawing a line of pixels for example).
-`volatile` could be used to ensure each write to the framebuffer actually happens, and is not cached in a register and written later. This would work perfectly fine, but it's also limits the compiler's options.
+`volatile` could be used to ensure each write to the framebuffer actually happens, and is not cached in a register and written later. This would work perfectly fine, but it also limits the compiler's options.
 
 However in this case, the platform has a built in solution to this problem: write-combine cache mode.
 

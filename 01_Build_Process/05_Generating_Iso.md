@@ -27,11 +27,11 @@ We can now run `grub-mkrescue -o my_iso.iso disk`, and it will generate an iso c
 
 ### Grub.cfg
 
-This file contains some global config options for grub (setting boot timeouts, etc...) as well as a list of boot options for this disk. In our case we only have the one option of our kernel. 
+This file contains some global config options for grub (setting boot timeouts, etc...) as well as a list of boot options for this disk. In our case we only have the one option of our kernel.
 
 Global options can be changed using the `set option=value` syntax, and a list is available from the grub documentation.
 
-For each boot option, a menu entry needs to be created within grub.cfg. A menu entry consists of a header, and then a body containing a series of grub commands to boot the operating system. This allows grub to provide a flexible interface for more complex setups. 
+For each boot option, a menu entry needs to be created within grub.cfg. A menu entry consists of a header, and then a body containing a series of grub commands to boot the operating system. This allows grub to provide a flexible interface for more complex setups.
 
 However in our case, we just want to boot our kernel using the standard multiboot2 protocol. Fortunately grub has a built in command (`multiboot2`) for doing just that:
 
@@ -49,7 +49,7 @@ The process for limine is a little more manual: we must build the iso ourselves,
 
 To get started we'll want to create a working directory to use as the root of our iso. In this case we'll use `disk/`. Next we'll need to clone the latest binary branch of limine (using `git clone https://github.com/limine-bootloader/limine.git --branch=v3.0-branch-binary --depth=1`) and copy 'limine.sys', 'limine-cd.bin', and 'limine-cd-efi.bin' into `disk/limine/`, creating that directory if it doesn't exist.
 
-Now we can copy our `limine.cfg` and kernel into the working directory. The `limine.cfg` file needs to be in one of a few locations in order to be found, the best place is the root directory. 
+Now we can copy our `limine.cfg` and kernel into the working directory. The `limine.cfg` file needs to be in one of a few locations in order to be found, the best place is the root directory.
 
 Now we're ready to run the following xorisso command:
 
@@ -71,7 +71,7 @@ limine-deploy my_iso.iso
 That took a little more work than grub, but this can (and should) be automated as part of the build system. If can't find `limine-deploy` inside the cloned limine directory, we may need to run `make -C limine` from there for it to be build.
 
 ### Limine.cfg
-Similar to grub, limine also uses a config file. This config file has it's own documentation, which is available in the limine repository.
+Similar to grub, limine also uses a config file. This config file has its own documentation, which is available in the limine repository.
 
 Limine.cfg lists each boot entry as a title, followed by a series of key-value pairs. To boot our example from above using stivale 2, our config might look like the following:
 

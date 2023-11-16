@@ -1,20 +1,20 @@
 # Debugging
 
-## GDB 
+## GDB
 
 ### Remote Debugging
 
-First thing Qemu needs to be launched telling it to accepts connections from gdb, it needs the parameters: *-s* and *-S*  added to the command, where: 
+First thing Qemu needs to be launched telling it to accepts connections from gdb, it needs the parameters: *-s* and *-S*  added to the command, where:
 
-* **-s** is a shortand for **-gdb tcp::1234** 
+* **-s** is a shortand for **-gdb tcp::1234**
 * **-S** instead tells the emulator to halt before starting the CPU, in this way you have time to connect the debugger before the OS start.
-To connect with qemu/bochs host configure for remote debugging launch gdb, and type the following command in gdb cli: 
+To connect with qemu/bochs host configure for remote debugging launch gdb, and type the following command in gdb cli:
 
 ```bash
 target remote localhost:1234
 ```
 
-And then you can load the symbols (if you have compiled your os with debugging symbols): 
+And then you can load the symbols (if you have compiled your os with debugging symbols):
 
 ```bash
 symbol-file path/to/kernel.bin
@@ -22,7 +22,7 @@ symbol-file path/to/kernel.bin
 
 ### Useful Commands
 
-Below a list of some useful gdb commands 
+Below a list of some useful gdb commands
 
 * Show register content: *info register reg* where reg is the register we need
 * Set breakpoint to specific address: *break 0xaddress*
@@ -40,8 +40,8 @@ Below a list of some useful gdb commands
 ### Print and Examine Memory
 
 `p/print symbol` can be used to used to print almost anything that makes sense in your program.
-Lets say you have an integer variable i, `p i` will print what i currently is. This takes a c-like syntax, 
-so if you print a pointer, gdb will simply tell you its address. To view it's contents you would need to use `p *i`, like in c.
+Lets say you have an integer variable i, `p i` will print what i currently is. This takes a c-like syntax,
+so if you print a pointer, gdb will simply tell you its address. To view its contents you would need to use `p *i`, like in c.
 `x address` is similar to print, but takes a memory address instead of a symbol.
 
 Both commands accept 'format specifiers' which change the output. For example `p/x i` will print i, formatted as hexadecimal number.
@@ -59,7 +59,7 @@ Here a collection of useful command to keep track of the call stack.
 * `bt/backtrace/info stack` will show you the current call stack, with lower numbers meaning deeper (current breakpoint is stack frame 0).
 * `up/down` can be used to move up and down the callstack.
 * `frame x` will jump directly to frame number x (view frame numbers with `bt`)
-* `info args` will display the arguments passed into the function. It's worth nothing that the first few instructions of a function set up the stack frame, 
+* `info args` will display the arguments passed into the function. It's worth nothing that the first few instructions of a function set up the stack frame,
 so you may need to `si` a few times when entering a function for this to return correct values.
 * `info locals` displays local variables (on the stack). Any variables that have no yet been declared in the source code will have junk values (keep this in mind!).
 * `info variables` is similar to info global and static variables
@@ -71,7 +71,7 @@ A breakpoint can be set in a variety of ways! The command is `b/break symbol`, w
 
 * a function entry: `break init` or `break init()` will break at *any* function named init.
 * a file/line number: `break main.c:42` will break just before the first instruction of line 42 (in main.c) is executed.
-* an address in memory: `break 0x1234` will break whenever the cpu's next instruction is at address 0x1234. 
+* an address in memory: `break 0x1234` will break whenever the cpu's next instruction is at address 0x1234.
 
 Breakpoints can be enabled/disabled at runtime with `enable x`/`disable x` where x is the breakpoint number (displayed when you first it it).
 
@@ -85,26 +85,26 @@ It is possible at any time to print the list of breakpoints using the command: `
 
 And finally breakpoints can be deleted as well using `delete [breakpoints]`
 
-It's worth noting if you're debugging a kernel running with kvm, you wont be able to use software breakpoints (above) like normal. 
+It's worth noting if you're debugging a kernel running with kvm, you wont be able to use software breakpoints (above) like normal.
 GDB does support hardware breakpoints using `hb` instead of `b` for above, although their functionality can be limited, depending on what the hardware supports.
 Best to do serious debugging without kvm, and only use hardware debugging when absolutely necessary.
 
 ### Variables
 
-While debugging with gdb, we can change the value of the variables in the code being executed. To do that we just need the command: 
+While debugging with gdb, we can change the value of the variables in the code being executed. To do that we just need the command:
 
 ```gdb
 set variable_name=value
 ```
 
-where `variable_name` is a variable present in the code being debugged. This is extermely useful in the cases where we want to test some edge cases, that are hard to reproduce. 
+where `variable_name` is a variable present in the code being debugged. This is extermely useful in the cases where we want to test some edge cases, that are hard to reproduce.
 
 ### TUI - Text User Interface
 This area of gdb is hilariously undocumented, but still really useful. It can be entered in a number of ways:
 
 * `layout xyz`, will drop into a 1 window tui with the specified data in the main window. This can be 'src' for the source code, 'regs' for registers, or 'asm' for assembly.
 * Control-X + 1 will enter a 1 window tui, Control-X 2 will enter a 2 window tui. Pressing these will cycle window layouts. Trying is easier than explaining here!
-* `tui enable` will do the same the first option, but defaults to asm layout. 
+* `tui enable` will do the same the first option, but defaults to asm layout.
 
 Tui layouts can be switched at any time, or you can return to your regular shell at any time using `tui disable`, or exiting gdb.
 
@@ -133,38 +133,38 @@ vboxmanage list vms
 
 It will show for every virtual machine, its label and its UUID
 
-* To launch a VM from command line: 
+* To launch a VM from command line:
 
 ```bash
 virtualboxvm --startvm vmname
  ```
 
-You can use either the Virtual Machine name, or its uuid. 
+You can use either the Virtual Machine name, or its uuid.
 
 ### Debugging a Virtual Machine
 
-To run a VM with debug you need two things: 
+To run a VM with debug you need two things:
 
-* The first one is either the `VBOX_GUI_DBG_ENABLED` or `VBOX_GUI_DBG_AUTO_SHOW` set to true 
-* Launch the virtual machine with the `--debug` option: 
+* The first one is either the `VBOX_GUI_DBG_ENABLED` or `VBOX_GUI_DBG_AUTO_SHOW` set to true
+* Launch the virtual machine with the `--debug` option:
 
 ```bash
 virtualboxvm --startvm vmname --debug
 ```
 
-this will open the Virtual Machine with the Debugger command line and ui. 
+this will open the Virtual Machine with the Debugger command line and ui.
 
 ## Qemu
 
 ## Qemu Interrupt Log
 
-If you are using qemu, a good idea is to dump registers when an exception occurs, you just need to add the following option to qemu command: 
+If you are using qemu, a good idea is to dump registers when an exception occurs, you just need to add the following option to qemu command:
 
 ```bash
 qemu -d int
 ```
 
-Sometime could be needed to avoid the emulator restart on triple fault, in this case to catch the "offending" exception, just add: 
+Sometime could be needed to avoid the emulator restart on triple fault, in this case to catch the "offending" exception, just add:
 
 ```bash
 qemu -d int -no-reboot
@@ -174,28 +174,28 @@ While debugging with gdb, we may want to keep qemu hanging after a triple fault 
 
 ### Qemu Monitor
 
-Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger. 
+Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger.
 
-One way to start Qemu monitor on a unix system is using the following parameter when starting qemu: 
+One way to start Qemu monitor on a unix system is using the following parameter when starting qemu:
 
 ```bash
 qemu-system-i386 [..other params..] -monitor unix:qemu-monitor-socket,server,nowait
 ```
 
-then on another shell, on the same folder where you started the emulator launch the following command: 
+then on another shell, on the same folder where you started the emulator launch the following command:
 
 ```bash
 socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
-``` 
+```
 
-This will prompt with a shell similar to the following: 
+This will prompt with a shell similar to the following:
 
 ```bash
 username@host:~/yourpojectpath/$ socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
 QEMU 6.1.0 monitor - type 'help' for more information
-(qemu) 
+(qemu)
 
-``` 
+```
 
 From here you can send commands directly to the emulator, below a list of useful commands:
 
@@ -206,7 +206,7 @@ From here you can send commands directly to the emulator, below a list of useful
 
 #### Info mem & Info tlb
 
-These commands are very useful when we need to debug memory related issues, the first command `info mem` will print the list of active virtual memory mappings, the output format depends on the architecture, for exmple on `x86-64`, it will be similar to the following: 
+These commands are very useful when we need to debug memory related issues, the first command `info mem` will print the list of active virtual memory mappings, the output format depends on the architecture, for exmple on `x86-64`, it will be similar to the following:
 
 ```
 info mem
@@ -234,7 +234,7 @@ ffffffff80069000: 0000000009951000 XG-DA---W
 ffffffff8006a000: 0000000009952000 XG-DA---W
 ```
 
-In this case the line contains: _virtualaddress: physicaladdress flags_. The command is not available on all architecture, so if developing on an architecture different from `x86-64` it could not be available. 
+In this case the line contains: _virtualaddress: physicaladdress flags_. The command is not available on all architecture, so if developing on an architecture different from `x86-64` it could not be available.
 
 ### Debugcon
 

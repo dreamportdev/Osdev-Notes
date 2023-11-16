@@ -14,7 +14,7 @@ One helpful mitigation for this is to set the WP bit, which is bit 16 of cr0. On
 
 Two separate features that serve similar enough purposes, that they're often grouped together.
 
-SMEP (Supervisor Memory Execute Protection) checks that while in a supervisor ring the next instruction isn't being fetched from a user page. If the cpu sees that the cpl < 3 and the instruction comes from a user page, it will generate a page fault, allowing the kernel to take action. 
+SMEP (Supervisor Memory Execute Protection) checks that while in a supervisor ring the next instruction isn't being fetched from a user page. If the cpu sees that the cpl < 3 and the instruction comes from a user page, it will generate a page fault, allowing the kernel to take action.
 
 SMAP (Supervisor Memory Access Protection) will generate a page fault if the supervisor attempts to read or write to a user page. This is quite useful, but it brings up an interesting problem: how do the kernel and userspace programs communicate now? Well the engineers at Intel thought of this, and have repurposed the AC (alignment check) bit in the flags register. When AC is cleared, SMAP is active and will generate faults. When AC is set SMAP is temporarily disabled and supervisor rings can access user pages until AC is cleared again. Like most of the other flag bits, AC has dedicated instructions to set (`stac`) and clear (`clac`) it.
 
@@ -66,7 +66,7 @@ void* page_heap_alloc(size_t size, bool detect_overrun) {
     //if we don't want to detect overruns, detect underruns instead.
     if (!detect_overrun)
         return pages;
-    
+
     return (void*)((uint64_t)pages + (pages_required * PAGE_SIZE_IN_BYTES - size));
 }
 ```

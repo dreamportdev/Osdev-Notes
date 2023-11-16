@@ -5,7 +5,7 @@
 Let's refine some of the previous definitions:
 
 * *Process*: A process can be thought of as representing a single running program. A program can be multi-threaded, but it is still a single program, running in a single address space and with one set of resources. Resources in this context refer to things like file handles. All of this information is stored in a process control block (PCB).
-* *Thread*: A thread represents an instance of running code. They live within the environment of a process and multiple threads with a process share the same resources, including the address space. This allows them share memory directly to communicate, as opposed to two processes which would need to use some form of IPC (which involves the kernel). While the code a thread is running can be shared, each thread must have it's own stack and context (saved registers).
+* *Thread*: A thread represents an instance of running code. They live within the environment of a process and multiple threads with a process share the same resources, including the address space. This allows them share memory directly to communicate, as opposed to two processes which would need to use some form of IPC (which involves the kernel). While the code a thread is running can be shared, each thread must have its own stack and context (saved registers).
 
 With these definitions is possible to create a cross-section of scheduler configurations:
 
@@ -100,7 +100,7 @@ One of the most useful features of modern processors is paging. This allows us t
 
 Now we have the issue of how these isolated processes communicate with each other? This is called IPC (Inter-Process Communication) and is not covered in this chapter, but it is worth being aware of.
 
-One thing to note with this, is that while each process has it's own address space, the kernel exists in *all* address spaces. This is where a higher half kernel is useful: since the kernel lives entirely in the higher half, the higher half of any address space can be the same.
+One thing to note with this, is that while each process has its own address space, the kernel exists in *all* address spaces. This is where a higher half kernel is useful: since the kernel lives entirely in the higher half, the higher half of any address space can be the same.
 
 Keeping track of an address space is fairly simple, it requires an extra field in the process control block to hold the root page table:
 
@@ -121,7 +121,7 @@ If we are using the recursion techcnique to access entries on page directories o
 
 Copying the higher half page tables like this can introduce a subtle issue: If the kernel modifies a pml4 entry in one process the changes won't be visible in any of the other processes. Let's say the kernel heap expands across a 512 GiB boundary, this would modify the next pml4 (since each pml4 entry is responsible for 512 GiB of address space). The current process would be able to see the new part of the heap, but upon switching processes the kernel could fault when trying to access this memory.
 
-While we're not going to implement a solution to this, but it's worth being aware of. One possible solution is to keep track of the current 'generation' of the kernel pml4 entries. Everytime a kernel pml4 is modified the generation number is increased, and whenever a new processes is loaded it's kernel pml4 generation is checked against the current generation. If the current generation is higher, we copy it's kernel tables over, and now the page tables are synchronized again.
+While we're not going to implement a solution to this, but it's worth being aware of. One possible solution is to keep track of the current 'generation' of the kernel pml4 entries. Everytime a kernel pml4 is modified the generation number is increased, and whenever a new processes is loaded its kernel pml4 generation is checked against the current generation. If the current generation is higher, we copy its kernel tables over, and now the page tables are synchronized again.
 
 Don't forget to load the new process's page tables before leaving the `schedule()`.
 
@@ -129,7 +129,7 @@ Don't forget to load the new process's page tables before leaving the `schedule(
 
 Let's talk about the heap for a moment. With each process being isolated, they can't really share any data, meaning they can't share a heap, and will need to bring their own. The way this usually works is programs link with a standard library, which includes a heap allocator. This heap is exposed through the familiar `malloc()`/`free()` functions, but behind the scenes this heap is calling the VMM and asking for more memory when needed.
 
-Of course the kernel is the exception, because it doesn't live in it's own process, but instead lives in *every* process. Its heap is available in every process, but can only be used by the kernel.
+Of course the kernel is the exception, because it doesn't live in its own process, but instead lives in *every* process. Its heap is available in every process, but can only be used by the kernel.
 
 What this means is when we look at loading programs in userspace, these programs will need to provide their own heap. However we're only running threads within the kernel right now, so we can just use the kernel heap.
 
@@ -182,7 +182,7 @@ Threads within the same process share a lot of things:
 - The virtual address space, which is managed by the VMM, so this is included too.
 - Resource handles, like sockets or open files.
 
-Each thread will need it's own stack, and it's own context. That's all that's needed for a thread, but we may want to include fields for a unique id and human-readable name, similar to a process. This brings up the question of do we use the same pool of ids for threads and processes? There's no good answer here, it is possible, but is also possible to use separate pools. The choice is personal!
+Each thread will need its own stack, and its own context. That's all that's needed for a thread, but we may want to include fields for a unique id and human-readable name, similar to a process. This brings up the question of do we use the same pool of ids for threads and processes? There's no good answer here, it is possible, but is also possible to use separate pools. The choice is personal!
 
 We'll also need to keep track of the thread's current status, and we may want some place to keep some custom flags (is it a kernel thread vs user thread etc).
 
@@ -309,9 +309,9 @@ void thread_exit() {
 
 At this point the thread can exit succesfully, but the thread's resources are still around. The big ones are the thread control block and the stack. They can be freed in the `thread_exit` but be careful we're not exiting the current thread. If we do, we'll free the stack being currently used. We could switch to a kernel-only stack here, and then safely free the stack.
 
-Alternatively the thread could be placed into a 'cleanup queue' that is processed by a special thread that frees the resources associated with threads. Since the cleanup thread has it's own stack and resources, we can safely free those in the queued threads.
+Alternatively the thread could be placed into a 'cleanup queue' that is processed by a special thread that frees the resources associated with threads. Since the cleanup thread has its own stack and resources, we can safely free those in the queued threads.
 
-Another option, which we've chosen here, is to update the thread's status here. Then when the scheduler encounters a thread in the DEAD state, it will free it's resources there.
+Another option, which we've chosen here, is to update the thread's status here. Then when the scheduler encounters a thread in the DEAD state, it will free its resources there.
 
 Note that we use an infinite loop at the end of `thread_exit` since that function cannot return (it would return to the junk after the thread's main function). This will busy-wait until the end of the current quantum, however we could also call the scheduler to reschedule early here.
 

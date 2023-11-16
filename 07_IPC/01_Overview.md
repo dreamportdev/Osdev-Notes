@@ -13,6 +13,6 @@ All IPC can be broken down into two forms:
 
 ## Single-Copy vs Double-Copy
 
-These terms refer to the number of times the data must be copied before reaching it's destination. Message passing as described above is double-copy (process A's buffer is copied to the kernel buffer, kernel buffer is copied to process B's buffer). There are ways to implement single-copy of course.
+These terms refer to the number of times the data must be copied before reaching its destination. Message passing as described above is double-copy (process A's buffer is copied to the kernel buffer, kernel buffer is copied to process B's buffer). There are ways to implement single-copy of course.
 
 For fun, we can think of shared memory as 'zero-copy', since the data is never copied at all.

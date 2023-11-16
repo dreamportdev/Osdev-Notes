@@ -1,6 +1,6 @@
 # ACPI Tables
 
-ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like the amount of power on each device, thermal zones, fan control, IRQs, battery levels, etc. 
+ACPI (Advanced Configuration and Power Interface) is a Power Management and configuration standard for the PC, it allows operating systems to control many different hardware features, like the amount of power on each device, thermal zones, fan control, IRQs, battery levels, etc.
 
 We need to access the ACPI Tables in order to read the IO-APIC information, used to receive hardware interrupts (it will be explained later).
 
@@ -18,21 +18,21 @@ The newer version is backward compatible with the older.
 
 #### Accessing the RSDP
 
-Accessing the RSDP register depends on the boot system used, if we are using grub, we get a copy of the RSDT/XSDT in one of the multiboot2 header tags. The specs contains two possible tags for the RSDP value, which one is used depend on the version: 
+Accessing the RSDP register depends on the boot system used, if we are using grub, we get a copy of the RSDT/XSDT in one of the multiboot2 header tags. The specs contains two possible tags for the RSDP value, which one is used depend on the version:
 
 * For the version 1 the MULTIBOOT_TAG_TYPE_ACPI_OLD is used (type 14)
 * For the version 2 the MULTIBOOT_TAG_TYPE_ACPI_NEW is used (type 15)
 
-Both headers are identical, with the only difference being in the type value, they are composed of just two fields: 
+Both headers are identical, with the only difference being in the type value, they are composed of just two fields:
 
 * The type field that can be 14 or 15 depending on the version
 * The size of the RSDP
 
-And is followed by the RSDP itself. 
+And is followed by the RSDP itself.
 
 #### RSDP Structure
 
-As already mentioned there are two different version of RSDP, basic data structure for RSDP v1 is: 
+As already mentioned there are two different version of RSDP, basic data structure for RSDP v1 is:
 
 ```c
 struct RSDPDescriptor {
@@ -44,15 +44,15 @@ struct RSDPDescriptor {
 } __attribute__ ((packed));
 ```
 
-Where the fields are: 
+Where the fields are:
 
-* *Signature*: Is an 8 byte string, that must contain: "RSDT PTR " **P.S. The string is not null terminated** 
+* *Signature*: Is an 8 byte string, that must contain: "RSDT PTR " **P.S. The string is not null terminated**
 * *Checksum*: The value to add to all the other bytes (of the Version 1.0 table) to calculate the Checksum of the table. If this value added to all the others and casted to byte isn't equal to 0, the table must be ignored.
-* *OEMID*: Is a string that identifies the OEM 
+* *OEMID*: Is a string that identifies the OEM
 * *Revision*: Is the revision number
 * *RSDTAddress*: The address of the RSDT Table
 
-The structure for the v2 header is an extension of the previous one, so the fields above are still valid, but in addition it has also the following extra-fields: 
+The structure for the v2 header is an extension of the previous one, so the fields above are still valid, but in addition it has also the following extra-fields:
 
 ```c
 struct RSDP2Descriptor {
@@ -70,7 +70,7 @@ struct RSDP2Descriptor {
 
 #### RSDP Validation
 
-Before proceeding, let's explain a little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just matter of cycling a byte array. Here the example code: 
+Before proceeding, let's explain a little bit better the validation. For both version what we need to check is that the sum of all bytes composing the descriptor structure have last byte equals to 0. How is possible to achieve that, and keep the same function for both? That is pretty easy, we just need cast the `RSDP*Descriptor` to a char pointer, and pass the size of the correct struct. Once we have done that is just matter of cycling a byte array. Here the example code:
 
 ```c
 bool validate_RSDP(char *byte_array, size_t size) {
@@ -87,7 +87,7 @@ Having last byte means that `result mod 0x100` is 0. Now there are two ways to t
 * Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored.
 * Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with `0xFF` value (`0xFF` is equivalent to the `0b11111111` byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.
 
-The function above works perfectly with both versions of descriptors. 
+The function above works perfectly with both versions of descriptors.
 In the XSDT, since it has more fields, the previous checksum field won't offset them properly (because it doesn't know about them), so this is why an extended checksum field is added.
 
 ### RSDT Data structure and fields
@@ -111,7 +111,7 @@ struct ACPISDTHeader {
     uint32_t CreatorRevision;
 };
 ```
-* The second part is the table itself, every SDT has it's own table
+* The second part is the table itself, every SDT has its own table
 
 #### RSDT vs XSDT
 
@@ -133,7 +133,7 @@ struct XSDT {
 };
 ```
 
-This means that if we want to get the n-th SDT table we just need to acces the corresponding item in the *SDT array: 
+This means that if we want to get the n-th SDT table we just need to acces the corresponding item in the *SDT array:
 
 ```c
 //to get the sdt header at n index

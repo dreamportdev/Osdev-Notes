@@ -97,9 +97,9 @@ Now we can use the configure script like before:
 For brevity we'll only explain the new flags:
 
 - `--enable-languages=c,c++`: select which language frontends to enable, these two are the default. We can disable c++ but if we plan to cross compile more things than our kernel this can be nice to have.
-- `--without-headers`: tells the compiler not to rely on any headers from the host and instead generate it's own.
+- `--without-headers`: tells the compiler not to rely on any headers from the host and instead generate its own.
 
-Once the script is finished we can run a few make targets to build the compiler and it's support libraries. By default running `make`/`make all` is not recommended as this builds everything for a full userspace compiler. We don't need all that and it can take a lot of time. For a freestanding program like a kernel we only need the compiler and libgcc.
+Once the script is finished we can run a few make targets to build the compiler and its support libraries. By default running `make`/`make all` is not recommended as this builds everything for a full userspace compiler. We don't need all that and it can take a lot of time. For a freestanding program like a kernel we only need the compiler and libgcc.
 
 ```bash
 make all-gcc
@@ -124,26 +124,26 @@ Since `clang` and `lld` are compatible with the `gcc/binutils` versions of these
 
 ## Emulator (QEmu)
 
-Of course we can use any emulator we want, but in our example we rely on qemu. This tool to be compiled requires some extra dependencies: 
+Of course we can use any emulator we want, but in our example we rely on qemu. This tool to be compiled requires some extra dependencies:
 
 * ninja-build
-* python3-sphinx 
+* python3-sphinx
 * sphinx-rtd-theme
 * If we want to use the gtk ui, we also need libgtk3-dev
 
-As usual let's create a new folder called `build_qemu` and move into it. The confiure command is: 
+As usual let's create a new folder called `build_qemu` and move into it. The confiure command is:
 
 ```bash
-/path/qemu_src/configure --prefix=$PREFIX --target-list=riscv64-softmmu --enable-gtk --enable-gtk-clipboard --enable-tools --enable-vhost-net 
+/path/qemu_src/configure --prefix=$PREFIX --target-list=riscv64-softmmu --enable-gtk --enable-gtk-clipboard --enable-tools --enable-vhost-net
 ```
-where: 
+where:
 
 * `--target-list=riscv64-softmmu,x86_64`: is a comma separated list of platforms we want to support.
 * `--enable-tools`: will build support utilities that comes with qemu
 * `--enable-gtk`: it will enable the gtk+ interface
 * `--enable-vhost-net` : it will enable the vhost-net kernel acceleration support
 
-After the configuration has finished, to build qemu the commands to install it: 
+After the configuration has finished, to build qemu the commands to install it:
 
 ```bash
 make -j $(nproc)
@@ -151,7 +151,7 @@ make install
 ```
 
 Qemu is quite a large program, so it's recommended to make use of all cores when building it.
- 
+
 ## GDB
 
 The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need:

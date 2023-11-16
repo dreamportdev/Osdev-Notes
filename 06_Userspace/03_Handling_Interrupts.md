@@ -58,7 +58,7 @@ The layout of the TSS system descriptor is broken down below in the following ta
 | 15:0   | 0xFFFF           | Represents the limit field for this segment. |
 | 31:16 | TSS address bits 15:0 | Contains the lowest 16 bits of the tss address. |
 | 39:32  | TSS address bits 23:16 | Contains the next 8 bits of the tss address. |
-| 47:40  | 0b10001001 | Sets the type of GDT descriptor, it's DPL (bits 45:46) to 0, marks it as present (bit 47). Bit 44 (S) along with bits 40 to 43 indicate the type of descriptor. If curious as to how this value was created, see the  intel SDM manual or our section about the GDT.|
+| 47:40  | 0b10001001 | Sets the type of GDT descriptor, its DPL (bits 45:46) to 0, marks it as present (bit 47). Bit 44 (S) along with bits 40 to 43 indicate the type of descriptor. If curious as to how this value was created, see the  intel SDM manual or our section about the GDT.|
 | 48:51 | Limit 16:9 | The higher part of the limit field, bits 9 to 16 |
 | 55:52  | 0bG000A | Additional fields for the TSS entry. Where G (bit 55) is the granularity bit and A (bit 52) is a bit left available to the operating system. The other bits must be left as 0 |
 | 63:56  | TSS address bits 31:24 | Contains the next 8 bits of the tss address. |
@@ -92,13 +92,13 @@ Now that we have a TSS, lets review what happens when the cpu is in user mode, a
 
 Something to be aware of if we support multiple cores is that the TSS has no way of ensuring exclusivity. Meaning if core 0 loads the `rsp0` stack and begins to use it for an interrupt, and core 1 gets an interrupt it will also happily load `rsp0` from the same TSS. This ultimately leads to much hair pulling and confusing stack corruption bugs.
 
-The easiest way to handle this is to have a separate TSS per core. Now we can ensure that each core only accesses it's own TSS and the stacks within. However we've created a new problem here: Each TSS needs it's own entry in the GDT to be loaded, and we can't know how many cores (and TSSs) we'll need ahead of time.
+The easiest way to handle this is to have a separate TSS per core. Now we can ensure that each core only accesses its own TSS and the stacks within. However we've created a new problem here: Each TSS needs its own entry in the GDT to be loaded, and we can't know how many cores (and TSSs) we'll need ahead of time.
 
 There's a few ways to go about this:
 
 - Each core has a separate GDT, allowing us to use the same selector in each GDT for that core's TSS. This option uses the most memory, but is the most straightforward to implement.
 - Have a single GDT shared between all cores, but each core gets a separate TSS selector. This would require some logic to decide which core uses which selector.
-- Have a single GDT and a single TSS descriptor within it. This works because the task register caches the values it loads from the GDT until it is next reloaded. Since the TR is never changed by the cpu, if we never change it ourselves, we are free to change the TSS descriptor after using it to load the TR. This would require logic to determine which core can use the TSS descriptor to load it's own TSS. Uses the least memory, but the most code of the three options.
+- Have a single GDT and a single TSS descriptor within it. This works because the task register caches the values it loads from the GDT until it is next reloaded. Since the TR is never changed by the cpu, if we never change it ourselves, we are free to change the TSS descriptor after using it to load the TR. This would require logic to determine which core can use the TSS descriptor to load its own TSS. Uses the least memory, but the most code of the three options.
 
 ### Software Interrupts
 
@@ -108,4 +108,4 @@ While this is a good default behaviour, as it stops a user program from being ab
 
 Fortunately the solution is less words than the question: Set the DPL field to 3.
 
-Now any attempts to call an IDT entry with a `DPL < 3` will still cause a general protection fault. If the entry has `DPL == 3`, the interrupt handler will be called as expected. Note that the handler runs with the code selector of the IDT entry, which is kernel code, so care should be taken when accessing data from the user program. This is how most legacy system calls work, linux uses the infamous `int 0x80` as it's system call vector.
+Now any attempts to call an IDT entry with a `DPL < 3` will still cause a general protection fault. If the entry has `DPL == 3`, the interrupt handler will be called as expected. Note that the handler runs with the code selector of the IDT entry, which is kernel code, so care should be taken when accessing data from the user program. This is how most legacy system calls work, linux uses the infamous `int 0x80` as its system call vector.
