@@ -33,3 +33,4 @@ Third Book Release
 
 * Add more information on the Memory protection chapter, abouit its future implications
 * Emergency grammar fix!
+* Fix tss structure in Userspace/Handling_Interrupt chapter.
