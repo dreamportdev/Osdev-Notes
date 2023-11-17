@@ -10,7 +10,7 @@ What the physical memory manager has to take care of as its bare minimum is:
 2. Check if given an address it is already used or not
 3. Allocate/free a page
 
-In this document we will explain the bitmap method, because is probably the simplest to understand for a beginner. To keep the explanation simple, we will assume that the kernel will support only one page size.
+In this chapter we will explain the bitmap method, because is probably the simplest to understand for a beginner. To keep the explanation simple, we will assume that the kernel will support only one page size.
 
 ## The Bitmap
 

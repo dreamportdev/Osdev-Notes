@@ -15,14 +15,14 @@ As for the legacy part? `X86` is an old architecture, oringinally it had no conc
 The TSS served a different purpose on `x86` (protected mode, not `x86_64`), and was for *hardware task switching*. Since this proved to be slower than *software task switching*, this functionality was removed in long-mode. The 32 and 64 bit TSS structures are very different and not compatible. Note that the example below uses the `packed` attribute, as is always a good idea when using structures that are dealing with hardware directly. We want to ensure our compiler lays out the memory as we expect. A `C` version of the long mode TSS is given below:
 
 ```c
-__attribute__((packed))
-struct tss
+typedef struct tss
 {
     uint32_t reserved0;
     uint64_t rsp0;
     uint64_t rsp1;
     uint64_t rsp2;
     uint64_t reserved1;
+    uint64_t reserved2;
     uint64_t ist1;
     uint64_t ist2;
     uint64_t ist3;
@@ -30,10 +30,10 @@ struct tss
     uint64_t ist5;
     uint64_t ist6;
     uint64_t ist7;
-    uint64_t reserved2;
-    uint16_t reserved3;
+    uint64_t reserved3;
+    uint16_t reserved4;
     uint16_t io_bitmap_offset;
-};
+}__attribute__((__packed__)) tss_t;
 ```
 
 As per the manual, the reserved fields should be left as zero. The rest of the fields can be broken up into three groups:
