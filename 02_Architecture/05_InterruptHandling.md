@@ -2,7 +2,7 @@
 
 As the title implies, this chapter is purely focused on `x86_64`. Other platforms will have different mechanisms for handling interrupts.
 
-If not familiar with the term *interrupt*, it's a way for the cpu to tell our code that something unexpected or unpredictable has happened, and that it needs to be handled. When an interrupt is triggered, the cpu will *serve* the interrupt by loading the *interrupt handler* specified. The handler itself is just a function, but with a few special conditions. 
+If not familiar with the term *interrupt*, it's a way for the cpu to tell our code that something unexpected or unpredictable has happened, and that it needs to be handled. When an interrupt is triggered, the cpu will *serve* the interrupt by loading the *interrupt handler* specified. The handler itself is just a function, but with a few special conditions.
 
 __Interrupts__ get their name because they interrupt the normal flow of execution, stop whatever code was running on the cpu, execute a handler function, and then resume the previously running code. Interrupts can signal a number of events from the system, from fatal errors to a device telling us it has some data ready to be read.
 
@@ -17,7 +17,7 @@ There will be situations where we don't want to be interrupted, usually in some 
 
 ### Non-Maskable Interrupts
 
-When the interrupt flag is cleared, most interrupts will be *masked*, meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's perfectly acceptable to simply have the operating system panic in this case. 
+When the interrupt flag is cleared, most interrupts will be *masked*, meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's perfectly acceptable to simply have the operating system panic in this case.
 
 *Authors note: Don't let NMIs scare you, we've never run actually run into one on real hardware. You do need to be aware that they exist and can happen at any time, regardless of the interrupt flag.*
 
@@ -54,9 +54,9 @@ struct interrupt_descriptor
 Note the use of the packed attribute! Since this structure is processed by hardware, we don't want the compiler to insert any padding in our struct, we want it to look exactly as we defined it (and be exactly 128 bits long, like the manual says).
 The three `address_` fields represent the 64-bit address of our handler function, split into different parts: with `address_low` being bits 15:0, `address_mid` is bits 31:16 and `address_high` is bits 63:32. The `reserved` field should be set to zero, and otherwise ignored.
 
-The selector field is the *code selector* the cpu will load into `%cs` before running the interrupt handler. This should be our kernel code selector. Since the kernel code selector should be running in ring 0, there is no need to set the RPL field. This selector can just be the byte offset into the GDT we want to use. 
+The selector field is the *code selector* the cpu will load into `%cs` before running the interrupt handler. This should be our kernel code selector. Since the kernel code selector should be running in ring 0, there is no need to set the RPL field. This selector can just be the byte offset into the GDT we want to use.
 
-The `ist` field can safely be left at zero to disable the IST mechanism. For the curious, this is used in combination with the TSS to force the cpu to switch stacks when handling a specific interrupt vector. This feature can be useful for certain edge cases like handling NMIs. ISTs and the TSS are covered later on when we go to userspace. 
+The `ist` field can safely be left at zero to disable the IST mechanism. For the curious, this is used in combination with the TSS to force the cpu to switch stacks when handling a specific interrupt vector. This feature can be useful for certain edge cases like handling NMIs. ISTs and the TSS are covered later on when we go to userspace.
 
 The `flags` field is a little more complex, and is actually a bitfield. Its format is as follows:
 
@@ -72,7 +72,7 @@ Let's look closer at the type field. We have two options here, with only one dif
 - Interrupt gate: `0b1110`.
 - Trap gate: `0b1111`.
 
-The DPL field is used to control which cpu rings can trigger this vector with a software interrupt. On `x86` there are four protection rings (0 being the most privileged, 3 the least). Setting DPL = 0 means that only ring 0 can issue a software interrupt for this vector, if a program in another ring tries to do this it will instead trigger a *general protection fault*. For now we have no use for software interrupts, so we'll set this to 0 to only allow ring 0 to trigger them. 
+The DPL field is used to control which cpu rings can trigger this vector with a software interrupt. On `x86` there are four protection rings (0 being the most privileged, 3 the least). Setting DPL = 0 means that only ring 0 can issue a software interrupt for this vector, if a program in another ring tries to do this it will instead trigger a *general protection fault*. For now we have no use for software interrupts, so we'll set this to 0 to only allow ring 0 to trigger them.
 
 That's a lot writing, but in practice it won't be that complex. Let's create a function to populate a single IDT entry for us. In this example we'll assume the kernel code selector is 0x8, but it may not be.
 
@@ -100,7 +100,7 @@ In the above example we just used an array of descriptors for our IDT, because t
 
 ### Loading an IDT
 
-We can fill in the IDT, now we need to tell the cpu where it is. This is where the `lidt` instruction comes in. It's nearly identical to how the `lgdt` instruction works, except it loads the IDTR instead of the GDTR. To use this instruction we'll need to use a temporary structure, the address of which will be used by `lidt`. 
+We can fill in the IDT, now we need to tell the cpu where it is. This is where the `lidt` instruction comes in. It's nearly identical to how the `lgdt` instruction works, except it loads the IDTR instead of the GDTR. To use this instruction we'll need to use a temporary structure, the address of which will be used by `lidt`.
 
 ```c
 struct idtr
@@ -147,13 +147,13 @@ There is also one other thing: when an interrupt is served the cpu will store so
 - `%rip`: The previous instruction pointer.
 
 Optionally, for some vectors the cpu will push a 64-bit error code (see the table below for specifics).
-This structure is known as an *iret frame*, because to return from an interrupt we use the `iret` instruction, which pops those five values from the stack. 
+This structure is known as an *iret frame*, because to return from an interrupt we use the `iret` instruction, which pops those five values from the stack.
 
 Hopefully the flow of things is clear at this point: the cpu serves the interrupt, pushes those five values onto the stack. Our handler function runs, and then executes the `iret` instruction to pop the previously pushed values off the stack, and returns to the interrupted code.
 
 ### An Example Stub
 
-Armed with the above infomation, now we should be able to implement our own handler stubs. One common way to do this is using an assembler macro. Here we would create one macro that pushes all registers, calls a C function and then pops all registers before executing `iret`. What about the optional error code? Well, the easiest solution is to define *two* macros, one like the previous one, and another that pushes a pretend error code of 0, before pushing all the general registers. Because we know which vectors push an error code and which don't, we can change which macro we use. 
+Armed with the above infomation, now we should be able to implement our own handler stubs. One common way to do this is using an assembler macro. Here we would create one macro that pushes all registers, calls a C function and then pops all registers before executing `iret`. What about the optional error code? Well, the easiest solution is to define *two* macros, one like the previous one, and another that pushes a pretend error code of 0, before pushing all the general registers. Because we know which vectors push an error code and which don't, we can change which macro we use.
 
 The benefit of this is our stack will always look the same regardless of whether a real error was used or not. This allows us to do all sorts of things later on.
 
@@ -171,7 +171,7 @@ push %r15
 
 call interrupt_disaptch
 
-pop %15
+pop %r15
 pop %r14
 //push other registers here
 pop %rbx
@@ -183,7 +183,7 @@ add $16, %rsp
 iret
 ```
 
-You'll notice we added 16 bytes to the stack before the `iret`. This is because there will be an error code (real or dummy) and the vector number that we need to remove, so that the iret frame is at the top of the stack. If we don't do this, `iret` will use the wrong data and likely trigger a general protection fault.
+A thing to notice is that  we added 16 bytes to the stack before the `iret`. This is because there will be an error code (real or dummy) and the vector number that we need to remove, so that the iret frame is at the top of the stack. If we don't do this, `iret` will use the wrong data and likely trigger a general protection fault.
 
 As for the general purpose registers, the order they're pushed doesn't really matter, as long as they're popped in reverse. You can skip storing `%rsp`, as its value is already preserved in the `iret` frame. That's the generic part of our interrupt stub, now we just need the handlers for each vector. They're very simple!
 
@@ -217,8 +217,8 @@ pushq $13
 jmp interrupt_stub
 ```
 
-There's still a lot of repetition, so we could take advantage of your assembler's macro features to automate that down into a few lines. That's beyond the scope of this chapter though.
-Because of the 16-byte alignment, we know that handler number `xyz` is offset by `xyz * 16` bytes from the first handler. 
+There's still a lot of repetition, so we could take advantage of our assembler macro features to automate that down into a few lines. That's beyond the scope of this chapter though.
+Because of the 16-byte alignment, we know that handler number `xyz` is offset by `xyz * 16` bytes from the first handler.
 
 ```c
 extern char vector_0_handler[];
@@ -241,7 +241,7 @@ If we don't send the EOI, the cpu will return from the interrupt handler and exe
 
 *Authors Note: This chapter is biased towards how I usually implement my interrupt handling. I like it because it lets me collect all interrupts in one place, and if something fires an interrupt I'm not ready for, I can log it for debugging. As always, there are other ways to go about this, but for the purposes of this chapter and the chapters to follow, it's assumed that your interrupt handling looks like the following (for simplicity of the explanations). -DT*
 
-We introduced the `interrupt_dispatch` function before, and had *all* of our interrupts call it. The `dispatch` part of the name hints that its purpose is to call other functions within the kernel, based on the interrupt vector. There is also a hidden benefit here that we don't have to route one interrupt to one kernel function. An intermediate design could maintain a list for each vector of functions that wish to be called when something occurs. For example there might be multiple parts of the kernel that wish to know when a timer fires. This design is not covered here, but it's something to think about for future uses. For now we'll stick with a simple design which just calls a single kernel function directly. 
+We introduced the `interrupt_dispatch` function before, and had *all* of our interrupts call it. The `dispatch` part of the name hints that its purpose is to call other functions within the kernel, based on the interrupt vector. There is also a hidden benefit here that we don't have to route one interrupt to one kernel function. An intermediate design could maintain a list for each vector of functions that wish to be called when something occurs. For example there might be multiple parts of the kernel that wish to know when a timer fires. This design is not covered here, but it's something to think about for future uses. For now we'll stick with a simple design which just calls a single kernel function directly.
 
 ```c
 void interrupt_dispatch()
@@ -265,9 +265,9 @@ There's an immediate issue with the above code though: How do we actually get `v
 
 Each platform has at least one *psABI* (Platform-Specific Application Binary Interface). It's a document that lays out how C structures translate to the specific registers and memory layouts of a particular platform, and it covers *a lot* of things. What we're interested in is something called the *calling convention*. For x86 there are a few calling conventions, but we're going to use the default one that most compilers (gcc and clang included) use: system V x86_64. Note that the x86_64 calling convention is different to the x86 (32-bit) one.
 
-Calling conventions are explored more in the appendix chapter about the C language, but what we care about is how to pass an argument to a function, and how to access the return value. For the system V x86-64 calling convention the first argument is passed in `%rdi`, and and the return value of a function is left in `%rax`. 
+Calling conventions are explored more in the appendix chapter about the C language, but what we care about is how to pass an argument to a function, and how to access the return value. For the system V x86-64 calling convention the first argument is passed in `%rdi`, and and the return value of a function is left in `%rax`.
 
-Excellent, we can pass data to and from our C code now. As for what we're going to pass? The stack pointer. 
+Excellent, we can pass data to and from our C code now. As for what we're going to pass? The stack pointer.
 
 The logic behind this is that all of our saved registers, the vector number, error code and iret frame are all saved on the stack. So by passing the stack pointer, we can access all of those values from our C code. We're also going to return the stack pointer from `interrupt_dispatch` to our assembly stub. This serves no purpose currently, but is something that will be used by future chapters (scheduling and system calls).
 
@@ -284,7 +284,7 @@ struct cpu_status_t
 
     uint64_t vector_number;
     uint64_t error_code;
-    
+
     uint64_t iret_rip;
     uint64_t iret_cs;
     uint64_t iret_flags;
@@ -338,13 +338,13 @@ There's one piece of housekeeping to take care of! On x86 there first 32 interru
 
 |  Vector Number | Shorthand | Description                           | Has Error Code |
 |----------------|-----------|---------------------------------------|----------------|
-| 0              | #DE       | Divide By Zero Error                  | No             | 
+| 0              | #DE       | Divide By Zero Error                  | No             |
 | 1              | #DB       | Debug                                 | No             |
 | 2              | #NMI      | Non-Maskable Interrupt                | No             |
 | 3              | #BP       | Breakpoint                            | No             |
 | 4              | #OF       | Overflow                              | No             |
 | 5              | #BR       | Bound Range Exceeded                  | No             |
-| 6              | #UD       | Invalid Opcode                        | No             | 
+| 6              | #UD       | Invalid Opcode                        | No             |
 | 7              | #NM       | Device not available                  | No             |
 | 8              | #DF       | Double Fault                          | Yes (always 0) |
 | 9              |           | Unused (was x87 Segment Overrrun)     | -              |
@@ -356,17 +356,17 @@ There's one piece of housekeeping to take care of! On x86 there first 32 interru
 | 15             |           | Currently Unused                      | -              |
 | 16             | #MF       | x87 FPU error                         | No             |
 | 17             | #AC       | Alignment Check                       | Yes (always 0) |
-| 18             | #MC       | Machine Check                         | No             | 
+| 18             | #MC       | Machine Check                         | No             |
 | 19             | #XF       | SIMD (SSE/AVX) error                  | No             |
 | 20-31          |           | Currently Unused                      | -              |
 
 While some of these vectors are unused, they are still reserved and might be used in the future. So consider using them as an error. Most of these are fairly rare occurrences, however we will quickly explain a few of the common ones:
 
-- _Page Fault_: Easily the most common one to run into. It means there was an issue with translating a virtual address into a physical one. This does push an error code which describes the memory access that triggered the page fault. Note the error describes what was being attempted, not what caused translation to fail. The `%cr2` register will also contain the virtual address that was being translated. 
+- _Page Fault_: Easily the most common one to run into. It means there was an issue with translating a virtual address into a physical one. This does push an error code which describes the memory access that triggered the page fault. Note the error describes what was being attempted, not what caused translation to fail. The `%cr2` register will also contain the virtual address that was being translated.
 - _General Protection Fault_: A GP fault can come from a large number of places, although it's generally from an instruction dealing with the segment registers in some way. This includes `iret` (it modifies cs/ss), and others like `lidt`/`ltr`. It also pushes an error code, which is described below. A GP fault can also come from trying to execute a privileged instruction outside when it's not allowed to be. This case is different to an undefined opcode, as the instruction exists, but is just not allowed.
 - _Double Fault_: This means something has gone horribly wrong, and the system is not in a state that can be recovered from. Commonly this occurs because the cpu could not call the GP fault handler, but it can be triggered by hardware conditions too. This should be considered as our last chance to clean up and save any state. If a double fault is not handled, the cpu will 'triple fault', meaning the system resets.
 
-A number of the reserved interrupts will not be fired by default, they require certain flags to be set. For example the x87 FPU error only occurs if `CR0.NE` is set, otherwise the FPU will silently fail. The SIMD error will only occur if the cpu has been told to enable SSE. Others like bound range exceeded or device not available can only occur on specific instructions, and are generally unseen. 
+A number of the reserved interrupts will not be fired by default, they require certain flags to be set. For example the x87 FPU error only occurs if `CR0.NE` is set, otherwise the FPU will silently fail. The SIMD error will only occur if the cpu has been told to enable SSE. Others like bound range exceeded or device not available can only occur on specific instructions, and are generally unseen.
 
 A Page Fault will push a bitfield as its error code. This is not a complete description of all the fields, but it's all the common ones. The others are specific to certain features of the cpu.
 
@@ -397,7 +397,7 @@ Fortunately the PICs allow us to offset the vectors they issue to the cpu. They 
 
 ### Halt not Halting
 
-If a `hlt` call has been placed  at the end of the kernel, and are suddenly getting errors after successfully handling an interrupt, read on. There's a caveat to the halt instruction that's easily forgotten: this instruction works by telling the cpu to stop fetching instructions, and when an interrupt is served the cpu fetches the instructions required for the interrupt handler function. Now, since the cpu is halted, it must un-halt itself to execute the interrupt handler. This is what we expect, and we are fine so far. 
+If a `hlt` call has been placed  at the end of the kernel, and are suddenly getting errors after successfully handling an interrupt, read on. There's a caveat to the halt instruction that's easily forgotten: this instruction works by telling the cpu to stop fetching instructions, and when an interrupt is served the cpu fetches the instructions required for the interrupt handler function. Now, since the cpu is halted, it must un-halt itself to execute the interrupt handler. This is what we expect, and we are fine so far.
 However, when we return from the interrupt, we have already run the `hlt` instruction, so we return to the *next instruction*. See the issue? There's usually nothing after we halt, in fact that memory is probably data instead of code. Therefore we end up executing *something*, and ultimately trigger some sort of error.
 The solution is to use the halt instruction within a loop, so that after each instruction we run `hlt` again, like so:
 
