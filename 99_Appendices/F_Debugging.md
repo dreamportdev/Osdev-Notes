@@ -108,7 +108,7 @@ If we want to interrupt the execution when myVar2 changes value this can be easi
 watch myVar2
 ```
 
-As soon as `myVar2` changes from 0 to 5, the execution will stop. This works pretty well for global variables. But what about local variables? Like `myVar`, the workflow is pretty similar but to catch the watchpoint we need first to set a brakpoint when the variable is _in-scope_ (inside the test_function).
+As soon as `myVar2` changes from 0 to 5, the execution will stop. This works pretty well for global variables. But what about local variables? Like `myVar`, the workflow is pretty similar but to catch the watchpoint we need first to set a breakpoint when the variable is _in-scope_ (inside the test_function).
 
 We can use conditions on watchpoint too, in the same way they are used for breakpoints.
 
