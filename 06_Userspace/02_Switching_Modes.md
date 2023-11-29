@@ -51,6 +51,44 @@ As for the other two values? We're going to set `rip` to the instruction we want
 
 Since we have paging enabled, that means page-level protections are in effect. If we try to run code from a page that has the NX-bit set (bit 63), we'll page fault. The same is true for trying to run code or access a stack from a page with the U/S bit cleared. On `x86_64` this bit must be set at every level in the paging structure.
 
+This also cause us to face another problem: how to test if userspace is working correctly? If the scheduler has been implemented using the part 5 of this book, just creating a thread with user level `ss` and `cs` is not enough, since the thread to run use the code that is present in the higher half (even the function to execute), and this mean that according to our design that area is marked as supervisor only.
+
+The best way to test it should be implementing support for an executable format  (this is explained on [part nine](../09_Loading_Elf/01_Elf_Theory.md)), in this case we just need to write an extra simple asm program (probably an infininte loop), compile it (but not link it to the kernel), and load it somewhere in memory while booting the os (for example as a mulbiboot2 module).
+
+When the thread is created with user level privilege, now we can load that executable, making sure that the memory mapped for it has the user level flag set. Also if we have a file system support and executable support, we can load it from the file system directly (file system support is covered in [part ten](../10_VirtualFileSystem/01_Overview.md)).
+
+But in both cases, this take some time to implement, and what we probably want is just check that our kernel can enter and exit the user mode safely. A quick solution to this problem is:
+
+* write an infinite loop in assembly language, and compile it:
+
+```x86asm
+loop:
+    jmp loop
+```
+
+* get the binary code of the compiled source, for example using the following `objdump` command:
+
+```sh
+objdump -D -b binary -m i386:x86-64 ../example
+```
+
+we get the following output:
+
+```
+example:     file format binary
+
+
+Disassembly of section .data:
+
+0000000000000000 <.data>:
+   0:   eb fe                   jmp    0x0
+```
+
+As you can see this code is very trivial, and its binary is just two bytes: `eb fe`.
+
+* Assign those two bytes in a `char` array somewhere in the kernel code
+* Now we can map the address of variable containing the program to a userspace memory location, and pass it to the thread execution function.
+
 *Authors Note: For my VMM, I always set write-enabled + present flags on every page entry that is present, and also the user flag if it's a lower-half address. The exception is the last level of the paging structure (pml1, or pml2 for 2mb pages) where I apply the flags I actually need. For example, for a read-only user data page I would set the R/W + U/S + NX + Present bits in the final entry. This keeps the rest of implementation simple. - DT.*
 
 ### Actually Getting to User Mode
