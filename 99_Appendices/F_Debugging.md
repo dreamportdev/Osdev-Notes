@@ -88,9 +88,9 @@ It's worth noting if debugging a kernel running with kvm, is not possible to use
 GDB does support hardware breakpoints using `hb` instead of `b` for above, although their functionality can be limited, depending on what the hardware supports.
 Best to do serious debugging without kvm, and only use hardware debugging when absolutely necessary.
 
-In case we want to watch the behaviour of a variable, and interrupt the code every time the variable changes, we can use `watchpoints` they are similar to breakpoints, but instead of  being set for lines of code or functions, they are set to watch variable behaviour.
+In case we want to watch the behaviour of a variable, and interrupt the code every time the variable changes, we can use `watchpoints` they are similar to breakpoints, but instead of being set for lines of code or functions, they are set to watch variable behaviour.
 
-For example imagine to have the following simple  function:
+For example imagine to have the following simple function:
 
 ```c
 int myVar2 = 3;
@@ -163,7 +163,7 @@ It will show for every virtual machine, its label and its UUID
 virtualboxvm --startvm vmname
  ```
 
-The Virtual Machine name, or its uuid can be used.
+The virtual machine name, or its uuid can be used.
 
 ### Debugging a Virtual Machine
 
