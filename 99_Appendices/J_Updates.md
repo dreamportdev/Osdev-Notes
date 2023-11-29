@@ -34,5 +34,5 @@ Third Book Release
 * Add more information on the Memory protection chapter, abouit its future implications
 * Emergency grammar fix!
 * Fix tss structure in Userspace/Handling_Interrupt chapter
-* Add watchpoint infromation on gdb chapter
+* Add watchpoint information on gdb chapter
 * Add explanation on how to test when entering userspace
