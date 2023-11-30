@@ -55,11 +55,11 @@ Since we have paging enabled, that means page-level protections are in effect. I
 
 #### Testing userspace
 
-This also leaves us with a problem: how to test if userspace is working correctly? If the scheduler has been implemented using the part 5 of this book, just creating a thread with user level `ss` and `cs` is not enough, since the thread to run use the code that is present in the higher half (even the function to execute), and this mean that according to our design that area is marked as supervisor only.
+This also leaves us with a problem: how to test if userspace is working correctly? If the scheduler has been implemented using [part five](../05_Scheduling/01_Overview.md) of this book, just creating a thread with user level `ss` and `cs` is not enough, since the thread to run uses the code that is present in the higher half (even the function to execute), and this mean that according to our design that area is marked as supervisor only.
 
 The best way to test it should be implementing support for an executable format (this is explained on [part nine](../09_Loading_Elf/01_Elf_Theory.md)), in this case we're going to write a simple program with just one instruction that loops infinitely. compile it (but not link it to the kernel), and load it somewhere in memory while booting the os (for example as a mulbiboot2 module). Later on we can put it together with the VFS, to load and execute programs for there.
 
-But the problem is that this take some time to implement, and what we probably want is just check that our kernel can enter and exit the user mode safely. A quick solution to this problem is:
+But the problem is that this takes some time to implement, and what we probably want is just check that our kernel can enter and exit the user mode safely. A quick solution to this problem is:
 
 * Write an infinite loop in assembly language:
 
@@ -86,9 +86,7 @@ we get the following output:
 ```
 example:     file format binary
 
-
 Disassembly of section .data:
-
 0000000000000000 <.data>:
    0:   eb fe                   jmp    0x0
 ```
