@@ -4,13 +4,13 @@ This is not a complete guide on how to handle interrupts. It assumes we already 
 
 On `x86_64` there are two main structures involved in handling interrupts. The first is the IDT, which we should already be familiar with. The second is the task state segment (TSS). While the TSS is not technically mandatory for handling interrupts, once we leave ring 0 it's functionally impossible to handle interrupts without it.
 
-### The Why
+## The Why
 
 *Why is getting back into supervisor mode on x86_64 so long-winded?* It's an easy question to ask. The answer is a combination of two things: legacy compatibility, and security. The security side is easy to understand. The idea with switching stacks on interrupts is to prevent leaking kernel data to user programs. Since the kernel may process sensitive data inside of an interrupt, that data may be left on the stack. Of course a user program can't really know when it's been interrupted and there might be valuable kernel data on the stack to scan for, but it's not impossible. There have already been several exploits that work like this. So switching stacks is an easy way to prevent a whole class of security issues.
 
 As for the legacy part? `X86` is an old architecture, oringinally it had no concept of rings or protection of any kind. There have been many attempts to introduce new levels of security into the architecture over time, resulting in what we have now. However for all that, it does leave us with a process that is quite flexible, and provides a lot of possibilities in how interrupts can be handled.
 
-### The How
+## The How
 
 The TSS served a different purpose on `x86` (protected mode, not `x86_64`), and was for *hardware task switching*. Since this proved to be slower than *software task switching*, this functionality was removed in long-mode. The 32 and 64 bit TSS structures are very different and not compatible. Note that the example below uses the `packed` attribute, as is always a good idea when using structures that are dealing with hardware directly. We want to ensure our compiler lays out the memory as we expect. A `C` version of the long mode TSS is given below:
 
@@ -88,7 +88,7 @@ Now that we have a TSS, lets review what happens when the cpu is in user mode, a
 - The cpu now jumps to the handler function stored in the IDT entry.
 - The interrupt handler runs on the new stack.
 
-### The TSS and SMP
+## The TSS and SMP
 
 Something to be aware of if we support multiple cores is that the TSS has no way of ensuring exclusivity. Meaning if core 0 loads the `rsp0` stack and begins to use it for an interrupt, and core 1 gets an interrupt it will also happily load `rsp0` from the same TSS. This ultimately leads to much hair pulling and confusing stack corruption bugs.
 
@@ -100,7 +100,7 @@ There's a few ways to go about this:
 - Have a single GDT shared between all cores, but each core gets a separate TSS selector. This would require some logic to decide which core uses which selector.
 - Have a single GDT and a single TSS descriptor within it. This works because the task register caches the values it loads from the GDT until it is next reloaded. Since the TR is never changed by the cpu, if we never change it ourselves, we are free to change the TSS descriptor after using it to load the TR. This would require logic to determine which core can use the TSS descriptor to load its own TSS. Uses the least memory, but the most code of the three options.
 
-### Software Interrupts
+## Software Interrupts
 
 On `x86(_64)` IDT entries have a 2-bit DPL field. The DPL (Descriptor Privilege Level) represents the highest ring that is allowed to call that interrupt from software. This is usually left to zero as default, meaning that ring 0 can use the `int` instruction to trigger an interrupt from software, but all rings higher than 0 will cause a general protection fault. This means that user mode software (ring 3) will always trigger a #GP instead of being able to call an interrupt handler.
 
