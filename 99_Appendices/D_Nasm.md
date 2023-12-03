@@ -170,8 +170,6 @@ And it could potentially lead to two different values in the register. That beca
 
 This is kind of misleading if we usually do mostly register to memory, or value to register, value to memory, where the size is "implicit".
 
-_Authors Note_: Probably it can be a trivial issue, but it took me couple of hours to figure it out!
-
 ## If Statement
 
 Below an example showing a possible solution to a complex if statement. Let's assume that we have the following `if` statement in C and we want to translate in assembly:
