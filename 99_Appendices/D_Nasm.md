@@ -251,6 +251,31 @@ jmp .item_not_needed
 	;rest of the code
 ```
 
+## Loop
+
+Another typical scenario are loops. For example imagine we have the following while loop in C:
+
+```c
+unsigned int counter = 0;
+while (counter < SOME_VALUE) {
+	//do something
+	counter++;
+}
+```
+
+Again in assembly we can use the `jmp` instructions family:
+
+```asm
+mov ecx, 0  ; Loop counter
+.loop_cycle
+	; do sometehing
+	inc ecx
+	cmp ecx, SOME_VALUE
+	jne loop_cycle
+```
+
+The `inc` instruction increase the value contained by the `ecx` register.
+
 ## Data Structures
 
 Every language supports accessing data as a raw array of bytes, C provides an abstraction over this in the form of structs. NASM also happens to provide us with an abstraction over raw bytes, that is similar to how C does it.
