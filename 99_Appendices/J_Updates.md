@@ -36,3 +36,4 @@ Third Book Release
 * Fix tss structure in Userspace/Handling_Interrupt chapter
 * Add watchpoint information on gdb chapter
 * Add explanation on how to test when entering userspace
+* Fix some examples in the Nasm appendix, and add new section with loop cycle example.
