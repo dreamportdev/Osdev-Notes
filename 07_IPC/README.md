@@ -4,5 +4,6 @@ This part will explain how to allow two processes to safely communicate with eac
 
 Below the list of chapters:
 
+- [Overview](01_Overview.md) A brief introduction to what is the Inter-Process communication, and what are the types that will be covered in this part.
 - [Shared_Memory](02_Shared_Memory.md) is the easiest way for two processes to communicate each other, by mapping the same memory into both addresses spaces. This chapter will look at an example implementation.
 - [Message Passing](03_Message_Passing.md) will cover message passing, which moves packets of information between two processes.
