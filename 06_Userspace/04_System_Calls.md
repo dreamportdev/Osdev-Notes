@@ -60,8 +60,8 @@ __attribute__((naked))
 size_t do_syscall(size_t syscall_num, size_t arg)
 {
     asm("int $0xFE"
-        : "S"(arg)
-        : "D"(syscall_enum), "S"(arg));
+        : "+S"(arg)
+        : "D"(syscall_num), "S"(arg));
 
     return arg;
 }

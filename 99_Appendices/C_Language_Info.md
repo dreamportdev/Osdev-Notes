@@ -63,11 +63,11 @@ The constraints are many and they depends the architecture too. Usually they are
 
 The list below contains some constraints that are worth an explanation:
 
-* 0, 1, ..., 9 - when a constraint is a nuber, it is called a *matching_constraint*, and this means that the same use the same register in output as the corresponding input registers.
+* 0, 1, ..., 9 - when a constraint is a number, it is called a *matching_constraint*, and this means that use the same register in output as the corresponding input registers.
 * m - this constraint indicates to use a memory operand supported by the architecture.
 * a, b, c, etc. - The etters usually indicate the registers we want to use, so for example a it means rax (or eax or ax depending on the mode), b means rbx (or ebx or bx), etc.
-* g - this consrtaint indicates that a general register, memory or immediate operand is used.
-* r - it indicates that it is a register operand is allowed, provided that it is a general purpose register.
+* g - this constiraint indicates that a general register, memory or immediate operand is used.
+* r - it indicates that a register operand is allowed, provided that it is a general purpose register.
 
 An example of an inline assembly instruction of this type is:
 
