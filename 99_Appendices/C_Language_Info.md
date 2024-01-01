@@ -44,10 +44,10 @@ asm("assembly_template"
 ```
 
 * Every line of assembly code should terminate with: **;**
-* Clobbered registers can usually be left empty. However if we use an instruction like `rdmsr` which places data in registers without the compiler knowing, we'll want to mark those are clobbered. If we specify eax/edx as output operands, the compiler is smart enough to work this out.
+* Clobbered registers can usually be left empty. However if we use an instruction like `rdmsr` which places data in registers without the compiler knowing, we'll want to mark those as clobbered. If we specify eax/edx as output operands, the compiler is smart enough to work this out.
 * One special clobber exists: "memory". This is a read/write barrier. It tells the compiler we've accessed memory other than what was specified as input/ouput operands. The cause of many optimization issues!
 * For every operand type there can be more than one, in this case they must be comma separated.
-* Every operand consists of a constraint and c expression pair. A constrait can also have a modifier itself
+* Every operand consists of a constraint and `c` expression pair. A constrait can also have a modifier itself
 * Operands parameters are indicated with an increasing number prefixed by a %, so the first operand declared is %0, the second is %1, etc. And the order they appears in the output/input operands section represent their numbering
 
 Below is the list of the constraint modifiers:

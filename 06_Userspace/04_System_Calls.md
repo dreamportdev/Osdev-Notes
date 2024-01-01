@@ -27,7 +27,7 @@ We've probably heard of `int 0x80` before. That's the interrupt vector used by L
 
 ### Using Software Interrupts
 
-Now we've selected which interrupt vector to use for system calls, we can install an interrupt handler. On `x86`, this is done via the IDT like any other interrupt handler. The only different is the DPL field.
+Now we've selected which interrupt vector to use for system calls, we can install an interrupt handler. On `x86_64`, this is done via the IDT like any other interrupt handler. The only difference is the DPL field.
 
 As mentioned before, the DPL field is the highest ring that is allowed to call this interrupt from software. By default it was left as 0, meaning only ring 0 can trigger software interrupts. Other rings trying to do this will trigger a general protection fault. However since we want ring 3 code to call this vector, we'll need to set its DPL to 3.
 
