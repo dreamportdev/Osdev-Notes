@@ -60,7 +60,7 @@ __attribute__((naked))
 size_t do_syscall(size_t syscall_num, size_t arg)
 {
     asm("int $0xFE"
-        : "+S"(arg)
+        : "=S"(arg)
         : "D"(syscall_num), "S"(arg));
 
     return arg;
@@ -69,7 +69,7 @@ size_t do_syscall(size_t syscall_num, size_t arg)
 
 There's a few tricks happening with the inline assembly above. First is the `naked` attribute. This is not strictly necessary, but since we're only doing inline assembly in the function it's a nice optimization hint to the compiler. It tells the compiler not to generate the prologue/epilogue sequences for this function. This is stuff like creating the stack frame.
 
-Next we're using two special constraints for the input and output operands. "S" and "D" are the source and destination registers, or on x86 the `rsi` and `rdi` registers. This means the compiler will ensure that those registers are loaded with the values we specify before the assembly body is run. The compiler will then also move the value of "S" (`rsi`) into `arg` after the assembly body has run. This is where we'll be placing the return value of the system call, hence why the `return arg` line below.
+Next we're using two special constraints for the input and output operands. "S" and "D" are the source and destination registers, or on `x86-64` the `rsi` and `rdi` registers. This means the compiler will ensure that those registers are loaded with the values we specify before the assembly body is run. The compiler will then also move the value of "S" (`rsi`) into `arg` after the assembly body has run. This is where we'll be placing the return value of the system call, hence why the `return arg` line below.
 
 For more details on inline assembly, see the dedicated appendix on it, or check the compiler's manual.
 
