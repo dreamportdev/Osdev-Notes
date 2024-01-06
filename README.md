@@ -12,9 +12,9 @@ Currently these notes are a work in progress, but many chapters are functionally
 
 We hope you enjoy, and find something interesting here!
 
-Physical copies can be purchased via Lulu: 
-* Paperback: [Click here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/paperback/product-mpzp5v.html?q=osdev+notes&page=1&pageSize=4)
-* Hardcover: [Click Here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/hardcover/product-je5drpr.html?page=1&pageSize=4)
+The content of this repository is also available as a _**printed book**_, it can be purchased via Lulu: 
+* **Paperback**: [Click here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/paperback/product-mpzp5v.html?q=osdev+notes&page=1&pageSize=4)
+* **Hardcover**: [Click Here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/hardcover/product-je5drpr.html?page=1&pageSize=4)
 
 
 The [latest-master](https://github.com/dreamos82/Osdev-Notes/releases/tag/latest-master) release contains the PDF built from master.
