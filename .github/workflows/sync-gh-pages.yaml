@@ -1,25 +1,25 @@
-name: Sync gh-pages branch with master branch
+#name: Sync gh-pages branch with master branch
 
-on:
-  push:
-    paths-ignore: [ '**/pandoc_workflow.yaml' ]
-    branches: [ master, feature-sync-pages ]
+#on:
+#  push:
+#    paths-ignore: [ '**/pandoc_workflow.yaml' ]
+#    branches: [ master, feature-sync-pages ]
   
-jobs:
-  do_sync:
-    runs-on: ubuntu-latest
+#jobs:
+#  do_sync:
+#    runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
+#    steps:
+#    - uses: actions/checkout@v2
 
-    - name: setup git user
-      run: >
-        git config --local user.name "sync-gh-pages-script";
-        git config --local user.email "sync-gh-pages-script@noemail.com";
+#    - name: setup git user
+#      run: >
+#        git config --local user.name "sync-gh-pages-script";
+#        git config --local user.email "sync-gh-pages-script@noemail.com";
 
-    - name: merge and push
-      run: >
-        git fetch;
-        git checkout gh-pages;
-        git merge origin/master --allow-unrelated-histories -X theirs;
-        git push origin gh-pages;
+#    - name: merge and push
+#      run: >
+#        git fetch;
+#        git checkout gh-pages;
+#        git merge origin/master --allow-unrelated-histories -X theirs;
+#        git push origin gh-pages;
