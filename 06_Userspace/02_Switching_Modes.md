@@ -59,7 +59,7 @@ This also leaves us with a problem: how to test if userspace is working correctl
 
 The best way to test it should be implementing support for an executable format (this is explained on [part nine](../09_Loading_Elf/01_Elf_Theory.md)), in this case we're going to write a simple program with just one instruction that loops infinitely. compile it (but not link it to the kernel), and load it somewhere in memory while booting the os (for example as a mulbiboot2 module). Later on we can put it together with the VFS, to load and execute programs for there.
 
-But the problem is that this takes some time to implement, and what we probably want is just check that our kernel can enter and exit the user mode safely. A quick solution to this problem is:
+But the problem is that this takes some time to implement, and what we probably want is just check that our kernel can enter and exit the user mode safely. Below a quick solution to the problem is outlined: 
 
 * Write an infinite loop in assembly language:
 
@@ -68,14 +68,14 @@ loop:
     jmp loop
 ```
 
-and compile it, in using _binary_ as format specifier , for example using nasm:
+and compile it, using _binary_ as format specifier , for example using nasm:
 
 ```x86asm
 nasm -f bin example.s -o example
 ```
 
 
-* Get the binary code of the compiled source, for example using the following `objdump` command:
+* Now get the binary code of the compiled source, for example using the `objdump` command:
 
 ```sh
 objdump -D -b binary -m i386:x86-64 ../example
@@ -94,9 +94,9 @@ Disassembly of section .data:
 The code is stored in the `.data` section, and as you can see in this case is very trivial, and its binary is just two bytes: `eb fe`.
 
 * Assign those two bytes in a `char` array somewhere in our code.
-* Now we can map the address of variable containing the program to a userspace memory location, and pass assign this pointer as the new `rip` value for the userspace thread.(how to do it is left as exercise).
+* Now we can map the address of the variable containing the program to a userspace memory location, and assign this pointer as the new `rip` value for the userspace thread (how to do it is left as exercise).
 
-In this way the function being executed by the thread will be a userspace executable address containing an infinite loop. If the scheduler keep switching between the idle thread and this  thread, well everything should be working fine.
+In this way the function being executed by the thread will be a userspace executable address containing an infinite loop. If the scheduler keep switching between the idle thread and this  thread, well everything is be working as expected.
 
 ### Actually Getting to User Mode
 
