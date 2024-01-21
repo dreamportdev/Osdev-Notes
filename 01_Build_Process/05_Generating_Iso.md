@@ -3,7 +3,7 @@
 Generating a bootable iso is specific to the bootloader of choice, both grub and limine are outlined below!
 The generated iso can then be used as a cdrom in an emulator, or burnt to a real disk or usb thumb drive as we would do for installing any other operating system.
 
-## Xorisso
+## Xorriso
 
 Xorisso is a tool used to create iso disk images. Iso is actually quite a complex format, as it aims to be compatible with a lot of different formats and ways of booting.
 
