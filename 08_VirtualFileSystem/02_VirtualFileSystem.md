@@ -203,7 +203,7 @@ If the above function fail it should return  NULL to let the caller know that so
 #### Absolute vs Relative Path
 
 Even though these concepts should already be familiar, let's discuss how they work from the VFS point of view.
-An absolute path is easy to understand: it begins at the top of the filesystem tree and specifies exactly where to go. The one caveat is that in a multi-root design it will need to indicate which filesystem is the root, windows does this by prepending a device id like so: `C:` or `D:`.
+An absolute path is easy to understand: it begins at the top of the filesystem tree and specifies exactly where to go. The one caveat is that in a multi-root design is that file-paths have to specify which filesystem they start from, windows does this by prepending a device id like so: `C:` or `D:`.
 A relative path begins traversing the filesystem from the current directory. Sometimes this is indicated by starting the filepath with a single dot '.'. A relative path is also one that doesn't begin at the file system root.
 
 It can be easier to design a design our VFS to only accept absolute paths, and handle relative paths by combining them with the current working directory, giving us an absolute path. This removes the idea of relative paths from the VFS code and can greatly simplify the cases we have to handle.
@@ -391,7 +391,6 @@ The pseudocode for this function is going to be similar to the open/close:
 
 ```c
 ssize_t read(int fildes, void *buf, size_t nbytes) {
-
     if (vfs_opened_files[fildes].fs_fildes_id != -1) {
         int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
         mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id)
@@ -404,7 +403,6 @@ ssize_t read(int fildes, void *buf, size_t nbytes) {
         }
         return bytes_read;
     }
-
     return -1;
 }
 ```
