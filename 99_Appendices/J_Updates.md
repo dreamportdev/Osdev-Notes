@@ -28,8 +28,8 @@ Second book release.
 
 ### Revision 2
 
-Release date: November 2023.
-Third Book Release
+Release date: December 2023.
+Third Book release
 
 * Add more information on the Memory protection chapter, abouit its future implications
 * Emergency grammar fix!
@@ -37,3 +37,12 @@ Third Book Release
 * Add watchpoint information on gdb chapter
 * Add explanation on how to test when entering userspace
 * Fix some examples in the Nasm appendix, and add new section with loop cycle example.
+
+### Revision 3
+
+Release date: TBD
+Fourth book release
+
+* Typo fixes
+* Expand Syscall example chapter
+
