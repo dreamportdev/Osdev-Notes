@@ -37,7 +37,7 @@ Returns: count copied
 
 Please don't actually do this, `memcpy` does not need to be a system call, but it serves for this example, as it's a function everyone is familiar with.
 
-We're going to implement a wrapper function for system calls in C, purely for convinience, which might look so:
+We're going to implement a wrapper function for system calls in C, purely for convenience, which might look so:
 
 ```c
 __attribute__((naked))
