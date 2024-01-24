@@ -224,7 +224,7 @@ menuentry "My Os" {
 }
 ```
 
-The module path is the where the file is placed in the iso. Make sure that the `module2` commands is after the `multiboot2` line. Now when the kernel is loaded, we should have a new boot information item passed to the kernel (like the framebuffer, and acpi), the tag structure is:
+The module path is where the file is placed in the iso. Make sure that the `module2` commands is after the `multiboot2` line. Now when the kernel is loaded, we should have a new boot information item passed to the kernel (like the framebuffer, and acpi), the tag structure is:
 
 ```
         +-------------------+
