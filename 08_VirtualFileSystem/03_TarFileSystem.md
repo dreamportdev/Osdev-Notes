@@ -236,11 +236,9 @@ u8[n]   | string            |
         +-------------------+
 ```
 
-The type is just a numeric id to identify the tag, the size is the file size. `mod_start` and `mod_end` are the phsyical address of the start and end of the module. The string is an arbitrary string associated with the module. How to parse the multioot information tags is explained in the _Boot Protocols_ chapter.
+The `type`  is just a numeric id to identify the tag, the `size` field is not the size of the file, but of the tag itself. The fields `mod_start` and `mod_end` are the phsyical address of the beginning and end of the module (then `mod_end - mod_start` is its size). The string is an arbitrary string associated with the module, in this case our tar file content. How to parse the multiboot information tags is explained in the [_Boot Protocols_](../01_Overview/02_Boot_Protocols.md) chapter.
 
 Once parsed the tag above, we now need to map the memory range from `mod_start` to `mod_end` into our virtual memory, and then the archive is ready to be accessed by the driver at the virtual address specified.
-
-Now after parsing the information above
 
 ## Where To Go From Here
 
