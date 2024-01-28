@@ -185,7 +185,7 @@ There is another problem: how do we know when we have reached the end of the fil
 
 ### Closing A File
 
-In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done on the VFS layer. But in other scnearios, where we are handling opened filesi n the VFS, or keeping track of their status, it could be necessary to unmap/unload the file or the data structures associated to it.
+In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done at the VFS layer. But in other scenarios, where we are handling opened files in the VFS, or keeping track of their status, it could be necessary to unmap/unload the file or the data structures associated to it.
 
 ## And Now from A VFS Point Of View
 
