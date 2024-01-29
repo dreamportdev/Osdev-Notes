@@ -46,7 +46,7 @@ struct RSDPDescriptor {
 
 Where the fields are:
 
-* *Signature*: Is an 8 byte string, that must contain: "RSDT PTR " **P.S. The string is not null terminated**
+* *Signature*: Is an 8 byte string, that must contain: "RSD PTR " **P.S. The string is not null terminated**
 * *Checksum*: The value to add to all the other bytes (of the Version 1.0 table) to calculate the Checksum of the table. If this value added to all the others and casted to byte isn't equal to 0, the table must be ignored.
 * *OEMID*: Is a string that identifies the OEM
 * *Revision*: Is the revision number

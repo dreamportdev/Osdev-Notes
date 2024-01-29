@@ -15,4 +15,5 @@ In no particular order:
 - @Flukas88 ([https://github.com/Flukas88](https://github.com/Flukas88))
 - @Rubo3 ([https://github.com/Rubo3](https://github.com/Rubo3))
 - @ajccosta([https://github.com/ajccosta](https://github.com/ajccosta))
+- @maxtyson123 ([https://github.com/maxtyson123](https://github.com/maxtyson123))
 
