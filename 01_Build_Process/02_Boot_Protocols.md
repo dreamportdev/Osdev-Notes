@@ -12,11 +12,11 @@ Recently limine has added a new protocol (the limine boot protocol) which is not
 
 All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
-### What about the earlier versions?
+## What about the earlier versions?
 
 Both protocols have their earlier versions (_multiboot 1 & stivale 1_), but these are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set we get for the short term gains. The only thing multiboot 1 is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the `x86` emulation, so there are better ways to do that.
 
-### Why A Bootloader At All?
+## Why A Bootloader At All?
 
 It's a fair question. In the world of testing on qemu/bochs/vmware/vbox, its easy to write a bootloader directly against UEFI or BIOS. Things get more complicated on real hardware though.
 

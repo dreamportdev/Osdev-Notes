@@ -1,23 +1,23 @@
 # Welcome
 
-Whether you're reading this online, or in a book, welcome to our collection of notes about operating systems development! We've written these while writing (and re-writing) our own operating systems, with the intent of guiding a reader through the various stages of building an operating system from scratch. We've tried to focus more on the concepts and theory behind the various components, with the code only provided to help solidify some concepts.
+Whether you're reading this online, or in a book, welcome to our collection of notes about operating systems development! We've written these while writing (and re-writing) our own kernels, with the intent of guiding a reader through the various stages of building an operating system from scratch. We've tried to focus more on the concepts and theory behind the various components, with the code only provided to help solidify some concepts.
 
 We hope you enjoy, and find something interesting here!
 
 ## Structure Of The Book
 
-The book is divided in parts and every part is composed by one or more capter. Each numbered chapter adds a new layer to the kernel, expanding its capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones.
+The book is divided in parts and every part is composed by one or more chapter. Each numbered chapter adds a new layer to the kernel, expanding its capabilities. While it's not strictly necessary to read them in order, it is encouraged as some later chapters may reference earlier ones.
 
-There is also a series of appendices at the end of the book, covering some extra topics that may be useful along the way. The appendices are intended to be used a reference, and can be read at any time. 
+There is also a series of appendices at the end of the book, covering some extra topics that may be useful along the way. The appendices are intended to be used as a reference, and can be read at any time. 
 
 ### Topics covered
 
-As we've already mentioned, our main purpose here is to guide the reader through the general process of building a kernel (and surrounding operating system). We're using `x86_64` as our reference architecture, but most of the concepts should transfer to other architectures, with the exception of the very early states of booting.
+As we've already mentioned, our main purpose here is to guide the reader through the general process of building a kernel (and surrounding operating system). We're using `x86_64` as our reference architecture, but most of the concepts should transfer to other architectures, with the exception of the very early stages of booting.
 
 Below the list of parts that compose the book: 
 
 * *Build Process* - The first part is all about setting up a suitable environment for operating systems development, explaining what tools are needed and the steps required to build and test a kernel.
-* *Architecture/Drivers* - This part contains most the architecture specific components, as well as most of the data structures and underlying mechanisms of the hardware we'll need. It also includes some early drivers that are very useful during further development (like the keyboard and timer).
+* *Architecture/Drivers* - This part contains most of the architecture specific components, as well as most of the data structures and underlying mechanisms of the hardware we'll need. It also includes some early drivers that are very useful during further development (like the keyboard and timer).
 * *Video Output* - This part looks at working with linear framebuffers, and how we can display text on them to aid with early debugging.
 * *Memory Management* - This part looks at the memory management stack of a kernel. We cover all the layers from the physical memory manager, to the virtual memory manager and the heap.
 * *Scheduling* - A modern operating system should support running multiple programs at once. In this part we're going to look at how processes and threads are implemented, write a simple scheduler and have a look at some of the typical concurrency issues that arise. 

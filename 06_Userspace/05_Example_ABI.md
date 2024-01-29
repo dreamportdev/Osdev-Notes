@@ -37,7 +37,7 @@ Returns: count copied
 
 Please don't actually do this, `memcpy` does not need to be a system call, but it serves for this example, as it's a function everyone is familiar with.
 
-We're going to implement a wrapper function for system calls in C, purely for convinience, which might look so:
+We're going to implement a wrapper function for system calls in C, purely for convenience, which might look so:
 
 ```c
 __attribute__((naked))
@@ -58,6 +58,18 @@ void memcpy(void* src, void* dest, size_t count) {
 }
 ```
 
-## Summary
+## Summary and Next Steps
 
 At this point we should be ready to go off and implement our own system call interface, and maybe even begin to expose some kernel functions to userspace. Always keep in mind that values (especially pointers) coming from userspace may contain anything, so we should verify them and their contents as much as possible before passing them deeper into the kernel.
+
+Now the question is what syscalls should we start to implement? As per usual this depends on the design of your kernel, and what interface we want to export userland. If unsure, take a look at POSIX (and the linux extensions), but we can also go the custom route. We should also keep in mind whether we want to port an existing libc later on, as this will require standard syscalls. For now we'll want to start with the following:
+
+* A way to pass log messages to the kernel, so it can print them for us.
+* A way to map, unmap, and modify protections of virtual memory.
+* A way to terminate the current thread, since the wrapper function used in the scheduler chapter only works for kernel threads.
+
+The list above acts just as a starting point, but the idea is that we want to expose most of the kernel can do, for example we probably want syscalls to create/terminate tasks and thread, syscalls to access files on different filesystems, accessing devices. 
+
+
+
+

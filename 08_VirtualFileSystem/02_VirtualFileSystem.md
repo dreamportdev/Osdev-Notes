@@ -49,7 +49,7 @@ Finally we are going to write our implementation of the virtual file system, fol
 * Read/write its content.
 * Open, read and close a directory.
 
-### Mountiung a File System
+### Mounting a File System
 
 To be able to access the different filesystems currently lodaed (*mounted*) by the operating system it needs to keep track of where to access them (wheter it is a drive letter or a directory), and how to access them (implementation functions), to do that we need two things:
 
@@ -202,13 +202,13 @@ If the above function fail it should return  NULL to let the caller know that so
 
 #### Absolute vs Relative Path
 
-Even though these concepts should already be familiar, let's discuss how they work from the view of the VFS.
-An absolute path is easy to understand: it begins at the top of the filesystem tree and specifics exactly where to go. The one caveat is that in a multi-root design it will need to indicate which filesystem the root is, windows does this by prepending a device id like so: `C:` or `D:`.
+Even though these concepts should already be familiar, let's discuss how they work from the VFS point of view.
+An absolute path is easy to understand: it begins at the top of the filesystem tree and specifies exactly where to go. The one caveat is that in a multi-root design is that file-paths have to specify which filesystem they start from, windows does this by prepending a device id like so: `C:` or `D:`.
 A relative path begins traversing the filesystem from the current directory. Sometimes this is indicated by starting the filepath with a single dot '.'. A relative path is also one that doesn't begin at the file system root.
 
-It can be easier to design a design our VFS to only accept absolute paths, and handle relative paths by combing them with the current working directory, giving us an absolute path. This removes the idea of relative paths from the VFS code and can greatly simplify the cases we have to handle.
+It can be easier to design a design our VFS to only accept absolute paths, and handle relative paths by combining them with the current working directory, giving us an absolute path. This removes the idea of relative paths from the VFS code and can greatly simplify the cases we have to handle.
 
-As for how we track the current working directory of a program or user, that's information is usually stored in a process's control block, alongside things like privately mapped files (if support for those exists).
+As for how we track the current working directory of a program or user, that information is usually stored in a process's control block, alongside things like privately mapped files (if support for those exists).
 
 A filesystem driver also shouldn't need to worry about full filepaths, rather it should only care about the path that comes after its root node.
 
@@ -260,7 +260,7 @@ The `flags` parameter will tell how the file will be opened, there are many flag
 * O_RDWR it opens a file for reading and writing
 * O_WRONLY it opens a file only for writing.
 
-The flags value is a bitwise operator, and there are other possible values to be used, but for our purpose will focus only on the three mentioned above.
+The flags value is a bitwise operator, and there are other possible values to be used, but for our purpose we will focus only on the three mentioned above.
 
 The return value of the function is the file descriptor id. We have already seen how to parse a path and get the mountpoint id if it is available. But what about the file descriptor and its id? What is it? File descriptors represents a file that has been opened by the VFS, and contain information on how to access it (i.e. mountpoint_id), the filename, the various pointers to keep track of current read/write positions, eventual locks, etc. So before proceed let's outline a very simple file descriptor struct:
 
@@ -391,7 +391,6 @@ The pseudocode for this function is going to be similar to the open/close:
 
 ```c
 ssize_t read(int fildes, void *buf, size_t nbytes) {
-
     if (vfs_opened_files[fildes].fs_fildes_id != -1) {
         int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
         mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id)
@@ -404,7 +403,6 @@ ssize_t read(int fildes, void *buf, size_t nbytes) {
         }
         return bytes_read;
     }
-
     return -1;
 }
 ```
@@ -424,16 +422,15 @@ Now that we have implemented the `read` function we should be able to code a sim
 We have decided to not cover how to open and read directories, because the implementation will be similar to  the above cases, where we need to identify the mountpoint, call the filesystem driver equivalent of the vfs function called, and make it available to the caller. This means that most of its implementation will be a repetition of what has been done until now, but there are few extra things we need to be aware:
 
 * A directory is a container of files and/or other directories
-* There will be a function that will read through the items into a folder usually called `readdir` that will return the next item stored into the directory, and if it reach the end NULL will be reutrned.
+* There will be a function that will read through the items into a folder usually called `readdir` that will return the next item stored into the directory, and if it reach the end NULL will be returned.
 * There will be a need for a new data structure to store the information about the items stored within a directory that will be returned by the `readdir` (or similar) function.
 * There are some special "directories" that should be known to everyone: "." and ".."
 
 Initially let's concentrate with the basic function for directory handling: `opendir`, `readdir` and `closedir`, then when we get a grasp on them we can implement other more sophisticated functions.
 
-
 ### Conclusions And Suggestions
 
-In this chapter we outlined a naive VFS that abstracts access to different filesystems. The current feature-set is very basic, but it serves as a good starting point. From here you begin to think about more features like memory mapping files and permissions.
+In this chapter we outlined a naive VFS that abstracts access to different filesystems. The current feature-set is very basic, but it serves as a good starting point. From here we can begin to think about more features like memory mapping files and permissions.
 
 We haven't added any locks to protect our VFS data structures in order to keep the design simple. However in a real implementation this should be done. Implementing a file-cache/page-cache is also a useful feature to have, and can be a nice way to make use of all the extra physical memory we've had sitting around until now.
 

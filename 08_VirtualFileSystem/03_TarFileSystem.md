@@ -185,7 +185,7 @@ There is another problem: how do we know when we have reached the end of the fil
 
 ### Closing A File
 
-In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done on the VFS layer. But in other scnearios, where we are handling opened filesi n the VFS, or keeping track of their status, it could be necessary to unmap/unload the file or the data structures associated to it.
+In our scenario there is no really need to close a file from a fs driver point of view, so in this case everything is done at the VFS layer. But in other scenarios, where we are handling opened files in the VFS, or keeping track of their status, it could be necessary to unmap/unload the file or the data structures associated to it.
 
 ## And Now from A VFS Point Of View
 
@@ -224,7 +224,7 @@ menuentry "My Os" {
 }
 ```
 
-The module path is the where the file is placed in the iso. Make sure that the `module2` commands is after the `multiboot2` line. Now when the kernel is loaded, we should have a new boot information item passed to the kernel (like the framebuffer, and acpi), the tag structure is:
+The module path is where the file is placed in the iso. Make sure that the `module2` commands is after the `multiboot2` line. Now when the kernel is loaded, we should have a new boot information item passed to the kernel (like the framebuffer, and acpi), the tag structure is:
 
 ```
         +-------------------+
@@ -236,11 +236,9 @@ u8[n]   | string            |
         +-------------------+
 ```
 
-The type is just a numeric id to identify the tag, the size is the file size. `mod_start` and `mod_end` are the phsyical address of the start and end of the module. The string is an arbitrary string associated with the module. How to parse the multioot information tags is explained in the _Boot Protocols_ chapter.
+The `type`  is just a numeric id to identify the tag, the `size` field is not the size of the file, but of the tag itself. The fields `mod_start` and `mod_end` are the phsyical address of the beginning and end of the module (then `mod_end - mod_start` is its size). The string is an arbitrary string associated with the module, in this case our tar file content. How to parse the multiboot information tags is explained in the [_Boot Protocols_](../01_Overview/02_Boot_Protocols.md) chapter.
 
 Once parsed the tag above, we now need to map the memory range from `mod_start` to `mod_end` into our virtual memory, and then the archive is ready to be accessed by the driver at the virtual address specified.
-
-Now after parsing the information above
 
 ## Where To Go From Here
 
