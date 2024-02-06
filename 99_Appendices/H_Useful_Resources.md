@@ -27,7 +27,7 @@ This appendix is a collection of links we found useful developing our own kernel
 - Broken Thron Osdev Book Series Chapter 16 PIC, PIT and Exceptions: [http://www.brokenthorn.com/Resources/OSDev16.htm](http://www.brokenthorn.com/Resources/OSDev16.html)
 - Osdev Wiki Ps2 Keyboard page: [https://wiki.osdev.org/PS/2_Keyboard](https://wiki.osdev.org/PS/2_Keyboard)
 - Osdev Wiki Interrupts page: [https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective](https://wiki.osdev.org/IRQ#From_the_keyboard.27s_perspective)
-- Osdev Wiki 8042 Controller pagepage: [https://wiki.osdev.org/"8042"_PS/2_Controller#Translation](https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation)
+- Osdev Wiki 8042 Controller pagepage: [https://wiki.osdev.org/8042_PS/2_Controller#Translation](https://wiki.osdev.org/%228042%22_PS/2_Controller#Translation)
 - Scancode sets page: [https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets](https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets)
 - Brokenthorn Book Series Chapter 19 Keyboard programming: [http://www.brokenthorn.com/Resources/OSDev19.html](http://www.brokenthorn.com/Resources/OSDev19.html)
 
@@ -43,13 +43,13 @@ This appendix is a collection of links we found useful developing our own kernel
 ## Memory Management
 
 - Intel Software developer's manual Vol 3A Paging Chapter
-- Osdev Wiki page for  Page Frame Allocation: [https://wiki.osdev.org/Page_Frame_Allocation](https://wiki.osdev.org/Page_Frame_Allocation)
+- Osdev Wiki page for Page Frame Allocation: [https://wiki.osdev.org/Page_Frame_Allocation](https://wiki.osdev.org/Page_Frame_Allocation)
 - Writing an Os in Rust by Philipp Oppermann Memory management: [https://os.phil-opp.com/paging-introduction/](https://os.phil-opp.com/paging-introduction/)
 - Broken Thorn Osdev Book Series, Chapter 18: The VMM [http://www.brokenthorn.com/Resources/OSDev18.html](http://www.brokenthorn.com/Resources/OSDev18.html)
 
 ## Scheduling
 
-- Osdev Wiki page for Scheduling Algirthm: [https://wiki.osdev.org/Scheduling_Algorithms](https://wiki.osdev.org/Scheduling_Algorithms)
+- Osdev Wiki page for Scheduling Algorithm: [https://wiki.osdev.org/Scheduling_Algorithms](https://wiki.osdev.org/Scheduling_Algorithms)
 - Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/)
 - Broken Thorn Osdev Book Series: [http://www.brokenthorn.com/Resources/OSDev25.html](http://www.brokenthorn.com/Resources/OSDev25.html)
 - Writing an Os in Rust by Philip Opperman Multitasking: [https://os.phil-opp.com/async-await/](https://os.phil-opp.com/async-await/)
@@ -58,7 +58,6 @@ This appendix is a collection of links we found useful developing our own kernel
 
 - Intel Software developer's manual Vol 3A Protection Chapter
 - Wiki Osdev Page for Ring 3: [https://wiki.osdev.org/Getting_to_Ring_3](https://wiki.osdev.org/Getting_to_Ring_3)
-- JamesMolloy User mode chapter: [http://www.jamesmolloy.co.uk/tutorial_html/10.-User Mode.html](http://www.jamesmolloy.co.uk/tutorial_html/10.-User%20Mode.html)
 - Default calling conventions for different compilers: [https://www.agner.org/optimize/#manuals](https://www.agner.org/optimize/#manuals)
 
 ## IPC
@@ -70,7 +69,6 @@ This appendix is a collection of links we found useful developing our own kernel
 
 ## Virtual File System
 
-- JamesMolloy VFS chapter: [http://www.jamesmolloy.co.uk/tutorial_html/8.-The VFS and the initrd.html](http://www.jamesmolloy.co.uk/tutorial_html/8.-The%20VFS%20and%20the%20initrd.html)
 - Wiki Osdev page for USTAR: [https://wiki.osdev.org/USTAR](https://wiki.osdev.org/USTAR)
 - Tar (Wikipedia): [https://en.wikipedia.org/wiki/Tar_(computing)](https://en.wikipedia.org/wiki/Tar_\(computing\))
 - Osdev Wiki page for VFS: [https://wiki.osdev.org/VFS](https://wiki.osdev.org/VFS)
@@ -97,9 +95,10 @@ This appendix is a collection of links we found useful developing our own kernel
 
 ## Communities
 
-- Osdev Fourm: [https://forum.osdev.org/](https://forum.osdev.org/)
-- Operating System Developmen on Reddit: [https://www.reddit.com/r/osdev/](https://www.reddit.com/r/osdev/)
-- Osdev Discord server: [https://discord.gg/osdev](https://discord.gg/osdev)
+- Osdev Forum: [https://forum.osdev.org/](https://forum.osdev.org/)
+- Operating System Development on Reddit: [https://www.reddit.com/r/osdev/](https://www.reddit.com/r/osdev/)
+- OSdev Discord server: [https://discord.gg/osdev](https://discord.gg/osdev)
+- Friendly Operating System Devs: [https://discord.gg/Vwudfxx8Sp](https://discord.gg/Vwudfxx8Sp)
 
 ## Books and Manuals
 
@@ -107,7 +106,7 @@ This appendix is a collection of links we found useful developing our own kernel
 - Broken Thorne Osdev Book Series Chapter 22 VFS: [http://www.brokenthorn.com/Resources/OSDev22.html](http://www.brokenthorn.com/Resources/OSDev22.html)
 - Operating System Three Easy Pieces (Book): [https://pages.cs.wisc.edu/~remzi/OSTEP/](https://pages.cs.wisc.edu/~remzi/OSTEP/)
 - Operating Systems Design And Implementation by Andres S. Tanenbaum. Difficult to find as of today, but if you can it's an excellent resource on the minix kernel.
-- Thinks Os By Allen B. Downey: [https://greenteapress.com/thinkos/](https://greenteapress.com/thinkos/)
-- Xv6 is a modern rewrite of v6 unix, for teaching purposes. It comes with an accompanying book which walks through each part of the source code. It was later ported to risc-v, but the x86 version is still available (but no longer actively maintained). [https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf](https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf)
+- Think Os By Allen B. Downey: [https://greenteapress.com/thinkos/](https://greenteapress.com/thinkos/)
+- Xv6 is a modern rewrite of v6 unix, for teaching purposes. It comes with an accompanying book which walks through each part of the source code. It was later ported to risc-v, but the x86 version is still available (but no longer actively maintained): [https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf](https://pdos.csail.mit.edu/6.S081/2020/xv6/book-riscv-rev1.pdf)
 
-An interesting github repository with a lot of resources about operating systems, like guides, tutorials, hobby kernels, interesting project is the `awesome-os` rpository by @jubalh available here: [https://github.com/jubalh/awesome-os](https://github.com/jubalh/awesome-os)
+An interesting github repository with a lot of resources about operating systems like guides, tutorials, hobby kernels, is the `awesome-os` project by @jubalh available here: [https://github.com/jubalh/awesome-os](https://github.com/jubalh/awesome-os)
