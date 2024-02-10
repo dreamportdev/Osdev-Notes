@@ -31,7 +31,7 @@ All structs in the base ELF spec are defined using these types, and so we will u
 
 The format has four main sections:
 
-- *The ELF header*: This contains the magic number used to identify it as an ELF, as well as information about the architecture the ELF was compiled for, the target operating system and other useful info.
+- *The ELF header*: This contains the magic number used to identify it as an ELF, as well as information about the architecture the ELF was compiled for, the target operating system and other useful info. This is usually identified as the `e_ident` field.
 - *The data blob*: The bulk of the file is made up of this blob. This is a big binary blob containing code, all kinds of data, some string tables and sometimes debugging information. All program data lives here.
 - *Section headers*: Each header has a name and some metadata associated with it, and describes a region of the data blob. Section names usually begin with a dot (`.`), like `.strtab` which refers to the string table. Section headers are for other software to parse the ELF and understand its structure and contents.
 - *Program headers*: These are for the program loader (what we're going to write). Each program header has a type that tells the loader how to interpret it, as well as specifying a range within the data blob. These ranges in the data blob can overlap (or often cover the same area as some section header ranges) ranges described by section headers.
@@ -98,7 +98,7 @@ This type means that we are expected to load the contents of this program header
 To load our simple, statically-linked, program the process is as follows:
 
 1) Load the ELF file in memory somewhere.
-2) Validate the ELF header by checking the machine type matches what we expect (is this an x86_64 program?).
+2) Validate the ELF header by checking the machine type matches what we expect (is this an x86_64 program?), this is usually done by parsing the `e_ident` member.
 3) Find all program headers with the `PT_LOAD` type.
 4) Load each program header: we'll cover this shortly.
 5) Jump to the start address defined in the ELF header.
