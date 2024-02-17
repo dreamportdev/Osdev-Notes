@@ -32,7 +32,8 @@ When veryfyig an ELF file there are few things we need to check in order to deci
 * The version field, byte 6,  to be a valid elf it has to be set to 1 (EVCURRENT).
 * The OS Abi and Abi version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
 
-Then from the other fields that needs validation (that area not in the `e_ident` field) are : 
+Then from the other fields that needs validation (that area not in the `e_ident` field) are:
+
 * `e_type`: they identify the type of elf, for our purpose the one to be considered valid this value should be 2 that indicates an Executable File (ET_EXEC) there are other values that in the future we could support, but they require more work to be done.
 * `e_machine`: it indicates the required architecture for the executable, the value depends on the architectures we are supporting, for example the value for the AMD64 architecture is `62`
 
