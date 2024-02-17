@@ -22,6 +22,37 @@ In the previous chapter we looked at the details of loading program headers, but
 
 If all of the above are done,  then the program is ready to run! We now should be able to enqueue the main thread in the scheduler and let it run.
 
+### What We Verify?
+
+When veryfyig an ELF file there are few things we need to check in order to decide if an executable is valid, the field to validate are in different headers, some of them are in the `e_ident` header, and they are the following:
+
+* The first thing we want to check is the Magic number, this is the `ELFMAG` part. It is expected to be the following values: `0x7f, 'E', 'L', 'F'`. Bytes 0 to 3.
+* We need to check that the file class match with the one we are supporting. There are two possible classes: 64 and 32. Thi is byte 4
+* The data field indicates the bit numbering convetion, again this depends on the architecture used. It can be three values: None (0), LSB (1) and MSB (2). For example x86_64 architecture value is 1. This field is in the byte 5.
+* The version field, byte 6,  to be a valid elf it has to be set to 1 (EVCURRENT).
+* The OS Abi and Abi version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
+
+Then from the other fields that needs validation (that area not in the `e_ident` field) are : 
+* `e_type`: they identify the type of elf, for our purpose the one to be considered valid this value should be 2 that indicates an Executable File (ET_EXEC) there are other values that in the future we could support, but they require more work to be done.
+* `e_machine`: it indicates the required architecture for the executable, the value depends on the architectures we are supporting, for example the value for the AMD64 architecture is `62`
+
+Beware that some compilers when generating a simple executable are not using the `ET_EXEC` value, but it could be of the type `ET_REL` (value 1), to obtain an executable we need to link it using a linker, for example if we generated the executable: `example.elf` with `ET_REL` type, we can use `ld` (or another equivalent linker):
+
+```sh
+ld -o example.o example.elf
+```
+
+For basic executables, we most likely don't need to include any linker script. 
+
+If we want to know the type of an elf, we can use the `readelf` command, if we are on a unix-like os: 
+```sh
+readelf -e example.elf
+``` 
+
+Will print out all the executable information, including the type.
+
+
+
 ## Caveats
 
 As we can already see from the above restrictions there is plenty of room for improvement. There are also some other things to keep in mind:
