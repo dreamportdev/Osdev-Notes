@@ -37,6 +37,8 @@ Then from the other fields that needs validation (that area not in the `e_ident`
 * `e_type`: they identify the type of elf, for our purpose the one to be considered valid this value should be 2 that indicates an Executable File (ET_EXEC) there are other values that in the future we could support, but they require more work to be done.
 * `e_machine`: it indicates the required architecture for the executable, the value depends on the architectures we are supporting, for example the value for the AMD64 architecture is `62`
 
+Be aware that most of the variables and their values have a specific naming convention, that is pretty standardized, for more information refer to the ELF specs.
+
 Beware that some compilers when generating a simple executable are not using the `ET_EXEC` value, but it could be of the type `ET_REL` (value 1), to obtain an executable we need to link it using a linker, for example if we generated the executable: `example.elf` with `ET_REL` type, we can use `ld` (or another equivalent linker):
 
 ```sh
