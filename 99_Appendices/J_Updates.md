@@ -45,4 +45,5 @@ Fourth book release
 
 * Typo fixes
 * Expand Syscall example chapter
+* Expand ELF chapter, and fixing code in one of examples
 

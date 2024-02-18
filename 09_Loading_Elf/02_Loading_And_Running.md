@@ -14,7 +14,7 @@ In the previous chapter we looked at the details of loading program headers, but
 
 - First a copy of the ELF file to be loaded is needed. The recommended way is to load a file via the VFS, but it could be a bootloader module or even embedded into the kernel.
 - Then once the ELF is loaded, we need verify that its header is correct. Also check the architecture (machine type) matches the current machine, and that the bit-ness is correct (dont try to run a 32-bit program if you dont support it!).
-- Find all the loadable program headers for the ELF, we'll need those in a moment.
+- Find all the loadable program headers for the ELF, we'll need those in a moment (They are the headers with type `PT_LOAD`).
 - Create a new address space for the program to live in. This usually involves creating a new VMM instance, but the specifics will vary depending on your design. Don't forget to keep the kernel mappings in the higher half!
 - Copy the loadable program headers into this new address space. Take care when writing this code, as the program headers may not be page-aligned:. Don't forget to zero the extra bytes between `memsz` and `filesz`.
 - Once loaded, set the appropriate permission on the memory each program header lives in: the write, execute (or no-execute) and user flags.

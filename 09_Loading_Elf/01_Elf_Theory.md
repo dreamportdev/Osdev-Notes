@@ -78,12 +78,12 @@ Finding the program headers within an ELF binary is also quite straightforward. 
 Like section headers, each program header is tighly packed against the next one. This means that  program headers can be treated as an array. As an example is possible to loop through the _phdrs_ as follows:
 
 ```c
-void loop_phdrs(Elf64_Hdr* ehdr) {
-    Elf64_Phdr* phdrs = *(Elf64_Phdr*)((uintptr_t)ehdr + ehdr->e_phoff);
+void loop_phdrs(Elf64_Ehdr* ehdr) {
+    Elf64_Phdr* phdrs = (Elf64_Phdr*)((uintptr_t)ehdr + ehdr->e_phoff);
 
     for (size_t i = 0; i < ehdr->e_phnum; i++)
     {
-        Elf64_Phdr* program_header = phdrs[i];
+        Elf64_Phdr program_header = phdrs[i];
         //do something with program_header here.
     }
 }
