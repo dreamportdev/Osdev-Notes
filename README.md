@@ -71,7 +71,7 @@ The [latest-master](https://github.com/dreamportdev/Osdev-Notes/releases/tag/lat
     * [The Tar File System](08_VirtualFileSystem/03_TarFileSystem.md)
 * [Part 9: Loading & Executing ELFs](09_Loading_Elf/README.md)
     * [Theory](09_Loading_Elf/01_Elf_Theory.md)
-    * [Loading and Running](02_Loading_Elf/03_Loading_And_Running.md)
+    * [Loading and Running](09_Loading_Elf/03_Loading_And_Running.md)
 * [Part 10: Going Beyond](10_Going_Beyond/README.md)
 * [Extras: Appendices](99_Appendices/README.md)
     * [General Troubleshooting](99_Appendices/A_Troubleshooting.md)
