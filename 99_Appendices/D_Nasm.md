@@ -79,15 +79,16 @@ quad_var:
 	dq	133.463 ; Example with a real number
 ```
 
-But what if we want to declare a string? Well in  this case we can use a different syntax for db:
+If we want to declare a string we need to use a different syntax for db:
 
 ```nasm
 string_var:
 	db	"Hello", 10
 ```
-What does it mean? We are simply declaring a variable (string_variable) that starts at 'H', and fill the consecutive bytes with the next letters. But what about the last number? It is just an extra byte, that represents the newline character. So what we are really storing is the string _"Hello\\n"_
 
-Now what we have seen so far is valid for a variable that can be initialized with a value, but what if we don't know the value yet, but we want just to "label" it with a variable name? Well is pretty simple, we have equivalent directives for reserving memory:
+The above code means that we are declaring a variable (`string_variable`) that starts at 'H', and fill the consecutive bytes with the next letters. And what about the last number? It is just an extra byte, that represents the newline character, so what we are really storing is the string _"Hello\\n"_
+
+What we have seen so far is valid for a variable that can be initialized with a value, but what if we don't know the value yet, but we want just to "label" it with a variable name? Well is pretty simple, we have equivalent directives for reserving memory:
 
 | Directive   | Description                     |
 |-------------|---------------------------------|
