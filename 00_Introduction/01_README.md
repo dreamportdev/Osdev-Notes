@@ -25,6 +25,6 @@ Below the list of parts that compose the book:
 * *Inter-Process Communication (IPC)* - This part looks at how we might implement IPC for our kernel, allowing isolated programs to communicate with each other in a controlled way. 
 * *Virtual File System (VFS)* - This part will cover how a kernel presents different file systems to the rest of the system. We'll also take a look at implementing a 'tempfs' that is loaded from a tape archive (tar), similar to initrd. 
 * *The ELF format* - Once we have a file system we can load files from it, why not load a program? This part looks at writing a simple program loader for ELF64 binaries, and why you would want to use this format.
-* *Going Beyond* - The final part (for now). We have implemented all the core components of a kernel, and we are free to go from here. This final chapter contains some ideas for new components that you might want to add, or at least begin thinking about.
+* *Going Beyond* - The final part (for now). We have implemented all the core components of a kernel, and we are free to go from here. This final chapter contains some ideas for new components that we might want to add, or at least begin thinking about.
 
 In the appendices we cover various topic, from debugging tips, language specific information, troubleshooting, etc.

@@ -249,7 +249,7 @@ thread_t* add_thread(process_t* proc, char* name, void(*function)(void*), void* 
 }
 ```
 
-You'll notice this function looks almost identical to the `create_process` function from before. That's because a lot of it is the same! The first part of the function is just inserting the new thread at the end of the list of threads.
+We can see that this function looks almost identical to the `create_process` outlined earlier in this chapter. That's because a lot of it is the same! The first part of the function is just inserting the new thread at the end of the list of threads.
 
 Let's look at how our `create_process` function would look now:
 
