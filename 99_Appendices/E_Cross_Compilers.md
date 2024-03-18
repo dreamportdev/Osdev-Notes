@@ -36,7 +36,7 @@ There's three environment variables we're going to use during the build process:
 
 ```
 export PREFIX="/your/path/to/cross/compiler"
-export TARGET="riscv64-elf"
+export TARGET="x86_64-elf"
 export PATH="$PREFIX/bin:$PATH"
 ```
 
