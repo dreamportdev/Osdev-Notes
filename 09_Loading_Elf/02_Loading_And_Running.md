@@ -40,14 +40,14 @@ When veryfying an ELF file there are few things we need to check in order to dec
 * The version field, byte 6,  to be a valid elf it has to be set to 1 (EVCURRENT).
 * The OS Abi and Abi version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
 
-Then from the other fields that needs validation (that area not in the `e_ident` field) are:
+Then from the other fields that need validation (that area not in the `e_ident` field) are:
 
-* `e_type`: this identify the type of elf, for our purpose the one to be considered valid this value should be 2 that indicates an Executable File (ET_EXEC) there are other values that in the future we could support, for example the `ET_DYN` type that is used for position independent code or shared object, but they require more work to be done.
-* `e_machine`: it indicates the required architecture for the executable, the value depends on the architectures we are supporting, for example the value for the AMD64 architecture is `62`
+* `e_type`: this identifies the type of elf, for our purpose the one to be considered valid this value should be 2 that indicates an Executable File (ET_EXEC) there are other values that in the future we could support, for example the `ET_DYN` type that is used for position independent code or shared object, but they require more work to be done.
+* `e_machine`: this indicates the required architecture for the executable, the value depends on the architectures we are supporting. For example the value for the AMD64 architecture is `62`
 
-Be aware that most of the variables and their values have a specific naming convention, that is pretty standardized, for more information refer to the ELF specs.
+Be aware that most of the variables and their values have a specific naming convention, for more information refer to the ELF specs.
 
-Beware that some compilers when generating a simple executable are not using the `ET_EXEC` value, but it could be of the type `ET_REL` (value 1), to obtain an executable we need to link it using a linker, for example if we generated the executable: `example.elf` with `ET_REL` type, we can use `ld` (or another equivalent linker):
+Beware that some compilers when generating a simple executable are not using the `ET_EXEC` value, but it could be of the type `ET_REL` (value 1), to obtain an executable we need to link it using a linker. For example if we generated the executable: `example.elf` with `ET_REL` type, we can use `ld` (or another equivalent linker):
 
 ```sh
 ld -o example.o example.elf
