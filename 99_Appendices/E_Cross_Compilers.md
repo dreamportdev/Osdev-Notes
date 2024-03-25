@@ -36,7 +36,7 @@ There's three environment variables we're going to use during the build process:
 
 ```
 export PREFIX="/your/path/to/cross/compiler"
-export TARGET="riscv64-elf"
+export TARGET="x86_64-elf"
 export PATH="$PREFIX/bin:$PATH"
 ```
 
@@ -154,16 +154,16 @@ Qemu is quite a large program, so it's recommended to make use of all cores when
 
 ## GDB
 
-The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need:
+The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need (name can be different depending on the distribution used):
 
 * libncurses-dev
-* libsource-highligh-dev
+* libsource-highlight-dev
 
 ```bash
 path/to/gdb_sources/configure --target=$TARGET  --host=x86_64-linux-gnu  --prefix="$PREFIX" --disable-werror --enable-tui --enable-source-highlight
 ```
 
-The last two options enable compiling the text-user-interface (`--enable-tui`) and source code highlighting (`--enable-source-highlight) which are nice-to-haves. These flags can be safely omitted if these aren't features we want.
+The last two options enable compiling the text-user-interface (`--enable-tui`) and source code highlighting (`--enable-source-highlight`) which are nice-to-haves. These flags can be safely omitted if these aren't features we want.
 
 The `--target=` flag is special here in that it can also take an option `all` which builds gdb with support for every single architecture it can support. If we're going to develop on one machine but test on multiple architectures (via qemu or real hardware) this is nice. It allows a single instance of gdb to debug multiple architectures without needing different versions of gdb. Often this is how the 'gdb-multiarch' package is created for distros that have it.
 

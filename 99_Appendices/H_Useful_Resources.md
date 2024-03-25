@@ -81,6 +81,11 @@ This appendix is a collection of links we found useful developing our own kernel
 - Osdev Wiki Page ELF Tutorial: [https://wiki.osdev.org/ELF_Tutorial](https://wiki.osdev.org/ELF_Tutorial)
 - x86-64 psABI: [https://gitlab.com/x86-psABIs/x86-64-ABI](https://gitlab.com/x86-psABIs/x86-64-ABI)
 
+## C Language Infos
+
+* [IBM inline assembly guide](https://www.ibm.com/docs/en/xl-c-and-cpp-linux/13.1.4?topic=compatibility-inline-assembly-statements) This is not gcc related, but the syntax is identical, and it contains useful and concise info on the constraintsa
+* [Fedora Inline assembly list of constraints](https://dmalcolm.fedorapeople.org/gcc/2015-08-31/rst-experiment/how-to-use-inline-assembly-language-in-c-code.html#simple-constraints)
+
 ## Nasm
 
 * Nasm Struct Section: [https://www.nasm.us/xdoc/2.15/html/nasmdoc5.html#section-5.9.1](https://www.nasm.us/xdoc/2.15/html/nasmdoc5.html#section-5.9.1)

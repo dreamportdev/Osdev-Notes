@@ -14,13 +14,55 @@ In the previous chapter we looked at the details of loading program headers, but
 
 - First a copy of the ELF file to be loaded is needed. The recommended way is to load a file via the VFS, but it could be a bootloader module or even embedded into the kernel.
 - Then once the ELF is loaded, we need verify that its header is correct. Also check the architecture (machine type) matches the current machine, and that the bit-ness is correct (dont try to run a 32-bit program if you dont support it!).
-- Find all the loadable program headers for the ELF, we'll need those in a moment.
+- Find all the program headers with the type `PT_LOAD`, we'll need those in a moment.
 - Create a new address space for the program to live in. This usually involves creating a new process with a new VMM instance, but the specifics will vary depending on your design. Don't forget to keep the kernel mappings in the higher half!
 - Copy the loadable program headers into this new address space. Take care when writing this code, as the program headers may not be page-aligned:. Don't forget to zero the extra bytes between `memsz` and `filesz`.
 - Once loaded, set the appropriate permission on the memory each program header lives in: the write, execute (or no-execute) and user flags.
 - Now we'll need to create a new thread to act as the main thread for this program, and set its entry point to the `e_entry` field in the ELF header. This field is the start function of the program. You'll also need to create a stack in the memory space of this program for the thread to use, if this wasnt already done as part of our thread creation.
 
 If all of the above are done,  then the program is ready to run! We now should be able to enqueue the main thread in the scheduler and let it run.
+
+### Verifying an ELF file
+
+When veryfying an ELF file there are few things we need to check in order to decide if an executable is valid, the fields to validate are at different points in the ELF header. Some can be found in the `e_ident` field, like the following:
+
+* The first thing we want to check is the magic number, this is the `ELFMAG` part. It is expected to be the following values: 
+
+| Value | Byte|
+|-------|-----|
+| `0x7f`| 0 |
+| `E`   | 1 |
+| `L`   | 2 |
+| `F`   | 3 |
+
+* We need to check that the file class match with the one we are supporting. There are two possible classes: 64 and 32. This is byte 4
+* The data field indicates the _endiannes_, again this depends on the architecture used. It can be three values: None (0), LSB (1) and MSB (2). For example `x86_64` architecture endiannes is LSB, then the value is expected to be 1. This field is in the byte 5.
+* The version field, byte 6,  to be a valid elf it has to be set to 1 (EVCURRENT).
+* The OS Abi and Abi version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
+
+Then from the other fields that need validation (that area not in the `e_ident` field) are:
+
+* `e_type`: this identifies the type of elf, for our purpose the one to be considered valid this value should be 2 that indicates an Executable File (ET_EXEC) there are other values that in the future we could support, for example the `ET_DYN` type that is used for position independent code or shared object, but they require more work to be done.
+* `e_machine`: this indicates the required architecture for the executable, the value depends on the architectures we are supporting. For example the value for the AMD64 architecture is `62`
+
+Be aware that most of the variables and their values have a specific naming convention, for more information refer to the ELF specs.
+
+Beware that some compilers when generating a simple executable are not using the `ET_EXEC` value, but it could be of the type `ET_REL` (value 1), to obtain an executable we need to link it using a linker. For example if we generated the executable: `example.elf` with `ET_REL` type, we can use `ld` (or another equivalent linker):
+
+```sh
+ld -o example.o example.elf
+```
+
+For basic executables, we most likely don't need to include any linker script. 
+
+If we want to know the type of an elf, we can use the `readelf` command, if we are on a unix-like os: 
+```sh
+readelf -e example.elf
+``` 
+
+Will print out all the executable information, including the type.
+
+
 
 ## Caveats
 

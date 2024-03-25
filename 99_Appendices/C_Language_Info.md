@@ -199,8 +199,3 @@ If unfamiliar with caching, each page can have a set of caching attributes appli
 One of these is write-combine. It works by queueing up writes to nearby areas of memory, until a buffer is full, and then flushing them to main memory in a single access. This is much faster than accessing main memory each write.
 
 However if we're working with an older x86 cpu, or another platform, this solution is not available. Hence `volatile` would do the job.
-
-### Useful Links
-
-* [IBM inline assembly guide](https://www.ibm.com/docs/en/xl-c-and-cpp-linux/13.1.4?topic=compatibility-inline-assembly-statements) This is not gcc related, but the syntax is identical, and it contains useful and concise info on the constraintsa
-* [Fedora Inline assembly list of constraints](https://dmalcolm.fedorapeople.org/gcc/2015-08-31/rst-experiment/how-to-use-inline-assembly-language-in-c-code.html#simple-constraints)
