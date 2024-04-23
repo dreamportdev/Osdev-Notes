@@ -24,10 +24,10 @@ symbol-file path/to/kernel.bin
 
 Below a list of some useful gdb commands
 
-* Show register content: *info register reg* where reg is the register we need
-* Set breakpoint to specific address: *break 0xaddress*
-* Show memory address content: *x/nfu addr* wher: n is the number of iterations f the format (x = hex) and the addr we want to show
-* We can show also the content of pointer stored into a register: *x/h ($rax)* shows the content of memory address pointed by rax
+* Show register content: `info register reg` where reg is the register we need
+* Set breakpoint to specific address: `break 0xaddress`
+* Show memory address content: `x/nfu addr` where: *n* is the number of iterations *f* the format (*x* = hex) and the *addr* we want to show
+* We can show also the content of pointer stored into a register: `x/h ($rax)` shows the content of memory address pointed by rax
 
 ### Navigation
 
@@ -223,10 +223,10 @@ QEMU 6.1.0 monitor - type 'help' for more information
 
 From here is possible to send commands directly to the emulator, below a list of useful commands:
 
-* **help** Well this is the first command to get some help on how to use the monitor.
-* **info xxxx** It will print several information, depending on xxxx for example: *info lapic* will show the current status of the local apic, *info mem* will print current virtual memory mappings, *info registers* will print the registers content.
-* **x/cf address** where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address.
-* **xp/cf address** same as above, but for physical memory.
+* `help` Well this is the first command to get some help on how to use the monitor.
+* `info xxxx` It will print several information, depending on xxxx for example: `info lapic` will show the current status of the local apic, `info mem` will print current virtual memory mappings, `info registers` will print the registers content.
+* `x /cf address` where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address.
+* `xp /cf address` same as above, but for physical memory.
 
 #### Info mem & Info tlb
 
