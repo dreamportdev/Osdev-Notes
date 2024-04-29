@@ -109,7 +109,7 @@ On `x86_64` there exists a pair of instructions that allow for a "fast superviso
 
 This is certainly faster as the instruction only needs to deal with a handful of registers, however it leaves the rest of the context switching up to the kernel code.
 
-Upon entering the kernel, you will be running with ring 0 privileges and certain flags will be cleared, and that's it. You must perform the stack switch yourself, as well as collecting any information the kernel might need (like the user rip, stack, ss/cs).
+Upon entering the kernel, you will be running with ring 0 privileges and certain flags will be cleared, and that's it. You must perform the stack switch yourself, as well as collecting any information the kernel might need (like the user RIP, stack, SS/CS).
 
 *Authors Note: While these instructions are covered here, `syscall` can actually result in several quite nasty security bugs if not used carefully. These issues can be worked around of course, but at that point you've lost the speed benefit offered by using these instead of an interrupt. We consider using these instructions an advanced topic. If you do find yourself in a position where the speed of the system call entry is a bottleneck, then these instructions are likely not the solution, and you should look at why you require so many system calls. - DT*
 
@@ -123,13 +123,35 @@ In summary: if the kernel is on a 32-bit platform, use `sysenter`/`sysexit`, for
 
 ### Using Syscall & Sysret
 
-Before using these instructions we'll need to perform a bit of setup first. They require the GDT to have a very specific layout.
+Before using these instructions we'll need to perform a bit of setup. 
 
-Let's assume that our kernel CS is 0x8: to use `syscall` the kernel SS **must** be the next GDT entry, at offset 0x10.
+First things first, the `syscall`/`sysret` pair uses three MSRs: `STAR` (0xC0000081), `LSTAR` (0xC0000082) and `FMASK` (0xC0000084).
 
-For `sysret`, which returns to user mode, things are a little more complex. This instruction allows for going to both compatibility mode (32-bit long mode) and long mode (64-bit long mode proper). So the instruction actually requires three GDT selectors to be placed immedately following each other: user CS (32-bit mode), user SS, user CS (64-bit mode). As an example if our 32-bit CS was 0x18, our user SS **must** be at 0x20, and our 64-bit user CS **must** be at 0x28.
+`STAR` has three fields used to set the GDT descriptors of userspace and kernelspace. The low 32 bits are reserved for the handler of 32-bit variant of `syscall`. It's safe to set it to zero if you don't target 64-bit code. The next 16 bits (47:32) hold the kernel CS/SS base. When `syscall` is executed, the new CS is set to `base` and the new SS is set to `base + 8`. The last 16 bits (64:48) hold the userspace CS/SS base. Because it supports jumping back to compatibility mode, `sysret` requires a very specific GDT layout. It expects the 32-bit CS to be at `base`, the SS (either 64-bit or 32-bit) at `base + 8` and the 64-bit CS to be at `base + 16`. If you don't target 32-bit code, it's safe to omit the 32-bit segment from the GDT, but not that the 64-bit CS will still be fetched from `base + 16`.
 
-If support compatibility mode is not supported, we can simply omit the 32-bit user code selector, and set use the offset 8 bytes below the user SS. This will work as long as we never try to `sysret` back to compatibility mode.
+`LSTAR` holds the RIP of the handler.
+
+`FMASK` holds a bit mask used to disable certain flags when transitioning control to kernel. Basically, if a bit in `FMASK` is set, the coresponding flag is guranteed to be disabled when entering the kernel.
+
+An example of properly configured GDT and MSRs for 64-bit-only operation:
+
+GDT:
+|Offset|Name|Access byte|
+|------|----|-----------|
+|0x0|NULL|`0`|
+|0x8|Kernel Code|`0b10011010`|
+|0x10|Kernel Data|`0b10010010`|
+|0x18|User Data|`0b11110010`|
+|0x20|User Code|`0b11111010`|
+
+MSRs:
+|MSR|Name|Value|
+|---|----|-----|
+|`0xC0000081`|`STAR`| `0x0013000800000000` |
+|`0xC0000082`|`LSTAR`| address of the handler |
+|`0xC0000084`|`FMASK`| `0xFFFFFFFFFFFFFFFD` | 
+
+In this configuration, `STAR`(47:32) is set to `0x8`. It corresponds to the kernel code segment. Thus, on a `syscall` the CS will be `0x8` and SS `0x10`. Next, bits (64:48) are set to `0x13`. After `sysret`, the CS will be `0x23` (`0x13 + 16`) and SS will be `0x1B` (`0x13 + 8`). Note that we have to set the lower two bits that represent the privilege level!
 
 As an aside, the `sysret` instruction determines which mode to return to based on the operand size. By default all operands are 32-bit, to specify a 64-bit operand (i.e. return to 64-bit long mode) just add the `q` suffix in GNU as, or the `o64` prefix in NASM.
 
@@ -141,23 +163,13 @@ sysretq
 o64 sysret
 ```
 
-Now we have our GDT set up accordingly, we just have to tell the CPU about it. We'll do this via the `STAR` MSR (0xC0000081). This particular MSR contains 3 fields:
-
-- The lowest 32-bits are used by the the 32-bit `syscall` operation. This is the address the CPU will jump to when running `syscall` in 32-bit protected mode. They are ignored in long mode.
-- Bits 47:32 are the kernel CS to be loaded. Remember from above that the kernel SS will be loaded from the next GDT descriptor after the kernel CS.
-- Bits 63:48 are used by when `sysret` is returning to 32-bit code. As described above, the user SS must be the next GDT descriptor, and the 64-bit user CS must follow that.
-
-Since we're in long mode, we'll actually need to access three more MSRs: `LSTAR` (0xC0000082), `CSTAR` (0xC0000083), and `SFMASK` (0xC0000084). The first two are the kernel address `syscall` will jump to when coming from long mode (`LSTAR`) or compatibility mode (`CSTAR`). If compatibility mode is not supported in the kernel, `CSTAR` can be ignored.
-
-The `SFMASK` MSR is a little more interesting. When `syscall` is executed, the CPU will do a bitwise AND of this register and the flags register. This means that any set bits in `SFMASK` will be cleared in the flags register when `syscall` is executed. For our purposes, we'll want to to set bit 9 (interrupt flag), so that it's cleared when the syscall handler runs. Otherwise we may have interrupts occuring before we could execute a `cli` instruction in our handler, which would be bad!
-
-Finally, we need to tell the CPU we support these instructions and have done all of the above setup. Like many extended features on `x86`, there is a flag to enable them at a global level. For `syscall`/`sysret` this is the system call extensions flag in the EFER MSR, which is bit 0. After setting this, the CPU is ready to handle these instructions!
+Finally, we need to tell the CPU we support these instructions and have done all of the above setup. Like many extended features on `x86`, there is a flag to enable them at a global level. For `syscall`/`sysret` this is the system call extensions flag in the `IA32_EFER` (0xC0000080) MSR, which is bit 0. After setting this, the CPU is ready to handle these instructions!
 
 ### Handler Function
 
 We're not done with these instructions yet! We can get to and from our handler function, but there are a few critical things to know when writing a handler function:
 
 - The stack *selector* has been changed, but the stack itself has not. We're still operating on the user's stack. The stack need to be loaded manually.
-- Since the flags register is modified by `SFMASK`, the previous flags are stored in the `r11` register. The value of `r11` is also used to restore the flags register when `sysret` is executed.
+- Since the flags register is modified by `FMASK`, the previous flags are stored in the `r11` register. The value of `r11` is also used to restore the flags register when `sysret` is executed.
 - The saved user instruction pointer is available in rcx.
 - Although interrupts are disabled, machine check exceptions and non maskable interrupts can (and will) still occur. Since the  handler will already have ring 0 selectors loaded, the CPU won't automatically switch stacks if an interrupt occurs during its execution. This is pretty dangerous if one of these interrupts happens before the kernel stack is loaded, as that means we'll be running supervisor code on a user stack, and may not be aware of it. The solution is to use the interrupt stack tables for these interrupts, so they will always have a new stack loaded.
