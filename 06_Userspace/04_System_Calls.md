@@ -151,7 +151,7 @@ MSRs:
 |`0xC0000082`|`LSTAR`| address of the handler |
 |`0xC0000084`|`FMASK`| `0xFFFFFFFFFFFFFFFD` | 
 
-In this configuration, `STAR`(47:32) is set to `0x8`. It corresponds to the kernel code segment. Thus, on a `syscall` the CS will be `0x8` and SS `0x10`. Next, bits (64:48) are set to `0x13`. After `sysret`, the CS will be `0x23` (`0x13 + 16`) and SS will be `0x1B` (`0x13 + 8`). Note that we have to set the lower two bits that represent the privilege level!
+In this configuration, `STAR`(47:32) is set to `0x8`. It corresponds to the kernel code segment. Thus, on a `syscall` the CS will be `0x8` and SS `0x10`. Next, bits (64:48) are set to `0x13`. After `sysret`, the CS will be `0x23` (`0x13 + 16`) and SS will be `0x1B` (`0x13 + 8`). Note that we have to set the lower two bits that represent the privilege level! And last, `FMASK` clears all flags while keeping bit 1 (reserved) set.
 
 As an aside, the `sysret` instruction determines which mode to return to based on the operand size. By default all operands are 32-bit, to specify a 64-bit operand (i.e. return to 64-bit long mode) just add the `q` suffix in GNU as, or the `o64` prefix in NASM.
 
