@@ -127,11 +127,11 @@ Before using these instructions we'll need to perform a bit of setup.
 
 First things first, the `syscall`/`sysret` pair uses three MSRs: `STAR` (0xC0000081), `LSTAR` (0xC0000082) and `FMASK` (0xC0000084).
 
-`STAR` has three fields used to set the GDT descriptors of userspace and kernelspace. The low 32 bits are reserved for the handler of 32-bit variant of `syscall`. It's safe to set it to zero if you don't target 64-bit code. The next 16 bits (47:32) hold the kernel CS/SS base. When `syscall` is executed, the new CS is set to `base` and the new SS is set to `base + 8`. The last 16 bits (64:48) hold the userspace CS/SS base. Because it supports jumping back to compatibility mode, `sysret` requires a very specific GDT layout. It expects the 32-bit CS to be at `base`, the SS (either 64-bit or 32-bit) at `base + 8` and the 64-bit CS to be at `base + 16`. If you don't target 32-bit code, it's safe to omit the 32-bit segment from the GDT, but not that the 64-bit CS will still be fetched from `base + 16`.
+`STAR` has three fields that specify the selectors used for userspace and kernelspace. The low 32 bits are reserved for the handler of 32-bit variant of `syscall`. It's safe to set it to zero if you don't target 32-bit userspace code. The next 16 bits (47:32) hold the kernel CS/SS base. When `syscall` is executed, the new CS is set to `base` and the new SS is set to `base + 8`. The last 16 bits (64:48) hold the userspace CS/SS base. Because it supports jumping back to compatibility mode, `sysret` requires a very specific GDT layout. It expects the 32-bit CS to be at `base`, the SS (either 64-bit or 32-bit) at `base + 8` and the 64-bit CS to be at `base + 16`. If you don't target 32-bit code, it's safe to omit the 32-bit segment from the GDT, but note that the 64-bit CS will still be fetched from `base + 16`.
 
 `LSTAR` holds the RIP of the handler.
 
-`FMASK` holds a bit mask used to disable certain flags when transitioning control to kernel. Basically, if a bit in `FMASK` is set, the coresponding flag is guranteed to be disabled when entering the kernel.
+`FMASK` holds a bit mask used to disable certain flags when transitioning control to kernel. Basically, if a bit in `FMASK` is set, the corresponding flag is guaranteed to be cleared when entering the kernel.
 
 An example of properly configured GDT and MSRs for 64-bit-only operation:
 
@@ -163,7 +163,7 @@ sysretq
 o64 sysret
 ```
 
-Finally, we need to tell the CPU we support these instructions and have done all of the above setup. Like many extended features on `x86`, there is a flag to enable them at a global level. For `syscall`/`sysret` this is the system call extensions flag in the `IA32_EFER` (0xC0000080) MSR, which is bit 0. After setting this, the CPU is ready to handle these instructions!
+Finally, we need to tell the CPU we support these instructions and have done all of the above setup. Like many extended features on `x86`, there is a flag to enable them at a global level. For `syscall`/`sysret` this is the system call extensions flag in the `EFER` (0xC0000080) MSR, which is bit 0. After setting this, the CPU is ready to handle these instructions!
 
 ### Handler Function
 
