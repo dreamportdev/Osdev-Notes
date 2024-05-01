@@ -16,4 +16,4 @@ In no particular order:
 - @Rubo3 ([https://github.com/Rubo3](https://github.com/Rubo3))
 - @ajccosta([https://github.com/ajccosta](https://github.com/ajccosta))
 - @maxtyson123 ([https://github.com/maxtyson123](https://github.com/maxtyson123))
-
+- @Moldytzu ([https://github.com/Moldytzu](https://github.com/Moldytzu))
