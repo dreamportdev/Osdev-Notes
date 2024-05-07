@@ -28,7 +28,7 @@ Each of the layers has a dedicated chapter, however we'll start with a high leve
 
 ## A Word of Wisdom
 
-As said at the beginning of this chapter Memory management is one of the most important parts of a kernel, as every other part of the kernel will interact with it in some way. It's worth taking the extra time to consider what features we want our PMM and VMM to have, and the ramifications. A little planning now can save us a lot of heacaches and rewriting code later!
+As said at the beginning of this chapter Memory management is one of the most important parts of a kernel, as every other part of the kernel will interact with it in some way. It's worth taking the extra time to consider what features we want our PMM and VMM to have, and the ramifications. A little planning now can save us a lot of hedacaches and rewriting code later!
 
 ## PMM - Physical Memory Manager
 
