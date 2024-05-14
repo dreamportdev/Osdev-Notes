@@ -213,11 +213,11 @@ Note about PWT and PCD, the definiton of those bits depends on whether PAT (page
 
 If we are using 2MB pages this is how the address will be handled by the paging mechanism:
 
-|            |           |               |            |           |
-|------------|-----------|---------------|------------|-----------|
-| 63 .... 48 | 47 ... 39 | 38   ...   30 | 29  ..  21 | 20 ...  0 |
-|  1 ...  1  | 1  ...  1 | 1    ...    0 | 0   ... 0  | 0  ...  0 |
-|  Sgn. ext  |    PML4   |      PDPR     |   Page dir |   Offset  |
+|              |           |               |              |            |
+|--------------|-----------|---------------|--------------|------------|
+| 63 .... 48   | 47 ... 39 | 38   ...   30 |  29  ..  21  | 20 ...  0  |
+|  1 ...  1    | 1  ...  1 | 1    ...    0 |  0   ... 0   | 0  ...  0  |
+| **Sgn. ext** | **PML4**  |    **PDPR**   | **Page dir** | **Offset** |
 
 * Bits 63 to 48, not used in address translation.
 * Bits 47 ... 39 are the PML4 entry.
@@ -231,11 +231,11 @@ Every table has 512 elements, so we have an address space of $2^{512}*2^{512}*2^
 
 If we are using 4kB pages this is how the address will be handled by the paging mechanism:
 
-|           |           |           |           |             |           |
-|-----------|-----------|-----------|-----------|-------------|-----------|
-| 63 ... 48 | 47 ... 39 | 38 ... 30 | 29 ... 21 | 20  ...  12 | 11 ...  0 |
-| 1  ...  1 | 1  ...  1 | 1  ... 0  | 0  ... 0  | 0   ...  0  | 0  ... 0  |
-|  Sgn. ext |    PML4   |   PDPR    |  Page dir |  Page Table |   Offset  |
+|              |           |           |              |                |             |
+|--------------|-----------|-----------|--------------|----------------|-------------|
+| 63 ... 48    | 47 ... 39 | 38 ... 30 |  29 ... 21   | 20  ...  12    |  11 ...  0  |
+| 1  ...  1    | 1  ...  1 | 1  ... 0  |  0  ... 0    | 0   ...  0     |  0  ... 0   |
+| **Sgn. ext** |  **PML4** |  **PDPR** | **Page dir** | **Page Table** | **Offset**  |
 
 * Bits 63 to 48, not used in address translation.
 * Bits 47 ... 39 are the PML4 entry.
@@ -257,10 +257,10 @@ The idea of the page fault handler is to look at the error code and faulting add
 
 The error code has the following structure:
 
-|           |       |        |      |       |     |
-|-----------|-------|--------|------|-------|-----|
-| 31 .... 4 |   4   |    3   |   2  |   1   |  0  |
-|  Reserved |  I/D  |  RSVD  |  U/S |  W/R  |  P  |
+|            |         |          |         |         |       |
+|------------|---------|----------|---------|---------|-------|
+| 31 .... 4  |   4     |    3     |    2    |    1    |   0   |
+| _Reserved_ | **I/D** | **RSVD** | **U/S** | **W/R** | **P** |
 
 The meanings of these bits are expanded below:
 

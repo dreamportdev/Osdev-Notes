@@ -55,7 +55,7 @@ Well the answer is, as we already know: it allocates memory, specifically in byt
 
 If we are writing an OS, we already know that RAM can be viewed as a very long array, where the index into this array is the memory address. The allocator is returning these indices. So we can already see the first detail we'll need to keep track of: next available address.
 
-Let's start with a simple example, assume that we have an address space of 100 bytes, nothing has allocated yet, and the program makes the following consecutive `alloc()` calls:
+Let's start with a simple example, assume that we have an address space of 100 bytes, nothing has been allocated yet, and the program makes the following consecutive `alloc()` calls:
 
 ```c
 alloc(10);
@@ -94,7 +94,7 @@ uint8_t *cur_heap_position = 0; //Just an example, in the real world you would u
                                 //a virtual address allocated from the VMM.
 void *first_alloc(size_t size) {
   uint8_t *addr_to_return = cur_heap_position;
-  cur_heap_position= cur_heap_position + size;
+  cur_heap_position = cur_heap_position + size;
   return (void*) addr_to_return;
 }
 ```
@@ -111,7 +111,7 @@ void first_free(void *ptr) {
 
 Yeah... that's right, it's not an error. A bump allocator does not have `free()`.
 
-Why? Because we are not keeping track of the allocated memory, so we can't just update the `cur_heap_position` variable with the address of ptr, because we don't know who is using the memory after ptr. So we are forced just to do nothing.
+Why? Because we are not keeping track of the allocated memory, so we can't just update the `cur_heap_position` variable with the address of ptr, since we don't know who is using the memory after ptr. So we are forced just to do nothing.
 
 Even if probably useless let's see what are the pros and cons of this approach:
 
@@ -128,9 +128,9 @@ Of course the cons are probably pretty clear and make this algorithm pretty usel
 * There is no way to traverse the heap, because we don't keep track of the allocations.
 * We will eventually run out of memory (OOM - out of memory).
 
-### Part 2: Adding Free()
+### Part 2: Adding free()
 
-The main problem with this algorithm is that we don't keep track of what we have allocated in the past, so we are not able to free that memory in the future, when it's no longer used.
+The main problem with the algorithm outlined above is that we don't keep track of what we have allocated in the past, so we are not able to free that memory in the future, when it's no longer used.
 
 Now we're going to build a new allocator based on the one we just implemented. The first thing to do is try to figure out what are the information we need to keep track of from the previous allocations:
 

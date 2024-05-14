@@ -6,7 +6,7 @@ There's a million and one excellent resources on makefiles out there, so this ch
 
 There's multiple different make-like programs out there, a lot of them share a common base, usually the one specified in posix. GNU make also has a bunch of custom extensions it adds, which can be quite useful. These will render our Makefiles only usable for gnu make, which is the most common version. So this is fine, but if we care about being fully portable between make versions, we'll have to avoid these.
 
-If we want to use gnu make extensions, we now have a makefile that wont run under every version of make. Fortunately the folks at gnu allow us to name our makefile `GNUMakefile` instead, and this will run as normal. However other versions of make won't see this file, meaning they wont try to run it.
+If we want to use gnu make extensions, we now have a makefile that wont run under every version of make. Fortunately the folks at gnu allow us to name our makefile `GNUmakefile` instead, and this will run as normal. However other versions of make won't see this file, meaning they wont try to run it.
 
 ## Simple Makefile Example
 

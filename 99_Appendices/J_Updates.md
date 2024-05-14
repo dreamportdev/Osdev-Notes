@@ -40,7 +40,7 @@ Third Book release
 
 ### Revision 3
 
-Release date: April 2024
+Release date: April 2024.
 Fourth book release
 
 * Typo fixes
