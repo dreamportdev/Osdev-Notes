@@ -153,9 +153,9 @@ Setting those bits must be done only once at early stages of boot process (proba
 
 PML4 and PDPR entry structures are identical, while the PD one has few differences. Let's begin by looking at the structure of the first two types:
 
-| 63   | 62 ... 59 | 58 ... 52 | 51 ... 40            | 39 ... 12              | 11  ...  9 |
-|------|-----------|-----------|----------------------|------------------------|------------|
-|**XD**| **PK**    | Available | _Reserved must be 0_ | **Table base address** | Available  |
+| 63   | 62 ... 59              | 58 ... 52 | 51 ... 40            | 39 ... 12              | 11  ...  9 |
+|------|------------------------|-----------|----------------------|------------------------|------------|
+|**XD**| **PK** or available    | Available | _Reserved must be 0_ | **Table base address** | Available  |
 
 
 |8   ...   6 | 5     |  4      |  3      |  2      |  1      | 0     |
@@ -175,9 +175,9 @@ Now the Page Directory (PD) has few differences:
 
 A page table entry structure is still similar to the one above, but it contains few more bits that can be set:
 
-| 63   | 62 ... 59 | 58 ... 52 | 51 ... 40            | 39 ... 12             | 11  ... 9 |
-|------|-----------|-----------|----------------------|-----------------------|-----------|
-|**XD**| **PK**    | Available | _Reserved must be 0_ | **Page Base Address** | Available |
+| 63   | 62 ... 59              | 58 ... 52 | 51 ... 40            | 39 ... 12             | 11  ... 9 |
+|------|------------------------|-----------|----------------------|-----------------------|-----------|
+|**XD**| **PK** or available    | Available | _Reserved must be 0_ | **Page Base Address** | Available |
 
 
 | 8     | 7       | 6      | 5     |  4      |  3      |  2      |  1      | 0     |
@@ -203,7 +203,7 @@ Below is a list of all the fields present in the table entries, with an explanat
 * **PS** (Page Size): Reserved in the pml4, if set on the PDPR it means address translation stops at this level and is mapping a 1GB page. Check for 1gb page support before using this. More commonly this can be set on the PD entry to stop translation at that level, and map a 2MB page.
 * **PAT** (Page Attribute Table Index) only for the page table: It selects the PAT entry (in combination with the PWT and PCD bits above), refer to the Intel Manual for a more detailed explanation.
 * **G** (Global): If set it indicates that when CR3 is loaded or a task switch occurs that this particular entry should not be ejected. This feature is not architectural, and should be checked for before using.
-* **PK** (Protection Key): A 4-bit value used to control supervisor & user level accesses for a virtual address. If bit 22 (PKE) is set in CR4, the PKRU register will be used to control access rights for user level accesses based on the PK, and if bit 24 (PKS) is set, same will happen but for supervisor level accesses with the PKRS register.
+* **PK** (Protection Key): A 4-bit value used to control supervisor & user level accesses for a virtual address. If bit 22 (PKE) is set in CR4, the PKRU register will be used to control access rights for user level accesses based on the PK, and if bit 24 (PKS) is set, same will happen but for supervisor level accesses with the PKRS register. **Note**: This value is ignored on older CPUs, which means those bits are marked as available on them. If you want to use the protection key, make sure to check for its existence using CPUID, and of course to set the corresponding bits for it in the CR4 register.
 * **XD**: Also known as NX, the execute disable bit is only available if supported by the CPU (can be checked wit CPUID), otherwise reserved. If supported, and after enabling this feature in EFER (see the intel manual for this), attempting to execute code from a page with this bit set will result in a page fault.
 
 Note about PWT and PCD, the definiton of those bits depends on whether PAT (page attribute tables) are in use or not. For a better understanding of those two bits please refer to the most updated intel documentation (is in the Paging section of the intel Software Developer Manual vol.3)
