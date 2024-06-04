@@ -17,3 +17,4 @@ In no particular order:
 - @ajccosta([https://github.com/ajccosta](https://github.com/ajccosta))
 - @maxtyson123 ([https://github.com/maxtyson123](https://github.com/maxtyson123))
 - @Moldytzu ([https://github.com/Moldytzu](https://github.com/Moldytzu))
+- @AnErrupTion ([https://github.com/AnErrupTion](https://github.com/AnErrupTion))
