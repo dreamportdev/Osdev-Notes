@@ -15,7 +15,7 @@ In these chapters we're going to use a linear framebuffer, since it's the only f
 One way to enable framebuffer is asking grub to do it (this can be done also using uefi but it is not covered in this chapter).
 
 To enable it, we need to add the relevant tag in the multiboot2 header.
-Simply we just need to add in the tag section a new item, like the one below, to request to grub to enable the framebuffer if avaiable, with the requested configuration:
+Simply we just need to add in the tag section a new item, like the one below, to request to grub to enable the framebuffer if available, with the requested configuration:
 
 ```assembly
 framebuffer_tag_start:
@@ -28,7 +28,7 @@ framebuffer_tag_start:
 framebuffer_tag_end:
 ```
 
-The comments are self explanatory.
+In this case we let the bootloader decide for us the framebuffer configuration. `Width` and `Heigth` field are self explanatory, while the `depth` field indicates the number of bits per pixel in a graphic mode.
 
 ## Accessing the Framebuffer
 
@@ -148,15 +148,17 @@ where `logo_data` is a pointer to the image content and `pixel` is an array of 4
 Now since each pixel is identified by 3 colors and we have 4 elements into an array, we know that the last element (`pixel[3]`) is always zero. The color is encoded in RGB format with Blue being the least significant byte, and to plot that pixel we need to fill a 32 bit address, so the array need to be converted into a `uint32_t` variable, this can easily be done with some bitwise operations:
 
 ```c
-char pixel[4];
+unsigned char pixel[4];
 HEADER_PIXEL(logo_data, pixel)
 pixel[3] = 0;
-uint32_t num = (uint32_t) pixel[0] << 24 |
-    (uint32_t)pixel[1] << 16 |
-    (uint32_t)pixel[2] << 8  |
-    (uint32_t)pixel[3];
+uint32_t num = (uint32_t) pixel[3] << 24 |
+    (uint32_t)pixel[0] << 16 |
+    (uint32_t)pixel[1] << 8  |
+    (uint32_t)pixel[2];
 
 ```
+
+Note that we used a `unsigned char` type, while gimp is providing for a `static char` type, the reason is because `char` type can be signed or unsigned depending on the platform. So if values are greater than 127 are used, they may be intended as negative values, if `char` is signed, when they are cast to `uint32_t` the sign can be extended, leading unexpected results. 
 
 In the code above we are making sure that the value of `pixel[3]` is zero, since the `HEADER_PIXEL` function is not touching it. Now the value of `num` will be the colour of the pixel to be plotted.
 
