@@ -10,7 +10,7 @@ This appendix is a collection of links we found useful developing our own kernel
 - Stivale 2 Specification: [https://github.com/stivale/stivale/blob/master/STIVALE2.md](https://github.com/stivale/stivale/blob/master/STIVALE2.md)
 - Stivale 2 Barebones: [https://github.com/stivale/stivale2-barebones/](https://github.com/stivale/stivale2-barebones/)
 - Sabaton - ARM Stivale 2 Bootloader: [https://github.com/FlorenceOS/Sabaton](https://github.com/FlorenceOS/Sabaton)
-- Xorisso Documentation: [https://linux.die.net/man/1/xorriso](https://linux.die.net/man/1/xorriso)
+- Xorriso Documentation: [https://linux.die.net/man/1/xorriso](https://linux.die.net/man/1/xorriso)
 - GNU Make Documenation: [https://www.gnu.org/software/make/manual/make.html](https://www.gnu.org/software/make/manual/make.html)
 - Linker Scripts Documentation : [https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts)
 - Bootlin Toolchains : [https://toolchains.bootlin.com/](https://toolchains.bootlin.com/)
