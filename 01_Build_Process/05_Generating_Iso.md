@@ -5,9 +5,9 @@ The generated iso can then be used as a cdrom in an emulator, or burnt to a real
 
 ## Xorriso
 
-Xorisso is a tool used to create iso disk images. Iso is actually quite a complex format, as it aims to be compatible with a lot of different formats and ways of booting.
+Xorriso is a tool used to create iso disk images. Iso is actually quite a complex format, as it aims to be compatible with a lot of different formats and ways of booting.
 
-A walkthrough of xorisso is outside the scope of this chapter, but just know it's the standard tool for working with the iso format.
+A walkthrough of xorriso is outside the scope of this chapter, but just know it's the standard tool for working with the iso format.
 
 ## Grub (Multiboot 2)
 
@@ -51,10 +51,10 @@ To get started we'll want to create a working directory to use as the root of ou
 
 Now we can copy our `limine.cfg` and kernel into the working directory. The `limine.cfg` file needs to be in one of a few locations in order to be found, the best place is the root directory.
 
-Now we're ready to run the following xorisso command:
+Now we're ready to run the following xorriso command:
 
 ```sh
-xorisso -as mkisofs -b limine-cd.bin -no-emul-boot \
+xorriso -as mkisofs -b limine-cd.bin -no-emul-boot \
     -boot-load-size 4 -boot-info-table --efi-boot \
     limine-cd-efi.bin -efi-boot-part --efi-boot-image \
     --protective-msdos-label disk -o my_iso.iso
