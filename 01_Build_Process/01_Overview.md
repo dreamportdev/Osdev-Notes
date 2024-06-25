@@ -162,7 +162,7 @@ There are other make-like tools out there (xmake, nmake) but these are less popu
 
 There are more details to this, however most bootloaders will provide a tool that lets us create a bootable iso, with the kernel, the bootloader itself and any other files we might want. For grub this is `grub-mkrescue` and limine provides `limine-install` for version 2.x or `limine-deploy` for version 3.x.
 
-While the process of generating an iso is straightforward enough when using something like xorisso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in its own chapter.
+While the process of generating an iso is straightforward enough when using something like xorriso, the process of installing a bootloader into that iso is usually bootloader dependent. This is covered more in detail in its own chapter.
 
 If just here for a quick reference, grub uses `grub-mkrescue` and a `grub.cfg` file, limine reqiures us to build the iso by yourselves with a `limine.cfg` on it, and then run `limine-deploy`.
 
