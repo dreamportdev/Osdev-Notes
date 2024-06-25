@@ -18,3 +18,4 @@ In no particular order:
 - @maxtyson123 ([https://github.com/maxtyson123](https://github.com/maxtyson123))
 - @Moldytzu ([https://github.com/Moldytzu](https://github.com/Moldytzu))
 - @AnErrupTion ([https://github.com/AnErrupTion](https://github.com/AnErrupTion))
+- @MRRcode979 ([https://github.com/MRRcode979](https://github.com/MRRcode979))
