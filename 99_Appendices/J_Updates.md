@@ -47,3 +47,14 @@ Fourth book release
 * Expand Syscall example chapter
 * Expand ELF chapter, and fixing code in one of examples
 
+### Revision 4
+
+Release date: TBD
+Fifth book release
+
+* Typo fixes
+* Code (and typo) fixes on the framebuffer chapter. 
+* Add explanation of potential bug on converting GIMP Header file to RGB.
+* Added missing flags on page table/dirs entries
+* Rewrite and rearrangement of syscall/sysret section
+
