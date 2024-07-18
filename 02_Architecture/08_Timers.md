@@ -235,7 +235,7 @@ However not all local APIC timers are created equal! There are a few feature fla
 
 - ARAT/Always Running APIC Timer: cpuid leaf 6, eax bit 2. If the cpu hasn't set this bit the APIC timer may stop in lower power states. This is okay for a hobby OS, but if we do begin managing system power states later on, it's good to be aware of this.
 
-The timer is managed by registers within the local APIC MMIO area. The base address for this can be obtained from the lapic MSR (MSR `0x1B`). See the APIC chapter for more info on this. We're interested in three registers for the timer: the divisor (offset `0x3E0`), initial count (offset `0x380`) and timer entry in the LVT (offset `0x320`). There is also a current count register, but we don't need ot access that right now.
+The timer is managed by registers within the local APIC MMIO area. The base address for this can be obtained from the lapic MSR (MSR `0x1B`). See the APIC chapter for more info on this. We're interested in three registers for the timer: the divisor (offset `0x3E0`), initial count (offset `0x380`) and timer entry in the LVT (offset `0x320`). There is also a current count register, but we don't need to access that right now.
 
 Unfortunately we're not told the frequency of this timer (except for some very new cpus which include this in cpuid), so we'll need to calibrate this timer against one we already know the speed of. Other than this, using the local APIC is very simple: simply set the mode needed in the LVT entry, set the divisor and initial count and it should work.
 
