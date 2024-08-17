@@ -138,10 +138,10 @@ If we are using debian, we most-likely need to install the *gdb* package, becaus
 
 Currently these are the type of tui layouts available in gdb:
 
-* asm - shows the asm code being executed
-* src - shows the actual source code line executed
-* regs - shows the content of the cpu registers
-* split - generate a split view that shows theasm and the src layout
+* `asm` - shows the asm code being executed
+* `src` - shows the actual source code line executed
+* `regs` - shows the content of the cpu registers
+* `split` - generate a split view that shows the asm and the src layout
 
 When in a view with multiple windows, the command `focus xyz` can be used to change which window has the current focus. Most key combinations are directed to the currently focused window, so if something isn't working as expected, that might be why. For example to get back the focus to the command view just type: `focus cmd`
 
@@ -198,7 +198,7 @@ While debugging with gdb, we may want to keep qemu hanging after a triple fault 
 
 ### Qemu Monitor
 
-Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the Virtual machine without using an external debugger.
+Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the virtual machine without using an external debugger.
 
 One way to start Qemu monitor on a unix system is using the following parameter when starting qemu:
 
@@ -241,7 +241,7 @@ ffffffff80000000-ffffffff80057000 0000000000057000 -r-
 ffffffff80057000-ffffffff8006b000 0000000000014000 -rw
 ```
 
-Where every line describes a single virtual memory mapping. The fields are (ordered left to right): base address, limit, size and the three common flags (user, read, write).
+Where every line describes a single virtual memory mapping. The fields are (ordered left to right): base `address`, `limit`, `size` and the three common flags (user, read, write).
 
 The other command, `info tlb`, shows the state of the translation lookaside buffer. In qemu this is shown as individual address translations, and can be quite verbose. An example of what the output might look like is shown below:
 
@@ -258,7 +258,7 @@ ffffffff80069000: 0000000009951000 XG-DA---W
 ffffffff8006a000: 0000000009952000 XG-DA---W
 ```
 
-In this case the line contains: _virtualaddress: physicaladdress flags_. The command is not available on all architecture, so if developing on an architecture different from `x86-64` it could not be available.
+In this case the line contains: _virtualaddress: physicaladdress flags_. The command is not available on all architectures, so if developing on an architecture different from `x86-64` it could not be present.
 
 ### Debugcon
 
@@ -267,5 +267,5 @@ It's an extremely simple protocol, similar to serial - but with no config, where
 Same is true with input (although this is quite buggy, best to use serial for this).
 To enable it in qemu add this to the qemu flags `-debugcon where`. Where can be anything really, a log file for example. We can even use `-debugcon /dev/stdout` to have the output appear on the current terminal.
 
-It's worth noting that because this is just a binary stream, and not a serial device emulation, its much faster than usual port io. And there's no state management or device setup to worry about.
+It's worth noting that because this is just a binary stream, and not a serial device emulation, its much faster than usual port i/o. And there's no state management or device setup to worry about.
 
