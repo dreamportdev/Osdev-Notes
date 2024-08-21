@@ -4,7 +4,7 @@
 
 At first a virtual memory manager might not seem like necessary when we have paging, but the VMM serves as an abstraction on top of paging (or whatever memory management hardware our platform has), as well as abstracting away other things like memory mapping files or even devices.
 
-As mentioned before, a simple kernel only requires a simple VMM which may end up being a glorified page-table manager. However as our kernel grows more complex, so will the VMM.
+As mentioned before, a simple kernel only requires a simple VMM which may end up being a glorified page-table manager. However, as our kernel grows more complex, so will the VMM.
 
 ### Virtual Memory
 
@@ -19,10 +19,10 @@ Virtual memory can be imagined as how the program views memory, as opposed to ph
 Now that we have a layer between how a program views memory and how memory is actually laid out, we can do some interesting things:
 
 - Making all of physical memory available as virtual memory somewhere is a common use. You'll need this to be able to modify page tables. The common ways are to create an identity map, or to create an identity map but shift it into the higher half (so the lower half is free for userspace later on).
-- Place things in memory at near-impossible addresses. Higher half kernels are commonly placed at -2GB as this allows for certain compiler optimizations. On a 64-bit machine -2GB is `0xFFFF'FFFF'8000'0000`. Placing the kernel at that address without virtual memory would require an insane amount of physical memory to be present. This can also be extended to do things like place MMIO at more convinient locations.
-- We can protect regions of memory. Later on once we reach userspace, we'll still need the kernel loaded in virtual memory to handle interrupts and provide system calls, but we don't want the user program to arbitarily access kernel memory.
+- Place things in memory at near-impossible addresses. Higher half kernels are commonly placed at -2GB as this allows for certain compiler optimizations. On a 64-bit machine -2GB is `0xFFFF'FFFF'8000'0000`. Placing the kernel at that address without virtual memory would require an insane amount of physical memory to be present. This can also be extended to do things like place MMIO at more convenient locations.
+- We can protect regions of memory. Later on once we reach userspace, we'll still need the kernel loaded in virtual memory to handle interrupts and provide system calls, but we don't want the user program to arbitrarily access kernel memory.
 
-We can also add more advanced features later on, like demand paging. Typically when a program (including the kernel) asks the VMM for memory, and the VMM can successfully allocate it, physical memory is mapped there right away. *Immediately backing* like this has advantages in that it's very simple to implement, and can be very fast. The major downside is that we trust the program to only allocate what it needs, and if it allocates more (which is very common) that extra physical memory is wasted. In contrast, *demand paging* does not back memory right away, instead relying on the program to cause a page fault when it accesses the virtual memory it just allocated. At this point the VMM now backs that virtual memory with some physical memory, usually a few pages at a time (to save overhead on page-faults). The benefits of demand-paging are that it can reduce physical memory usage, but it can slow down programs if not implemented carefully. It also requires a more complex VMM, and the ability to handle page faults properly.
+We can also add more advanced features later on, like demand paging. Typically, when a program (including the kernel) asks the VMM for memory, and the VMM can successfully allocate it, physical memory is mapped there right away. *Immediately backing* like this has advantages in that it's very simple to implement, and can be very fast. The major downside is that we trust the program to only allocate what it needs, and if it allocates more (which is very common) that extra physical memory is wasted. In contrast, *demand paging* does not back memory right away, instead relying on the program to cause a page fault when it accesses the virtual memory it just allocated. At this point the VMM now backs that virtual memory with some physical memory, usually a few pages at a time (to save overhead on page-faults). The benefits of demand-paging are that it can reduce physical memory usage, but it can slow down programs if not implemented carefully. It also requires a more complex VMM, and the ability to handle page faults properly.
 
 On the topic of advanced VMM features, it can also do other things like caching files in memory, and then mapping those files into the virtual address space somewhere (this is what the `mmap` system call does).
 
@@ -33,7 +33,7 @@ A lot of these features are not needed in the beginning, but hopefully the uses 
 As it might be expected, there are many VMM designs out there. We're going to look at a simple one that should provide all the functionality needed for now.
 First we'll need to introduce a new concept: a *virtual memory object*, sometimes called a *virtual memory range*. This is just a struct that represents part of the virtual address space, so it will need a base address and length, both of these are measured in bytes and will be page-aligned. This requirement to be page-aligned comes from the mechanism used to manage virtual memory: paging. On `x86` the smallest page we can manage is `4K`, meaning that all of our VM objects must be aligned to this.
 
-In addition we might want to store some flags in the *vm object*, they are like the flags used in the page tables, we could technically just store them there, but having them as part of the object makes looking them up faster, since we don't need to manually traverse the paging structure. It also allows us to store flags that the are not relevant to paging.
+In addition, we might want to store some flags in the *vm object*, they are like the flags used in the page tables, we could technically just store them there, but having them as part of the object makes looking them up faster, since we don't need to manually traverse the paging structure. It also allows us to store flags that are not relevant to paging.
 
 Here's what our example virtual memory object looks like:
 
@@ -53,7 +53,7 @@ typedef struct {
 
 The `flags` field is actually a bitfield, and we've defined some macros to use with it.
 
-These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convenient for oddities like `x86` and its ` nx-bit`, where all memory is executable by default, and it must specified if the memory *don't* want to be executable.
+These don't correspond to the bits in the page table, but having them separate like this means they are platform-agnostic. We can port our kernel to any cpu architecture that supports some kind of MMU and most of the code won't need to change, we'll just need a short function that converts our vm flags into page table flags. This is especially convenient for oddities like `x86` and its ` nx-bit`, where all memory is executable by default, and it must be specified if the memory *shouldn't* be to be executable.
 
 Having it like this allows that to be abstracted away from the rest of our kernel. For `x86_64` our translation function would look like the following:
 
@@ -90,12 +90,12 @@ This is where design and reality collide, because our high level VMM needs to pr
 void* vmm_pt_root;
 ```
 
-This variable can be placed anywhere, this depend on our design decisions, there is not correct answer, but a good idea is to reserve some space in the VM space to be used by the VMM to store its data. Usually a good idea is to place this space somewhere in the higher half area probably anywhere below the kernel.
+This variable can be placed anywhere, this depends on our design decisions, there is no correct answer, but a good idea is to reserve some space in the VM space to be used by the VMM to store its data. Usually a good idea is to place this space somewhere in the higher half area probably anywhere below the kernel.
 
 Once we got the address, this needs to be mapped to an existing physical address, so we will need to do two things:
 
 * Allocate a physical page for the `vmm_pt_root` pointer (at this point a function to do that should be present)
-* Map the phyiscal address into the virtual address `vmm_pt_root`.
+* Map the physical address into the virtual address `vmm_pt_root`.
 
 It is important to keep in mind that the all the addresses must be page aligned.
 
@@ -115,7 +115,7 @@ The `length` field is how many bytes we want. Internally we will round this **up
 
 The final argument is unused for the moment, but will be used to pass data for more exotic allocations. We'll look at an example of this later on.
 
-The function will return a virtual address, it doesn't have necessarily to be already mapped and present, it just need to be an available address. Again the question is: where is that address? The answer again is that it depends on the design decisions. So we need to decide where we want the virtual memory range to be returned is, and use it as starting address. It can be the same space used for the vmm data strutctures, or another area, that is up to us, of course this decision will have an impact on the design of the algorithm.
+The function will return a virtual address, it doesn't have necessarily to be already mapped and present, it just needs to be an available address. Again the question is: where is that address? The answer again is that it depends on the design decisions. So we need to decide where we want the virtual memory range to be returned is, and use it as starting address. It can be the same space used for the vmm data structures, or another area, that is up to us, of course this decision will have an impact on the design of the algorithm.
 
 For the example code we're going to assume we have a function to modify page tables that looks like the following:
 
@@ -173,7 +173,7 @@ else
 latest->next = current;
 ```
 
-What happens next depends on the design of the VMM. We're going to use immediate backing to keep things simple, meaning we will immedately map some physical memory to the virtual memory we've allocated.
+What happens next depends on the design of the VMM. We're going to use immediate backing to keep things simple, meaning we will immediately map some physical memory to the virtual memory we've allocated.
 
 ```c
     //immediate backing: map physical pages right away.
@@ -190,9 +190,9 @@ We're not handling errors here to keep the focus on the core code, but they shou
 
 What about that extra argument that's gone unused? Right now it serves no purpose, but we've only looked at one use of the VMM: allocating working memory.
 
-Working memory is called anonymous memory in the unix world and refers to what most programs think of as just 'memory'. It's a temporary data store for while the program is running, it's not persistent between runs and only the current program can access it. Currently this is all our VMM supports.
+Working memory is called anonymous memory in the unix world and refers to what most programs think of as just 'memory'. It's a temporary data store for while the program is running, it's not persistent between runs and only the current program can access it. Currently, this is all our VMM supports.
 
-The next thing we should add support for is mapping MMIO (memory mapped I/O). Plenty of modern devices will expose their interfaces via mmio, like the APICs, PCI config space or NVMe controllers. MMIO is usually some physical addresses we can interact with, that are redirected to the internal registers of the device. The trick is that MMIO requires us to access *specific* physical addresses, see the issue with our current design?
+The next thing we should add support for is mapping MMIO (memory mapped I/O). Plenty of modern devices will expose their interfaces via MMIO, like the APICs, PCI config space or NVMe controllers. MMIO is usually some physical addresses we can interact with, that are redirected to the internal registers of the device. The trick is that MMIO requires us to access *specific* physical addresses, see the issue with our current design?
 
 This is easily solved however! We can add a new `VM_FLAG` that specifies we're allocating a virtual object for MMIO, and pass the physical address in the extra argument. If the VMM sees this flag, it will know not to allocate (and later on, not to free) the mapped physical address. This is important because there's not any physical memory there, so we don't want to try free it.
 
@@ -214,7 +214,7 @@ else
 map_memory(vmm_pt_root, phys, (void*)obj->base, convert_x86_64_vm_flags(flags));
 ```
 
-Now we have check for whether an object is MMIO or not. If it is, we don't allocate physical memory to back it. Instead we just modify the page tables to point to the physical address we want it too.
+Now we have to check for whether an object is MMIO or not. If it is, we don't allocate physical memory to back it. Instead, we just modify the page tables to point to the physical address we want it too.
 
 At this point our VMM can allocate any object types we'll need for now, and hopefully we can start to see the purpose of the VMM.
 
@@ -224,7 +224,7 @@ As mentioned previously a more advanced design could allow for memory mapping fi
 
 We've looked at allocating virtual memory, how about freeing it? This is quite simple! To start with, we'll need to find the VM object that represents the memory we want to free: this can be done by searching through the list of objects until we find the one we want.
 
-If we don't find a VM object with a matching base address, something has gone wrong and error for debugging should be emitted. Otherwise the VM object can be safely removed from the linked list.
+If we don't find a VM object with a matching base address, something has gone wrong and error for debugging should be emitted. Otherwise, the VM object can be safely removed from the linked list.
 
 At this point the object's flags need to be inspected to determine how to handle the physical addresses that are mapped. If the object represents MMIO, it will only need to remove the mappings from the page tables. If the object is working (anonymous) memory, which is indicated by the `VM_FLAG_MMIO` bit being cleared, the physical addresses in the page tables are page frames. The physical memory manager should be informed that these frames are now free after removing the mappings.
 
@@ -240,7 +240,7 @@ Now that we have a virtual memory manager, let's take a look at how we might use
 
 ### Example 1: Allocating A Temporary Buffer
 
-Traditionally `malloc()` or a variable-length array for something like this should be used. However there isn't a heap yet (see the next chapter), and allocating from the VMM directly like this gives few guarentees, we might want, like the memory always being page-aligned.
+Traditionally `malloc()` or a variable-length array for something like this should be used. However, there isn't a heap yet (see the next chapter), and allocating from the VMM directly like this gives few guarantees, we might want, like the memory always being page-aligned.
 
 ```c
 void* buffer = vmm_alloc(buffer_length, VM_FLAG_WRITE, NULL);
@@ -274,7 +274,7 @@ We've looked a basic VMM implementation, and discussed some advanced concepts to
 - A function to get the physical address (if any) of a virtual address. This is essentially just walking the page tables in software, with extra logic to ensure a VM object exists at that address. We could add the ability to check if a VM object has specific flags as well.
 - A way to copy data between separate VMMs (with separate address spaces). There are a number of ways to do this, it can be an interesting problem to solve. We'll actually look at some roundabout ways of doing this later on when we look at IPC.
 - Cleaning up a VMM that is no longer in use. When a program exits, we'll want to destroy the VMM associated with it to reclaim some memory.
-- Adding upper and lower bounds to where `vmm_alloc` will search. This can be useful for debugging, or it want to a split higher half VMM/lower half VMM design like mentioned previously.
+- Adding upper and lower bounds to where `vmm_alloc` will search. This can be useful for debugging, or it wants to a split higher half VMM/lower half VMM design like mentioned previously.
 
 ## Final Notes
 

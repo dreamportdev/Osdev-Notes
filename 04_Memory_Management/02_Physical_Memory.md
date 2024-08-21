@@ -34,23 +34,23 @@ So marking a memory location as free or used is just matter of setting clearing 
 
 ### Returning An Address
 
-But how do we mark a page as taken or free? We need to translate row/column in an address, or the address in row/column. Let's assume that we asked fro a free page and we found the first available bit at row 0 and column 3, how we translate it to address, well for that we need few extra info: 
+But how do we mark a page as taken or free? We need to translate row/column in an address, or the address in row/column. Let's assume that we asked for a free page and we found the first available bit at row 0 and column 3, how we translate it to an address, well for that we need a few extra infos: 
 
-* The page size (we should know what is the size of the page we are using), Let's call it `PAGE_SIZE`
-* How many bits are in a row (it's up to us to decide it, in this example we are using an unsigned char, but most probably in real life it is going to be a `uint32_t` for 32bit OS or `uint64_t` for 64bit os) let's call it `BITS_PER_ROW`
+* The page size (we should know what the size of the page we are using is), Let's call it `PAGE_SIZE`
+* How many bits are in a row (it's up to us to decide it, in this example we are using an unsigned char, but most probably in real life it is going to be a `uint32_t` for 32bit OS or `uint64_t` for 64bit OS) let's call it `BITS_PER_ROW`
 
 To get the address we just need to do: 
 
 * `bit_number = (row * BITS_PER_ROW) + column`
 * `address = bit_number * PAGE_SIZE`
 
-Let's pause for a second, and have a look at `bit_number`, what it represent? Maybe it is not straightforward what it is, but consider that the memory is just a linear space of consecutive addresses (just like a long tape of bits grouped in bytes), so when we declare an array we just reserve *NxSizeof(chosendatatype)* contiguous addresses of this space, so the reality is that our array is just something like: 
+Let's pause for a second, and have a look at `bit_number`, what it does it represent? Maybe it is not straightforward what it is, but consider that the memory is just a linear space of consecutive addresses (just like a long tape of bits grouped in bytes), so when we declare an array we just reserve *NxSizeof(chosendatatype)* contiguous addresses of this space, so the reality is that our array is just something like: 
 
  | bit_number | 0 | 1 | 2 | ... | *8* | ... | 31 | *32* | ... | 63 |
  |------------|---|---|---|-----|-----|-----|----|------|-----|----|
  | \*bitmap   | 1 | 1 | 1 | ... | *0* | ... |  0 |  *0* | ... |  0 |
   
-It just represent the offset in bit from `&bitmap` (the starting address of the bitmap). 
+It just represents the offset in bit from `&bitmap` (the starting address of the bitmap). 
 
 In our example with *row=0 column=3* (and page size of 4k) we get:
 
@@ -66,7 +66,7 @@ But what about the opposite way? Given an address compute the bitmap location? S
 
 $$bitmap_{location}=\frac{address}{4096}$$
 
-In this way we know the "page" index into an hypoteteical array of Pages. But we need row and columns, how do we compute them? That depends on the variable size used for the bitmap, let's stick to 8 bits, in this case:
+In this way we know the "page" index into a hypothetical array of Pages. But we need row and columns, how do we compute them? That depends on the variable size used for the bitmap, let's stick to 8 bits, in this case:
 
 * The row is given by `bitmap_location / 8`
 * The column is given by: `bitmap_location % 8`
