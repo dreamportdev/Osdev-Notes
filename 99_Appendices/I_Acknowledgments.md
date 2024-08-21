@@ -19,3 +19,4 @@ In no particular order:
 - @Moldytzu ([https://github.com/Moldytzu](https://github.com/Moldytzu))
 - @AnErrupTion ([https://github.com/AnErrupTion](https://github.com/AnErrupTion))
 - @MRRcode979 ([https://github.com/MRRcode979](https://github.com/MRRcode979))
+- @Hqnnqh ([https://github.com/Hqnnqh](https://github.com/Hqnnqh))
