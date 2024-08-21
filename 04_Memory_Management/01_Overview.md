@@ -43,11 +43,11 @@ Usually this is the lowest level of allocation, and only the kernel should acces
 
 ## Paging
 
-Although Paging and VMM are strongly tied, let's split this topic into two parts: with paging we refer to the hardware paging mechanism, that usually involeves tables, and registers and address translation, while the VMM it refers to the higher level (usually architecture independant).
+Although Paging and VMM are strongly tied, let's split this topic into two parts: with paging we refer to the hardware paging mechanism, that usually involves tables, and registers and address translation, while the VMM it refers to the higher level (usually architecture independent).
 
 While writing the support for paging, independently there are few future choices we need to think about now:
 
-* Are we going to have a single or mulitple address spaces (i.e. every task will have its own address space)? If yes in this case we need to keep in mind that when mapping addresses we need to make sure they are done on the right Virtual Memory Space. So usually a good idea is to add an extra parameter to the mapping/unmapping functions that contains the pointer to the root page table (for _x86\_64 architecture is the PML4 table).
+* Are we going to have a single or multiple address spaces (i.e. every task will have its own address space)? If yes in this case we need to keep in mind that when mapping addresses we need to make sure they are done on the right Virtual Memory Space. So usually a good idea is to add an extra parameter to the mapping/unmapping functions that contains the pointer to the root page table (for _x86\_64 architecture is the PML4 table).
 * Are we going to support User and Supervisor mode? In this case we need to make sure that the correct flag is set in the table entries.
 
 ## VMM - Virtual Memory Manager
@@ -71,7 +71,7 @@ Similarly to paging there are some things we need to consider depending on our f
 
 ## Heap Allocator
 
-There is a disntiction to be made here, between the kernel heap and the program heap. Many characteristic are similar between each other, although different algorithm can be used.
+There is a distinction to be made here, between the kernel heap and the program heap. Many characteristic are similar between each other, although different algorithm can be used.
 Usually there is just one kernel heap, while every program will have its own userspace heap.
 
 - At least one per process/running program, and one for the kernel.
@@ -99,7 +99,7 @@ char *a = alloc(5);
 What happens under the hood?
 
 1. The alloc request the heap for pointer to an area of 5 bytes.
-2. The heap allocator searches for a region big enough for 5 bytes, if available in the current heap. If so, no need to dig down further, just return what was found. However if the current heap doesn't contain an area of 5 bytes that can be returned, it will need to expand. So it asks for more space from the VMM. Remember: the *addresses returned by the heap are all virtual*.
+2. The heap allocator searches for a region big enough for 5 bytes, if available in the current heap. If so, no need to dig down further, just return what was found. However, if the current heap doesn't contain an area of 5 bytes that can be returned, it will need to expand. So it asks for more space from the VMM. Remember: the *addresses returned by the heap are all virtual*.
 3. The VMM will allocate a region of virtual memory big enough for the new heap expansion. It then asks the physical memory manager for a new physical page to map there.
 4. Lastly a new physical page from the PMM will be mapped to the VMM (using paging for example). Now the VMM will provide the heap with the extra space it needed, and the heap can return an address using this new space.
 
