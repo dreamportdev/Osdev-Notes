@@ -295,7 +295,7 @@ Now we have a decent and working function that can free previously allocated mem
 * There is a lot of potential waste of space, for example if we are allocating 10 bytes, and the heap has two holes big enough the first is 40 bytes, the second 14, the algorithm will pick the first one free so the bigger one with a waste of 26 bytes. There can be different solution to this issue, but is out of the purpose of this tutorial (and eventually left as an exercise)
 * It can suffer from fragmentation. Basically there can be a lot of small freed areas that the allocator will not be able to use because of their size. A partial solution to this problem is described in the next paragraph.
 
-Another thing worth doing to improve readability of the code by replacing the direct pointer access with a more elegant data structure. This lets us add more fields (as we will in the next paragraph) as needed.
+Another thing worth doing is to improve readability of the code by replacing the direct pointer access with a more elegant data structure. This lets us add more fields (as we will in the next paragraph) as needed.
 
 So far our allocator needs to keep track of just the size of the block returned and its status The data structure for this could look like the following:
 
@@ -451,7 +451,7 @@ After that the allocator can compute the address to return using `(uintptr_t)cur
 Before wrapping up there's a few things worth pointing out about implementing splitting:
 
 * Remember that every node has some overhead, so when splitting we shouldn't have nodes smaller (or equal to) than `sizeof(Heap_Node)`, because otherwise they will never be allocated.
-* It's a good idea to have a minimum size for the memory a chunk can contain, to avoid having a large number of nodes and for easy alignment later on. For example if the minimum_allocatable_size is 0x20 bytes, and we want to allocate 5 bytes, we will still receive a memory block of `0x20` bytes. The program may not know it was returned `0x20` bytes, but that is okay. What exactly value should be used for it is implementation specific, values of `0x10` and `0x20` are popular.
+* It's a good idea to have a minimum size for the memory a chunk can contain, to avoid having a large number of nodes and for easy alignment later on. For example if the `minimum_allocatable_size` is 0x20 bytes, and we want to allocate 5 bytes, we will still receive a memory block of `0x20` bytes. The program may not know it was returned `0x20` bytes, but that is okay. What exactly value should be used for it is implementation specific, values of `0x10` and `0x20` are popular.
 * Always remember that there is the memory footprint of `sizeof(Heap_Node)` bytes while computing sizes that involve multiple nodes. If we decide to include the overhead size in the node's size, remember to also subtract it when checking for suitable nodes.
 
 And that's it!
