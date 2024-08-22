@@ -8,7 +8,7 @@ We need to access the ACPI Tables in order to read the IO-APIC information, used
 
 Most of the information is organized and accessible through different data structures, but since the ACPI spec is quite big, and covers so many different components, we focus only on what we need to get the information about the APIC.
 
-Before proceeding, let's keep in mind that all address described below are physical, so if we we have enabled paging, we need to ensure they are properly mapped in the virtual memory space.
+Before proceeding, let's keep in mind that all addresses described below are physical, so if we we have enabled paging, we need to ensure they are properly mapped in the virtual memory space.
 
 ### RSDP
 
@@ -82,7 +82,7 @@ bool validate_RSDP(char *byte_array, size_t size) {
 }
 ```
 
-Having last byte means that `result mod 0x100` is 0. Now there are two ways to test it:
+Having last byte equals `0`, means that `result mod 0x100` is 0. Now there are two ways to test it:
 
 * Using the `mod` instruction, and check the result, if is 0 the structure is valid, otherwise it should be ignored.
 * Just checking the last byte of the result it can be achieved in several ways: for example is possible  cast the result to `uint_8` if the content after casting is 0 the struct is valid, or use bitwise AND with `0xFF` value (`0xFF` is equivalent to the `0b11111111` byte) `sum & 0xFF`, if it is 0 the struct is valid otherwise it has to be ignored.

@@ -17,7 +17,7 @@ Both types of APIC are accessed by memory mapped registers, with 32-bit wide reg
 
 ## Local APIC
 
-When a system boots up, the cpu starts in PIC8259A emulation mode for legacy reasons. This simply means that instead of having the LAPIC and I/O APIC up and running, we have them working to emulate the old interrupt controller, so before we can use them properly we should to disable the PIC8259 emulation.
+When a system boots up, the cpu starts in PIC8259A emulation mode for legacy reasons. This simply means that instead of having the LAPIC and I/O APIC up and running, we have them working to emulate the old interrupt controller, so before we can use them properly we should disable the PIC8259 emulation.
 
 ### Disabling The PIC8259
 
