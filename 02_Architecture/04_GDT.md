@@ -11,14 +11,14 @@ Most descriptors are 8 bytes wide, usually resulting in the selectors looking li
 - null descriptor: selector 0x0
 - first descriptor: selector 0x8
 - second descriptor: selector 0x10
-- third descritor: selector 0x18
+- third descriptor: selector 0x18
 - etc ...
 
 There is one exception to the 8-byte-per-descriptor rule, the TSS descriptor, which is used by the `ltr` instruction to load the task register with a task state segment. It's a 16-byte wide descriptor.
 
 Usually these selectors are for code (CS) and data (DS, SS), which tell the cpu where it's allowed to fetch instructions from, and what regions of memory it can read/write to. There are other selectors, for example the first entry in the GDT must be all zeroes (called the null descriptor).
 
-The null selector is mainly used for edge cases, and is usually treated as 'ignore segmentation', although it can lead to #GP faults if certain instructions are issued. Its usage only occurs with more advanced parts of x86, so we'll known to look out for it.
+The null selector is mainly used for edge cases, and is usually treated as 'ignore segmentation', although it can lead to #GP faults if certain instructions are issued. Its usage only occurs with more advanced parts of x86, so we'll know to look out for it.
 
 The code and data descriptors are what they sound like: the code descriptor tells the cpu what region of memory it can fetch instructions from, and how to interpret them. Code selectors can be either 16-bit or 32-bit, or if running in long mode 64-bit or 32-bit.
 
@@ -48,13 +48,13 @@ The various segment registers:
 - _FS_: F selector, no specific purpose. Sys V ABI uses it for thread local storage.
 - _GS_: G selector, no specific purpose. Sys V ABI uses it for process local storage, commonly used for cpu-local storage in kernels due to `swapgs` instruction.
 
-When using a selector to refer to a GDT descriptor, we'll also need to specify the ring we're trying to access. This exists for legacy reasons to solve a few edge cases that have been solved in other ways. If we will need to use these mechanisms, we'll know, otherwise the default (setting to zero) is fine.
+When using a selector to refer to a GDT descriptor, we'll also need to specify the ring we're trying to access. This exists for legacy reasons to solve a few edge cases that have been solved in other ways. If we need to use these mechanisms, we'll know, otherwise the default (setting to zero) is fine.
 
 A _segment selector_ contains the following information:
 
 * `index` bits 15-3: is the GDT selector.
 * `TI` bit 2: is the Table Indicator if clear it means GDT, if set it means LDT, in our case we can leave it to 0.
-* `RPL` bits 1 and 0:  is the Requested Priivlege Level, it will be explained later.
+* `RPL` bits 1 and 0:  is the Requested Privilege Level, it will be explained later.
 
 
 Constructing a segment selector is done like so:
@@ -69,7 +69,7 @@ selector |= ((is_ldt_selector & 0b1) << 2);
 
 The `is_ldt_selector` field can be set to tell the cpu this selector references the LDT (local descriptor table) instead of the GDT. We're not interested in the LDT, so we will leave this as zero. The `target_cpu_ring` field (called RPL in the manuals), is used to handle some edge cases. This is best set to the same ring the selector refers to (if the selector is for ring 0, set this to 0, if the selector is for ring 3, set this to 3).
 
-It's worth noting that in the early stages of the kernel we only be using the GDT and kernel selectors, meaning these fields are zero. Therefore this calculation is not necessary, we can simply use the byte offset into the GDT as the selector.
+It's worth noting that in the early stages of the kernel we only be using the GDT and kernel selectors, meaning these fields are zero. Therefore, this calculation is not necessary, we can simply use the byte offset into the GDT as the selector.
 
 This is also the first mention of the LDT (local descriptor table). The LDT uses the same structure as the GDT, but is loaded into a separate register. The idea being that the GDT would hold system descriptors, and the LDT would hold process-specific descriptors. This tied in with the hardware task switching that existed in protected mode. The LDT still exists in long mode, but should be considered deprecated by paging.
 
@@ -92,7 +92,7 @@ When a descriptor is loaded into the appropriate segment register, it creates a 
 
 The idea is to place code in one region of memory, and then create a descriptor with a base and limit that only expose that region of memory to the cpu. Any attempts to fetch instructions from outside that region will result in a #GP fault being triggered, and the kernel will intervene.
 
-Accessing memory inside a segment is done relative to its base. Lets say we have a segment with a base of `0x1000`,
+Accessing memory inside a segment is done relative to its base. Let's say we have a segment with a base of `0x1000`,
 and some data in memory at address `0x1100`.
 The data would be accessed at address `0x100` (assuming the segment is the active DS), as addressed are translated as `segment_base + offset`. In this case the segment base is `0x1000`, and the offset is `0x100`.
 
@@ -115,7 +115,7 @@ mov $0x10, %ax
 mov %ax, %ss
 ```
 
-Changing CS (code segment) is a little trickier, as it can't be written to directly, instead it requires a far jump. Or in this case, a far return which performs the same job, it just get its values from the stack instead of from immediate operands.
+Changing CS (code segment) is a little trickier, as it can't be written to directly, instead it requires a far jump. Or in this case, a far return which performs the same job, it just gets its values from the stack instead of from immediate operands.
 
 ```x86asm
 reload_cs:
@@ -163,14 +163,14 @@ These are further distinguished with the `type` field, as outlined below.
 | 55              | 1                | Granularity: if set, limit is interpreted as 0x1000 sized chunks, otherwise as bytes |
 | 56              | 8                | Base address bits 31: 4                               |
 
-For system-type descriptors, it's best to consult the manual, the Intel SDM volume 3A chapter 3.5 has the relevent details.
+For system-type descriptors, it's best to consult the manual, the Intel SDM volume 3A chapter 3.5 has the relevant details.
 
 The _Selector Type_ is a multibit field, for non-system descriptor types, the MSB (bit 3) is set for code descriptors, and cleared for data descriptors.
 The LSB (bit 0) is a flag for the cpu to communicate to the OS that the descriptor has been accessed in someway, but this feature is mostly abandoned, and should not be used.
 
 For a data selector, the remaining two bits are: expand-down (bit 2) - causes the limit to grow downwards, instead of up. Useful for stack selectors. Write-allow (bit 1), allows writing to this region of memory. Region is read-only if cleared.
 
-For a code selector, the remaining bits are: Conforming (bit 2) - a tricky subject to explain. Allow user code to run with kernel selectors under certain circumstances, best left cleared. Read-allow (bit 1), allows for read-only access to code for accessing constants stored near instructions. Otherwise code cannot be read as data, only for instruction fetches.
+For a code selector, the remaining bits are: Conforming (bit 2) - a tricky subject to explain. Allow user code to run with kernel selectors under certain circumstances, best left cleared. Read-allow (bit 1), allows for read-only access to code for accessing constants stored near instructions. Otherwise, code cannot be read as data, only for instruction fetches.
 
 ## Using the GDT
 
@@ -205,7 +205,7 @@ For the type field we used the magic value `0b1011`. Bits 0/1/2 are the accessed
 
 All the flags we've been setting are actually in the *upper* 32-bits of the descriptor, so we left shift by 32 bits before we place the descriptor in the GDT. The lower 32-bits of the descriptor are the limit and part of the offset fields, which are ignored in long mode.
 
-For the kernel data selector we'd doing something similar:
+For the kernel data selector we'd do something similar:
 
 ```c
 uint64_t kernel_data = 0;

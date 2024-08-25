@@ -1,6 +1,6 @@
 # Handling The Keyboard Interrupt
 
-Either the PIC or IOAPIC can be used to set up the keyboard irq. For this chapter we'll use the IOAPIC as it's more modern and the LAPIC + IOAPIC is the evolution of the PIC. However if using the PIC, most of the theory still applies, we'll need to adjust the irq routing code accordingly.
+Either the PIC or IOAPIC can be used to set up the keyboard irq. For this chapter we'll use the IOAPIC as it's more modern and the LAPIC + IOAPIC is the evolution of the PIC. However, if using the PIC, most of the theory still applies, we'll need to adjust the irq routing code accordingly.
 
 To keep the examples below simple, we'll assume only a single IOAPIC is present in the system. This is true for most desktop systems, and is only something to worry about in server hardware.
 
@@ -49,12 +49,12 @@ We can disable the translation if we want, in that case we need to do the follow
 
 For our driver we will keep the translation enabled, since we'll be using set 1.
 
-The only scancode set guaranted to be supported by keyboards is the set 2. Keep in mind that most of the time the kernel communicate with a controller compatible with the intel 8042 PS2 controller. In this case the scancodes can be translated into set 1.
+The only scancode set guaranteed to be supported by keyboards is the set 2. Keep in mind that most of the time the kernel communicate with a controller compatible with the intel 8042 PS2 controller. In this case the scancodes can be translated into set 1.
 
 
 ### Sending Commands To The Keyboard
 
-This can look tricky, but when we are sending command to the PS2 Controller we need to use the port `0x64`, but if we want to send commands directly to the PS/2 keyboard  we need to send the bytes directly to the to the data port `0x60` (instead of the PS/2 controller command port).
+This can look tricky, but when we are sending command to the PS2 Controller we need to use the port `0x64`, but if we want to send commands directly to the PS/2 keyboard we need to send the bytes directly to the data port `0x60` (instead of the PS/2 controller command port).
 
 ## Identifying The Scancode Set
 
