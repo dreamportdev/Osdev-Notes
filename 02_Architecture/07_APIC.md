@@ -47,7 +47,7 @@ The ICW values are initialization commands (ICW stands for Initialization Comman
 
 * ICW_1 (value `0x11`) is a word that indicates a start of initialization sequence, it is the same for both the master and slave pic.
 * ICW_2 (value `0x20` for master, and `0x28` for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
-* ICW_3 (value `0x2` for master, `0x4` for slave) Is is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be its id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
+* ICW_3 (value `0x2` for master, `0x4` for slave) is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be its id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
 * ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode.
 * Finally `0xFF` is used to mask all interrupts for the pic.
 
@@ -92,7 +92,7 @@ The functions of the fields in the registers are as follows:
 * Bit 8: This bit acts a software toggle for enabling the local APIC, if set the local APIC is enabled.
 * Bit 9: This is an optional feature not available on processors, but if set it indicates that some interrupts can be routed according to a list of priorities. This is an advanced topic and this bit can be safely left clear and ignored.
 
-The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the LAPIC we need to set bit 8, and set-up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between `0xF0` and `0xFF`. For compatibility it's best to place the spurious vector in that range. Of course we need to set-up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
+The Spurious Vector register is writable only in the first 9 bits, the rest is read only. In order to enable the LAPIC we need to set bit 8, and set up a spurious vector entry for the idt. In modern processors the spurious vector can be any vector, however old CPUs have the upper 4 bits of the spurious vector forced to 1, meaning that the vector must be between `0xF0` and `0xFF`. For compatibility, it's best to place the spurious vector in that range. Of course, we need to set up the corresponding idt entry with a function to handle it, but for now printing an error message is enough.
 
 ### Reading APIC Id and Version
 
@@ -114,7 +114,7 @@ There are 6 items in the LVT starting from offset `0x320` to `0x370`:
 
 The `LINT0` and `LINT1` pins are mostly used for emulating the legacy PIC, but they may also be used as NMI sources. These are best left untouched until we have parsed the MADT, which will tell how the LVT for these pins should be programmed.
 
-Most LVT entries use the following format, with the timer LVT being the notable exception. It's format is explained in the timers chapter. The thermal sensor and performance entries ignore bits 15:13.
+Most LVT entries use the following format, with the timer LVT being the notable exception. Its format is explained in the timers chapter. The thermal sensor and performance entries ignore bits 15:13.
 
 | Bit      |  Description                                                                                 |
 |----------|----------------------------------------------------------------------------------------------|
@@ -127,7 +127,7 @@ Most LVT entries use the following format, with the timer LVT being the notable 
 | 15       |  Trigger mode: 0 is edge-triggered, 1 is level-triggered. |
 | 16       |  Interrupt mask, if it is 1 the interrupt is disabled, if 0 is enabled. |
 
-The delivery mode field determines how the the APIC should present the interrupt to the processor. The fixed mode (0b000) is fine in almost all cases, the other modes are for specific functions or advanced usage.
+The delivery mode field determines how the APIC should present the interrupt to the processor. The fixed mode (0b000) is fine in almost all cases, the other modes are for specific functions or advanced usage.
 
 ### X2 APIC
 
@@ -157,7 +157,7 @@ If we want to support symmetric multiprocessing (SMP) in our kernel, we need to 
 
 To send an IPI we need to know the local APIC ID of the core we wish to interrupt. We will also need a vector in the IDT set up for handling IPIs. With these two things we can use the ICR (interrupt command register).
 
-The ICR is 64-bits wide and therefore we access it as two registers (a higher and lower half). The IPI is sent when the lower register is written to, so we should set up the destination in the higher half first, before writing the vector in the lower half.
+The ICR is 64-bits wide, and therefore we access it as two registers (a higher and lower half). The IPI is sent when the lower register is written to, so we should set up the destination in the higher half first, before writing the vector in the lower half.
 
 This register contains a few fields but most can be safely ignored and left to zero. We're interested in bits 63:56 which is the ID of the target local APIC (in X2APIC mode it is bits 63:32) and bits 7:0 which contain the interrupt vector that will be served on the target core.
 
@@ -170,7 +170,7 @@ void lapic_send_ipi(uint32_t dest_id, uint8_t vector) {
 }
 ```
 
-At this point the target core would receive an interrupt with the vector we specified (assuming that core is setup correctly).
+At this point the target core would receive an interrupt with the vector we specified (assuming that core is set up correctly).
 
 
 There is also a shorthand field in the ICR which overrides the destination id. It's available in bits 19:18 and has the following definition:
@@ -277,13 +277,13 @@ The values stored in the I/O APIC Interrupt source overrides in the MADT are:
 
 Flags are defined as follows:
 
-* Polarity (*Lenght*: **2 bits**, *Offset*: *0*  of the APIC/IO input signals, possible values are:
+* Polarity (*Length*: **2 bits**, *Offset*: *0*  of the APIC/IO input signals, possible values are:
     * 00 Use the default settings is active-low for level-triggered interrupts)
     * 01 Active High
     * 10 Reserved
     * 11 Active Low
 * Trigger Mode (*Length*: **2 bits**, *Offset*: *2*) Trigger mode of the APIC I/O Input signals:
-    * 00 Use the default settiungs (in the ISA is edge-triggered)
+    * 00 Use the default settings (in the ISA is edge-triggered)
     * 01 Edge-triggered
     * 10 Reserved
     * 11 Level-Triggered
@@ -299,6 +299,6 @@ The content of each entry is:
 * The lower double word is basically an LVT entry, for their definition check the LVT entry definition
 * The upper double word contains:
     - Bits 17 to 55: are Reserved
-    - Bits 56 to 63: are the Destitnation Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the I/O APIC datasheet.
+    - Bits 56 to 63: are the Destination Field, In physical addressing mode (see the destination bit of the entry) it is the local apic id to forward the interrupts to, for more information read the I/O APIC datasheet.
 
 The number of items is stored in the I/O APIC MADT entry, but usually on modern architectures is 24.
