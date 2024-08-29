@@ -8,7 +8,7 @@ This chapter covers 2 protocols _Sultiboot 2_ and _Stivale 2_:
 
 * _Stivale 2_ (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. _Stivale 2_ is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
-Recently limine has added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
+Recently limine has added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
 
 All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
