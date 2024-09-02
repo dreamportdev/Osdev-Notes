@@ -167,6 +167,8 @@ The last two options enable compiling the text-user-interface (`--enable-tui`) a
 
 The `--target=` flag is special here in that it can also take an option `all` which builds gdb with support for every single architecture it can support. If we're going to develop on one machine but test on multiple architectures (via qemu or real hardware) this is nice. It allows a single instance of gdb to debug multiple architectures without needing different versions of gdb. Often this is how the 'gdb-multiarch' package is created for distros that have it.
 
+The `--host=` flags specify the host system running gdb, in the example above an `x86_64-linux-gnu` system, this should be changed depedning on the system used.
+
 After running the configure script, we can build and install our custom gdb like so:
 
 ```bash
