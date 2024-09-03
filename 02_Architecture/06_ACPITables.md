@@ -12,7 +12,7 @@ Before proceeding, let's keep in mind that all addresses described below are phy
 
 ### RSDP
 
-The RSDP (Root System Description Pointer) used in the ACPI programming interface is the pointer to the RSDT (Root System Descriptor Table), the full structure depends if the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
+The RSDP (Root System Description Pointer) used in the ACPI programming interface is the pointer to the RSDT (Root System Descriptor Table), the full structure depends on whether the version of ACPI used is 1 or 2, the newer version is just extending the previous one.
 
 The newer version is backward compatible with the older.
 

@@ -1,6 +1,6 @@
 # Hello World
 
-During the development of our kernel we will need to debug a lot, and checking a lot of values, but so far our kernel is not capable of doing anything, and having proper video output with scrolling, fonts etc, can take some time, so we need a quick way of getting some text out from our kernel, not necessarily on the screen. 
+During the development of our kernel we will need to debug a lot, and checking a lot of values, but so far our kernel is not capable of doing anything, and having proper video output with scrolling, fonts etc., can take some time, so we need a quick way of getting some text out from our kernel, not necessarily on the screen. 
 
 This is where the serial logging came to an aid, we will use the serial port to output our text and numbers. 
 
@@ -14,13 +14,13 @@ This will save the serial output on the file called `filename.log`, if we want t
 
 ## Printing to Serial
 
-We will use the `inb` and `outb` instruction to communicate with the serial port. But the first thing our kernel should do is do is being able to write to serial ports. To do that we need: 
+We will use the `inb` and `outb` instruction to communicate with the serial port. But the first thing our kernel should do is being able to write to serial ports. To do that we need: 
 
-* for simiplicity and readability two C functions that will make use of the inb/outb asm instructions (luckily they are asm functions so making their c version is very easy)
+* for simplicity and readability two C functions that will make use of the inb/outb asm instructions (luckily they are asm functions so making their c version is very easy)
 * initialization of serial communication
 * and at least an instruction to send characters and strings to the serial. 
 
-The first step is pretty strightforward, using inline assembly we will create two "one-line" functions for inb and outb: 
+The first step is pretty straightforward, using inline assembly we will create two "one-line" functions for inb and outb: 
 
 ```C
 extern inline unsigned char inportb (int portnum)
@@ -69,7 +69,7 @@ static int init_serial() {
 }
 ```
 
-Notice that usually the com1 port is mapped to address: *0x3f8*. The function above is setting just default values for serial communication. An alternative that does not require any initialization is to use the port `0xe9`, this is also know as the _debugcon_ or the _port e9 hack_ and it still use the `inportb` and `outportb` functions as they are, but is often faster because is a special port that sends data directly to the emulator console output. 
+Notice that usually the com1 port is mapped to address: *0x3f8*. The function above is setting just default values for serial communication. An alternative that does not require any initialization is to use the port `0xe9`, this is also known as the _debugcon_ or the _port e9 hack_, and it still uses the `inportb` and `outportb` functions as they are, but is often faster because is a special port that sends data directly to the emulator console output. 
 
 ### Sending a string
 
@@ -105,9 +105,9 @@ As an example consider the number 1235:  $1235/10=123.5$ and $1235 \mod 10=5$, r
 * $12/10 = 1$ and $12 \mod10 = 2$
 * $1/10 = 0$  and $1 \mod 10 = 1$
 
-And as we can see we got all the digits in reverse order, so now the only thing we need to do is reverse the them. The implementation of this function should be now pretty straightforward, and it will be left as exercise. 
+And as we can see we got all the digits in reverse order, so now the only thing we need to do is reverse them. The implementation of this function should be now pretty straightforward, and it will be left as exercise. 
 
-Printing other format like Hex or Octal is little bit different, but the base idea of getting the single number and converting it into a character is similar. The only tricky thing with the hex number is that now we have symbols for numbers between 10 and 15 that are characters, and they are before the digits symbol in the ascii map, but once that is known it is going to be just an if statement in our function. 
+Printing other format like Hex or Octal is a little bit different, but the base idea of getting the single number and converting it into a character is similar. The only tricky thing with the hex number is that now we have symbols for numbers between 10 and 15 that are characters, and they are before the digits symbol in the ascii map, but once that is known it is going to be just an if statement in our function. 
  
 ### Troubleshooting
 
