@@ -138,7 +138,7 @@ As usual let's create a new folder called `build_qemu` and move into it. The con
 ```
 where:
 
-* `--target-list=riscv64-softmmu,x86_64`: is a comma separated list of platforms we want to support.
+* `--target-list=riscv64-softmmu,x86_64-softmmu`: is a comma separated list of platforms we want to support.
 * `--enable-tools`: will build support utilities that comes with qemu
 * `--enable-gtk`: it will enable the gtk+ interface
 * `--enable-vhost-net` : it will enable the vhost-net kernel acceleration support
