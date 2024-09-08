@@ -20,3 +20,4 @@ In no particular order:
 - @AnErrupTion ([https://github.com/AnErrupTion](https://github.com/AnErrupTion))
 - @MRRcode979 ([https://github.com/MRRcode979](https://github.com/MRRcode979))
 - @Hqnnqh ([https://github.com/Hqnnqh](https://github.com/Hqnnqh))
+- @malletgaetan ([https://github.com/malletgaetan](https://github.com/malletgaetan))
