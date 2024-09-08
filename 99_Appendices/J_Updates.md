@@ -49,7 +49,7 @@ Fourth book release
 
 ### Revision 4
 
-Release date: TBD
+Release date: Sept 2024
 Fifth book release
 
 * Typo fixes

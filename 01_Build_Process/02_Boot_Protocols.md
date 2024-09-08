@@ -8,7 +8,7 @@ This chapter covers 2 protocols _Sultiboot 2_ and _Stivale 2_:
 
 * _Stivale 2_ (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. _Stivale 2_ is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
-Recently limine has added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
+Recently limine has added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
 
 All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
@@ -215,9 +215,9 @@ Stivale 2 has a number of major differences to multiboot 2 though:
 
 - The kernel starts in 64-bit long mode, by default. No need for a protected mode stub to setup up some initial paging.
 - The kernel starts with the first 4GB of memory and any usable regions of memory identity mapped.
-- Stivale 2 also sets up a 'higher half direct map', or hhdm. This is the same identity map as the lower half, but it starts as the hhdm_offset returned in a struct tag when the kernel runs. The idea is that as long we ensure all the pointers are in the higher half, we can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
+- Stivale 2 also sets up a _higher half direct map_, or _hhdm_. This is the same identity map as the lower half, but it starts at the `hhdm_offset` returned in a struct tag when the kernel runs. The idea is that as long we ensure all the pointers are in the higher half, we can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
 - A well-defined GDT is provided.
-- Unlike mb2, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
+- Unlike _mb2_, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
 
 To get the next tag in the chain, it's as simple as:
 

@@ -24,8 +24,8 @@ It shows a portion of a unix directory tree (starting from root), the gray circl
 
 So for example:
 
-* /home/userA point to a folder into the file system that is loaded at the "/" folder (we say that it's *mounted*)
-* /mnt/ext_device instead points to a file that is mounted within the /mnt folder
+* /home/user1 point to a folder into the file system that is loaded at the "/" folder (we say that it's *mounted*)
+* /mnt/ext_device/A instead points to a file that is mounted within the /mnt folder
 
 When a filesystem is *mounted* in a folder it means that the folder is no longer a container of other files/directories for the same filesystem but is referring to another one somewhere else (it can be a network drive, external device, an image file, etc.) and the folder takes the name of *mountpoint*.
 

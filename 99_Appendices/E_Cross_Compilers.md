@@ -138,7 +138,7 @@ As usual let's create a new folder called `build_qemu` and move into it. The con
 ```
 where:
 
-* `--target-list=riscv64-softmmu,x86_64`: is a comma separated list of platforms we want to support.
+* `--target-list=riscv64-softmmu,x86_64-softmmu`: is a comma separated list of platforms we want to support.
 * `--enable-tools`: will build support utilities that comes with qemu
 * `--enable-gtk`: it will enable the gtk+ interface
 * `--enable-vhost-net` : it will enable the vhost-net kernel acceleration support
@@ -166,6 +166,8 @@ path/to/gdb_sources/configure --target=$TARGET  --host=x86_64-linux-gnu  --prefi
 The last two options enable compiling the text-user-interface (`--enable-tui`) and source code highlighting (`--enable-source-highlight`) which are nice-to-haves. These flags can be safely omitted if these aren't features we want.
 
 The `--target=` flag is special here in that it can also take an option `all` which builds gdb with support for every single architecture it can support. If we're going to develop on one machine but test on multiple architectures (via qemu or real hardware) this is nice. It allows a single instance of gdb to debug multiple architectures without needing different versions of gdb. Often this is how the 'gdb-multiarch' package is created for distros that have it.
+
+The `--host=` flags specify the host system running gdb, in the example above an `x86_64-linux-gnu` system, this should be changed depedning on the system used.
 
 After running the configure script, we can build and install our custom gdb like so:
 

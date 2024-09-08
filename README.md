@@ -6,9 +6,7 @@
 </span>
 ![](https://tokei.rs/b1/github/dreamos82/osdev-notes)
 
-A collection of notes, organised as a book, intended to guide a reader through the steps of building an operating system kernel from scratch. Written while writing (and re-writing) our own kernels, each chapter covers a step from selecting a bootloader to running a loaded ELF in userspace.
-
-Currently these notes are a work in progress, but many chapters are functionally complete and available to read below. We'll keep updating old chapters and adding new ones over time so be sure to check back occasionally.
+A book, originated as a collection of notes, intended to guide a reader through the steps of building an operating system kernel from scratch. Written while writing (and re-writing) our own kernels, each chapter covers a step of the process from selecting a bootloader to running a loaded ELF in userspace.
 
 We hope you enjoy, and find something interesting here!
 
