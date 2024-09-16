@@ -68,8 +68,4 @@ Now the question is what syscalls should we start to implement? As per usual thi
 * A way to map, unmap, and modify protections of virtual memory.
 * A way to terminate the current thread, since the wrapper function used in the scheduler chapter only works for kernel threads.
 
-The list above acts just as a starting point, but the idea is that we want to expose most of the kernel can do, for example we probably want syscalls to create/terminate tasks and thread, syscalls to access files on different filesystems, accessing devices. 
-
-
-
-
+The list above acts just as a starting point, but the idea is that we want to expose most of the kernel can do, for example we probably want syscalls to create/terminate tasks and thread, syscalls to access files on different filesystems, accessing devices.
