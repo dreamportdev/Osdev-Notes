@@ -44,7 +44,7 @@ menuentry "My Operating System" {
 
 Note the last command `boot`, this tells grub to complete the boot process and actually run our kernel.
 
-## Limine (Stivale 2, multiboot 2)
+## Limine (Limine Protocol, Multiboot 2)
 The process for limine is a little more manual: we must build the iso ourselves, and then use the provided tool to install limine onto the iso we created.
 
 To get started we'll want to create a working directory to use as the root of our iso. In this case we'll use `disk/`. Next we'll need to clone the latest binary branch of limine (using `git clone https://github.com/limine-bootloader/limine.git --branch=v3.0-branch-binary --depth=1`) and copy 'limine.sys', 'limine-cd.bin', and 'limine-cd-efi.bin' into `disk/limine/`, creating that directory if it doesn't exist.

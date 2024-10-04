@@ -2,19 +2,19 @@
 
 A boot protocol defines the machine state when the kernel is given control by the bootloader. It also makes several services available to the kernel, like a memory map of the machine, a framebuffer and sometimes other utilities like uart or kernel debug symbols.
 
-This chapter covers 2 protocols _Sultiboot 2_ and _Stivale 2_:
+This chapter covers 2 protocols _Multiboot 2_ and _Limine Protocol_:
 
 * _Multiboot 2_ supercedes multiboot 1, both of which are the native protocols of grub. Meaning that anywhere grub is installed, a multiboot kernel can be loaded. making testing easy on most linux machines. _Multiboot 2_ is quite an old, but very robust protocol.
 
-* _Stivale 2_ (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. _Stivale 2_ is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
+* _Limine Protocol_ (it was preceded by Stivale 1 and 2) is the native protocol of the Limine bootloader. Limine and Stivale protocols were designed many years after Multiboot 2 as an attempt to make hobbyist OS development easier. _Limine Protocol_ is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
-Recently limine has added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
+The Limine protocol is based on Stivale2 (it was covered in earlier version of this book), with mainly architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
 
 All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
 ## What about the earlier versions?
 
-Both protocols have their earlier versions (_multiboot 1 & stivale 1_), but these are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set we get for the short term gains. The only thing multiboot 1 is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the `x86` emulation, so there are better ways to do that.
+Multiboot protocol has an earlier verison (_Multiboot 1_), while the limine prorocol was preceded by a different protocol, the _Stivale 1/2_. but in both cases. they are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set we get for the short term gains. The only thing `multiboot 1` is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the `x86` emulation, so there are better ways to do that.
 
 ## Why A Bootloader At All?
 
@@ -203,33 +203,46 @@ The interface between a higher level language like C and assembly (or another hi
 
 *Authors Note: If you're unsure of why we load a stack before jumping to compiled code in the kernel, it's simply required by all modern languages and compilers. The stack (which operates like the data structure of the same name) is a place to store local data that doesn't in the registers of a platform. This means local variables in a function or parts of a complex calculation. It's become so universal that it has also adopted other uses over time, like passing function arguments (sometimes) and being used by hardware to inform the kernel of things (the iret frame on x86).*
 
-## Stivale 2
+## Limine Protocol
 
-Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
-While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
+The _Limine Protocol_ that has replaced the _Stivale_  protocol, is following the same philosophy, and is designed for people making hobby operating systems, it sets up a number of things to make a new kernel developer's life easy.
+While _Multiboot 2_ is about providing just enough to get the kernel going, keeping things simple for the bootloader, _Limine_ creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
 
-To use stivale2, we'll need a copy of the limine bootloader. A link to it and the stivale2 specification are available at the start of this chapter. There is also a C header file containing all the structs and magic numbers used by the protocol. A link to a barebones example is also provided.
+To use this protocol, we'll need a copy of the _Limine bootloader_. A link to it and the specification are available in the appendices. There is also a C header file containing all the structs and magic numbers used by the protocol. A link to a barebones example is also provided.
 
-It operates in a similar way to multiboot 2, by using a linked list of tags, although this time in both directions (kernel -> bootloader and bootloader -> kernel). Tags from the kernel to the bootloader are called `header_tag`s, and ones returned from the bootloader are called `struct_tag`s.
-Stivale 2 has a number of major differences to multiboot 2 though:
+It is centered around the concept of `request/response`. For every information that we need from the bootloader, we provide a `request` structure, and it will return us with a `response`.
+
+Limine has a number of major differences to multiboot 2 though:
 
 - The kernel starts in 64-bit long mode, by default. No need for a protected mode stub to setup up some initial paging.
 - The kernel starts with the first 4GB of memory and any usable regions of memory identity mapped.
-- Stivale 2 also sets up a _higher half direct map_, or _hhdm_. This is the same identity map as the lower half, but it starts at the `hhdm_offset` returned in a struct tag when the kernel runs. The idea is that as long we ensure all the pointers are in the higher half, we can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
+- Limine protocol also sets up a _higher half direct map_, or _hhdm_. This is the same identity map as the lower half, but it starts at the `hhdm_offset` returned in a struct tag when the kernel runs. The idea is that as long we ensure all the pointers are in the higher half, we can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
 - A well-defined GDT is provided.
-- Unlike _mb2_, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
+- Unlike _Multiboot2_, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
 
-To get the next tag in the chain, it's as simple as:
+A `request` always has three members at the beginning of the structure:
 
+```c
+struct limine_example_request {
+    uint64_t id[4];
+    uint64_t revision;
+    struct limine_example_response *response;
+    // the members that follow depends on the request type
+};
 ```
-stivale2_tag* next_tag = (stivale2_tag*)current_tag->next;
-if (next_tag == NULL)
-    //we reached the end of the list.
-```
+Where the fields are:
+
+* `id` is a magic number that the bootloader uses to find and identify the requests within the executable. It is 8 byte aligned. For every type of request there can be only one. If there are multiple requests with the same id the bootloader will refuse to start.
+* `revision` is the revision of the request that the kernel provides. This number is bumped each time a new member is added to it. It starts from 0. It's backward compatible, that means if the bootloader does not support the revision of the request, it will be processed as if were the highest revision supported.
+* `response` this will contain the response by limine, this field is filled by the bootloader at load time. If there was an error processing the request, or the request was not supported, the field is left as it is, so for example if it was set to `NULL`, it will stay this way.
+
+All the other fields depends on the type of the request.
+
+The response instead, has only one mandatory field, it's the `revision` field, that like in the request, it marks the revision of the response field there is no coupling between response and request `revision` number.
 
 ### Fancy Features
 
-Stivale 2 also provides some more advanced features:
+Limine also provides some more advanced features:
 
 - It can enable 5 level paging, if requested.
 - It boots up AP (all other) cores in the system, and provides an easy interface to run code on them.
