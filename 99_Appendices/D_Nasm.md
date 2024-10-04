@@ -33,7 +33,7 @@ my_first_macro_label_%1:
 
 In the code above we can see few new things:
 
-* First we said the the label `my_first_macro_label_%1` has to be set as global, this is pretty straightforward to understand.
+* First we said the label `my_first_macro_label_%1` has to be set as global, this is pretty straightforward to understand.
 * the `%1` in the label definition, let us create different label using the first parameter passed in the macro.
 
 So if now we add a new line with the following code:

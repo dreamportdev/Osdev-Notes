@@ -73,7 +73,7 @@ That took a little more work than grub, but this can (and should) be automated a
 ### Limine.cfg
 Similar to grub, limine also uses a config file. This config file has its own documentation, which is available in the limine repository.
 
-Limine.cfg lists each boot entry as a title, followed by a series of key-value pairs. To boot our example from above using stivale 2, our config might look like the following:
+limine.cfg lists each boot entry as a title, followed by a series of key-value pairs. To boot our example from above using stivale 2, our config might look like the following:
 
 ```
 :My Operating System

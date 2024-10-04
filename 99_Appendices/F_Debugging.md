@@ -49,7 +49,7 @@ There are a number of other ones `/i` will format the output as cpu instructions
 `/c` will interpret an ASCII character, and `/s` will interpret it as a null terminated ASCII string (just a c string).
 
 The format specifier can be prefixed with a number of repeats. For example if we want to examine 10 instructions at address 0x1234, we could do:
-`x/10i 0x1234`, and gdb would show us that (i is the identifier for the instruction format), this is pretty useful if we want to look at raw areas of memory. In case we need to print raw memory insted we can use `x/10xb 0x1234`(where _x_ is the format (hexadecimal) and _b_ the size (bytes).
+`x/10i 0x1234`, and gdb would show us that (i is the identifier for the instruction format), this is pretty useful if we want to look at raw areas of memory. In case we need to print raw memory instead we can use `x/10xb 0x1234`(where _x_ is the format (hexadecimal) and _b_ the size (bytes).
 
 ### How Did I Get Here?
 
@@ -120,7 +120,7 @@ While debugging with gdb, we can change the value of the variables in the code b
 set variable_name=value
 ```
 
-where `variable_name` is a variable present in the code being debugged. This is extermely useful in the cases where we want to test some edge cases, that are hard to reproduce.
+where `variable_name` is a variable present in the code being debugged. This is extremely useful in the cases where we want to test some edge cases, that are hard to reproduce.
 
 ### TUI - Text User Interface
 
@@ -230,7 +230,7 @@ From here is possible to send commands directly to the emulator, below a list of
 
 #### Info mem & Info tlb
 
-These commands are very useful when we need to debug memory related issues, the first command `info mem` will print the list of active virtual memory mappings, the output format depends on the architecture, for exmple on `x86-64`, it will be similar to the following:
+These commands are very useful when we need to debug memory related issues, the first command `info mem` will print the list of active virtual memory mappings, the output format depends on the architecture, for example on `x86-64`, it will be similar to the following:
 
 ```
 info mem

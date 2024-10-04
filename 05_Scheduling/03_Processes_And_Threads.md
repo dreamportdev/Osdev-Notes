@@ -1,4 +1,4 @@
-# Processes And Threads
+[#](#.md) Processes And Threads
 
 ## Definitions and Terminology
 
@@ -191,7 +191,7 @@ We'll also need to keep track of the thread's current status, and we may want so
 Let's look at what our `thread_t` structure will need:
 
 ```c
-typdef struct {
+typedef struct {
     size_t tid;
     cpu_status_t* context;
     status_t status;
@@ -200,7 +200,7 @@ typdef struct {
 } thread_t;
 ```
 
-The `status_t` struct is the same one previously used for the proceses, but since we are scheduling threads now, we'll use it for the thread.
+The `status_t` struct is the same one previously used for the processes, but since we are scheduling threads now, we'll use it for the thread.
 
 You might be wondering where the stack is stored, and it's actually the `context` field. You'll remember that we store the current context on the stack when an interrupt is served, so this field actually represents both the stack and the context.
 
@@ -307,7 +307,7 @@ void thread_exit() {
 }
 ```
 
-At this point the thread can exit succesfully, but the thread's resources are still around. The big ones are the thread control block and the stack. They can be freed in the `thread_exit` but be careful we're not exiting the current thread. If we do, we'll free the stack being currently used. We could switch to a kernel-only stack here, and then safely free the stack.
+At this point the thread can exit successfully, but the thread's resources are still around. The big ones are the thread control block and the stack. They can be freed in the `thread_exit` but be careful we're not exiting the current thread. If we do, we'll free the stack being currently used. We could switch to a kernel-only stack here, and then safely free the stack.
 
 Alternatively the thread could be placed into a 'cleanup queue' that is processed by a special thread that frees the resources associated with threads. Since the cleanup thread has its own stack and resources, we can safely free those in the queued threads.
 
@@ -364,6 +364,6 @@ We've discussed the common approach to writing a scheduler using a periodic time
 
 The main difference is how the scheduler interacts with the timer. A periodic scheduler tells the timer to trigger at a fixed interval, and runs in response to the timer interrupt. A tickless scheduler instead uses a one-shot timer, and set the timer to send an interrupt when the next task switch is due.
 
-At a first glance this may seem like the same thing, but it eliminates unnecessary timer interrupts, when no task switch is occuring. It also removes the idea of a `quantum`, since we can run a thread for any arbitrary amount of time, rather than a number of timer intervals.
+At a first glance this may seem like the same thing, but it eliminates unnecessary timer interrupts, when no task switch is occurring. It also removes the idea of a `quantum`, since we can run a thread for any arbitrary amount of time, rather than a number of timer intervals.
 
-*Authors note: Tickless schedulers are usually seen as more accurrate and operate with less latency than periodic ones, but this comes at the cost of added complexity.*
+*Authors note: Tickless schedulers are usually seen as more accurate and operate with less latency than periodic ones, but this comes at the cost of added complexity.*

@@ -11,7 +11,7 @@ This appendix is a collection of links we found useful developing our own kernel
 - Stivale 2 Barebones: [https://github.com/stivale/stivale2-barebones/](https://github.com/stivale/stivale2-barebones/)
 - Sabaton - ARM Stivale 2 Bootloader: [https://github.com/FlorenceOS/Sabaton](https://github.com/FlorenceOS/Sabaton)
 - Xorriso Documentation: [https://linux.die.net/man/1/xorriso](https://linux.die.net/man/1/xorriso)
-- GNU Make Documenation: [https://www.gnu.org/software/make/manual/make.html](https://www.gnu.org/software/make/manual/make.html)
+- GNU Make Documentation: [https://www.gnu.org/software/make/manual/make.html](https://www.gnu.org/software/make/manual/make.html)
 - Linker Scripts Documentation : [https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts)
 - Bootlin Toolchains : [https://toolchains.bootlin.com/](https://toolchains.bootlin.com/)
 - OS Dev Wiki - Building A Cross Compiler: [https://wiki.osdev.org/GCC_Cross-Compiler](https://wiki.osdev.org/GCC_Cross-Compiler)
@@ -96,7 +96,7 @@ This appendix is a collection of links we found useful developing our own kernel
 * Osdev Wiki Page for kernel debugging: [https://wiki.osdev.org/Kernel_Debugging](https://wiki.osdev.org/Kernel_Debugging)
 * Osdev Wiki Page for Serial ports: [https://wiki.osdev.org/Serial_Ports](https://wiki.osdev.org/Serial_Ports)
 * Debugging with Qemu at Wikibooks: [https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU](https://en.wikibooks.org/wiki/QEMU/Debugging_with_QEMU)
-    
+
 
 ## Communities
 

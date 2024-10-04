@@ -40,7 +40,7 @@ export TARGET="x86_64-elf"
 export PATH="$PREFIX/bin:$PATH"
 ```
 
-The `PREFIX` environment variable stores the directory we want to install the toolchain into after building, `TARGET` is the target triplet of our target and we also modify the shell `PATH` variable  to include the prefix directory. To permantly add the cross compiler to your path, you may want to add this last line (where we updated `PATH`) to your shell's configuration. If you're unsure what shell you use, it's probably bash and you will want to edit your `.bashrc`. As for where to install this up to personal preference, but if unsure a 'tools' directory under our home folder should work. This is nice because the install process doesn't require root permissons. If we want all users on the system to be able to access it, we could install somewhere under `/usr/` too.
+The `PREFIX` environment variable stores the directory we want to install the toolchain into after building, `TARGET` is the target triplet of our target and we also modify the shell `PATH` variable  to include the prefix directory. To permanently add the cross compiler to your path, you may want to add this last line (where we updated `PATH`) to your shell's configuration. If you're unsure what shell you use, it's probably bash and you will want to edit your `.bashrc`. As for where to install this up to personal preference, but if unsure a 'tools' directory under our home folder should work. This is nice because the install process doesn't require root permissions. If we want all users on the system to be able to access it, we could install somewhere under `/usr/` too.
 
 The process of building binutils and GCC follows a pattern:
 
@@ -120,9 +120,9 @@ To tell clang to cross compile, there is a special flag you'll need to pass it: 
 
 As an example lets say you wanted to use clang as a cross compiler for `x86_64-elf` triplet or `x86_64-unknown-elf` you would invoke clang like `clang --target=x86_64-elf` or `--target=x86_64-unknown-elf`. Let's say you wanted to build your kernel for riscv64 you would do something like `clang --target=riscv64`.
 
-Since `clang` and `lld` are compatible with the `gcc/binutils` versions of these tools you can pass the same flags and compilation should go as exepected.
+Since `clang` and `lld` are compatible with the `gcc/binutils` versions of these tools you can pass the same flags and compilation should go as expected.
 
-## Emulator (QEmu)
+## Emulator (QEMU)
 
 Of course we can use any emulator we want, but in our example we rely on qemu. This tool to be compiled requires some extra dependencies:
 
@@ -131,7 +131,7 @@ Of course we can use any emulator we want, but in our example we rely on qemu. T
 * sphinx-rtd-theme
 * If we want to use the gtk ui, we also need libgtk3-dev
 
-As usual let's create a new folder called `build_qemu` and move into it. The confiure command is:
+As usual let's create a new folder called `build_qemu` and move into it. The configure command is:
 
 ```bash
 /path/qemu_src/configure --prefix=$PREFIX --target-list=riscv64-softmmu --enable-gtk --enable-gtk-clipboard --enable-tools --enable-vhost-net
@@ -167,7 +167,7 @@ The last two options enable compiling the text-user-interface (`--enable-tui`) a
 
 The `--target=` flag is special here in that it can also take an option `all` which builds gdb with support for every single architecture it can support. If we're going to develop on one machine but test on multiple architectures (via qemu or real hardware) this is nice. It allows a single instance of gdb to debug multiple architectures without needing different versions of gdb. Often this is how the 'gdb-multiarch' package is created for distros that have it.
 
-The `--host=` flags specify the host system running gdb, in the example above an `x86_64-linux-gnu` system, this should be changed depedning on the system used.
+The `--host=` flags specify the host system running gdb, in the example above an `x86_64-linux-gnu` system, this should be changed depending on the system used.
 
 After running the configure script, we can build and install our custom gdb like so:
 

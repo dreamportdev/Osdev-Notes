@@ -4,7 +4,7 @@ During the development of our kernel we will need to debug a lot, and checking a
 
 This is where the serial logging came to an aid, we will use the serial port to output our text and numbers.
 
-Many emulators have an option to redirect serial data to a file, if we are using QEmu (for more information about it refer to the Appendices section) we need to start it passing the parameter `-serial file:filename`:
+Many emulators have an option to redirect serial data to a file, if we are using QEMU (for more information about it refer to the Appendices section) we need to start it passing the parameter `-serial file:filename`:
 
 ```bash
 qemu -serial file:filename.log -cdrom yourosiso
