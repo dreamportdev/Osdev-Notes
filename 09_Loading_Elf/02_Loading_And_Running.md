@@ -26,7 +26,7 @@ If all of the above are done,  then the program is ready to run! We now should b
 
 When verifying an ELF file there are few things we need to check in order to decide if an executable is valid, the fields to validate are at different points in the ELF header. Some can be found in the `e_ident` field, like the following:
 
-* The first thing we want to check is the magic number, this is the `ELFMAG` part. It is expected to be the following values: 
+* The first thing we want to check is the magic number, this is the `ELFMAG` part. It is expected to be the following values:
 
 | Value | Byte|
 |-------|-----|
@@ -53,12 +53,12 @@ Beware that some compilers when generating a simple executable are not using the
 ld -o example.o example.elf
 ```
 
-For basic executables, we most likely don't need to include any linker script. 
+For basic executables, we most likely don't need to include any linker script.
 
-If we want to know the type of an elf, we can use the `readelf` command, if we are on a unix-like os: 
+If we want to know the type of an elf, we can use the `readelf` command, if we are on a unix-like os:
 ```sh
 readelf -e example.elf
-``` 
+```
 
 Will print out all the executable information, including the type.
 

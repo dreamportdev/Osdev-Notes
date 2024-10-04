@@ -1,8 +1,8 @@
-# Memory Management 
+# Memory Management
 
 This part will cover all the topic related on how to build a memory management mechanism, from scratch, all layers will be covered.
 
-Below the list of chapters: 
+Below the list of chapters:
 
 * [Overview](01_Overview.md) It introduces the basic concepts of memory management, and provide a high level overview of all the layers that are part of it.
 * [Physical Memory Manager](02_Physical_Memory.md) The lowest layer, the physical memory manager, it deals with "real memory".

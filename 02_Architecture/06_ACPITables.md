@@ -113,7 +113,7 @@ struct ACPISDTHeader {
 ```
 * The second part is the table itself, every SDT has its own table
 
-It's important to note that hte `Length` field contains the size of the table, header included. 
+It's important to note that hte `Length` field contains the size of the table, header included.
 
 #### RSDT vs XSDT
 

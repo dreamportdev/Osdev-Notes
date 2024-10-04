@@ -274,5 +274,3 @@ If you find any errors/issues (or horrors) with the notes please feel free to op
 Thanks again!
 
 Ivan G. and Dean T.
-
-

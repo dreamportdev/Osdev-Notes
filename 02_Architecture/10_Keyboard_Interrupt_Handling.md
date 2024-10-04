@@ -122,4 +122,3 @@ For now this function is enough and what we should expect from it is:
 * Again if it is a multibyte key to be released, we will have two lines with the scancode printed. one will still be `0xE0` and the other one is the BREAK code for the key.
 
 As an exercise before implementing the full driver, could be interesting try to implement a logic to identify if the IRQ is about a key being _pressed_ or _released_ (remember it depends on the scancode set used).
-

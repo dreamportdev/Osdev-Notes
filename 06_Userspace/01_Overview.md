@@ -25,4 +25,3 @@ Up until this point, we've just had kernel code running, maybe in multiple threa
 Of course there is only a single kernel, and it's the same kernel that runs alongside each user program.
 
 These functions provided by the kernel are special, they're called *system calls*. This is code that runs in supervisor mode, but can be called by user mode. Meaning we must be extremely careful what system calls are allowed to do, how they accept arguments, and what data is returned. Every argument that is given to a system call should be scrutinized and validated anyway it can be.
-
