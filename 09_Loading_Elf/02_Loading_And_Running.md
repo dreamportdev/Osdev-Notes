@@ -13,7 +13,7 @@ For a program to be compatible with our loader:
 In the previous chapter we looked at the details of loading program headers, but we glossed over a lot of the high level details of loading a program. Assuming we want to start running a new program (we're ignoring `fork()` and `exec()` for the moment), we'll need to do a few things. Most of this was covered in previous chapters, and now it's a matter of putting it all together.
 
 - First a copy of the ELF file to be loaded is needed. The recommended way is to load a file via the VFS, but it could be a bootloader module or even embedded into the kernel.
-- Then once the ELF is loaded, we need verify that its header is correct. Also check the architecture (machine type) matches the current machine, and that the bit-ness is correct (dont try to run a 32-bit program if you dont support it!).
+- Then once the ELF is loaded, we need verify that its header is correct. Also check the architecture (machine type) matches the current machine, and that the bit-ness is correct (don't try to run a 32-bit program if you don't support it!).
 - Find all the program headers with the type `PT_LOAD`, we'll need those in a moment.
 - Create a new address space for the program to live in. This usually involves creating a new process with a new VMM instance, but the specifics will vary depending on your design. Don't forget to keep the kernel mappings in the higher half!
 - Copy the loadable program headers into this new address space. Take care when writing this code, as the program headers may not be page-aligned:. Don't forget to zero the extra bytes between `memsz` and `filesz`.
@@ -24,7 +24,7 @@ If all of the above are done,  then the program is ready to run! We now should b
 
 ### Verifying an ELF file
 
-When veryfying an ELF file there are few things we need to check in order to decide if an executable is valid, the fields to validate are at different points in the ELF header. Some can be found in the `e_ident` field, like the following:
+When verifying an ELF file there are few things we need to check in order to decide if an executable is valid, the fields to validate are at different points in the ELF header. Some can be found in the `e_ident` field, like the following:
 
 * The first thing we want to check is the magic number, this is the `ELFMAG` part. It is expected to be the following values: 
 
@@ -38,7 +38,7 @@ When veryfying an ELF file there are few things we need to check in order to dec
 * We need to check that the file class match with the one we are supporting. There are two possible classes: 64 and 32. This is byte 4
 * The data field indicates the _endiannes_, again this depends on the architecture used. It can be three values: None (0), LSB (1) and MSB (2). For example `x86_64` architecture endiannes is LSB, then the value is expected to be 1. This field is in the byte 5.
 * The version field, byte 6,  to be a valid elf it has to be set to 1 (EVCURRENT).
-* The OS Abi and Abi version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
+* The OS ABI and ABI version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
 
 Then from the other fields that need validation (that area not in the `e_ident` field) are:
 

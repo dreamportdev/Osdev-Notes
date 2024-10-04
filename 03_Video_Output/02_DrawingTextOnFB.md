@@ -8,7 +8,7 @@ The font can be one of many different available (ttf, psf, etc.) in this tutoria
 
 **How** the font is stored depends on the status of the operating system, there are several way:
 
-* Store it in memory (if the OS doesn't support a file sytem yet)
+* Store it in memory (if the OS doesn't support a file system yet)
 * In case a file system has been already implemented, it could be better to store them in a file
 * We can also get a copy of the VGA Fonts in memory, using grub.
 

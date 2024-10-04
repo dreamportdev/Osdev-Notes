@@ -14,7 +14,7 @@ The basic concept of a VFS layer is pretty simple, we can see it like a common w
 
 ![Where the VFS sits in an OS](/Images/vfs_layer.png)
 
- How the different file systens are presented to the-end user depends on design decision. For example windows operating systems wants to keep different file systems logically separated using unit letters, while unix/linux systems represents them under the same tree, so a folder can be either on the same FS or on another one, but in both cases the idea is the same, we want to use the same functions to read/write files on them.
+ How the different file systems are presented to the-end user depends on design decision. For example windows operating systems wants to keep different file systems logically separated using unit letters, while unix/linux systems represents them under the same tree, so a folder can be either on the same FS or on another one, but in both cases the idea is the same, we want to use the same functions to read/write files on them.
 
 In this guide we will follow a unix approach. To better understand how does it works let's have a look at this picture:
 
@@ -51,7 +51,7 @@ Finally we are going to write our implementation of the virtual file system, fol
 
 ### Mounting a File System
 
-To be able to access the different filesystems currently lodaed (*mounted*) by the operating system it needs to keep track of where to access them (wheter it is a drive letter or a directory), and how to access them (implementation functions), to do that we need two things:
+To be able to access the different filesystems currently loaded (*mounted*) by the operating system it needs to keep track of where to access them (whether it is a drive letter or a directory), and how to access them (implementation functions), to do that we need two things:
 
 * A data structure to store all the information related to the loaded File System
 * A list/tree/array of all the file system currently loaded by the os
@@ -163,7 +163,7 @@ But where should be the first file system mounted? That again is depending on th
 Now that we know how to handle the mountpoints, we need to understand how given a path find the correct route toward the right mountpoint. Depending on the approach how a path is defined can vary slightly:
 
 * if we are using a single root approach we will have a path in the form of: `/path/to/folder/and/file`
-* if we are using a multi-root approach the the path will be similar to: `<device_id>/path/to/folder/and/file` (where device_id is what identify the file system to be used, and the device, what it is depend on the os, it can be a letter, a number, a mix, etc.)
+* if we are using a multi-root approach the path will be similar to: `<device_id>/path/to/folder/and/file` (where device_id is what identify the file system to be used, and the device, what it is depend on the os, it can be a letter, a number, a mix, etc.)
 
 We will cover the single root approach, but eventually changing to a multi-root approach should be pretty easy. One last thing to keep in mind is that the path separator is another design decision, mostly every operating system use either "/" or "\" (the latter is mostly on windows os and derivatives), but in theory everything can be used as a path separator, we will stick with the unix-friendly "/", just keep in mind if going for the "windows" way, the separator is the same as the escape character, so it can interfere with the escape sequences.
 
@@ -182,7 +182,7 @@ And we want to access the following paths:
 
 As we can see the first two paths have a common part, but belongs to different file system so we need to implement a function that given a path return a reference of the file system it belongs to.
 
-How to do it is pretty simple, we scan the list, and search for the "longest" mountpoint that is contained in the path, so in the first example, we can see that there are two items in the array that are contained in the path: _"/" (0)_, and _"/home" (3)_, and the longest one is number 3, so this is the file system our function is going to return (wheter it is going to be an id or the reference to the mountpoint item).
+How to do it is pretty simple, we scan the list, and search for the "longest" mountpoint that is contained in the path, so in the first example, we can see that there are two items in the array that are contained in the path: _"/" (0)_, and _"/home" (3)_, and the longest one is number 3, so this is the file system our function is going to return (whether it is going to be an id or the reference to the mountpoint item).
 
 The second path instead has three mountpoints contained into it: _/" (0)_, _"/home/mount" (1)_, _"/home" (3)_, in this case we are going to return 1.
 
@@ -282,11 +282,11 @@ We need to declare a variable that contains the opened file descriptors, as usua
 struct file_descriptors_t vfs_opened_files[MAX_OPENED_FILES]
 ```
 
-Where the `mountpoint_id` fields is the id of the mounted file system that is contining the requested file. The `fs_file_id` is the fs specific id of the fs opened by thefile descriptor, `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations and `file_size` is the the size of the opened file.
+Where the `mountpoint_id` fields is the id of the mounted file system that is containing the requested file. The `fs_file_id` is the fs specific id of the fs opened by the file descriptor, `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations and `file_size` is the size of the opened file.
 
-So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an id value returned. This id is different from the ine in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
+So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an id value returned. This id is different from the one in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
 
-Why "eventually" ? Having found the mountpoint id for the file doesn't mean that the file exists on that fs, the only thing that exist so far is the mountpoint, but after that the VFS can't really know if the file exists or not, it has to defer this task to the fs driver, hence it will call the implementation of a function that open a file on that FS that will do the search and return the an error if the file doesn't exists.
+Why "eventually"? Having found the mountpoint id for the file doesn't mean that the file exists on that fs, the only thing that exist so far is the mountpoint, but after that the VFS can't really know if the file exists or not, it has to defer this task to the fs driver, hence it will call the implementation of a function that open a file on that FS that will do the search and return an error if the file doesn't exists.
 
 But how to call the fs driver function? Earlier in this chapter when we outlined the `mountpoint_t` structure we added a field called `operations`, of type `fs_operations_t` and left it unimplemented. Now is the time to implement it, this field is going to contain the pointer to the driver functions that will be used by the vfs to open, read, write, and close files:
 
@@ -321,7 +321,7 @@ int open(const char *path, int flags){
 }
 ```
 
-The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as we can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is succesfull is time to initialize a new vfs file descriptor item.
+The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as we can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is successful is time to initialize a new vfs file descriptor item.
 
 Let's now have a look at the `close` function, as suggested by name this will do the opposite of the open function: given a file descriptor id it will free all the resources related to it and remove the file descriptor from the list of opened files. The function signature is the following:
 
@@ -366,7 +366,7 @@ So now we have managed to access a file stored somewhere on a file system using 
 ssize_t read(int fildes, void *buf, size_t nbyte);
 ```
 
-Where the paramaters are the opened file descriptor (`fildes) the buffer we want to read into (`buf`), and the number of bytes (`nbytes`) we want to read.
+Where the parameters are the opened file descriptor (`fildes) the buffer we want to read into (`buf`), and the number of bytes (`nbytes`) we want to read.
 
 The read function will return the number of bytes read, and in case of failure -1. Like all other vfs functions, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file and fill the `buf` buffer.
 

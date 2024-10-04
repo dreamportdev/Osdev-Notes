@@ -6,7 +6,7 @@ In the [Switching Modes](02_Switching_Modes.md) chapter we are going to explore 
 
 In the [Handling Interrupts](03_Handling_Interrupts.md) chapter we will update our interrupt handling to be able to run in user mode too, and avoid kernel panics
 
-Then in the [System Calls](04_System_Calls.md) we'll introduce the the concept of system calls. These are a controlled way to allow user programs to ask the kernel to perform certain tasks for it.
+Then in the [System Calls](04_System_Calls.md) we'll introduce the concept of system calls. These are a controlled way to allow user programs to ask the kernel to perform certain tasks for it.
 
 Finally in [Example ABI](05_Example_ABI.md) chapter we will implement an example system call interface for our kernel.
 

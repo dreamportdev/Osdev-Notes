@@ -28,7 +28,7 @@ framebuffer_tag_start:
 framebuffer_tag_end:
 ```
 
-In this case we let the bootloader decide for us the framebuffer configuration. `Width` and `Heigth` field are self explanatory, while the `depth` field indicates the number of bits per pixel in a graphic mode.
+In this case we let the bootloader decide for us the framebuffer configuration. `Width` and `Height` field are self explanatory, while the `depth` field indicates the number of bits per pixel in a graphic mode.
 
 ## Accessing the Framebuffer
 

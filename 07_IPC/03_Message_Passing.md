@@ -8,7 +8,7 @@ Message passing also has more kernel overhead as the kernel must manually copy e
 
 The key concept to understand for message passing is that we now have two distinct parties: the sender and the receiver. The receiver must set up an *endpoint* that messages can be sent to ahead of time, and then wait for a message to appear there. An endpoint can be thought of as the mailbox out the front of your house. If you have no mailbox, they don't know where to deliver the mail.
 
-More specifically, an endpoint is just a buffer with some global idenfier that we can look up. In unix systems these endpoints are typically managed by assigning them file descriptors, but we're going to use a linked list of structs to keep things simple. Each struct will represent an endpoint.
+More specifically, an endpoint is just a buffer with some global identifier that we can look up. In unix systems these endpoints are typically managed by assigning them file descriptors, but we're going to use a linked list of structs to keep things simple. Each struct will represent an endpoint.
 
 You may wish to use the VFS and file descriptors in your own design, or something completely different! Several of the ideas discussed in the previous chapter on shared memory apply here as well, like access control. We won't go over those again, but they're worth keeping in mind here.
 
@@ -30,7 +30,7 @@ What we've described here is a double-copy implementation of message: because th
 
 As mentioned, there's some initial setup that goes into message passing: we need to create an endpoint. We're going to need a way to identify each endpoint, so we'll use a string. We'll also need a way to indicate when a message is available, the address of the buffer containing the message, and the length of the message buffer.
 
-Since the struct representing the endpoint is going to be accessed by multiple proceses, we'll want a lock to protect the data from race conditions. We'll use the following struct to represent our endpoint:
+Since the struct representing the endpoint is going to be accessed by multiple processes, we'll want a lock to protect the data from race conditions. We'll use the following struct to represent our endpoint:
 
 ```c
 struct ipc_endpoint {
@@ -143,7 +143,7 @@ In theory this works, but we've overlooked one huge issue: what if there's alrea
 - Allow for multiple messages to be stored on an endpoint.
 - Fail to send the message, instead returning an error code from `ipc_send()`.
 
-The first option is recommended, as it's likely there will be some processes that handle a lot of messages. Implementing this is left as an exercise to the user, but a simple implemenation might use a struct to hold each message (the buffer address and length) and a next field. Yes, more linked lists!
+The first option is recommended, as it's likely there will be some processes that handle a lot of messages. Implementing this is left as an exercise to the user, but a simple implementation might use a struct to hold each message (the buffer address and length) and a next field. Yes, more linked lists!
 
 Sending messages would now mean appending to the list instead of writing the buffer address as before.
 
@@ -151,7 +151,7 @@ Sending messages would now mean appending to the list instead of writing the buf
 
 We have seen how to send messages, now let's take a look at how to receive them. We're going to use a basic (and inefficient) example, but it shows how it could be done.
 
-The theory behind this is simple: when we're in the receiving process, we allocate a buffer to hold the message, and copy the messge data stored at the endpoint into our local buffer. Now we can set the endpoint's `msg_buffer` field to `NULL` to indicate that there is no longer a message to be received. Note that setting the buffer to `NULL` is specific to our example code, and your implementation may be different.
+The theory behind this is simple: when we're in the receiving process, we allocate a buffer to hold the message, and copy the message data stored at the endpoint into our local buffer. Now we can set the endpoint's `msg_buffer` field to `NULL` to indicate that there is no longer a message to be received. Note that setting the buffer to `NULL` is specific to our example code, and your implementation may be different.
 
 As always, note the use of locks to prevent race conditions. The variable `endpoint` is assumed to be the endpoint we want to receive from.
 
@@ -171,7 +171,7 @@ At this point the endpoint is now ready to receive another message, and we've go
 
 ## Additional Notes
 
-- We've described a double-copy implementation here, but you might want to try a single-copy implemenation. Single-copy implementations *can* be faster, but they require extra logic. For example the kernel will need to access the recipient's address space from the sender's address space, how do you manage this? If you have all of physical memory mapped somewhere (like an identity map, or direct map (HHDM)) you could use this, otherwise you will need some way to access this memory.
+- We've described a double-copy implementation here, but you might want to try a single-copy implementation. Single-copy implementations *can* be faster, but they require extra logic. For example the kernel will need to access the recipient's address space from the sender's address space, how do you manage this? If you have all of physical memory mapped somewhere (like an identity map, or direct map (HHDM)) you could use this, otherwise you will need some way to access this memory.
 - A process waiting on an endpoint (to either send or receive a message) could be waiting quite a while in some circumstances. This is time the cpu could be doing work instead of blocking and spinning on a lock. A simple optimization would be to put the thread to sleep, and have it be woken up whenever the endpoint is updated: a new message is sent, or the current message is read.
 - In this example we've allowed for messages of any size to be sent to an endpoint, but you may want to set a maximum message size for each endpoint when creating it. This makes it easier to receive messages as you know the maximum possible size the message can be, and can allocate a buffer without checking the size of the message. This might seem silly, but when receiving a message from userspace the program has to make a system call each time it wants the kernel to do something. Having a maximum size allows for one-less system call. Enforcing a maximum size for messages also has security benefits.
 

@@ -205,7 +205,7 @@ Let's add our new flag:
 Now we'll need to modify `vmm_alloc` to handle this flag. We're going to modify where we would normally back the object with physical memory:
 
 ```c
-//immedate backing: map physical pages right away.
+//immediate backing: map physical pages right away.
 void* phys = NULL;
 if (flags & VM_FLAG_MMIO)
     phys = (void*)arg;

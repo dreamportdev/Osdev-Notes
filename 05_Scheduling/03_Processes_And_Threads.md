@@ -30,7 +30,7 @@ typedef struct {
 
 While this is functional, there are few problems:
 
-- They can't be easily identified, how do we know the difference between procesess.
+- They can't be easily identified, how do we know the difference between processes.
 - All processes currently share the same address space, and as a byproduct, the same virtual memory allocator.
 - Is not possible to keep track of any resources they might be using, like file handles or network sockets.
 - They can't be prioritized, since we don't know which ones are more important.
@@ -86,7 +86,7 @@ process_t* create_process(char* name, void(*function)(void*), void* arg) {
 }
 ```
 
-The above code omits any error handling, but this is left as an exercise to the reader. We may also want to disable interrupts while creating a new process, so that we aren't pre-empted and the half-initialized process starts running.
+The above code omits any error handling, but this is left as an exercise to the reader. We may also want to disable interrupts while creating a new process, so that we aren't pre-emptied and the half-initialized process starts running.
 
 Most of what happens in the above function should be familiar, but let's look at `iret_flags` for a moment. The value `0x202` will clear all flags except for bits 2 and 9. Bit 2 is a legacy feature and the manual recommends that it's set, and bit 9 is the interrupts flag. If the interrupt flag is not set when starting a new process, we won't be able to pre-empt it!
 

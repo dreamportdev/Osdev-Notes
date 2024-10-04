@@ -8,7 +8,7 @@ On `x86_64` there are two main structures involved in handling interrupts. The f
 
 *Why is getting back into supervisor mode on x86_64 so long-winded?* It's an easy question to ask. The answer is a combination of two things: legacy compatibility, and security. The security side is easy to understand. The idea with switching stacks on interrupts is to prevent leaking kernel data to user programs. Since the kernel may process sensitive data inside of an interrupt, that data may be left on the stack. Of course a user program can't really know when it's been interrupted and there might be valuable kernel data on the stack to scan for, but it's not impossible. There have already been several exploits that work like this. So switching stacks is an easy way to prevent a whole class of security issues.
 
-As for the legacy part? `X86` is an old architecture, oringinally it had no concept of rings or protection of any kind. There have been many attempts to introduce new levels of security into the architecture over time, resulting in what we have now. However for all that, it does leave us with a process that is quite flexible, and provides a lot of possibilities in how interrupts can be handled.
+As for the legacy part? `X86` is an old architecture, originally it had no concept of rings or protection of any kind. There have been many attempts to introduce new levels of security into the architecture over time, resulting in what we have now. However for all that, it does leave us with a process that is quite flexible, and provides a lot of possibilities in how interrupts can be handled.
 
 ## The How
 
@@ -38,7 +38,7 @@ typedef struct tss
 
 As per the manual, the reserved fields should be left as zero. The rest of the fields can be broken up into three groups:
 
-- `rspX`: where `X` represents a cpu ring (0 = supervisor). When an interrupt occurs, the cpu switches the code selector to the selector in the _IDT_ entry. Remember the _CS_ register is what determines the current prilege level. If the new CS is a lower ring (lower value = more privileged), the cpu will switch to the stack in `rspX` before pushing the `iret` frame.
+- `rspX`: where `X` represents a cpu ring (0 = supervisor). When an interrupt occurs, the cpu switches the code selector to the selector in the _IDT_ entry. Remember the _CS_ register is what determines the current privilege level. If the new CS is a lower ring (lower value = more privileged), the cpu will switch to the stack in `rspX` before pushing the `iret` frame.
 - `istX`: where `X` is a non-zero identifier. These are the _IST_ (Interrupt Stack Table) stacks, and are used by the IST field in the IDT descriptors. If an IDT descriptor has non-zero IST field, the cpu will always load the stack in the corresponding IST field in the TSS. This overrides the loading of a stack from an `rspX` field. This is useful for some interrupts that can occur at any time, like a machine check or NMI, or if you do sensitive work in a specific interrupt and don't want to leak data afterwards.
 - `io_bitmap_offset`: Works in tandem with the `IOPL` field in the flags register. If `IOPL` is less than the current privilege level, IO port access is not allowed (results in a #GP). Otherwise IO port accesses can be allowed by setting a bit in a bitmap (cleared bits deny access). This field in the tss specifies where this bitmap is located in memory, as an offset from the base of the tss. If `IOPL` is zero, ring 0 can implicitly access all ports, and `io_bitmap_offset` will be ignored in all rings.
 

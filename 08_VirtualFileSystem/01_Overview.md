@@ -28,7 +28,7 @@ The main purpose of a file system is to store and organise data, and make it eas
 
 Different filesystems have different advantages: some are simpler to implement, otherwise may be offer extreme redundancy and others may be usable across a network. Each filesystem implementation is typically provided by a separate driver that then interacts with the virtual file system provided by the kernel. The most common filesystem drivers you will want to provide are ext2, FAT(12/16/32 - they are fundamentally all the same) and an ram-based 'temp fs'. The tempfs may also support loading its contents from a TAR passed by the bootloader. This is the concept of a init ramdisk, and we'll look at an example of how to implement this.
 
-Each filesystem interally represents file (and directory) data in different ways. Whether they are just a structure laid out before the data, or an entry in a array or list somewhere.
+Each filesystem internally represents file (and directory) data in different ways. Whether they are just a structure laid out before the data, or an entry in a array or list somewhere.
 
 How do we combine the output of all these different filesystems in a uniform way that's usable by the rest of the OS? We achieve this through a layer of abstraction, which we called the *virtual file system*, or VFS. It's responsible for acting as a scaffold that other filesystems can attach themselves to.
 

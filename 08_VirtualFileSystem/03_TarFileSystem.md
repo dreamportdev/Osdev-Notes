@@ -4,7 +4,7 @@ In the previous chapter we have implemented the VFS layer. That will provide us 
 
 ## Introduction
 
-The Tar (standing for Tape ARchive) format is not technically a file system, rather it's an archive format which stores a snapshot of a filesystem. The acronym USTar is used to identify the posix standard version of it. Although is not a real fs it can be easily used as one in read-only mode.
+The Tar (standing for Tape Archive) format is not technically a file system, rather it's an archive format which stores a snapshot of a filesystem. The acronym USTar is used to identify the posix standard version of it. Although is not a real fs it can be easily used as one in read-only mode.
 
 It was first released on 1979 in Version 7 Unix, there are different tar formats (including historical and current ones) two are codified into standards: *ustar* (the one we will implement), and "pax", also still widely used but not standardized is the GNU Tar format.
 
@@ -69,7 +69,7 @@ In C an octal number is represented adding a `0` in front of the number, so for 
 
 But that's not all, we also have that the number is represented as an `ascii` characters, so to get the decimal number we need to:
 
-1. Convert each ascii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `´0'` ), to get the digit we need just to subrstract the `ascii` code for the 0 to the char supplied
+1. Convert each ascii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `´0'` ), to get the digit we need just to subtract the `ascii` code for the 0 to the char supplied
 2.  To obtain the decimal number from an octal we need to multiply each digit per `8^i` where i is the digit position (rightmost digit is 0) and sum their results. For example 37 in octal is:
 
 ```c
@@ -139,12 +139,12 @@ uint64_t tar_file_lookup(const char *filename) {
             strcpy(tar_filename, current_record->file_prefix);
         }
         if ( strcmp(tar_filename, searched_file) == 0) {
-            // We have found the file, we can return wheter the beginning of data, or the record itself
+            // We have found the file, we can return whether the beginning of data, or the record itself
         }
         uint64_t file_size = octascii_to_dec(current_record.file_size, 12);
         current_record = current_record + sizeof(tar_header) + file_size;
     }
-    // If the while looop finish it means we have not found the file
+    // If the while loop finish it means we have not found the file
 }
 ```
 
@@ -179,7 +179,7 @@ ssize_t ustar_read(uint64_t file_handle, const char *buffer, size_t nbytes);
 
 The function should be easy to write, we just need to convert the file handle to a pointer, and copy nbytes of it into the buffer, we can use just a strncpy or similar for it (if we have implemented it).
 
-There is only one problem, since we have the pointer to the start of the file, every time the function is called will return the first n-bytes of it, and this is not what we want since read keeps track of the previously read data, and alway start from the first byte not accessed yet. This can be easily solved in the VFS layer since it keeps track of the last byte read, in this case we just need to add the number of bytes read to the file start address.
+There is only one problem, since we have the pointer to the start of the file, every time the function is called will return the first n-bytes of it, and this is not what we want since read keeps track of the previously read data, and always start from the first byte not accessed yet. This can be easily solved in the VFS layer since it keeps track of the last byte read, in this case we just need to add the number of bytes read to the file start address.
 
 There is another problem: how do we know when we have reached the end of the file. This can be handled by the vfs, since in our case the list of opened files contains both information: current read position and the file size, so if `buf_read_pos + nbytes > filesize` we need to adjust the nbytes variable to `filesize - buf_read_pos` (filesize and buf_read_pos are the field of field_descriptor_t data structure).
 
@@ -189,13 +189,13 @@ In our scenario there is no really need to close a file from a fs driver point o
 
 ## And Now from A VFS Point Of View
 
-Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do we need to do two things: load the filesystem into memory and populate at least one mountpoint_t item. Since techincally there are no fs loaded yet we can add it as the first item in our list/array. We have seent the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure:
+Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do we need to do two things: load the filesystem into memory and populate at least one mountpoint_t item. Since technically there are no fs loaded yet we can add it as the first item in our list/array. We have seent the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure:
 
 * The file system name (it can be whatever we want).
 * The mountpoint (is the folder where we want to mount the filesystem), in our case since we have not mountpoints loaded, a good idea will be to mount it at "/".
 * The file_operations field, that will contain the pointer to the fs functions to open/read/close/write files, in this field we are going to place the fs driver function we just created..
 
-The file_operation field will be loaded as follows (this is according to our current implemeentation):
+The file_operation field will be loaded as follows (this is according to our current implementation):
 
 * The open function will be the ustar_open function.
 * The read function will be the ustar_read function.
@@ -236,7 +236,7 @@ u8[n]   | string            |
         +-------------------+
 ```
 
-The `type`  is just a numeric id to identify the tag, the `size` field is not the size of the file, but of the tag itself. The fields `mod_start` and `mod_end` are the phsyical address of the beginning and end of the module (then `mod_end - mod_start` is its size). The string is an arbitrary string associated with the module, in this case our tar file content. How to parse the multiboot information tags is explained in the [_Boot Protocols_](../01_Overview/02_Boot_Protocols.md) chapter.
+The `type`  is just a numeric id to identify the tag, the `size` field is not the size of the file, but of the tag itself. The fields `mod_start` and `mod_end` are the physical address of the beginning and end of the module (then `mod_end - mod_start` is its size). The string is an arbitrary string associated with the module, in this case our tar file content. How to parse the multiboot information tags is explained in the [_Boot Protocols_](../01_Overview/02_Boot_Protocols.md) chapter.
 
 Once parsed the tag above, we now need to map the memory range from `mod_start` to `mod_end` into our virtual memory, and then the archive is ready to be accessed by the driver at the virtual address specified.
 
@@ -256,9 +256,9 @@ struct tar_list_item {
 };
 ```
 
-And using the new datatype initalize the list accordingly.
+And using the new datatype initialize the list accordingly.
 
-Now when the file system is accessed for the first time we can initalize this list, and use it to search for the files, saving a lot of time and reasources, and it can makes things easier to for the lookup and read function.
+Now when the file system is accessed for the first time we can initialize this list, and use it to search for the files, saving a lot of time and resources, and it can makes things easier to for the lookup and read function.
 
 Another limitation of our driver is that it expects for the tar to be fully loaded into memory, while we know that probably file system will be stored into an external device, so a good idea is to make the driver aware of all possible scenarios.
 

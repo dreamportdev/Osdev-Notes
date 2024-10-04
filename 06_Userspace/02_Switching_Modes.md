@@ -14,7 +14,7 @@ The `iret` instruction _pops_ five arguments off of the stack, and then performs
 
 This is a very powerful instruction because it allows us to change the mode of both code and data accesses, as well as jump to new code all at once. It has the added benefit of switching the stack and flags at the same time, which is fantastic. This is everything we need to properly jump to user code.
 
-Changing the flags atomically like this means we can go from having interrupts disabled in supervisor mode, to interrupts enabled in user code. All without the risk of having an interrupt occuring while we change these values ourselves.
+Changing the flags atomically like this means we can go from having interrupts disabled in supervisor mode, to interrupts enabled in user code. All without the risk of having an interrupt occurring while we change these values ourselves.
 
 ### What to Push Onto The Stack
 
@@ -45,7 +45,7 @@ The kernel/supervisor selectors don't need to have their RPL set explicitly, sin
 
 If RPL is not set correctly, it will throw _#GP_ (General Protection) exception.
 
-As for the other two values? We're going to set `rip` to the instruction we want to execute after using `iret`, and `rsp` can be set to the stack we want to use. Remember that on `x86_64` the stack grows downwards, so if we allocate memory this should be set to the *highest* address of that region. It's a good idea to run user and supervisor code on separate stacks. This way the supverisor stack can have the `U/S` bit cleared in the paging structure, and prevent user mode accessing supervisor data that may be stored on the stack.
+As for the other two values? We're going to set `rip` to the instruction we want to execute after using `iret`, and `rsp` can be set to the stack we want to use. Remember that on `x86_64` the stack grows downwards, so if we allocate memory this should be set to the *highest* address of that region. It's a good idea to run user and supervisor code on separate stacks. This way the supervisor stack can have the `U/S` bit cleared in the paging structure, and prevent user mode accessing supervisor data that may be stored on the stack.
 
 ### Extra Considerations
 
