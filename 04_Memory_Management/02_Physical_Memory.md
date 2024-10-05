@@ -79,4 +79,4 @@ So now knowing how the bitmap works, let's see how to update/test it. We need ba
 * A function to mark a location as set
 * A function to mark a location as clear
 
-[For](for.md) all the above functions we are going to use bitwise operators, and all of them will take one argument that is the `bit_number` location (as seen in the previous paragraph), the implementation is left as exercise.
+For all the above functions we are going to use bitwise operators, and all of them will take one argument that is the `bit_number` location (as seen in the previous paragraph), the implementation is left as exercise.

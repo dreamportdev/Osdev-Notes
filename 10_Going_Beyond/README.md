@@ -1,6 +1,6 @@
 # Going Beyond
 
-This short parts will explore some future ideas for our kernel development, if all the previous parts in the book were completed.
+This short part will explore some future ideas for our kernel development, if all the previous parts in the book were completed.
 
 It will present them with a high level explanation of the steps and the prerequisites needed for the implementation.
 

@@ -347,7 +347,7 @@ There's one piece of housekeeping to take care of! On x86 there first 32 interru
 | 6              | #UD       | Invalid Opcode                        | No             |
 | 7              | #NM       | Device not available                  | No             |
 | 8              | #DF       | Double Fault                          | Yes (always 0) |
-| 9              |           | Unused (was x87 Segment Overrun)     | -              |
+| 9              |           | Unused (was x87 Segment Overrun)      | -              |
 | 10             | #TS       | Invalid TSS                           | Yes            |
 | 11             | #NP       | Segment Not Present                   | Yes            |
 | 12             | #SS       | Stack-Segment Fault                   | Yes            |
