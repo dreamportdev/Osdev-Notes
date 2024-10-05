@@ -1,4 +1,4 @@
-[#](#.md) Boot Protocols
+# Boot Protocols
 
 A boot protocol defines the machine state when the kernel is given control by the bootloader. It also makes several services available to the kernel, like a memory map of the machine, a framebuffer and sometimes other utilities like uart or kernel debug symbols.
 
