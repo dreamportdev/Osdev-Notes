@@ -53,7 +53,7 @@ Release date: Sept 2024
 Fifth book release
 
 * Typo fixes
-* Code (and typo) fixes on the framebuffer chapter. 
+* Code (and typo) fixes on the framebuffer chapter.
 * Add explanation of potential bug on converting GIMP Header file to RGB.
 * Added missing flags on page table/dirs entries
 * Rewrite and rearrangement of syscall/sysret section

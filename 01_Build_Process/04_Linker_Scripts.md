@@ -131,7 +131,7 @@ Let's consider the following example:
 } :text
 ```
 
-First we give this output section a name, in this case its `.text`. To the right of the colon is where we would place any extra attributes for this section or override the LMA. By default the LMA will be the same as the VMA, but if required it can be overriden here using the `AT()` syntax. Two examples are provided below: the first sets the LMA of a section to an absolute address, and the second shows the use of another operator (`ADDR()`) in combination with `AT()` to get the VMA of a section, and then use it for calculating where to place the LMA. This results in a section with an LMA relative to it's VMA.
+First we give this output section a name, in this case its `.text`. To the right of the colon is where we would place any extra attributes for this section or override the LMA. By default the LMA will be the same as the VMA, but if required it can be overridden here using the `AT()` syntax. Two examples are provided below: the first sets the LMA of a section to an absolute address, and the second shows the use of another operator (`ADDR()`) in combination with `AT()` to get the VMA of a section, and then use it for calculating where to place the LMA. This results in a section with an LMA relative to it's VMA.
 
 ```
 /* absolute LMA, set to 0x1234 */
@@ -149,7 +149,7 @@ Next up we have a number of lines describing the input sections, with the format
 
 After the closing brace is where we tell the linker what program header this section should be in, in this case its the `text` phdr. The program header name is prefixed with a colon in this case.
 
-Similarly to the program headers we should specify ithe following sections in in our script:
+Similarly to the program headers we should specify the following sections in in our script:
 
 * _.text_
 * _.rodata_

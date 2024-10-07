@@ -23,7 +23,7 @@ The null selector is mainly used for edge cases, and is usually treated as 'igno
 The code and data descriptors are what they sound like: the code descriptor tells the cpu what region of memory it can fetch instructions from, and how to interpret them. Code selectors can be either 16-bit or 32-bit, or if running in long mode 64-bit or 32-bit.
 
 To illustrate this point, is possible to run 32 bit code in 2 ways:
-- in long mode, with a compatability (32-bit) segment loaded. Paging is required to be used here as we're in long mode (4 or 5 levels used), and segmentation is also enabled due to compatability mode. SSE/SSE2 and various other long mode features are always available too.
+- in long mode, with a compatibility (32-bit) segment loaded. Paging is required to be used here as we're in long mode (4 or 5 levels used), and segmentation is also enabled due to compatibility mode. SSE/SSE2 and various other long mode features are always available too.
 - in protected mode, with a 32-bit segment loaded. Segmentation is mandatory here, and paging is optional (available as 2 or 3 levels). SSE/SSE2 is an optional cpu extension, and may not be supported.
 
 ### GDT Changes in Long Mode

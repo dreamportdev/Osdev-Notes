@@ -31,7 +31,7 @@ This file contains some global config options for grub (setting boot timeouts, e
 
 Global options can be changed using the `set option=value` syntax, and a list is available from the grub documentation.
 
-For each boot option, a menu entry needs to be created within grub.cfg. A menu entry consists of a header, and then a body containing a series of grub commands to boot the operating system. This allows grub to provide a flexible interface for more complex setups.
+For each boot option, a menu entry needs to be created within `grub.cfg`. A menu entry consists of a header, and then a body containing a series of grub commands to boot the operating system. This allows grub to provide a flexible interface for more complex setups.
 
 However in our case, we just want to boot our kernel using the standard multiboot2 protocol. Fortunately grub has a built in command (`multiboot2`) for doing just that:
 
@@ -73,7 +73,7 @@ That took a little more work than grub, but this can (and should) be automated a
 ### Limine.cfg
 Similar to grub, limine also uses a config file. This config file has its own documentation, which is available in the limine repository.
 
-Limine.cfg lists each boot entry as a title, followed by a series of key-value pairs. To boot our example from above using stivale 2, our config might look like the following:
+The `limine.cfg` file lists each boot entry as a title, followed by a series of key-value pairs. To boot our example from above using stivale 2, our config might look like the following:
 
 ```
 :My Operating System

@@ -87,8 +87,8 @@ struct BitfieldExample
 ```
 Bitfields can be very useful, as they allow access to oddly sized bits of data. However there's big issue that can lead to unexpected bugs:
 
-Consider the example above. This struct would form 16bits of data in memory, and while `_3bits` and `_5bits` would share 1 byte, same with `_6bits` and `_2bits`, the compiler makes no guarentees about which field occupies the least or most significant bits.
-Byte order of fields is always guarenteed by the spec to be in the order they were declared in the source file.
+Consider the example above. This struct would form 16bits of data in memory, and while `_3bits` and `_5bits` would share 1 byte, same with `_6bits` and `_2bits`, the compiler makes no guarantees about which field occupies the least or most significant bits.
+Byte order of fields is always guaranteed by the spec to be in the order they were declared in the source file.
 Bitwise order is not.
 
 It is worth noting that relying on this is *usually* okay, most compilers will do the right thing, but optimizations can get a little weird sometimes. Especially -O2 and above.

@@ -41,8 +41,8 @@ First you'll went to set some flags in cr0 for the fpu:
 * Bit 4 = Hardwired to 1 (but not always in some emulator versions!). If set means use 387 protocol, otherwise 287.
 * Bit 5 = NE/Native exceptions - required.
 
-You'll likely want to ensure bit 3 is clear. This is the TS/task swiched bit, which if set will generate a #NM/device missing exception when the cpu thinks you've switched tasks. Not worth the hassle.
-The FPU can now be initializaed by a simple `finit` instruction.
+You'll likely want to ensure bit 3 is clear. This is the TS/task switched bit, which if set will generate a #NM/device missing exception when the cpu thinks you've switched tasks. Not worth the hassle.
+The FPU can now be initialized by a simple `finit` instruction.
 
 SSE is a little trickier, but still straight forward enough
 You'll want to set the following bits in cr4:
@@ -50,7 +50,7 @@ You'll want to set the following bits in cr4:
 * Bit 9 = OSFDSR, tell the cpu our os knows to use the fxsave/fxrstor instructions for saving/restoring extended cpu state.
 * Bit 10 = OSXMMEXCPT, tell the cpu it can issue #XM (simd/sse exceptions), and we'll handle them.
 
-If the cpu supports XSAVE (check cpuid), you can also set bit 18 here to enable it, otherwise leave it as is. 
+If the cpu supports XSAVE (check cpuid), you can also set bit 18 here to enable it, otherwise leave it as is.
 There is more work to setting up xsave as well, for running in a single-task state where you don't care about saving/loading registers, not having xsave setup is fine.
 
 That's it, that should enable your compiler-generated code with sse instructions to work.

@@ -106,7 +106,7 @@ Telling the compiler to not use these features can be done by passing some extra
 - `-mno-mmx`: Disables using the FPU registers for 64-bit integer calculations.
 - `-mno-3dnow`: Disables 3dnow! extensions, similar to MMX.
 - `-mno-sse -mno-sse2`: Disables SSE and SSE2, which use the 128-bit xmm registers, and require setup before use.
-- `-mcmodel=kernel`: The compiler uses 'code models' to help optimize code generation depending on where in memory the code might run. The `medium` cmodel runs in the lower 2GiB, while the `large` runs anywhere in the 64-bit address space. We could use `large` for our kernel, but if the kernel is being loaded loading in the top-most 2GiB `kernel` valuie can be used which allows similar optimizations to `medium`.
+- `-mcmodel=kernel`: The compiler uses 'code models' to help optimize code generation depending on where in memory the code might run. The `medium` code model runs in the lower 2GiB, while the `large` runs anywhere in the 64-bit address space. We could use `large` for our kernel, but if the kernel is being loaded loading in the top-most 2GiB `kernel` value can be used which allows similar optimizations to `medium`.
 
 There are also a few other compiler flags that are useful, but not necessary:
 
@@ -120,7 +120,7 @@ This section should be seen as an extension to the section above on compiling C 
 
 When compiling C++ for a freestanding environment, there are a few extra flags that are required:
 
-- `-fno-rtti`: Tells the compiler not to generate runtime type information. This requires runtime support from the compiler libaries, and the os. Neither of which we have in a freestanding environment.
+- `-fno-rtti`: Tells the compiler not to generate runtime type information. This requires runtime support from the compiler libraries, and the os. Neither of which we have in a freestanding environment.
 - `-fno-exceptions`: Requires the compiler libraries to work, again which we don't have. Means we can't use C++ exceptions in your code. Some standard functions (like the `delete` operator) still require you to declare them `noexcept` so the correct symbols are generated.
 
 And a few flags that are not required, but can be nice to have:

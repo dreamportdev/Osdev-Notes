@@ -8,7 +8,7 @@ The font can be one of many different available (ttf, psf, etc.) in this tutoria
 
 **How** the font is stored depends on the status of the operating system, there are several way:
 
-* Store it in memory (if the OS doesn't support a file sytem yet)
+* Store it in memory (if the OS doesn't support a file system yet)
 * In case a file system has been already implemented, it could be better to store them in a file
 * We can also get a copy of the VGA Fonts in memory, using grub.
 
@@ -203,4 +203,3 @@ We already saw above how to get the selected glyph, but now how we compute the p
 The number of bytes in each line, assuming that we are using grub and the framebuffer is configured via the multiboot header, is available in the *multiboot_tag_framebuffer* structure, the field is *framebuffer_pitch*.
 
 Implementing the function above should be pretty simple and is left as exercise.
-

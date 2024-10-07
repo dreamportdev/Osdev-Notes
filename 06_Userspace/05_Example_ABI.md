@@ -14,7 +14,7 @@ We'll also be using those same four data registers to return data from the syste
 
 Something that was alluded to before was the idea of treating the data registers as a single big block. This would let us pass more than 4 values, and could even pass through more complex structs or unions.
 
-The last piece is how we're going to trigger a system call. We're going to use an interrupt, specificially vector 0x50 for our example ABI. You can use whatever you like, as long as it doesn't conflict with other interrupts.
+The last piece is how we're going to trigger a system call. We're going to use an interrupt, specifically vector 0x50 for our example ABI. You can use whatever you like, as long as it doesn't conflict with other interrupts.
 
 There are some other design considerations that haven't been discussed so far, including:
 
@@ -46,7 +46,7 @@ void execute_syscall(uint64_t num, uint64_t a0, uint64_t a1, uint64_t a2, uint64
 }
 ```
 
-The above function takes advantage of the fact the system V calling convention is the one used by GCC/Clang. If a different compiler/calling convention is used, then the arguments need to be moved into the registers manually. This is as straightfoward as it sounds, but is left as an exercise for the reader.
+The above function takes advantage of the fact the system V calling convention is the one used by GCC/Clang. If a different compiler/calling convention is used, then the arguments need to be moved into the registers manually. This is as straightforward as it sounds, but is left as an exercise for the reader.
 
 This function also uses the `naked` attribute. If unfamiliar with attributes, they are discussed in the C language chapter. This particular attribute tells the compiler not to generate the entry and exit sequences for this function. These are normally very useful, but in our case are unnecessary.
 

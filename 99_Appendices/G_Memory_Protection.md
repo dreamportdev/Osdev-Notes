@@ -19,7 +19,7 @@ SMEP (Supervisor Memory Execute Protection) checks that while in a supervisor ri
 SMAP (Supervisor Memory Access Protection) will generate a page fault if the supervisor attempts to read or write to a user page. This is quite useful, but it brings up an interesting problem: how do the kernel and userspace programs communicate now? Well the engineers at Intel thought of this, and have repurposed the AC (alignment check) bit in the flags register. When AC is cleared, SMAP is active and will generate faults. When AC is set SMAP is temporarily disabled and supervisor rings can access user pages until AC is cleared again. Like most of the other flag bits, AC has dedicated instructions to set (`stac`) and clear (`clac`) it.
 
 Support for SMEP can be checked via cpuid, specifically leaf 7 (sub-leaf 0) bit 7 of the ebx register. SMAP can be checked for via leaf 7 (sub-leaf 0) bit 20 of ebx.
-These features were not introduced at the same time, so it's possible to find a cpu that supports one and not the other. Futhermore, they were introduced relatively recently (2014-2015), so unlike other features (NX for example) they can't safely be assumed to be supported.
+These features were not introduced at the same time, so it's possible to find a cpu that supports one and not the other. Furthermore, they were introduced relatively recently (2014-2015), so unlike other features (NX for example) they can't safely be assumed to be supported.
 
 *Authors Note: Some leaves of cpuid have multiple subleaves, and the subleaf must be explicitly specified. I ran into a bug while testing this where I didn't specify that the subleaf was 0, and instead the last value in rax was used. The old phrase 'garbage in, garbage out' holds true here, and cpuid returned junk data. Be sure to set the subleaf!*
 
@@ -32,7 +32,7 @@ Once these features are known to be supported, they can be enabled like so:
 
 Unlike the previous features which are simple feature flags, this is a more advanced solution. It's really focused on detecting buffer overruns: when too much data is written to a buffer, and the data ends up writing into the next area of memory. This section assumes we're comfortable writing memory allocators, and familiar with how virtual memory works. It's definitely an intermediate topic, one worth being aware of though!
 
-Now while this technique is useful for tracking down a rogue memcpy or memset, it does waste quite a lot of physical memory and virtual address space, as will be shown. Because of this it's useful to be able to swap this with a more traditional allocator for when debugging featuresi are not needed.
+Now while this technique is useful for tracking down a rogue memcpy or memset, it does waste quite a lot of physical memory and virtual address space, as will be shown. Because of this it's useful to be able to swap this with a more traditional allocator for when debugging features are not needed.
 
 A page heap (named after the original Microsoft tool), is a heap where each allocator is rounded up to the nearest page. This entire memory region is dedicated to this allocation, and the two pages either side of the allocation are unmapped. The memory region is padded at the beginning, so that the last byte of the allocated buffer is the last byte of the last mapped page.
 
