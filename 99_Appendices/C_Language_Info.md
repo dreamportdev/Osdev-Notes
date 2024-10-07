@@ -47,7 +47,7 @@ asm("assembly_template"
 * Clobbered registers can usually be left empty. However if we use an instruction like `rdmsr` which places data in registers without the compiler knowing, we'll want to mark those as clobbered. If we specify eax/edx as output operands, the compiler is smart enough to work this out.
 * One special clobber exists: "memory". This is a read/write barrier. It tells the compiler we've accessed memory other than what was specified as input/ouput operands. The cause of many optimization issues!
 * For every operand type there can be more than one, in this case they must be comma separated.
-* Every operand consists of a constraint and `c` expression pair. A constrait can also have a modifier itself
+* Every operand consists of a constraint and `c` expression pair. A constraint can also have a modifier itself
 * Operands parameters are indicated with an increasing number prefixed by a %, so the first operand declared is %0, the second is %1, etc. And the order they appears in the output/input operands section represent their numbering
 
 Below is the list of the constraint modifiers:
@@ -56,8 +56,8 @@ Below is the list of the constraint modifiers:
 |--------|-------------------------|
 |   =    | Indicates that this is an output operand, whatever was the previous value, it will be discarded and replaced with something else |
 |   +    | It indicates that the operand is both read and written by the instruction. |
-|   &    | It indicates that the opreand can be modified before the instruction completion. |
-|   %    | It means that the instruction is commutative for this operand and the following, so the copiler may interchange the two opreands |
+|   &    | It indicates that the operand can be modified before the instruction completion. |
+|   %    | It means that the instruction is commutative for this operand and the following, so the compiler may interchange the two operands |
 
 The constraints are many and they depends the architecture too. Usually they are used to specify where the value should be stored, if in registers or memory, for more details see the useful links section.
 
@@ -85,10 +85,10 @@ Let's dig into the syntax:
 
 * First thing to know is that the order of operands is source, destination
 * When a %% is used to identify a register, it means that it is an operand (its value is provided in the operand section), otherwise a single % is used.
-* Every operand has it's own constraint, that is the letter in front of the variable referred in the oprand section
+* Every operand has it's own constraint, that is the letter in front of the variable referred in the operand section
 * If an operand is output then it will have a "=" in front of constraint (for example "=a")
 * The operand variable is specified next to the constraint between bracket
-* Even if the example above has only %2, we can say that: %0 is the low varible, %1 is high, and %2 is address.
+* Even if the example above has only %2, we can say that: %0 is the low variable, %1 is high, and %2 is address.
 
 It is worth mentioning that inline assembly syntax is the At&t syntax, so the usual rules for that apply, for example if we want to use immediate values in an instruction we must prefix them with the `$`, symbol so for example if we want to mov 5 into rcx register:
 
@@ -99,10 +99,10 @@ asm("movl $5, %rcx;");
 ## C +(+) assembly together - Calling Conventions
 
 Different C compilers feature a number of [calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions),
-with different ones having different defaults. GCC and clang follow the system V abi (which includes the calling convention).
+with different ones having different defaults. GCC and clang follow the system V ABI (which includes the calling convention).
 This details things like how arguments are passed to functions, how the stack is organised and other requirements.
 Other compilers can follow different conventions (MSVC has its own one - not recommended for osdev though), and the calling convention
-can be overriden for a specific function using attributes. Although this is not recommended as it can lead to strange bugs!
+can be overridden for a specific function using attributes. Although this is not recommended as it can lead to strange bugs!
 
 For x86 (32 bit), function calling convention is pretty simple. All arguments are passed on the stack, with the right-most (last arg),
 being pushed first. Stack pushes are 32 bits wide, so smaller values are sign extended. Larger values are pushed as multiple 32 bit components.
@@ -182,7 +182,7 @@ void calibrate_apic_timer()
 }
 ```
 
-The issue with this example is that `pit_ticks` is being constantly accessed inside the loop, and we never modify it inside the loop (its modified in unrelated code, the interrupt handler). With optmizations enabled the compiler will deduce that `pit_ticks` will always be its initial value, and will always be its initial value of 0, therefore the loop is infinite. If we change the variable declaration to be `volatile uint64_t pit_ticks` the compiler assumes nothing, and that this variable can be modified at *any time*.
+The issue with this example is that `pit_ticks` is being constantly accessed inside the loop, and we never modify it inside the loop (its modified in unrelated code, the interrupt handler). With optimizations enabled the compiler will deduce that `pit_ticks` will always be its initial value, and will always be its initial value of 0, therefore the loop is infinite. If we change the variable declaration to be `volatile uint64_t pit_ticks` the compiler assumes nothing, and that this variable can be modified at *any time*.
 
 Therefore it must do a valid read from memory each time it accesses the variable. This causes the above code to work as expected, although with increased latency, as memory must be accessed each cycle of the loop.
 

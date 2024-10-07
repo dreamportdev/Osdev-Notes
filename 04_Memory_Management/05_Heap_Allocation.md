@@ -496,7 +496,7 @@ Here is where the virtual memory manager will join the game. Roughly what will  
 * The heap allocator will first check if we have reached the end of the address space available (unlikely).
 * If not it will ask the VMManager to map a number of pages (exact number depends on implementation) at the address starting from `heap_end + heap_end->size + sizeof(heap_node)`.
 * If the mapping fail, the allocation will fail as well (i.e. out of memory/OOM. This is an issue to solve in its own right).
-* If the mapping is successfull, then we have just created a new node to be appended to the current end of the heap. Once this is done we can proceed with the split if needed.
+* If the mapping is successful, then we have just created a new node to be appended to the current end of the heap. Once this is done we can proceed with the split if needed.
 
 And with that we're just written a fairly complete heap allocator.
 

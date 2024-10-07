@@ -10,7 +10,7 @@ A book, originated as a collection of notes, intended to guide a reader through 
 
 We hope you enjoy, and find something interesting here!
 
-The content of this repository is also available as a _**printed book**_, it can be purchased via Lulu: 
+The content of this repository is also available as a _**printed book**_, it can be purchased via Lulu:
 * **Paperback**: [Click here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/paperback/product-mpzp5v.html?q=osdev+notes&page=1&pageSize=4)
 * **Hardcover**: [Click Here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/hardcover/product-je5drpr.html?page=1&pageSize=4)
 
@@ -37,7 +37,7 @@ The [latest-master](https://github.com/dreamportdev/Osdev-Notes/releases/tag/lat
     * [APIC](02_Architecture/07_APIC.md)
     * [Timers](02_Architecture/08_Timers.md)
     * [PS2 Keyboard Overview](02_Architecture/09_Add_Keyboard_Support.md)
-    * [PS2 Keybord Interrupt Handling](02_Architecture/10_Keyboard_Interrupt_Handling.md)
+    * [PS2 Keyboard Interrupt Handling](02_Architecture/10_Keyboard_Interrupt_Handling.md)
     * [PS2 Keyboard Driver implementation](02_Architecture/11_Keyboard_Driver_Implemenation.md)
 * [Part 3: Video Output](03_Video_Output/README.md)
     * [The Framebuffer](03_Video_Output/01_Framebuffer.md)

@@ -82,7 +82,7 @@ Next up is an important line: `.PHONY: `. Make targets are presumed to output a 
 
 The `all` and `clean` targets work as we'd expect, building the final output or cleaning the build files. It's worth noting the '@' symbol in front of echo. When at the start of a line, it tells make not to echo the rest of the line to the shell. In this case we're using echo because we want to output text without the shell trying to run it. Therefore we tell make not to output the echo line itself, since echo will already write the following text to the shell.
 
-The line `-rm -r build/` begins with a minus/hyphen. Normally if a command fails (returns a non-zero exit code), make will abort the sequence of commands and display an error. Beginning a line with a hyphen tells make to ignore the error code. Make will still tell if an error ocurred, but it won't stop the executing the make file. In this case this is what we want.
+The line `-rm -r build/` begins with a minus/hyphen. Normally if a command fails (returns a non-zero exit code), make will abort the sequence of commands and display an error. Beginning a line with a hyphen tells make to ignore the error code. Make will still tell if an error occurred, but it won't stop the executing the make file. In this case this is what we want.
 
 The last two rules tell make how it should create a `*.c.o` or `*.S.o` file if it needs them. They have a dependency on a file of the same name, but with a different extension (`*.c` or `*.S`). This means make will fail with an error if the source file does not exist, or if we forget to add it to the `SRCS` variables above. We do a protective mkdir, to ensure that the filepath used for output actually exists.
 

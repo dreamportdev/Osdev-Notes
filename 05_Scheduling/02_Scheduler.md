@@ -37,7 +37,7 @@ The basic scheduler we are going to implement will have the following characteri
 
 ### Prerequisites and Initialization
 
-As said above we are going to use a linked list, the implementation of the functions to add, remove and search for processes in the list are left as an exercise, since their implemenation is trivial, and doesn't have any special requirement. For our purposes we assume that the functions: `add_process`, `delete_process`, `get_next_process` are present.
+As said above we are going to use a linked list, the implementation of the functions to add, remove and search for processes in the list are left as an exercise, since their implementation is trivial, and doesn't have any special requirement. For our purposes we assume that the functions: `add_process`, `delete_process`, `get_next_process` are present.
 
 For our scheduler to work correctly it will need to keep track of some information. The first thing will be a list of the currently active processes (by *active* we mean that the process has not finished executing yet). This is our linked list, so for it we need a pointer to its root:
 
@@ -56,7 +56,7 @@ typedef struct process_t {
 } process_t;
 ```
 
-If `cpu_status_t` looks familiar, it's because the struct we created in the interrupts chapter. This represents a snapshot of the cpu when it was interrupted, which conviniently contains everything we need to resume the process properly. This is our processes's `context`.
+If `cpu_status_t` looks familiar, it's because the struct we created in the interrupts chapter. This represents a snapshot of the cpu when it was interrupted, which conveniently contains everything we need to resume the process properly. This is our processes's `context`.
 
 As for `status_t`, it's a enum representing one of the possible states a process can be in. This could also be represented by a plain integer, but this is nicer to read and debug. For now our processes are just going to have three statuses:
 
@@ -64,7 +64,7 @@ As for `status_t`, it's a enum representing one of the possible states a process
 * RUNNING: The process is currently running.
 * DEAD: The process has finished executing, and can have it's resources cleaned up.
 
-Our enum wll look like the following:
+Our enum will look like the following:
 
 ```c
 typedef enum {
@@ -74,7 +74,7 @@ typedef enum {
 } status_t;
 ```
 
-The scheduler will also need to keep track of which process is currently being executed. How exactly you do this depends on the data structure used to store your proceses, in our case using a linked list, we just need a pointer to it:
+The scheduler will also need to keep track of which process is currently being executed. How exactly you do this depends on the data structure used to store your processes, in our case using a linked list, we just need a pointer to it:
 
 ```c
 process_t *current_process;
@@ -228,7 +228,7 @@ loop:
     jmp loop
 ```
 
-That's all it needs to do: halt the cpu. We halt inside a loop so that we wake from an interrupt we halt again, rather than trying to execute whatever comes after the jump instructon.
+That's all it needs to do: halt the cpu. We halt inside a loop so that we wake from an interrupt we halt again, rather than trying to execute whatever comes after the jump instruction.
 
 You can also do this in C using inline assembly:
 

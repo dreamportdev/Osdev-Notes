@@ -10,7 +10,7 @@ This chapter won't be too heavy on new concepts, besides the ELF specification i
 
 It should be noted that the original ELF specification is for 32-bit programs, but a *64-bit extension* was created later on called ELF64. We'll be focusing on ELF64.
 
-It's worth having a copy of the ELF specification as a reference for this chapter as we won't define every structure required. The specification doesn't use fixed width types in its definiton, instead using `words` and `half words`, which are based on the word size of the cpu. For the exact definition of these terms we will need the platform-specific part of the ELF spec, which gives concrete types for these.
+It's worth having a copy of the ELF specification as a reference for this chapter as we won't define every structure required. The specification doesn't use fixed width types in its definition, instead using `words` and `half words`, which are based on the word size of the cpu. For the exact definition of these terms we will need the platform-specific part of the ELF spec, which gives concrete types for these.
 
 For `x86_64` these types are defined as follows:
 
@@ -44,7 +44,7 @@ Section headers describe the ELF in more detail and often contain useful (but no
 
 Having said that, if we're curious about what's inside the rest of the ELF file, tools like `objdump` or `readelf` can parse and display section headers for us. They're also documented thoroughly in the ELF specification.
 
-There are a few special section headers worth knowing about, even if we dont use them right now:
+There are a few special section headers worth knowing about, even if we don't use them right now:
 
 - `.text`, `.rodata`, `.data`, and `.bss`: These usually map directly to the program headers of the same name. Since section headers contain more information than program headers, there is often some extra information stored here about these sections. This is not needed by a program loader so it's not present in the PHDRs.
 - `.strtab`: Short for *string table*, this section header is a series of null-terminated strings. The first entry in this table is also a null-terminator. When other sections need to store a string they actually store a byte offset into this section.
@@ -75,7 +75,7 @@ The meaning of all these fields is explained below when we look at how actually 
 
 Finding the program headers within an ELF binary is also quite straightforward. The offset of the first phdr is given by the `phoff` (program header offset) field of the ELF header.
 
-Like section headers, each program header is tighly packed against the next one. This means that  program headers can be treated as an array. As an example is possible to loop through the _phdrs_ as follows:
+Like section headers, each program header is tightly packed against the next one. This means that  program headers can be treated as an array. As an example is possible to loop through the _phdrs_ as follows:
 
 ```c
 void loop_phdrs(Elf64_Ehdr* ehdr) {
@@ -142,7 +142,7 @@ void load_phdr(Elf64_EHdr* ehdr, Elf64_Phdr* phdr) {
 
 ### Program Header Flags
 
-At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers in virtual memory as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guarenteed to be code), we'll fault. Some of these headers should be read-only, and some (in the case of code) should be readable and executable.
+At this point we've got the program header's content loaded in the correct place. We'll run into an issue if we try to use the loaded program header in this state: we've mapped all program headers in virtual memory as read/write/no-execute. This means if we try to execute any of the headers as code (and at least one of them is guaranteed to be code), we'll fault. Some of these headers should be read-only, and some (in the case of code) should be readable and executable.
 
 While everything could be mapped  as *read* + *write* + *execute*, that's not recommended for security reasons. It can also lead to bugs in programs, and potentially cause crashes.
 

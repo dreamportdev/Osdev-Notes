@@ -113,7 +113,7 @@ struct ACPISDTHeader {
 ```
 * The second part is the table itself, every SDT has its own table
 
-It's important to note that hte `Length` field contains the size of the table, header included. 
+It's important to note that the `Length` field contains the size of the table, header included.
 
 #### RSDT vs XSDT
 
@@ -135,7 +135,7 @@ struct XSDT {
 };
 ```
 
-This means that if we want to get the n-th SDT table we just need to acces the corresponding item in the *SDT array:
+This means that if we want to get the n-th SDT table we just need to access the corresponding item in the *SDT array:
 
 ```c
 //to get the sdt header at n index

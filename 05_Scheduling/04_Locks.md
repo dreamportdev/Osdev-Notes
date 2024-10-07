@@ -6,7 +6,7 @@ Now that we have a scheduler, we can run multiple threads at the same time. This
 
 Imagine we have a shared resource that can be accessed at a specific address. This resource could be anything from MMIO, a buffer or some variable, the important part is that multiple threads *can* access it at the same time.
 
-For our example we're going to say this resouce is a NS16550 uart at address `0xDEAD'BEEF`. If not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms.
+For our example we're going to say this resource is a NS16550 uart at address `0xDEAD'BEEF`. If not familiar with this type of uart device, it's the de facto standard for serial devices. The COM ports on x86 use one of these, as do many other platforms.
 
 The key things to know are that if we write a byte at that address, it will be sent over the serial port to whatever is on the other end. So if to send a message, we must send it one character at a time, at the address specified (`0xDEADBEEF`).
 
@@ -162,11 +162,11 @@ We'll also be using two constants (these are provided by the compiler as well): 
 - `__ATOMIC_ACQUIRE`: Less restrictive, it communicates that operations after this point in the code cannot be reordered to happen before it. It allows the reverse though (writes that happened before this may complete after it).
 - `__ATOMIC_RELEASE`: This is the reverse of acquire, this constraint says that any memory operations before this must complete before this point in the code. Operations after this point may be reordered before this point however.
 
-Using these constraints we can be specific enough to achieve what we want while leaving room for the compiler and cpu to optimize for us. We won't use it here, but there is another ordering constraint to be aware of: `__ATOMIC_RELAXED`. Relaxed ordering is useful when in case a memory operation is deisred to be atomic, but not interact with the memory operations surrounding it.
+Using these constraints we can be specific enough to achieve what we want while leaving room for the compiler and cpu to optimize for us. We won't use it here, but there is another ordering constraint to be aware of: `__ATOMIC_RELAXED`. Relaxed ordering is useful when in case a memory operation is desired to be atomic, but not interact with the memory operations surrounding it.
 
 Both of the previously mentioned atomic functions take a pointer to either a `bool` or `char` that's used as the lock variable, and the memory order. The `__atomic_test_and_set` function returns the *previous* state of the lock. So if it returns true, the lock was already taken. A return of falses indicates we successfully took the lock.
 
-Using our new compiler instrinsics, we can update the `acquire` and `release` functions to look like the following:
+Using our new compiler intrinsics, we can update the `acquire` and `release` functions to look like the following:
 
 ```c
 void acquire(spinlock_t* lock) {
@@ -198,7 +198,7 @@ There is no decisive solution to this, and instead care must be taken when using
 
 ## Next Steps
 
-In this chapter we've implemented a simple spinlock that allows us to protect shared resources. Obiously there are other types of locks that could be implemented, each with various pros and cons. For example the spinlock shown here has the following problems:
+In this chapter we've implemented a simple spinlock that allows us to protect shared resources. Obviously there are other types of locks that could be implemented, each with various pros and cons. For example the spinlock shown here has the following problems:
 
 - It doesn't guaren'tee the order of processes accessing it. If we have threads A, B and C wanting access to a resource, threads A and B may keep acquiring the lock before C can, resulting in thread C stalling. One possible solution to this is called the ticket lock: it's a very simple next step to take from a basic spinlock.
 - It also doesn't prevent a *deadlock* scenario. For example lets say thread A takes lock X, and then needs to take lock Y, but lock Y is held by another thread. Thread B might be holding lock Y, but needs to take lock X. In this scenario neither thread can progress and both are effectively stalled.

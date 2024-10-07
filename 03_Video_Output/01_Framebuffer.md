@@ -28,7 +28,7 @@ framebuffer_tag_start:
 framebuffer_tag_end:
 ```
 
-In this case we let the bootloader decide for us the framebuffer configuration. `Width` and `Heigth` field are self explanatory, while the `depth` field indicates the number of bits per pixel in a graphic mode.
+In this case we let the bootloader decide for us the framebuffer configuration. `Width` and `Height` field are self explanatory, while the `depth` field indicates the number of bits per pixel in a graphic mode.
 
 ## Accessing the Framebuffer
 
@@ -158,7 +158,7 @@ uint32_t num = (uint32_t) pixel[3] << 24 |
 
 ```
 
-Note that we used a `unsigned char` type, while gimp is providing for a `static char` type, the reason is because `char` type can be signed or unsigned depending on the platform. So if values are greater than 127 are used, they may be intended as negative values, if `char` is signed, when they are cast to `uint32_t` the sign can be extended, leading unexpected results. 
+Note that we used a `unsigned char` type, while gimp is providing for a `static char` type, the reason is because `char` type can be signed or unsigned depending on the platform. So if values are greater than 127 are used, they may be intended as negative values, if `char` is signed, when they are cast to `uint32_t` the sign can be extended, leading unexpected results.
 
 In the code above we are making sure that the value of `pixel[3]` is zero, since the `HEADER_PIXEL` function is not touching it. Now the value of `num` will be the colour of the pixel to be plotted.
 

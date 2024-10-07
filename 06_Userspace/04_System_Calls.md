@@ -15,7 +15,7 @@ Some common things to consider include:
 - How does the kernel return data to the user?
 - How to pass larger amounts of data?
 
-On `x86_64`, using registers to pass arguments/return values is the most straightfoward way. Which registers specifically are left as an exercise to the reader. Note there's no right or wrong answer here (except maybe `rsp`), it's a matter of preference.
+On `x86_64`, using registers to pass arguments/return values is the most straightforward way. Which registers specifically are left as an exercise to the reader. Note there's no right or wrong answer here (except maybe `rsp`), it's a matter of preference.
 
 Since designing an ABI can be a rather tricky thing to get *just right* the first time, an example one is discussed in the next chapter. Along with the methodology used to create it.
 
@@ -115,7 +115,7 @@ Upon entering the kernel, you will be running with ring 0 privileges and certain
 
 ### Compatibility Issues
 
-As we hinted at before, there are actually two pairs of instructions: a pair designed by Intel and a pair by AMD. Unfortunately neither could agree on which to use, so we're left in an awkward situation. On `x86` (32-bit) Intel created their instructions first, and AMD honoured this by supporting them. These instructions are `sysenter` and `sysexit`, making use of three MSRs. If interested in these, all the relevent details can be found in the intel manuals.
+As we hinted at before, there are actually two pairs of instructions: a pair designed by Intel and a pair by AMD. Unfortunately neither could agree on which to use, so we're left in an awkward situation. On `x86` (32-bit) Intel created their instructions first, and AMD honoured this by supporting them. These instructions are `sysenter` and `sysexit`, making use of three MSRs. If interested in these, all the relevant details can be found in the intel manuals.
 
 Since AMD designed the 64-bit version of `x86` (`x86_64`), they made their instructions architectural and deprecated Intel's. For 64-bit platforms, we have the `syscall` and `sysret` instructions. Functionally very similar to the other pair, they do have slight differences. Since we're focused on `x86_64`, we'll only discuss the 64-bit versions.
 
