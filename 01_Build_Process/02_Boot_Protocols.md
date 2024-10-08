@@ -1,4 +1,4 @@
-# Boot Protocols
+    # Boot Protocols
 
 A boot protocol defines the machine state when the kernel is given control by the bootloader. It also makes several services available to the kernel, like a memory map of the machine, a framebuffer and sometimes other utilities like uart or kernel debug symbols.
 
@@ -238,7 +238,7 @@ Where the fields are:
 
 All the other fields depends on the type of the request.
 
-The response instead, has only one mandatory field, it's the `revision` field, that like in the request, it marks the revision of the response field there is no coupling between response and request `revision` number.
+The response instead, has only one mandatory field, it's the `revision` field, that like in the request, it marks the revision of the response field. Note that there is no coupling between response and request `revision` number.
 
 ### Fancy Features
 
@@ -248,25 +248,35 @@ Limine also provides some more advanced features:
 - It boots up AP (all other) cores in the system, and provides an easy interface to run code on them.
 - It supports KASLR, loading our kernel at a random offset each time.
 - It can also provide things like EDID blobs, address of the PXE server (if booted this way), and a device tree blob on some platforms.
-- A fully ANSI-compliant terminal is provided. This does require the kernel to make certain promises about memory layout and the GDT, but it's a very useful debug tool or basic shell in the early stages.
 
 The limine bootloader not only supports x86, but tentatively supports aarch64 as well (uefi is required). There is also a stivale2-compatible bootloader called Sabaton, providing broader support for ARM platforms.
 
-### Creating a Stivale2 Header
-The limine bootloader provides a `stivale2.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file.
+### Creating a Limine Header
+The limine bootloader provides a `limine.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file.
 
 *Authors Note: I like to place my limine header tags in a separate file, for organisation purposes, but as long as they appear in the final binary, they can be anywhere. You can also implement this in assembly if you really want.*
 
-First of all, we'll need an extra section in our linker script, this is how the bootloader knows our kernel can be booted via stivale2:
+First of all, we'll need an extra section in our linker script, this is where all the limine requests will be placed:
 
 ```
-.stivale2hdr :
+.requests :
 {
-    KEEP(*(.stivale2hdr))
-}
+    KEEP(*(.requests_start_marker))
+    KEEP(*(.requests))
+    KEEP(*(.requests_end_marker))
+} :requests
 ```
 
 If not familiar with the `KEEP()` command in linker scripts, it tells the linker to keep that section even if it's not referenced by anything. Useful in this case, since the only reference will be the bootloader, which the linker can't know about at link-time.
+
+First thing we want to do is set the base revision of the protocol. Latest version as time of writing is `2`, this can be done with the following line of code:
+
+```c
+__attribute__((used, section(".requests")))
+static volatile LIMINE_BASE_REVISION(2);
+```
+
+If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.requests` section, as is required by the Limine spec.
 
 Next we'll need to create space for our stack (stivale2 requires us to provide our own) and define the stivale2 header, like so:
 
