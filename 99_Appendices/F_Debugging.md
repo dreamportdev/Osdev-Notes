@@ -207,31 +207,35 @@ qemu-system-i386 [..other params..] -monitor unix:qemu-monitor-socket,server,now
 ```
 
 then on another shell, on the same folder where we started the emulator launch the following command:
+
 ```bash
 socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
 ```
 
 
-Another method is to use telnet to start the monitor. This is best for easier, cross-platform or remote use (albeit less secure).
+Another method is to use telnet to start the monitor. This is handy for easier, cross-platform or remote use (albeit less secure).
+
 ```bash
 qemu-system-i386 [..other params..] -monitor telnet::45454,server,nowait
 ```
 
 This enables the monitor to listen on a specified port (ie, 45454). You can then connect to the QEMU monitor from another terminal or a remote machine (with networking setup) using Telnet:
+
 ```bash
 telnet localhost 45454
 ```
 
 Both of these will prompt with a shell similar to the following:
+
 ```bash
 QEMU 6.1.0 monitor - type 'help' for more information
 (qemu)
 ```
 
-Once the monitor is running is possible to send commands directly to the emulator, below a list of useful commands:
+Once the monitor is running, it is possible to send commands directly to the emulator, below is a list of useful commands:
 
-* `help` Well this is the first command to get some help on how to use the monitor.
-* `info xxxx` It will print several information, depending on xxxx for example: `info lapic` will show the current status of the local apic, `info mem` will print current virtual memory mappings, `info registers` will print the registers content.
+* `help` This is the first command to get some help using the monitor.
+* `info xxxx` It will print information, depending on xxxx for example: `info lapic` will show the current status of the local apic, `info mem` will print current virtual memory mappings, `info registers` will print the content of the registers.
 * `x /cf address` where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address.
 * `xp /cf address` same as above, but for physical memory.
 
