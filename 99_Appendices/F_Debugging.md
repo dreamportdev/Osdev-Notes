@@ -207,21 +207,28 @@ qemu-system-i386 [..other params..] -monitor unix:qemu-monitor-socket,server,now
 ```
 
 then on another shell, on the same folder where we started the emulator launch the following command:
-
 ```bash
 socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
 ```
 
-This will prompt with a shell similar to the following:
 
+Another method is to use telnet to start the monitor. This is best for easier, cross-platform or remote use (albeit less secure).
 ```bash
-username@host:~/yourpojectpath/$ socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
-QEMU 6.1.0 monitor - type 'help' for more information
-(qemu)
-
+qemu-system-i386 [..other params..] -monitor telnet::45454,server,nowait
 ```
 
-From here is possible to send commands directly to the emulator, below a list of useful commands:
+This enables the monitor to listen on a specified port (ie, 45454). You can then connect to the QEMU monitor from another terminal or a remote machine (with networking setup) using Telnet:
+```bash
+telnet localhost 45454
+```
+
+Both of these will prompt with a shell similar to the following:
+```bash
+QEMU 6.1.0 monitor - type 'help' for more information
+(qemu)
+```
+
+Once the monitor is running is possible to send commands directly to the emulator, below a list of useful commands:
 
 * `help` Well this is the first command to get some help on how to use the monitor.
 * `info xxxx` It will print several information, depending on xxxx for example: `info lapic` will show the current status of the local apic, `info mem` will print current virtual memory mappings, `info registers` will print the registers content.
