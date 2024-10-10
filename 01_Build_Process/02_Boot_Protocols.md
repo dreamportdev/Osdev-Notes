@@ -293,7 +293,19 @@ static volatile struct limine_framebuffer_request {
 
 The requests types are all declared in the `limine.h` header.
 
-For any other information that we need to get from the bootloader, we are going to create a similar request using the correct request type.
+Any type of information that needs to be requested to the bootloader, will have it's own `request` variable, with it's type.
+
+Finally the requests start and end markers needs to be declared:
+
+```c
+__attribute__((used, section(".requests_start_marker")))
+static volatile LIMINE_REQUESTS_START_MARKER;
+
+__attribute__((used, section(".requests_end_marker")))
+static volatile LIMINE_REQUESTS_END_MARKER;
+```
+
+Again they can be placed anywhere in the code, since their position will be decided by the section they belongs to.
 
 The last detail is to add the kernel start function (declared in the `ENTRY()` section in the linker script):
 
