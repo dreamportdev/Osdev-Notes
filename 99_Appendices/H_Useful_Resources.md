@@ -33,7 +33,7 @@ This appendix is a collection of links we found useful developing our own kernel
 
 ## Video Output
 
-- JMNL.xyz blog post about creating a ui: [https://jmnl.xyz/window-manager/](https://jmnl.xyz/window-manager/]
+- JMNL.xyz blog post about creating a ui: [https://jmnl.xyz/window-manager/](https://jmnl.xyz/window-manager/)
 - Osdev wiki page for PSF format: [https://wiki.osdev.org/PC_Screen_Font](https://wiki.osdev.org/PC_Screen_Font)
 - gbdfed - Tool to inspect PSF files: [https://github.com/andrewshadura/gbdfed](https://github.com/andrewshadura/gbdfed)
 - PSF Formats: [https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html](https://www.win.tue.nl/~aeb/linux/kbd/font-formats-1.html)
