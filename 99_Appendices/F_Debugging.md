@@ -198,9 +198,9 @@ While debugging with gdb, we may want to keep qemu hanging after a triple fault 
 
 ### Qemu Monitor
 
-Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the virtual machine without using an external debugger.
+Qemu monitor is a tool used to send complex commands to the Qemu emulator, is useful to add/remove media images to the system, freeze/unfreeze the VM, and inspect the virtual machine's state without using an external debugger.
 
-One way to start Qemu monitor on a unix system is using the following parameter when starting qemu:
+One way to start Qemu monitor on a unix system is using the following parameter when starting Qemu:
 
 ```bash
 qemu-system-i386 [..other params..] -monitor unix:qemu-monitor-socket,server,nowait
@@ -213,7 +213,7 @@ socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
 ```
 
 
-Another method is to use telnet to start the monitor. This is handy for easier, cross-platform or remote use (albeit less secure).
+Another method is to use Telnet to start the monitor. This is handy for easier, cross-platform or remote use (albeit less secure).
 
 ```bash
 qemu-system-i386 [..other params..] -monitor telnet::45454,server,nowait
