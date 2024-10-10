@@ -252,6 +252,7 @@ Limine also provides some more advanced features:
 The limine bootloader not only supports x86, but tentatively supports aarch64 as well (uefi is required). There is also a stivale2-compatible bootloader called Sabaton, providing broader support for ARM platforms.
 
 ### Creating a Limine Header
+
 The limine bootloader provides a `limine.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file.
 
 *Authors Note: I like to place my limine header tags in a separate file, for organisation purposes, but as long as they appear in the final binary, they can be anywhere. You can also implement this in assembly if you really want.*
@@ -276,65 +277,39 @@ __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
 ```
 
-If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.requests` section, as is required by the Limine spec.
+If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.requests` section, as is required by the Limine spec and it is marked as used.
 
-Next we'll need to create space for our stack (stivale2 requires us to provide our own) and define the stivale2 header, like so:
+The main requirement of any limine protocol variable, request is that, is that the compiler keep them as they are, without any optimization optimizing them, for this reason they are declared as `volatile` and they should be accessed at least once, or marked as `used`.
+
+In this protocol, `requests` can be placed anywhere, and there is no need to use any type of list or place them in a specific memory area. For example, let's imagine that we want to get the framebuffer information from the bootloader. In this case we need to declare the `struct limine_framebuffer_request` type while creating a variable for our request:
 
 ```c
-#include <stivale2.h>
-
-//8K for the initial stack, a reasonable default
-static uint8_t init_stack[0x2000];
-
-__attribute__((section(".stivale2hdr)))
-static stivale2_header stivale2_hdr =
-{
-    .entry_point = 0,
-    .stack = (uintptr_t)init_stack + 0x2000,
-    .flags = (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
-    .tags = (uintptr_t)&framebuffer_tag
+__attribute__((used, section(".requests")))
+static volatile struct limine_framebuffer_request {
+    .id = LIMINE_FRAMEBUFFER_REQUEST,
+    .revision = 0
 };
 ```
 
-If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.stivale2hdr` section, as is required by the stivale2 spec.
+The requests types are all declared in the `limine.h` header.
 
-Next we set some fields in the stivale2 header:
+For any other information that we need to get from the bootloader, we are going to create a similar request using the correct request type.
 
-- `entry_point`: Is used to override the ELF's entry point address. Set this to zero to use the regular entry function we set in the linker script.
-- `stack`: Self explanatory, used to set the stack the kernel code will start with.
-- `flags`: A bitfield of flags. Bit 1 asks the bootloader to return higher half addresses to us for tags, modules and other things. Bit 2 asked the bootloader to make use of the nx-bit and write-enable bits in the page tables when loading the kernel. Bit 3 is recommended and enables the bootloader to load us at any physical address as long as the virtual address is the same. Bit 4 is required to be set, as it disables a legacy feature.
-- `tags`: A pointer to the first stivale2 tag in the linked list of requests.
-
-In the example above we actually set the first tag to a framebuffer request, so lets see what that would look like:
+The last detail is to add the kernel start function (declared in the `ENTRY()` section in the linker script):
 
 ```c
-static stivale2_header_tag_framebuffer framebuffer_tag =
-{
-    .tag =
-    {
-        .identifier = STIVALE2_HEADER_TAG_FRAMEBUFFER,
-        .next = 0,
-    },
-    .framebuffer_width = 0,
-    .framebuffer_height = 0,
-    .framebuffer_bpp = 0
-};
+void kernel_start(void);
 ```
 
-The `framebuffer_*` fields can be used to ask for a specific kind of framebuffer, but leaving them to zero tells the bootloader we want to best possible available. The `next` field can be used to point to the next header tag, if we had another one we wanted. The full list of tags is available in the stivale2 specification (see the useful links appendix).
+Since all the bootloader information are provided via `static` variables, the kernel start function doesn't require any particular signature.
 
-The last detail is to change the signature of our kernel entry function to:
-
-```c
-void kernel_start(stivale2_struct* stivale2_data);
-```
-
-This struct points to a list of tags, each containing details about the machine we're booted on. These are called struct tags (bootloader -> kernel) as opposed to the tags we defined before (header tags: kernel -> bootloader). To get info about a specific feature, simply walk the linked list of tags, the next tag's address is available in the `tag->next` field. The end of the list is indicated by a nullptr.
 
 ## Finding Bootloader Tags
+
 Since both multiboot 2 and stivale 2 return their info in linked lists, a brief example of how to traverse these lists is given below. These functions provide a nice abstraction to search the list for a specific tag, rather than manually searching each time.
 
 ### Multiboot 2
+
 Multiboot 2 gives us a pointer to the multiboot info struct, which contains 2x 32-bit fields. These can be safely ignored, as the list is null-terminated (a tag with a type 0, and size of 8). The first tag is at 8 bytes after the start of the mbi. All the structures and defines used here are available in the header provided by the multiboot specification (check the bottom section, in the example kernel), including the `MULTIBOOT_TAG_TYPE_xyz` defines (where xyz is a feature described by a tag). For example the memory map is `MULTIBOOT_TAG_TYPE_MMAP`, and framebuffer is `MULTIBOOT_TAG_TYPE_FRAMEBUFFER`.
 
 ```c
@@ -361,27 +336,17 @@ void* multiboot2_find_tag(uint32_t type)
 
 Lets talk about the last three lines of the loop, where we set the `tag` variable to the next value. The multiboot 2 spec says that tags should always be 8-byte aligned. While this is not a problem most of the time, it is *possible* we could get a misaligned pointer by simply adding `size` bytes to the current pointer. So to be on safe side, and spec-compliant, we'll align the value up to the nearest 8 bytes.
 
-### Stivale 2
-Stivale 2 gives us a pointer to a header at the start of the list, and then each item (including this header) contains a `next` pointer to the next item, and an `id` item with a unique 64-bit identifier for that tag. All the structures and defines are available in the standard `stivale2.h`. We'll know we've reached the end of the list when the `next` pointer is `NULL`.
+### Limine
+
+Accessing the bootloader response is very simple, and it  doesn't require iterating any list. We just need to read the content of the `.response` field of the request structure:
 
 ```c
-//given to the kernel entry function
-stivale2_struct* s2_struct;
-
-//returns null if tag could not be found
-void* stivale2_find_tag(uint64_t id)
-{
-    stivale2_tag* tag = s2_struct->next;
-
-    while (tag != NULL)
-    {
-        if (tag->id == id)
-            return tag;
-        tag = tag->next;
-    }
-
-    return NULL;
+//somewhere in the code
+if ( framebuffer_request->response != NULL) {
+    // Do something with the response
 }
 ```
 
-The above function can be used with the defines in `stivale2.h`, which follow the format `STIVALE2_STRUCT_TAG_xyz_ID`, where `xyz` represents the feature that is described in the tag. For example, the framebuffer would be `STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID` and the memory map is `STIVALE2_STRUCT_TAG_MEMMAP_ID`. It's a little verbose, but easy to search for.
+Is important to note, for every type of request the `response` field have a different type, in this case it is a pointer to a `struct limine_framebuffer_response`, for more info on all the available requests, and repsonses refer to the protocl documentation.
+
+The `framebuffer_*` fields can be used to ask for a specific kind of framebuffer, but leaving them to zero tells the bootloader we want to best possible available. The `next` field can be used to point to the next header tag, if we had another one we wanted. The full list of tags is available in the stivale2 specification (see the useful links appendix).
