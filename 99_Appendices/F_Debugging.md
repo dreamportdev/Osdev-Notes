@@ -198,9 +198,9 @@ While debugging with gdb, we may want to keep qemu hanging after a triple fault 
 
 ### Qemu Monitor
 
-Qemu monitor is a tool used to send complex commands to the qemu emulator, is useful to for example add/remove media images to the system, freeze/unfreeze the VM, and to inspect the state of the virtual machine without using an external debugger.
+Qemu monitor is a tool used to send complex commands to the Qemu emulator, is useful to add/remove media images to the system, freeze/unfreeze the VM, and inspect the virtual machine's state without using an external debugger.
 
-One way to start Qemu monitor on a unix system is using the following parameter when starting qemu:
+One way to start Qemu monitor on a unix system is using the following parameter when starting Qemu:
 
 ```bash
 qemu-system-i386 [..other params..] -monitor unix:qemu-monitor-socket,server,nowait
@@ -212,19 +212,30 @@ then on another shell, on the same folder where we started the emulator launch t
 socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
 ```
 
-This will prompt with a shell similar to the following:
+
+Another method is to use Telnet to start the monitor. This is handy for easier, cross-platform or remote use (albeit less secure).
 
 ```bash
-username@host:~/yourpojectpath/$ socat -,echo=0,icanon=0 unix-connect:qemu-monitor-socket
-QEMU 6.1.0 monitor - type 'help' for more information
-(qemu)
-
+qemu-system-i386 [..other params..] -monitor telnet::45454,server,nowait
 ```
 
-From here is possible to send commands directly to the emulator, below a list of useful commands:
+This enables the monitor to listen on a specified port (ie, 45454). You can then connect to the QEMU monitor from another terminal or a remote machine (with networking setup) using Telnet:
 
-* `help` Well this is the first command to get some help on how to use the monitor.
-* `info xxxx` It will print several information, depending on xxxx for example: `info lapic` will show the current status of the local apic, `info mem` will print current virtual memory mappings, `info registers` will print the registers content.
+```bash
+telnet localhost 45454
+```
+
+Both of these will prompt with a shell similar to the following:
+
+```bash
+QEMU 6.1.0 monitor - type 'help' for more information
+(qemu)
+```
+
+Once the monitor is running, it is possible to send commands directly to the emulator, below is a list of useful commands:
+
+* `help` This is the first command to get some help using the monitor.
+* `info xxxx` It will print information, depending on xxxx for example: `info lapic` will show the current status of the local apic, `info mem` will print current virtual memory mappings, `info registers` will print the content of the registers.
 * `x /cf address` where c is the number of items we want to display in decimal, f is the format (`x` for hex, `c` for char, etc) display the content of c virtual memory locations starting from address.
 * `xp /cf address` same as above, but for physical memory.
 
