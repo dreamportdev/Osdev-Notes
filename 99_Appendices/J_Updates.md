@@ -61,7 +61,7 @@ Fifth book release
 ### Revision 5
 
 Relase date: TBD
-Sixty Book Release
+Sixth Book Release
 
 * _Stivale 2_ protocol sections have been replaced with Limine protocl, since _stivale2_ has been deprecated.
 
