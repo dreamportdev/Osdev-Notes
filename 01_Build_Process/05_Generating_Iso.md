@@ -47,7 +47,7 @@ Note the last command `boot`, this tells grub to complete the boot process and a
 ## Limine (Limine Protocol, Multiboot 2)
 The process for limine is a little more manual: we must build the iso ourselves, and then use the provided tool to install limine onto the iso we created.
 
-To get started we'll want to create a working directory to use as the root of our iso. In this case we'll use `disk/`. Next we'll need to clone the latest binary branch of limine (using `git clone https://github.com/limine-bootloader/limine.git --branch=v3.0-branch-binary --depth=1`) and copy 'limine.sys', 'limine-cd.bin', and 'limine-cd-efi.bin' into `disk/limine/`, creating that directory if it doesn't exist.
+To get started we'll want to create a working directory to use as the root of our iso. In this case we'll use `disk/`. Next we'll need to clone the latest binary branch of limine that at time of writing is at version `8.x` (using `git clone https://github.com/limine-bootloader/limine.git --branch=v8.x-binary --depth=1`) and copy 'limine.sys', 'limine-cd.bin', and 'limine-cd-efi.bin' into `disk/limine/`, creating that directory if it doesn't exist.
 
 Now we can copy our `limine.conf` and kernel into the working directory. The `limine.conf` file needs to be in one of a few locations in order to be found, the best place is the root directory.
 
@@ -65,7 +65,7 @@ That's a lot of flags! Because of how flexible the iso format is, we need to be 
 Now we have an iso with our kernel, config and bootloader files on it that can boot if using uefi. If we want to make it bootable also using the `bios` an extra step is required, we need to install limine into the boot partitions, it can be done using the `limine` command like so:
 
 ```sh
-./limine/limine bios-install $(IMAGE_NAME).iso
+./limine/limine bios-install my_iso.iso
 ```
 
 That took a little more work than grub, but this can (and should) be automated as part of the build system. If can't find `limine` inside the cloned limine directory, we may need to run `make -C limine` from there for it to be build.
