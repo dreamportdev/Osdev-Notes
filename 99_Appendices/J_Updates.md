@@ -58,3 +58,10 @@ Fifth book release
 * Added missing flags on page table/dirs entries
 * Rewrite and rearrangement of syscall/sysret section
 
+### Revision 5
+
+Relase date: TBD
+Sixth Book Release
+
+* _Stivale 2_ protocol sections have been replaced with Limine protocol, since _stivale2_ has been deprecated.
+

@@ -6,14 +6,13 @@ In this part we are going to explore all the tools and steps that are needed in 
 
 In this chapter we will have a global overview of the build process, touching briefly what are the steps involved, and the tools that are going to be used.
 
-Then in the [Boots Protocols and Bootloaders](02_Boot_Protocols.md) chapter we will explore in detail how to boot a kernel, and describe two options that can be used for the boot process: Multiboot and Stivale.
+Then in the [Boots Protocols and Bootloaders](02_Boot_Protocols.md) chapter we will explore in detail how to boot a kernel, and describe two options that can be used for the boot process: Multiboot and Limine.
 
 The [Makefiles](04_Gnu_Makefiles.md) chapter will explain how to build a process, even if initially is just a bunch of file and it can be done manually, it soon grow more complex, and having the process automated will be more than useful, we will use _Makefile_ for our build script.
 
 One of the most _obscure_, that is always present while building any software, but is hidden to us until we start to roll up our own kernel is the _linking process_. The [Linker Scripts](05_Linker_Scripts.md) chapter will introduce us to the world of _linking_ files and explain how to write a linker script.
 
 Finally the kernel is built but not ready to run yet, we need to copy it into a bootable media, the [Generating A Bootable Iso](06_Generating_Iso.md) chapter will show how to create a bootable iso of our kernel, and finally being able to launch it and see the results of our hard work.
-
 
 For the rest of this part a basic knowledge of compiling these languages is assumed.
 
@@ -49,15 +48,17 @@ However, each GCC toolchain will use the platform-specific headers by default, w
 Compiling GCC from source doesn't take too long on a modern CPU (~10 minutes for a complete build on a 7th gen intel mobile cpu, 4 cores), however there are also prebuilt binaries online from places like bootlin, see the useful links appendix for .
 
 ## Setting up a build environment
+
 Setting up a proper build environment can be broken down into a few steps:
 
-- Setup a cross compilation toolchain.
+- Setup a cross compilation toolchain (refer to the [Appendix E: Cross Platform Building](../99_Appendices/E_Cross_Compilers.md).
 - Install an emulator.
 - Install any additional tools.
 - Setup the bootloader of choice.
 - Run a hello world to check everything works.
 
 ### Getting a Cross Compiler
+
 The easiest approach here is to simply use clang. Clang is designed to be a cross compiler, and so any install of clang can compile to any supported platform.
 To compile for another platform simply invoke clang as normally would, additionally passing `--target=xyz`, where xyz is the target triplet for the target platform.
 
@@ -80,6 +81,7 @@ The following sections will use the common shorthands to keep things simple:
 If using clang be sure to remember to pass `--target=xyz` with each command. This is not necessary with GCC.
 
 ### Building C Source Files
+
 Now that we have a toolchain setup we can test it all works by compiling a C file.
 Create a C source file, its contents don't matter here as we wont be running it, just telling it compiles.
 
@@ -212,9 +214,9 @@ Getting access to these debug symbols is dependent on the boot protocol used:
 
 Multiboot 2 provides the Elf-Symbols (section 3.6.7 of the spec) tag to the kernel which provides the elf section headers and the location of the string table. Using these is described below in the stivale section.
 
-### Stivale 2
+### Limine Protocol
 
-Stivale2 uses a similar and slightly more complex (but more powerful) mechanism of providing the entire kernel file in memory. This means we're not limited to just using elf files, and can access debug symbols from a kernel in any format. This is because we have the file base address and length and have to do the parsing by ourselves.
+Limine uses a similar and slightly more complex (but more powerful) mechanism of providing the entire kernel file in memory.
 
 ### ELFs Ahead, Beware!
 
@@ -239,18 +241,19 @@ Languages built around the C model will usually perform some kind of name mangli
 
 ### Locating The Symbol Table
 
-We'll need to access the data stored in the string table quite frequently for looking up symbols, so let's calculate that and store it in the variable `char* strtab_data`. For both protocols it's assumed that we have found the tag returned by the bootloader that contains the location of the elf file/elf symbols.
+We'll need to access the data stored in the string table quite frequently for looking up symbols, so let's calculate that and store it in the variable `char* strtab_data`. For both protocols it's assumed that we have found the tag returned by the bootloader that contains the location of the elf file/elf symbols (for more details, see the [Boot Protocols](./02_Boot_Protocols.md) chapter.
 
 ```c
 //multiboot 2
 multiboot_tag_elf_sections* sym_tag;
 const char* strtab_data = sym_tag->sections[sym_tag->shndx].sh_offset;
 
-//stivale 2
-stivale2_struct_tag_kernel_file* file_tag;
-Elf64_Ehdr* hdr = (Elf64_Ehdr*)file_tag->kernel_file;
-Elf64_Shdr* shdrs = (Elf64_Shdr*)(file_tag->kernel_file + hdr->shoff);
-const char* strtab_data = shdrs[hdr->e_shstrndx].sh_offset;
+//Limine Protocol
+struct limine_kernel_file_response file_response;
+struct limine_file kernel_file = file_response->kernel_file;
+Elf64_Ehdr* hdr = (Elf64_Ehdr*) kernel_file->address;
+Elf64_Shdr* shdrs = (Elf64_Shdr*) (kernel_file->address + hdr->shoff);
+const char* strtab_data = shdrs[hdr->e_shstrndx].sh_offset + kernel_file->address
 ```
 
 To find the symbol table, iterate through the section headers until one with the name `.symtab` is found.
@@ -288,4 +291,4 @@ void print_symbol(uint64_t addr)
 }
 ```
 
-A quick note about getting the symbol table data address: On multiboot `sym_tab->sh_offset` will be the physical address of the data, while stivale2 will return the original value, which is an offset from the beginning of the file. This means for stivale 2 we would add `file_tag->kernel_base` to this address to get its location in memory.
+A quick note about getting the symbol table data address: On multiboot `sym_tab->sh_offset` will be the physical address of the data, while limine protocol will return the original value, which is an offset from the beginning of the file. This means for limine protocol we need to add `kernel_file->address` to this address to get its location in memory.
