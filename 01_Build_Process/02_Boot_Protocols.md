@@ -309,10 +309,6 @@ Again they can be placed anywhere in the code, since their position will be deci
 
 The last detail is to add the kernel start function (declared in the `ENTRY()` section in the linker script):
 
-```c
-void kernel_start(void);
-```
-
 Since all the bootloader information are provided via `static` variables, the kernel start function doesn't require any particular signature.
 
 
@@ -359,6 +355,4 @@ if ( framebuffer_request->response != NULL) {
 }
 ```
 
-Is important to note, for every type of request the `response` field have a different type, in this case it is a pointer to a `struct limine_framebuffer_response`, for more info on all the available requests, and repsonses refer to the protocl documentation.
-
-The `framebuffer_*` fields can be used to ask for a specific kind of framebuffer, but leaving them to zero tells the bootloader we want to best possible available. The `next` field can be used to point to the next header tag, if we had another one we wanted. The full list of tags is available in the stivale2 specification (see the useful links appendix).
+Is important to note, for every type of request the `response` field have a different type, in this case it is a pointer to a `struct limine_framebuffer_response`, for more info on all the available requests, and repsonses refer to the protocol documentation.
