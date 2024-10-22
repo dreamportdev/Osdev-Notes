@@ -277,7 +277,7 @@ __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
 ```
 
-If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.requests` section, as is required by the Limine spec and it is marked as used.
+If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.requests` section, as is required by the Limine spec and it is marked as `used`.
 
 The main requirement of any limine protocol variable, request is that, is that the compiler keep them as they are, without any optimization optimizing them, for this reason they are declared as `volatile` and they should be accessed at least once, or marked as `used`.
 
