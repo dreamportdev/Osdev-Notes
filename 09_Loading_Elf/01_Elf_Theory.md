@@ -119,7 +119,7 @@ Before looking at some example code our VMM will need a new function that tries 
 void* vmm_alloc_at(uintptr_t addr, size_t length, size_t flags);
 ```
 
-Alternatively the in `vmm_alloc` function we can make use of the `flag` parameter, and add a new flag like `VM_FLAG_AT_ADDR` that indicates the VMM should use the extra arg as the virtual address. Bear in mind that if we're loading a program into another address space we will need a way to copy the phdr contents into that address space. The specifics of this don't matter too much, as long as there is a way to do it.
+Alternatively in the `vmm_alloc` function we can make use of the `flag` parameter, and add a new flag like `VM_FLAG_AT_ADDR` that indicates the VMM should use the extra arg as the virtual address. Bear in mind that if we're loading a program into another address space we will need a way to copy the phdr contents into that address space. The specifics of this don't matter too much, as long as there is a way to do it.
 
 The reason we need to use a specific address is that the code and data contained in the ELF are compiled and linked assuming that they're at that address. There might be code that jumps to a fixed address or data that is expected to be at a certain address. If we don't copy the program header where it expects to be, the program may break.
 

@@ -1,20 +1,20 @@
-# Boot Protocols
+    # Boot Protocols
 
 A boot protocol defines the machine state when the kernel is given control by the bootloader. It also makes several services available to the kernel, like a memory map of the machine, a framebuffer and sometimes other utilities like uart or kernel debug symbols.
 
-This chapter covers 2 protocols _Sultiboot 2_ and _Stivale 2_:
+This chapter covers 2 protocols _Multiboot 2_ and _Limine Protocol_:
 
 * _Multiboot 2_ supercedes multiboot 1, both of which are the native protocols of grub. Meaning that anywhere grub is installed, a multiboot kernel can be loaded. making testing easy on most linux machines. _Multiboot 2_ is quite an old, but very robust protocol.
 
-* _Stivale 2_ (also superceding stivale 1) is the native protocol of the limine bootloader. Limine and stivale were designed many years after multiboot 2 as an attempt to make hobbyist OS development easier. _Stivale 2_ is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
+* _Limine Protocol_ (it was preceded by Stivale 1 and 2) is the native protocol of the Limine bootloader. Limine and Stivale protocols were designed many years after Multiboot 2 as an attempt to make hobbyist OS development easier. _Limine Protocol_ is a more complex spec to read through, but it leaves the machine in a more known state prior to handing off to the kernel.
 
-Recently limine has added a new protocol (the limine boot protocol) which is not covered here. It's based on stivale2, with mainly architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
+The Limine protocol is based on Stivale2 (it was covered in earlier version of this book), with mainly architectural changes, but similar concepts behind it. If familiar with the concepts of stivale 2, the limine protocol is easy enough to understand.
 
 All the referenced specifications and documents are provided as links at the start of this chapter/in the readme.
 
 ## What about the earlier versions?
 
-Both protocols have their earlier versions (_multiboot 1 & stivale 1_), but these are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set we get for the short term gains. The only thing multiboot 1 is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the `x86` emulation, so there are better ways to do that.
+Multiboot protocol has an earlier verison (_Multiboot 1_), while the limine prorocol was preceded by a different protocol, the _Stivale 1/2_. but in both cases. they are not worth bothering with. Their newer versions are objectively better and available in all the same places. Multiboot 1 is quite a simple protocol, and a lot of tutorials and articles online like to use it because of that: however its not worth the limited feature set we get for the short term gains. The only thing `multiboot 1` is useful for is booting in qemu via the `-kernel` flag, as qemu can only process mb1 kernels like that. This option leaves a lot to be desired in the `x86` emulation, so there are better ways to do that.
 
 ## Why A Bootloader At All?
 
@@ -203,115 +203,121 @@ The interface between a higher level language like C and assembly (or another hi
 
 *Authors Note: If you're unsure of why we load a stack before jumping to compiled code in the kernel, it's simply required by all modern languages and compilers. The stack (which operates like the data structure of the same name) is a place to store local data that doesn't in the registers of a platform. This means local variables in a function or parts of a complex calculation. It's become so universal that it has also adopted other uses over time, like passing function arguments (sometimes) and being used by hardware to inform the kernel of things (the iret frame on x86).*
 
-## Stivale 2
+## Limine Protocol
 
-Stivale 2 is a much newer protocol, designed for people making hobby operating systems. It sets up a number of things to make a new kernel developer's life easy.
-While multiboot 2 is about providing just enough to get the kernel going, keeping things simple for the bootloader, stivale2 creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
+The _Limine Protocol_ that has replaced the _Stivale_  protocol, is following the same philosophy, and is designed for people making hobby operating systems, it sets up a number of things to make a new kernel developer's life easy.
+While _Multiboot 2_ is about providing just enough to get the kernel going, keeping things simple for the bootloader, _Limine_ creates more work for the bootloader (like initializing other cores, launching kernels in long mode with a pre-defined page map), which leads to the kernel ending up in a more comfortable development environment. The downsides of this approach are that the bootloader may need to be more complex to handle the extra features, and certain restrictions are placed on the kernel. Like the alignment of sections, since the bootloader needs to set up paging for the kernel.
 
-To use stivale2, we'll need a copy of the limine bootloader. A link to it and the stivale2 specification are available at the start of this chapter. There is also a C header file containing all the structs and magic numbers used by the protocol. A link to a barebones example is also provided.
+To use this protocol, we'll need a copy of the _Limine bootloader_. A link to it and the specification are available in the appendices. There is also a C header file containing all the structs and magic numbers used by the protocol. A link to a barebones example is also provided.
 
-It operates in a similar way to multiboot 2, by using a linked list of tags, although this time in both directions (kernel -> bootloader and bootloader -> kernel). Tags from the kernel to the bootloader are called `header_tag`s, and ones returned from the bootloader are called `struct_tag`s.
-Stivale 2 has a number of major differences to multiboot 2 though:
+It is centered around the concept of `request/response`. For every information that we need from the bootloader, we provide a `request` structure, and it will return us with a `response`.
+
+Limine has a number of major differences to multiboot 2 though:
 
 - The kernel starts in 64-bit long mode, by default. No need for a protected mode stub to setup up some initial paging.
 - The kernel starts with the first 4GB of memory and any usable regions of memory identity mapped.
-- Stivale 2 also sets up a _higher half direct map_, or _hhdm_. This is the same identity map as the lower half, but it starts at the `hhdm_offset` returned in a struct tag when the kernel runs. The idea is that as long we ensure all the pointers are in the higher half, we can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
+- Limine protocol also sets up a _higher half direct map_, or _hhdm_. This is the same identity map as the lower half, but it starts at the `hhdm_offset` returned in a struct tag when the kernel runs. The idea is that as long we ensure all the pointers are in the higher half, we can zero the bottom half of the page tables and easily be ready for userspace programs. No need to move code/data around.
 - A well-defined GDT is provided.
-- Unlike _mb2_, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
+- Unlike _Multiboot2_, a distinction is made between usable memory and the memory used by the bootloader, kernel/modules, and framebuffer. These are separate types in the memory, and don't intersect. Meaning usable memory regions can be used immediately.
 
-To get the next tag in the chain, it's as simple as:
+A `request` always has three members at the beginning of the structure:
 
+```c
+struct limine_example_request {
+    uint64_t id[4];
+    uint64_t revision;
+    struct limine_example_response *response;
+    // the members that follow depends on the request type
+};
 ```
-stivale2_tag* next_tag = (stivale2_tag*)current_tag->next;
-if (next_tag == NULL)
-    //we reached the end of the list.
-```
+Where the fields are:
+
+* `id` is a magic number that the bootloader uses to find and identify the requests within the executable. It is 8 byte aligned. For every type of request there can be only one. If there are multiple requests with the same id the bootloader will refuse to start.
+* `revision` is the revision of the request that the kernel provides. This number is bumped each time a new member is added to it. It starts from 0. It's backward compatible, that means if the bootloader does not support the revision of the request, it will be processed as if were the highest revision supported.
+* `response` this will contain the response by limine, this field is filled by the bootloader at load time. If there was an error processing the request, or the request was not supported, the field is left as it is, so for example if it was set to `NULL`, it will stay this way.
+
+All the other fields depends on the type of the request.
+
+The response instead, has only one mandatory field, it's the `revision` field, that like in the request, it marks the revision of the response field. Note that there is no coupling between response and request `revision` number.
 
 ### Fancy Features
 
-Stivale 2 also provides some more advanced features:
+Limine also provides some more advanced features:
 
 - It can enable 5 level paging, if requested.
 - It boots up AP (all other) cores in the system, and provides an easy interface to run code on them.
 - It supports KASLR, loading our kernel at a random offset each time.
 - It can also provide things like EDID blobs, address of the PXE server (if booted this way), and a device tree blob on some platforms.
-- A fully ANSI-compliant terminal is provided. This does require the kernel to make certain promises about memory layout and the GDT, but it's a very useful debug tool or basic shell in the early stages.
 
 The limine bootloader not only supports x86, but tentatively supports aarch64 as well (uefi is required). There is also a stivale2-compatible bootloader called Sabaton, providing broader support for ARM platforms.
 
-### Creating a Stivale2 Header
-The limine bootloader provides a `stivale2.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file.
+### Creating a Limine Header
+
+The limine bootloader provides a `limine.h` file which contains a number of nice definitions for us, otherwise everything else here can be placed inside of a c/c++ file.
 
 *Authors Note: I like to place my limine header tags in a separate file, for organisation purposes, but as long as they appear in the final binary, they can be anywhere. You can also implement this in assembly if you really want.*
 
-First of all, we'll need an extra section in our linker script, this is how the bootloader knows our kernel can be booted via stivale2:
+First of all, we'll need an extra section in our linker script, this is where all the limine requests will be placed:
 
 ```
-.stivale2hdr :
+.requests :
 {
-    KEEP(*(.stivale2hdr))
-}
+    KEEP(*(.requests_start_marker))
+    KEEP(*(.requests))
+    KEEP(*(.requests_end_marker))
+} :requests
 ```
 
 If not familiar with the `KEEP()` command in linker scripts, it tells the linker to keep that section even if it's not referenced by anything. Useful in this case, since the only reference will be the bootloader, which the linker can't know about at link-time.
 
-Next we'll need to create space for our stack (stivale2 requires us to provide our own) and define the stivale2 header, like so:
+First thing we want to do is set the base revision of the protocol. Latest version as time of writing is `2`, this can be done with the following line of code:
 
 ```c
-#include <stivale2.h>
+__attribute__((used, section(".requests")))
+static volatile LIMINE_BASE_REVISION(2);
+```
 
-//8K for the initial stack, a reasonable default
-static uint8_t init_stack[0x2000];
+If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.requests` section, as is required by the Limine spec and it is marked as `used`.
 
-__attribute__((section(".stivale2hdr)))
-static stivale2_header stivale2_hdr =
-{
-    .entry_point = 0,
-    .stack = (uintptr_t)init_stack + 0x2000,
-    .flags = (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
-    .tags = (uintptr_t)&framebuffer_tag
+The main requirement of any limine protocol variable, request is that, is that the compiler keep them as they are, without any optimization optimizing them, for this reason they are declared as `volatile` and they should be accessed at least once, or marked as `used`.
+
+In this protocol, `requests` can be placed anywhere, and there is no need to use any type of list or place them in a specific memory area. For example, let's imagine that we want to get the framebuffer information from the bootloader. In this case we need to declare the `struct limine_framebuffer_request` type while creating a variable for our request:
+
+```c
+__attribute__((used, section(".requests")))
+static volatile struct limine_framebuffer_request {
+    .id = LIMINE_FRAMEBUFFER_REQUEST,
+    .revision = 0
 };
 ```
 
-If not familiar with the `__attribute__(())` syntax, it's a compiler extension (both clang and GCC support it) that allows us to do certain things our language wouldn't normally allow. This attribute specified that this variable should go into the `.stivale2hdr` section, as is required by the stivale2 spec.
+The requests types are all declared in the `limine.h` header.
 
-Next we set some fields in the stivale2 header:
+Any type of information that needs to be requested to the bootloader, will have it's own `request` variable, with it's own type.
 
-- `entry_point`: Is used to override the ELF's entry point address. Set this to zero to use the regular entry function we set in the linker script.
-- `stack`: Self explanatory, used to set the stack the kernel code will start with.
-- `flags`: A bitfield of flags. Bit 1 asks the bootloader to return higher half addresses to us for tags, modules and other things. Bit 2 asked the bootloader to make use of the nx-bit and write-enable bits in the page tables when loading the kernel. Bit 3 is recommended and enables the bootloader to load us at any physical address as long as the virtual address is the same. Bit 4 is required to be set, as it disables a legacy feature.
-- `tags`: A pointer to the first stivale2 tag in the linked list of requests.
-
-In the example above we actually set the first tag to a framebuffer request, so lets see what that would look like:
+Finally the requests start and end markers needs to be declared:
 
 ```c
-static stivale2_header_tag_framebuffer framebuffer_tag =
-{
-    .tag =
-    {
-        .identifier = STIVALE2_HEADER_TAG_FRAMEBUFFER,
-        .next = 0,
-    },
-    .framebuffer_width = 0,
-    .framebuffer_height = 0,
-    .framebuffer_bpp = 0
-};
+__attribute__((used, section(".requests_start_marker")))
+static volatile LIMINE_REQUESTS_START_MARKER;
+
+__attribute__((used, section(".requests_end_marker")))
+static volatile LIMINE_REQUESTS_END_MARKER;
 ```
 
-The `framebuffer_*` fields can be used to ask for a specific kind of framebuffer, but leaving them to zero tells the bootloader we want to best possible available. The `next` field can be used to point to the next header tag, if we had another one we wanted. The full list of tags is available in the stivale2 specification (see the useful links appendix).
+Again they can be placed anywhere in the code, since their position will be decided by the section they belongs to.
 
-The last detail is to change the signature of our kernel entry function to:
+The last detail is to add the kernel start function (declared in the `ENTRY()` section in the linker script).
 
-```c
-void kernel_start(stivale2_struct* stivale2_data);
-```
+Since all the bootloader information are provided via `static` variables, the kernel start function doesn't require any particular signature.
 
-This struct points to a list of tags, each containing details about the machine we're booted on. These are called struct tags (bootloader -> kernel) as opposed to the tags we defined before (header tags: kernel -> bootloader). To get info about a specific feature, simply walk the linked list of tags, the next tag's address is available in the `tag->next` field. The end of the list is indicated by a nullptr.
 
 ## Finding Bootloader Tags
+
 Since both multiboot 2 and stivale 2 return their info in linked lists, a brief example of how to traverse these lists is given below. These functions provide a nice abstraction to search the list for a specific tag, rather than manually searching each time.
 
 ### Multiboot 2
+
 Multiboot 2 gives us a pointer to the multiboot info struct, which contains 2x 32-bit fields. These can be safely ignored, as the list is null-terminated (a tag with a type 0, and size of 8). The first tag is at 8 bytes after the start of the mbi. All the structures and defines used here are available in the header provided by the multiboot specification (check the bottom section, in the example kernel), including the `MULTIBOOT_TAG_TYPE_xyz` defines (where xyz is a feature described by a tag). For example the memory map is `MULTIBOOT_TAG_TYPE_MMAP`, and framebuffer is `MULTIBOOT_TAG_TYPE_FRAMEBUFFER`.
 
 ```c
@@ -338,27 +344,15 @@ void* multiboot2_find_tag(uint32_t type)
 
 Lets talk about the last three lines of the loop, where we set the `tag` variable to the next value. The multiboot 2 spec says that tags should always be 8-byte aligned. While this is not a problem most of the time, it is *possible* we could get a misaligned pointer by simply adding `size` bytes to the current pointer. So to be on safe side, and spec-compliant, we'll align the value up to the nearest 8 bytes.
 
-### Stivale 2
-Stivale 2 gives us a pointer to a header at the start of the list, and then each item (including this header) contains a `next` pointer to the next item, and an `id` item with a unique 64-bit identifier for that tag. All the structures and defines are available in the standard `stivale2.h`. We'll know we've reached the end of the list when the `next` pointer is `NULL`.
+### Limine
+
+Accessing the bootloader response is very simple, and it  doesn't require iterating any list. We just need to read the content of the `.response` field of the request structure:
 
 ```c
-//given to the kernel entry function
-stivale2_struct* s2_struct;
-
-//returns null if tag could not be found
-void* stivale2_find_tag(uint64_t id)
-{
-    stivale2_tag* tag = s2_struct->next;
-
-    while (tag != NULL)
-    {
-        if (tag->id == id)
-            return tag;
-        tag = tag->next;
-    }
-
-    return NULL;
+//somewhere in the code
+if ( framebuffer_request->response != NULL) {
+    // Do something with the response
 }
 ```
 
-The above function can be used with the defines in `stivale2.h`, which follow the format `STIVALE2_STRUCT_TAG_xyz_ID`, where `xyz` represents the feature that is described in the tag. For example, the framebuffer would be `STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID` and the memory map is `STIVALE2_STRUCT_TAG_MEMMAP_ID`. It's a little verbose, but easy to search for.
+Is important to note, for every type of request the `response` field have a different type, in this case it is a pointer to a `struct limine_framebuffer_response`, for more info on all the available requests, and repsonses refer to the protocol documentation.
