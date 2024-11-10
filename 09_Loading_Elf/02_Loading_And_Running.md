@@ -79,10 +79,14 @@ The code, as we can expect is pretty simple, and self-explanatory, it declares a
 The above code now can be compiled with nasm:
 
 ```sh
-nasm -g -F dwarf example_file.s -o example_file.o
+nasm -g -f elf64 -F dwarf example_file.s -o example_file.o
 ```
 
-Where: `-g -F dwarf` are used to add debug symbols to the assembly output.
+Where: 
+* `-f elf64` is the output format (in our case we use elf64, but this depend on the target architecture).
+* `-g` enable debug symbols
+* `-F dwarf` is the debug symbols format (for elf64 we use dwarf, but again it can depends on the target architecture).
+
 
 The last step is to use a linker to link the file, in this example we are going to use `ld`:
 
