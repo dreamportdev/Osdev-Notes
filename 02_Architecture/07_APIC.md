@@ -66,7 +66,7 @@ This register contains the following information:
 * Bits 12:31: Contains the base address of the local APIC for this processor core.
 * Bits 32:63: reserved.
 
-Note that the registers are given as a *physical address*, so to access these we will need to map them somewhere in the virtual address space. This is true for the addresses of any I/O APICs we obtain as well. When the system boots, the base address is usually `0xFEE0000` and often this is the value we read from `rdmsr`.
+Note that the registers are given as a *physical address*, so to access these we will need to map them somewhere in the virtual address space. This is true for the addresses of any I/O APICs we obtain as well. When the system boots, the base address is usually `0xFEE0000` and often this is the value we read from `rdmsr`. For correct operation the local APIC registers should be mapped as 'strong uncachable'.
 
 A complete list of local APIC registers is available in the Intel/AMD software development manuals, but the important ones for now are:
 
