@@ -21,3 +21,4 @@ In no particular order:
 - @MRRcode979 ([https://github.com/MRRcode979](https://github.com/MRRcode979))
 - @Hqnnqh ([https://github.com/Hqnnqh](https://github.com/Hqnnqh))
 - @malletgaetan ([https://github.com/malletgaetan](https://github.com/malletgaetan))
+- @mrjbom ([https://github.com/mrjbom](https://github.com/mrjbom))
