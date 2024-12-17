@@ -47,7 +47,7 @@ Then from the other fields that need validation (that area not in the `e_ident` 
 
 Be aware that most of the variables and their values have a specific naming convention, for more information refer to the ELF specs.
 
-Beware that some compilers when generating a simple executable are not using the `ET_EXEC` value, but it could be of the type `ET_REL` (value 1), to obtain an executable we need to link it using a linker. For example if we generated the executable: `example.elf` with `ET_REL` type, we can use `ld` (or another equivalent linker):
+Another thing to be aware is that some compilers when generating a simple executable are not using the `ET_EXEC` value, but it could be of the type `ET_REL` (value 1), to obtain an executable we need to link it using a linker. For example if we generated the executable: `example.elf` with `ET_REL` type, we can use `ld` (or another equivalent linker):
 
 ```sh
 ld -o example.o example.elf
@@ -62,6 +62,41 @@ readelf -e example.elf
 
 Will print out all the executable information, including the type.
 
+### Example: Creating a simple program for our kernel
+
+For this example, let's create a very basic assembly program, that is a simple infinite loop:
+
+```
+extern loop
+[bits 64]
+loop:
+    jmp loop
+
+```
+
+The code, as we can expect is pretty simple, and self-explanatory, it declares a `loop` function, and  mark it as global using the `extern` keyword..
+
+The above code now can be compiled with nasm:
+
+```sh
+nasm -g -f elf64 -F dwarf example_file.s -o example_file.o
+```
+
+Where: 
+* `-f elf64` is the output format (in our case we use elf64, but this depend on the target architecture).
+* `-g` enable debug symbols
+* `-F dwarf` is the debug symbols format (for elf64 we use dwarf, but again it can depends on the target architecture).
+
+
+The last step is to use a linker to link the file, in this example we are going to use `ld`:
+
+```sh
+ld -g example_file.o -o example_file.elf -e loop
+```
+
+Where `-g` is a parameter that instructs the linker to include the debugging symbols, and `-e loop` instructs the linker to look for the symbol called `loop` as entry point of the program.
+
+Now the program is ready to be loaded by our kernel, either as a bootloader module or a file on a filesystem (or any other way that allow the kernel to reach this executable).
 
 
 ## Caveats
