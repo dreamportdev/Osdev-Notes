@@ -259,7 +259,7 @@ The actual read or write operation is performed when IOWIN is accessed.
 Accessing IOREGSEL has no side effects.
 
 ### Interrupt source overrides
-They contain differences between the IA-PC standard and the dual 8250 interrupt definitions. The isa interrupts should be identity mapped into the first I/O APIC sources, but most of the time there will be at least one exception. This table contains those exceptions.
+They contain differences between the IA-PC standard and the dual 8259 interrupt definitions. The isa interrupts should be identity mapped into the first I/O APIC sources, but most of the time there will be at least one exception. This table contains those exceptions.
 
 An example is the PIT Timer is connected to ISA IRQ 0, but when apic is enabled it is connected to the I/O APIC interrupt input pin 2, so in this case we need an interrupt source override where the Source entry (bus source) is 0 and the global system interrupt is 2
 The values stored in the I/O APIC Interrupt source overrides in the MADT are:
