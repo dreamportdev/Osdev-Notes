@@ -22,3 +22,4 @@ In no particular order:
 - @Hqnnqh ([https://github.com/Hqnnqh](https://github.com/Hqnnqh))
 - @malletgaetan ([https://github.com/malletgaetan](https://github.com/malletgaetan))
 - @mrjbom ([https://github.com/mrjbom](https://github.com/mrjbom))
+- @AFellowSpeedrunner ([https://github.com/AFellowSpeedrunner](https://github.com/AFellowSpeedrunner))
