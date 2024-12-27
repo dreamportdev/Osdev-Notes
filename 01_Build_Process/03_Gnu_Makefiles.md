@@ -26,7 +26,7 @@ TARGET = build/kernel.elf
 
 #flags
 CC_FLAGS = -g -ffreestanding
-LD_FLAGS = -T linker_script.lds -ffreestanding -shared
+LD_FLAGS = -T linker_script.lds
 
 #auto populated variables
 OBJS = $(patsubst %.c, build/%.c.o, $(C_SRCS))
