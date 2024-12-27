@@ -196,7 +196,7 @@ SECTIONS
         /* Then we can map those pages appropriately. */
         TEXT_BEGIN = .;
         *(.text*)
-        TEXT_END = ,;
+        TEXT_END = .;
     } :text
 
     /* a trick to ensure the section next is on the next physical */
