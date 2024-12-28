@@ -17,7 +17,7 @@ Below is an example of a basic Makefile.
 CC = x86_64-elf-gcc
 CXX = x86_64-elf-g++
 AS = x86_64-elf-as
-LD = x86_64_elf-ld
+LD = x86_64-elf-ld
 
 #inputs
 C_SRCS = kernel_main.c util.c
@@ -26,11 +26,11 @@ TARGET = build/kernel.elf
 
 #flags
 CC_FLAGS = -g -ffreestanding
-LD_FLAGS = -T linker_script.lds -ffreestanding
+LD_FLAGS = -T linker_script.lds
 
 #auto populated variables
 OBJS = $(patsubst %.c, build/%.c.o, $(C_SRCS))
-OBJS += $(patsubst %.S, build/%.S.o, %(ASM_SRCS))
+OBJS += $(patsubst %.S, build/%.S.o, $(ASM_SRCS))
 
 .PHONY: all clean
 
