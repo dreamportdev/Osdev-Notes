@@ -60,8 +60,9 @@ Fifth book release
 
 ### Revision 5
 
-Relase date: TBD
+Relase date: Jan 2025
 Sixth Book Release
 
 * _Stivale 2_ protocol sections have been replaced with Limine protocol, since _stivale2_ has been deprecated.
-
+* Add a complete exammple of how to create an ELF executable for our kernel
+* Typo and error fixes
