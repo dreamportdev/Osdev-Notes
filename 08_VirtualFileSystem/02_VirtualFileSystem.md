@@ -10,7 +10,7 @@ To keep our design simple, the features of our VFS driver will be:
 
 ## How The VFS Works
 
-The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver, as shown in the picture
+The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver, as shown in the picture:
 
 ![Where the VFS sits in an OS](/Images/vfs_layer.png)
 

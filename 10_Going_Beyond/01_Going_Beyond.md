@@ -253,7 +253,7 @@ The Application layer instead are usually the protocols we want to implement, so
 
 When we want to send data, we start from the topmost layer (the application) and go down the whole stack until the network layer adding some extra information on each level. The extra information is the layer header and footer (if needed), so when the data has reached the last level it will have all the technical information for each level. This is described in the picture below.
 
-On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application Layer it will be the information we are looking for (you can just look  at the picture from bottom to top.
+On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application Layer it will be the information we are looking for (you can just look  at the picture from bottom to top):
 
 ![TCP/IP Layers](/Images/tcpip.png)
 
