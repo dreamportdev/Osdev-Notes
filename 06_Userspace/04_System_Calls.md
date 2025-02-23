@@ -135,7 +135,7 @@ First things first, the `syscall`/`sysret` pair uses three MSRs: `STAR` (0xC0000
 
 An example of properly configured GDT and MSRs for 64-bit-only operation:
 
-GDT:
+* GDT:
 |Offset|Name|Access byte|
 |------|----|-----------|
 |0x0|NULL|`0`|
@@ -144,7 +144,7 @@ GDT:
 |0x18|User Data|`0b11110010`|
 |0x20|User Code|`0b11111010`|
 
-MSRs:
+* MSRs:
 |MSR|Name|Value|
 |---|----|-----|
 |`0xC0000081`|`STAR`| `0x0013000800000000` |
