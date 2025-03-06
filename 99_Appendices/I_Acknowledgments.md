@@ -23,3 +23,4 @@ In no particular order:
 - @malletgaetan ([https://github.com/malletgaetan](https://github.com/malletgaetan))
 - @mrjbom ([https://github.com/mrjbom](https://github.com/mrjbom))
 - @IAmTheNerdNextDoor ([https://github.com/IAmTheNerdNextDoor](https://github.com/IAmTheNerdNextDoor))
+- @vasilisalmpanis ([https://github.com/vasilisalmpanis](https://github.com/vasilisalmpanis))
