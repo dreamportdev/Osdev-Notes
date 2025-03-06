@@ -35,8 +35,8 @@ So if we're going to ring 0 (supervisor), RPL can be left at 0. If going to ring
 This means our selectors for `ss` and `cs` end up looking like this:
 
 ```c
-kernel_ss = 0x08 | 0;
-kernel_cs = 0x10 | 0;
+kernel_cs = 0x08 | 0;
+kernel_ss = 0x10 | 0;
 user_cs   = 0x18 | 3;
 user_ss   = 0x20 | 3;
 ```
