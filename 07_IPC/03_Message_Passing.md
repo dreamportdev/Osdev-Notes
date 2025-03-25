@@ -16,13 +16,13 @@ You may wish to use the VFS and file descriptors in your own design, or somethin
 
 After the initial setup, the implementation of message passing is similar to a relay race:
 
-- Process 1 wants to receive incoming messages on an endpoint, so it calls a function telling the kernel it's ready. This function will only return once a flag has been set on the endpoint that a message is ready, and otherwise blocks the thread. We'll call this function `ipc_receive()`.
-- Some time later process 2 wants to send a message, so it allocates a buffer and writes some data there.
+- Process 1  wants to receive incoming messages on an endpoint, so it calls a function telling the kernel to create an endpoint in our IPC manager. This function will setup and return a block of (userspace) memory containing a message queue. We'll call this function `create_endpoint()`.
+- Process 2 wants to send a message sometime later, so it allocates a buffer and writes some data there.
 - Process 2 now calls a function to tell the kernel it wants to send this buffer as a message to an endpoint. We'll call this function `ipc_send()`.
-- Inside `ipc_send()` the buffer is copied into kernel memory. In our example we'll use the heap for this memory. We can then set a flag on the endpoint telling it that a message has been received.
+- Inside `ipc_send()` the buffer is copied into kernel memory as process 1 can't access process 2's buffer. In our example we'll use the heap for this memory. We can then switch to process 1's address space and copy the buffer on the heap into the queue.
 - At this point `ipc_send()` can return, and process 2 can continue on as per normal.
-- The next time process 1 runs, `ipc_receive()` will see that the flag has been set, and copy the message from the kernel buffer into a buffer for the program.
-- The `ipc_receive()` function can also free the kernel buffer, before returning and letting process 1 continue as normal.
+- The message is now waiting at the end of the endpoint's message queue which processes 1 can do what it pleases with.
+
 
 What we've described here is a double-copy implementation of message: because the data is first copied into the kernel, and then out of it. Hence we performed two copy operations.
 
@@ -33,16 +33,27 @@ As mentioned, there's some initial setup that goes into message passing: we need
 Since the struct representing the endpoint is going to be accessed by multiple processes, we'll want a lock to protect the data from race conditions. We'll use the following struct to represent our endpoint:
 
 ```c
+
+typedef struct ipc_message{
+    void* message_buffer;
+    size_t message_size;
+    uintptr_t next_message;
+} ipc_message_t;
+
+ typedef struct ipc_message_queue{
+    ipc_message_t* messages;
+} ipc_message_queue_t;
+
 struct ipc_endpoint {
     char* name;
-    void* msg_buffer;
-    size_t msg_length;
+    ipc_message_queue_t* queue;
+    uint64_t owner_pid;
     spinlock_t msg_lock;
     ipc_endpoint* next;
 };
 ```
 
-To save some space we'll use `NULL` as the message address to represent that there is no message available.
+To save some space we'll use `NULL` as the `queue -> messages` address to represent that there is no message available.
 
 If you're wondering about the `next` field, that's because we're going to store these in a linked list. You'll want a variable to store the head of the list, and a lock to protect the list anytime it's modified.
 
@@ -51,15 +62,20 @@ ipc_endpoint* first_endpoint = NULL;
 spinlock_t endpoints_lock;
 ```
 
-At this point we have all we need to implement a function to create a new endpoint. This doesn't need to be too complex, and just needs to create a new instance of our endpoint struct. Since we're using `NULL` to in the message buffer address to represent no message, we'll be sure to set that when creating a new endpoint. Also notice how we hold the lock when we're interacting with the list of endpoints, to prevent race conditions.
+At this point we have all we need to implement a function to create a new endpoint. This doesn't need to be too complex, and just needs to create a new instance of our endpoint struct. Since we're using `NULL` to in the message buffer address to represent no message, we'll be sure to set that when creating a new endpoint. Also notice how we hold the lock when we're interacting with the list of endpoints, to prevent race conditions. Note: `kmalloc()` refers to kernel heap and `malloc()` refers to the active proccess' heap.
 
 ```c
 void create_endpoint(const char* name) {
-    ipc_endpoint* ep = malloc(sizeof(ipc_endpoint));
+
+    // Create the end point
+    ipc_endpoint* ep = kmalloc(sizeof(ipc_endpoint));
     ep->name = malloc(strlen(name) + 1);
     strcpy(ep->name, name);
 
-    ep->msg_buffer = NULL;
+    endpoint -> queue = (ipc_message_queue_t*)malloc(sizeof(ipc_message_queue_t));
+    ep -> queue -> messages = NULL;
+
+    owner_pid -> get_currently_executing_proc()
 
     //add endpoint to the end of the list
     acquire(&endpoints_lock);
@@ -72,6 +88,10 @@ void create_endpoint(const char* name) {
         last->next = ep;
     }
     release(&endpoints_lock);
+
+    // This should go to the calling proc
+    return endpoint -> queue;
+
 }
 ```
 
@@ -117,8 +137,8 @@ You may want to return an error here if the endpoint couldn't be found, however 
 Now we'll need to allocate a buffer to store a copy of the message in, and copy the original message into this buffer.
 
 ```c
-void* msg_copy = malloc(length);
-memcpy(msg_copy, buffer, length);
+void* kernel_copy = kmalloc(length);
+memcpy(kernel_copy, buffer, length);
 ```
 
 Why do we make a copy of the original message? Well if we don't, the sending process has to keep the original message around until the receiver has processed it. We don't have a way for the receiver to communicate that it's finished reading the message. By making a copy, we can return from `ipc_send()` as soon as the message is sent, regardless of when the message is read. Now the sending process is free to do what it wants with the memory holding the original message as soon as `ipc_send()` has completed.
@@ -129,45 +149,53 @@ All that's left is to tell the receiver it has a message available by placing th
 
 ```c
 acquire(&target->lock);
-target->msg_buffer = msg_copy;
-target->msg_length = length;
+
+load_address_space(target->owner_pid)
+
+// Create the message
+ipc_message_t* new_message = (ipc_message_t*)malloc(sizeof(ipc_message_t));
+void* new_buffer = malloc(size);
+new_message -> message_buffer = memcpy(new_buffer, kernel_copy, size);
+new_message -> message_size = size;
+new_message -> next_message = 0;
+
+// Add  the message to the queue
+// Left for the reader to do, trivial linked list appending
+
 release(&target->lock);
+
+kfree(kernel_copy)
+restore_address_space()
 ```
 
 After the lock on the endpoint is released, the message has been sent! Now it's up to the receiving thread to check the endpoint and set the buffer to NULL again.
 
-### Multiple Messages
-
-In theory this works, but we've overlooked one huge issue: what if there's already a message at the endpoint? You should handle this, and there's a couple of ways to go about it:
-
-- Allow for multiple messages to be stored on an endpoint.
-- Fail to send the message, instead returning an error code from `ipc_send()`.
-
-The first option is recommended, as it's likely there will be some processes that handle a lot of messages. Implementing this is left as an exercise to the user, but a simple implementation might use a struct to hold each message (the buffer address and length) and a next field. Yes, more linked lists!
-
-Sending messages would now mean appending to the list instead of writing the buffer address as before.
-
 ## Receiving
 
-We have seen how to send messages, now let's take a look at how to receive them. We're going to use a basic (and inefficient) example, but it shows how it could be done.
+We have seen how to send messages, now let's take a look at how to receive them. We're going to use a basic example, but it shows how it could be done.
 
-The theory behind this is simple: when we're in the receiving process, we allocate a buffer to hold the message, and copy the message data stored at the endpoint into our local buffer. Now we can set the endpoint's `msg_buffer` field to `NULL` to indicate that there is no longer a message to be received. Note that setting the buffer to `NULL` is specific to our example code, and your implementation may be different.
+The theory behind this is simple: when we're in the receiving process, we have access to the message queue of the endpoint we created using `create_endpoint()` so we can just iterate through the linked list. It is assumed that `sys_create_endpoint` is your implementation of calling the kernel's `create_endpoint`.
 
-As always, note the use of locks to prevent race conditions. The variable `endpoint` is assumed to be the endpoint we want to receive from.
 
 ```c
-ipc_endpoint* endpoint;
 
-acquire(&endpoint->lock);
-void* local_copy = malloc(endpoint->msg_length);
-memcpy(local_copy, endpoint->msg_data, endpoint->msg_length);
+// Create a message endpoint
+ipc_message_queue_t* message_queue = (ipc_message_queue_t *)sys_create_endpoint("name of endpoint");
 
-endpoint->msg_data = NULL;
-endpoint->msg_length = 0;
-release(&endpoint->lock);
+// Handle the messages
+ipc_message_t* message = nullptr
+while(message != nullptr){
+
+  do_what_you_want_with_it(message->message_buffer, message->message_size);
+
+  // Move to the next message
+  message_queue->messages = (ipc_message_t*)message->next_message;
+
+}
+
 ```
 
-At this point the endpoint is now ready to receive another message, and we've got a copy of the message in `local_copy`. You're successfully passed a message from one address space to another!
+You've successfully passed a message from one address space to another!
 
 ## Additional Notes
 
