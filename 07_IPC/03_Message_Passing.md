@@ -19,7 +19,7 @@ After the initial setup, the implementation of message passing is similar to a r
 - Process 1  wants to receive incoming messages on an endpoint, so it calls a function telling the kernel to create an endpoint in our IPC manager. This function will setup and return a block of (userspace) memory containing a message queue. We'll call this function `create_endpoint()`.
 - Process 2 wants to send a message sometime later, so it allocates a buffer and writes some data there.
 - Process 2 now calls a function to tell the kernel it wants to send this buffer as a message to an endpoint. We'll call this function `ipc_send()`.
-- Inside `ipc_send()` the buffer is copied into kernel memory as process 1 can't access process 2's buffer. In our example we'll use the heap for this memory. We can then switch to process 1's address space and copy the buffer on the heap into the queue.
+- Inside `ipc_send()` the buffer is copied into kernel memory. In our example we'll use the heap for this memory. We can then switch to process 1's address space and copy the buffer on the heap into the queue.
 - At this point `ipc_send()` can return, and process 2 can continue on as per normal.
 - The message is now waiting at the end of the endpoint's message queue which processes 1 can do what it pleases with.
 
@@ -62,7 +62,7 @@ ipc_endpoint* first_endpoint = NULL;
 spinlock_t endpoints_lock;
 ```
 
-At this point we have all we need to implement a function to create a new endpoint. This doesn't need to be too complex, and just needs to create a new instance of our endpoint struct. Since we're using `NULL` to in the message buffer address to represent no message, we'll be sure to set that when creating a new endpoint. Also notice how we hold the lock when we're interacting with the list of endpoints, to prevent race conditions. Note: `kmalloc()` refers to kernel heap and `malloc()` refers to the active proccess' heap.
+At this point we have all we need to implement a function to create a new endpoint. This doesn't need to be too complex, and just needs to create a new instance of our endpoint struct. Since we're using `NULL` to in the message buffer address to represent no message, we'll be sure to set that when creating a new endpoint. Also notice how we hold the lock when we're interacting with the list of endpoints, to prevent race conditions. Note: `kmalloc()` assumes the use of kernel heap and `malloc()` assumes the active proccess' heap.
 
 ```c
 void create_endpoint(const char* name) {
@@ -103,7 +103,7 @@ Now our endpoint has been added to the list! As always we omitted checking for e
 Removing an endpoint is also an important function to have. As this is a simple operation, implementing this is left as an exercise to the reader, but there are a few important things to consider:
 
 - What happens if there unread messages when destroying an endpoint? How do you handle them?
-- Who is allowed to remove an endpoint?
+- Who is allowed to remove an endpoint? (`owner_pid` would be useful here)
 
 ## Sending A Message
 
@@ -168,7 +168,7 @@ kfree(kernel_copy)
 restore_address_space()
 ```
 
-After the lock on the endpoint is released, the message has been sent! Now it's up to the receiving thread to check the endpoint and set the buffer to NULL again.
+After the lock on the endpoint is released, the message has been sent! Now it's up to the receiving thread to check the endpoint and remove the message from the list.
 
 ## Receiving
 
@@ -187,6 +187,9 @@ ipc_message_t* message = nullptr
 while(message != nullptr){
 
   do_what_you_want_with_it(message->message_buffer, message->message_size);
+
+  // Remove from the list
+  // Free the memory   
 
   // Move to the next message
   message_queue->messages = (ipc_message_t*)message->next_message;
