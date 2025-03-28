@@ -16,12 +16,12 @@ You may wish to use the VFS and file descriptors in your own design, or somethin
 
 After the initial setup, the implementation of message passing is similar to a relay race:
 
-- Process 1  wants to receive incoming messages on an endpoint, so it calls a function telling the kernel to create an endpoint in our IPC manager. This function will setup and return a block of (userspace) memory containing a message queue. We'll call this function `create_endpoint()`.
-- Process 2 wants to send a message sometime later, so it allocates a buffer and writes some data there.
-- Process 2 now calls a function to tell the kernel it wants to send this buffer as a message to an endpoint. We'll call this function `ipc_send()`.
+- _Process 1_  wants to receive incoming messages on an endpoint, so it calls a function telling the kernel to create an endpoint in our IPC manager. This function will setup and return a block of (userspace) memory containing a message queue. We'll call this function `create_endpoint()`.
+- _Process 2_ wants to send a message sometime later, so it allocates a buffer and writes some data there.
+- _Process 2_ now calls a function to tell the kernel it wants to send this buffer as a message to an endpoint. We'll call this function `ipc_send()`.
 - Inside `ipc_send()` the buffer is copied into kernel memory. In our example, we'll use the heap for this memory. We can then switch to process 1's address space and copy the buffer on the heap into the queue.
-- At this point `ipc_send()` can return, and process 2 can continue on as per normal.
-- The message is now waiting at the end of the endpoint's message queue which processes 1 can do what it pleases with.
+- At this point `ipc_send()` can return, and _process 2_ can continue on as per normal.
+- The message is now waiting at the end of the endpoint's message queue which _process 1_ can do what it pleases with.
 
 
 What we've described here is a double-copy implementation of message: because the data is first copied into the kernel, and then out of it. Hence we performed two copy operations.
@@ -62,7 +62,8 @@ ipc_endpoint* first_endpoint = NULL;
 spinlock_t endpoints_lock;
 ```
 
-At this point we have all we need to implement a function to create a new endpoint. This doesn't need to be too complex and just needs to create a new instance of our endpoint struct. Since we're using `NULL` in the message buffer address to represent no message, we'll be sure to set that when creating a new endpoint. Also notice how we hold the lock when we're interacting with the list of endpoints, to prevent race conditions. Note: `kmalloc()` assumes the use of kernel heap and `malloc()` assumes the active process's heap.
+At this point we have all we need to implement a function to create a new endpoint. This doesn't need to be too complex and just needs to create a new instance of our endpoint struct. Since we're using `NULL` in the message buffer address to represent no message, we'll be sure to set that when creating a new endpoint. Also notice how we hold the lock when we're interacting with the list of endpoints, to prevent race conditions. 
+_Note_: `kmalloc()` assumes the use of kernel heap and `malloc()` assumes the active process's heap.
 
 ```c
 void create_endpoint(const char* name) {
