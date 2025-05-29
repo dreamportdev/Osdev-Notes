@@ -272,7 +272,7 @@ char shifted_chars[] = {
 
 char get_printable_char(key_event key)
 {
-    if (key.status_mask & CTRL_MASK || key.caps_lock)
+    if (key.status_mask & SHIFT_MASK || key.caps_lock)
         return shifted_chars[key.code];
     else
         return lower_chars[key.code];
@@ -288,7 +288,7 @@ Using the switch statement approach looks like the following:
 ```c
 char get_printable_char(key_event key)
 {
-    const bool shifted = key.status_mask & CTRL_MASK || key.caps_lock;
+    const bool shifted = key.status_mask & SHIFT_MASK || key.caps_lock;
     switch (key.code)
     {
         case KEY_A:
