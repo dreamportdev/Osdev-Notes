@@ -24,3 +24,4 @@ In no particular order:
 - @mrjbom ([https://github.com/mrjbom](https://github.com/mrjbom))
 - @IAmTheNerdNextDoor ([https://github.com/IAmTheNerdNextDoor](https://github.com/IAmTheNerdNextDoor))
 - @vasilisalmpanis ([https://github.com/vasilisalmpanis](https://github.com/vasilisalmpanis))
+- @AntoninRuan ([https://github.com/AntoninRuan](https://github.com/AntoninRuan))
