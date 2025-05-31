@@ -22,7 +22,6 @@ typedef struct tss
     uint64_t rsp1;
     uint64_t rsp2;
     uint64_t reserved1;
-    uint64_t reserved2;
     uint64_t ist1;
     uint64_t ist2;
     uint64_t ist3;
@@ -30,8 +29,8 @@ typedef struct tss
     uint64_t ist5;
     uint64_t ist6;
     uint64_t ist7;
-    uint64_t reserved3;
-    uint16_t reserved4;
+    uint64_t reserved2;
+    uint16_t reserved3;
     uint16_t io_bitmap_offset;
 }__attribute__((__packed__)) tss_t;
 ```
@@ -60,7 +59,7 @@ The layout of the TSS system descriptor is broken down below in the following ta
 | 39:32  | TSS address bits 23:16 | Contains the next 8 bits of the tss address. |
 | 47:40  | 0b10001001 | Sets the type of GDT descriptor, its DPL (bits 45:46) to 0, marks it as present (bit 47). Bit 44 (S) along with bits 40 to 43 indicate the type of descriptor. If curious as to how this value was created, see the  intel SDM manual or our section about the GDT.|
 | 48:51 | Limit 16:9 | The higher part of the limit field, bits 9 to 16 |
-| 55:52  | 0bG000A | Additional fields for the TSS entry. Where G (bit 55) is the granularity bit and A (bit 52) is a bit left available to the operating system. The other bits must be left as 0 |
+| 55:52  | 0bG00A | Additional fields for the TSS entry. Where G (bit 55) is the granularity bit and A (bit 52) is a bit left available to the operating system. The other bits must be left as 0 |
 | 63:56  | TSS address bits 31:24 | Contains the next 8 bits of the tss address. |
 | 95:64  | TSS address bits 63:32 | Contains the upper 32 bits of the tss address. |
 | 96:127 | Reserved | They should be left as 0. |
