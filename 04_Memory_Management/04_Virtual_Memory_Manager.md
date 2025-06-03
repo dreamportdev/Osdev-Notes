@@ -280,6 +280,6 @@ We've looked a basic VMM implementation, and discussed some advanced concepts to
 
 As mentioned above all the memory accessed is virtual memory at this point, so unless there is a specific reason to interact with the PMM it can be best to deal with the VMM instead. Then let the VMM manage the physical memory it may or may not need.
 
-Of course there will be cases where this is not possible, and there are valid reasons to allocate physical memory directory (DMA buffers for device drivers, for example), but for the most part the VMM should be the interface to interact with memory.
+Of course there will be cases where this is not possible, and there are valid reasons to allocate physical memory directly (DMA buffers for device drivers, for example), but for the most part the VMM should be the interface to interact with memory.
 
 This VMM design that was explained here is based on a stripped-down version of the Solaris VMM. It's very well understood and there is plenty of more in depth material out there if interested in exploring further. The original authors have also published several papers on the topic.
