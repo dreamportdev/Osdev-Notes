@@ -25,3 +25,4 @@ In no particular order:
 - @IAmTheNerdNextDoor ([https://github.com/IAmTheNerdNextDoor](https://github.com/IAmTheNerdNextDoor))
 - @vasilisalmpanis ([https://github.com/vasilisalmpanis](https://github.com/vasilisalmpanis))
 - @AntoninRuan ([https://github.com/AntoninRuan](https://github.com/AntoninRuan))
+- @sudw1n ([https://github.com/sudw1n](https://github.com/sudw1n))

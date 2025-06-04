@@ -9,7 +9,7 @@ We'll focus on three things: allocating memory (`alloc()`), freeing memory (`fre
 
 ### To Avoid Confusion
 
-The term 'heap' has a few meanings, and if coming from a computer science course the first though might be the data structure (specialized tree). That can be used to implement a heap allocator (hence the name), but it's not what we're talking about here.
+The term 'heap' has a few meanings, and if coming from a computer science course the first thought might be the data structure (specialized tree). That can be used to implement a heap allocator (hence the name), but it's not what we're talking about here.
 
 This term when used in a memory management/osdev environment has a different meaning, and it usually refers to the code where memory is _dynamically allocated_ (`malloc()` and friends).
 
@@ -24,7 +24,7 @@ If some of these terms need more explanation, they have chapters of their own to
 
 With the above assumptions, what happens under the hood when we want to allocate some memory from the heap?
 
-* The heap searches for a suitable address. If one is found returns that address is returned and the algorithm stops there. If it can't find any it will ask the VMM for more space.
+* The heap searches for a suitable address. If one is found that address is returned and the algorithm stops there. If it can't find any it will ask the VMM for more space.
 * The VMM will receive the heap's request and ask the PMM a suitable physical page to be allocated to fulfill the heap's request.
 * The PMM search for a suitable physical page to fulfill the VMM's request, returning that address to the VMM.
 * Once the VMM has the physical memory, that memory is mapped into the program's virtual address space, at the address the heap requested (usually at the end).
@@ -49,7 +49,7 @@ So let's get started with describing the allocation algorithm.
 
 *Authors note: In the following examples we will use `uint8_t` for all the pointers, but in a real scenario it will be better to use a bigger size for the variable keeping track of the allocated region sizes (so we're not limited to 255 bytes).*
 
-The easiest way to start with creating our allocator is to ask: "What do a heap allocator do?".
+The easiest way to start with creating our allocator is to ask: "What does a heap allocator do?".
 
 Well the answer is, as we already know: it allocates memory, specifically in bytes. The bytes part is important, because as kernel developers we're probably used to dealing with pages and page-sized things. If the program asks for _X_ bytes, the allocator will return an address pointing to an area of memory that is at least _X_ bytes. The VMM is allocating memory, but the biggest difference is that the Heap is allocating bytes, while the VMM is allocating Pages.
 
