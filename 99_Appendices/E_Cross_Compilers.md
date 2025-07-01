@@ -130,7 +130,7 @@ Of course we can use any emulator we want, but in our example we rely on qemu. T
 * ninja-build
 * python3-sphinx
 * sphinx-rtd-theme
-* If we want to use the gtk ui, we also need libgtk3-dev
+* If we want to use the gtk ui, we also need libgtk-3-dev
 
 As usual let's create a new folder called `build_qemu` and move into it. The configure command is:
 
