@@ -147,7 +147,7 @@ Of course we can use any emulator we want, but in our example we rely on qemu. T
 As usual let's create a new folder called `build_qemu` and move into it. The configure command is:
 
 ```bash
-/path/qemu_src/configure --prefix=$PREFIX --target-list=riscv64-softmmu --enable-gtk --enable-gtk-clipboard --enable-tools --enable-vhost-net
+/path/qemu_src/configure --prefix=$PREFIX --target-list=riscv64-softmmu,x86_64-softmmu --enable-gtk --enable-gtk-clipboard --enable-tools --enable-vhost-net
 ```
 where:
 
