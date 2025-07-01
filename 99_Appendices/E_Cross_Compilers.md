@@ -88,7 +88,7 @@ That's it! Now all the binutils tools are installed in the `PREFIX` directory an
 
 The process for building GCC is very similar to binutils. Note that we need to have a version of binutils for our target triplet before trying to build GCC. These binaries must also be in the path, which we did before. Let's create a new folder for the build files (`build_gcc`) and move into it.
 
-Now we can use the configure script like before:
+Now we can use the configure:
 
 ```bash
 /path/to/gcc_sources/configure --target=$TARGET --prefix=$PREFIX --disable-nls --enable-languages=c,c++ --without-headers
@@ -98,18 +98,6 @@ For brevity we'll only explain the new flags:
 
 - `--enable-languages=c,c++`: select which language frontends to enable, these two are the default. We can disable c++ but if we plan to cross compile more things than our kernel this can be nice to have.
 - `--without-headers`: tells the compiler not to rely on any headers from the host and instead generate its own.
-
-If it fails with the following error: 
-
-```
-configure: error: Building GCC requires GMP 4.2+, MPFR 3.1.0+ and MPC 0.8.0+.
-```
-
-Just run the following script from the gcc _source directory_:
-
-```sh
-./contrib/download_prerequisites
-```
 
 It will download the missing dependencies for us. Now is possible to relaunch the `configure` command.
 Once the script is finished we can run a few make targets to build the compiler and its support libraries. By default running `make`/`make all` is not recommended as this builds everything for a full userspace compiler. We don't need all that and it can take a lot of time. For a freestanding program like a kernel we only need the compiler and libgcc.
