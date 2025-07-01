@@ -129,6 +129,8 @@ Of course we can use any emulator we want, but in our example we rely on qemu. T
 
 * ninja-build
 * python3-sphinx
+* python3-pip
+* python3-venv
 * sphinx-rtd-theme
 * If we want to use the gtk ui, we also need libgtk-3-dev
 
