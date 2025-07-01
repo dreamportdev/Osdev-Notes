@@ -72,7 +72,7 @@ cd binutils_build
 From this temporary directory we can use the configure script to generate the build files, like so:
 
 ```bash
-/path/to/binutils_src/configure --target=$TARGET --with-sysroot --disable-nls --disable-werror
+/path/to/binutils_src/configure --prefix=$PREFIX --target=$TARGET --with-sysroot --disable-nls --disable-werror
 ```
 
 At this point the configure script has generated a makefile for us with our requested options, now we can do the usual series of commands:
@@ -99,6 +99,19 @@ For brevity we'll only explain the new flags:
 - `--enable-languages=c,c++`: select which language frontends to enable, these two are the default. We can disable c++ but if we plan to cross compile more things than our kernel this can be nice to have.
 - `--without-headers`: tells the compiler not to rely on any headers from the host and instead generate its own.
 
+If it fails with the following error: 
+
+```
+configure: error: Building GCC requires GMP 4.2+, MPFR 3.1.0+ and MPC 0.8.0+.
+```
+
+Just run the following script from the gcc _source directory_:
+
+```sh
+./contrib/download_prerequisites
+```
+
+It will download the missing dependencies for us. Now is possible to relaunch the `configure` command.
 Once the script is finished we can run a few make targets to build the compiler and its support libraries. By default running `make`/`make all` is not recommended as this builds everything for a full userspace compiler. We don't need all that and it can take a lot of time. For a freestanding program like a kernel we only need the compiler and libgcc.
 
 ```bash
@@ -154,7 +167,7 @@ Qemu is quite a large program, so it's recommended to make use of all cores when
 
 ## GDB
 
-The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need (name can be different depending on the distribution used):
+The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need (name can be different depending on the distribution used, the names below are for _Debian_ based distributions):
 
 * libncurses-dev
 * libsource-highlight-dev
