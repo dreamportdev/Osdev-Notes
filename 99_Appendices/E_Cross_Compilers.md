@@ -72,7 +72,7 @@ cd binutils_build
 From this temporary directory we can use the configure script to generate the build files, like so:
 
 ```bash
-/path/to/binutils_src/configure --target=$TARGET --with-sysroot --disable-nls --disable-werror
+/path/to/binutils_src/configure --prefix=$PREFIX --target=$TARGET --with-sysroot --disable-nls --disable-werror
 ```
 
 At this point the configure script has generated a makefile for us with our requested options, now we can do the usual series of commands:
@@ -88,7 +88,7 @@ That's it! Now all the binutils tools are installed in the `PREFIX` directory an
 
 The process for building GCC is very similar to binutils. Note that we need to have a version of binutils for our target triplet before trying to build GCC. These binaries must also be in the path, which we did before. Let's create a new folder for the build files (`build_gcc`) and move into it.
 
-Now we can use the configure script like before:
+Now we can use the configure command:
 
 ```bash
 /path/to/gcc_sources/configure --target=$TARGET --prefix=$PREFIX --disable-nls --enable-languages=c,c++ --without-headers
@@ -99,6 +99,7 @@ For brevity we'll only explain the new flags:
 - `--enable-languages=c,c++`: select which language frontends to enable, these two are the default. We can disable c++ but if we plan to cross compile more things than our kernel this can be nice to have.
 - `--without-headers`: tells the compiler not to rely on any headers from the host and instead generate its own.
 
+It will download the missing dependencies for us. Now is possible to re-run the `configure` command.
 Once the script is finished we can run a few make targets to build the compiler and its support libraries. By default running `make`/`make all` is not recommended as this builds everything for a full userspace compiler. We don't need all that and it can take a lot of time. For a freestanding program like a kernel we only need the compiler and libgcc.
 
 ```bash
@@ -128,13 +129,15 @@ Of course we can use any emulator we want, but in our example we rely on qemu. T
 
 * ninja-build
 * python3-sphinx
+* python3-pip
+* python3-venv
 * sphinx-rtd-theme
-* If we want to use the gtk ui, we also need libgtk3-dev
+* If we want to use the gtk ui, we also need libgtk-3-dev
 
 As usual let's create a new folder called `build_qemu` and move into it. The configure command is:
 
 ```bash
-/path/qemu_src/configure --prefix=$PREFIX --target-list=riscv64-softmmu --enable-gtk --enable-gtk-clipboard --enable-tools --enable-vhost-net
+/path/qemu_src/configure --prefix=$PREFIX --target-list=riscv64-softmmu,x86_64-softmmu --enable-gtk --enable-gtk-clipboard --enable-tools --enable-vhost-net
 ```
 where:
 
@@ -154,7 +157,7 @@ Qemu is quite a large program, so it's recommended to make use of all cores when
 
 ## GDB
 
-The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need (name can be different depending on the distribution used):
+The steps for building GDB are similar to binutils and GCC. We'll create a temporary working directory and move into it. Gdb has a few extra dependencies we'll need (name can be different depending on the distribution used, the names below are for _Debian_ based distributions):
 
 * libncurses-dev
 * libsource-highlight-dev
