@@ -373,9 +373,9 @@ So now our heap node will look like the following in memory:
 |----|------|-------|------|-----|
 |  6 | F/U  | PREV  | NEXT |  X  |
 
-As mentioned earlier using the double linked list the check for merge-ability is more straightforward. For example to check if we can merge with the left node we just need to check the status of the node pointed by the prev field, if it is freer than they can be merged. To merge with the previous node would apply the logic below to `node->prev`:
+As mentioned earlier using the double linked list the check for merge-ability is more straightforward. For example to check if we can merge with the left node we just need to check the status of the node pointed by the prev field, if it is free then they can be merged. To merge with the previous node, we would apply the logic below to `node->prev`:
 
-* Update the `size` its, adding to it the size of cur_node
+* Update the `size` field, adding to it the size of cur_node
 * Update the `next` pointer to point to cur_node->next
 
 Referring to the next node:
