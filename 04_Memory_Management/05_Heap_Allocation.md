@@ -211,7 +211,7 @@ void *third_alloc(size_t size) {
 }
 ```
 
-One thing that might have been noticed so far is that for keep track of all those new information we are adding an overhead to our allocator. How big this overhead is depends on the size of the variables we use in the chunk headers (where we store the alloc size and status). Even if we keep things small by only using `uint8_t`, we have already added 2 bytes of overhead for every single allocation.
+One thing that might have been noticed so far is that in order to keep track of all those new information, we are adding an overhead to our allocator. How big this overhead is depends on the size of the variables we use in the chunk headers (where we store the alloc size and status). Even if we keep things small by only using `uint8_t`, we have already added 2 bytes of overhead for every single allocation.
 The implementation above is not completed yet, since we haven't implemented a mechanism to re-use the freed location but before adding this last piece let's talk about the free.
 
 Now we know that given a pointer `ptr` (previously allocated from our heap, of course) `ptr - 1` is the status (and should be USED) and `ptr - 2` is the size.
