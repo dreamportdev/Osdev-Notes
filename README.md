@@ -16,6 +16,8 @@ The content of this repository is also available as a _**printed book**_, it can
 
 The [latest-master](https://github.com/dreamportdev/Osdev-Notes/releases/tag/latest-master) release contains the PDF built from master.
 
+You can reach us on Discord: https://discordapp.com/channels/578193015433330698/578193713340219392
+
 ## Current Chapters:
 
 * [Part 0: Introduction](00_Introduction/01_README.md)
