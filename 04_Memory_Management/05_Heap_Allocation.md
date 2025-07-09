@@ -400,7 +400,7 @@ if (prev_node != NULL && prev_node->status == FREE) {
     }
 }
 ```
-What we're describing here is the left node being "swallowed" by the right one, and growing in size. The memory that the left node owns and is responsible for is now part of the right oneTo make it easier to understand, consider the portion of a hypothetical heap in the picture below:
+What we're describing here is the left node being "swallowed" by the right one, and growing in size. The memory that the left node owns and is responsible for is now part of the right one. To make it easier to understand, consider the portion of a hypothetical heap in the picture below:
 
 ![Heap initial status](/Images/heapexample.png)
 
@@ -434,8 +434,8 @@ Now `alloc()` is called again, like so:
 alloc(10);
 ```
 The allocator is going to look for the first node it can return that is at least 10 bytes. Using the example from above, this will be the first node. Everything looks fine, except that we've just returned 150 bytes for a 10 byte allocation (i.e. ~140 bytes of memory is wasted). There are a few ways to approach this problem:
-- The first solution that comes to mind if to scan the entire heap each time and use the smallest (but still big enough for the requested size) node. This is better, but the downside (speed) should be obvious. This will also still not work as well as the second solution because in the above the example it would still return 150 bytes.
-- What we're going to do is 'cut' the space that we need from the node, splitting it into 2 new nodes. The first node will be the request allocation size, and is used to fulfill that. The other will be kept as a free node, inserted into the linked list.
+* The first solution that comes to mind is to scan the entire heap each time and use the smallest (but still big enough for the requested size) node. This is better, but the downside (speed) should be obvious. This will also still not work as well as the second solution because in the above example it would still return 150 bytes.
+* What we're going to do is 'cut' the space that we need from the node, splitting it into 2 new nodes. The first node will be the request allocation size, and is used to fulfill that. The other will be kept as a free node, inserted into the linked list.
 
 The workflow will be the following:
 
@@ -446,12 +446,12 @@ The workflow will be the following:
 * One edge case to be aware of here is if node that was split was the last node of the heap, The `heap_tail` variable should be updated as well, if it is being used (this depends on design decisions).
 
 
-After that the allocator can compute the address to return using `(uintptr_t)cur_node + sizeof(Heap_node)`, since we want to return the memory *after* the node, not the node itself (otherwise the program would put data there and overwrite what we've stored there!).
+After that the allocator can compute the address to return using `(uintptr_t)cur_node + sizeof(Heap_node)`, since we want to return the memory *after* the node, not the node itself (otherwise the program would put data there and overwrite what we've stored!).
 
 Before wrapping up there's a few things worth pointing out about implementing splitting:
 
-* Remember that every node has some overhead, so when splitting we shouldn't have nodes smaller (or equal to) than `sizeof(Heap_Node)`, because otherwise they will never be allocated.
-* It's a good idea to have a minimum size for the memory a chunk can contain, to avoid having a large number of nodes and for easy alignment later on. For example if the `minimum_allocatable_size` is 0x20 bytes, and we want to allocate 5 bytes, we will still receive a memory block of `0x20` bytes. The program may not know it was returned `0x20` bytes, but that is okay. What exactly value should be used for it is implementation specific, values of `0x10` and `0x20` are popular.
+* Remember that every node has some overhead, so when splitting we shouldn't have nodes smaller than (or equal to) `sizeof(Heap_Node)`, because otherwise they will never be allocated.
+* It's a good idea to have a minimum size for the memory a chunk can contain, to avoid having a large number of nodes and for easy alignment later on. For example if the `minimum_allocatable_size` is 0x20 bytes, and we want to allocate 5 bytes, we will still receive a memory block of `0x20` bytes. The program may not know it was returned `0x20` bytes, but that is okay. What exact value should be used for it is implementation specific, values of `0x10` and `0x20` are popular.
 * Always remember that there is the memory footprint of `sizeof(Heap_Node)` bytes while computing sizes that involve multiple nodes. If we decide to include the overhead size in the node's size, remember to also subtract it when checking for suitable nodes.
 
 And that's it!
@@ -476,7 +476,7 @@ void initialize_heap() {
 }
 ```
 
-Now the question is, how do we choose the starting address? This really is arbitrary. We can pick any address that we like, but there are a few  constraints that we should follow:
+Now the question is, how do we choose the starting address? This really is arbitrary. We can pick any address that we like, but there are a few constraints that we should follow:
 
 * Some memory is used by the kernel, we don't want to overwrite anything with our heap, so let's keep sure that the area we are going is free.
 * Usually when paging is enabled, in many case the kernel is moved to one half of the memory space (usually referred as to HIGHER_HALF and LOWER_HALF) so when deciding the initial address we should place it in the correct half, so if the kernel is placed in the HIGHER half, and we are implementing the kernel heap it should go on the HIGHER half and if it is for the user space heap it will go to the LOWER half.
@@ -491,14 +491,14 @@ And that's it, that is how the heap is initialized with a single node. The first
 
 One final part that we will be explained briefly, is what happens when we reach the end of the heap. Imagine the following scenario we have done a lot of allocations, most of the heap nodes are used and the few usable nodes are small. The next allocation request will fail to find a suitable node because the requested size is bigger than any free node available. Now the allocator has searched through the heap, and reached the end without success. What happens next? Time to expand the heap by adding more memory to the end of it.
 
-Here is where the virtual memory manager will join the game. Roughly what will  is:
+Here is where the virtual memory manager will join the game. Roughly what will happen is:
 
 * The heap allocator will first check if we have reached the end of the address space available (unlikely).
 * If not it will ask the VMManager to map a number of pages (exact number depends on implementation) at the address starting from `heap_end + heap_end->size + sizeof(heap_node)`.
 * If the mapping fail, the allocation will fail as well (i.e. out of memory/OOM. This is an issue to solve in its own right).
 * If the mapping is successful, then we have just created a new node to be appended to the current end of the heap. Once this is done we can proceed with the split if needed.
 
-And with that we're just written a fairly complete heap allocator.
+And with that we've just written a fairly complete heap allocator.
 
 A final note: in these examples we're not zeroing the memory returned by the heap, which languages like C++ may expect when `new` and `delete` operators are used. This can lead to non-deterministic bugs where objects may be initialized with left over values from previous allocations (if the memory has been used before), and suddenly default construction is not doing what is expected.
 Doing a `memset()` on each block of memory returned does cost cpu time, so it's a trade off, a decision to be made for your specific implementation.
