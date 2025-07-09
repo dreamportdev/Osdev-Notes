@@ -389,7 +389,7 @@ Of course merging with the right node is the opposite (update the size and the p
 Below a pseudocode example of how to merge left:
 
 ```c
-Heap_Node *prev_node = cur_node->prev //cur_pointer is the node we want to check if can be merged
+Heap_Node *prev_node = cur_pointer->prev //cur_pointer is the node we want to check if can be merged
 if (prev_node != NULL && prev_node->status == FREE) {
     // The prev node is free, and cur node is going to be freed so we can merge them
     Heap_Node next_node = cur_pointer->next;
