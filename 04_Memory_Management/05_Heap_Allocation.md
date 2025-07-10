@@ -458,7 +458,7 @@ And that's it!
 
 ### Part 7: Heap Initialization
 
-Each heap will likely have different requires for how it's initialized, depending on whether it's a heap for a user program, or it's running as part of a kernel. For a userspace program heap we may want to allocate a bigger initial size if we know the program will need it. As the operating system grows there will be more instances of the heap (usually at least one per program + global kernel heap), and it becomes important to keep track of all the memory used by these heaps. This is often a job that the VMM for a process will take on.
+Each heap will likely have different requirement for how it's initialized, depending on whether it's a heap for a user program, or it's running as part of a kernel. For a userspace program heap we may want to allocate a bigger initial size if we know the program will need it. As the operating system grows there will be more instances of the heap (usually at least one per program + global kernel heap), and it becomes important to keep track of all the memory used by these heaps. This is often a job that the VMM for a process will take on.
 
 What is really needed to initialize a heap is an initial size (for example 8k), and to create a single starting node:
 
@@ -468,9 +468,9 @@ Heap_Node *heap_start;
 Heap_Node *heap_end;
 void initialize_heap() {
   heap_start = INITIAL_HEAP_ADDRESS //Remember is a virtual address;
-  heap_start->next = NULL;
+  heap_start->prev = NULL;
   heap_start->next = NULL; // Just make sure that prev and next are not going anywhere
-  heap_start->status = free;
+  heap_start->status = FREE;
   heap_start->size = INITIAL_HEAP_SIZE // 8096 = 8k;
   heap_end = heap_start
 }
