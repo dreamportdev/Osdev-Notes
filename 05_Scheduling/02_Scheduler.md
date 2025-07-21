@@ -184,7 +184,7 @@ For the purpose of our example the scheduler will only have three states for now
 
 * READY: The process is in the queue and waiting to be scheduled.
 * RUNNING: The process is currently running on the cpu.
-* DEAD: The process has finished running and should not be scheduled. It's resources can also be cleaned up.
+* DEAD: The process has finished running and should not be scheduled. Its resources can also be cleaned up.
 
 We'll modify our selection algorithm to take these new states into account:
 
