@@ -237,7 +237,7 @@ thread_t* add_thread(process_t* proc, char* name, void(*function)(void*), void* 
     thread->tid = next_thread_id++;
     thread->status = READY;
     thread->next = NULL:
-    thread->context.iret_ss = KERNEL_SS; // from the GDT chapter
+    thread->context.iret_ss = KERNEL_DS; // from the GDT chapter
     thread->context.iret_rsp = alloc_stack();
     thread->context.iret_flags = 0x202;
     thread->context.iret_cs = KERNEL_CS; // from the GDT chapter
