@@ -183,6 +183,16 @@ A simple example is outline just below, for a simple 64-bit long mode setup we'd
 - Selector 0x18: user code (64-bit, ring 3)
 - Selector 0x20: user data (64-bit)
 
+For future reference, we should define macros for these selectors. So let's assume we have the following:
+
+```c
+#define NULL_SELECTOR 0x00
+#define KERNEL_CS 0x08
+#define KERNEL_DS 0x10
+#define USER_CS 0x18
+#define USER_DS 0x20
+```
+
 To create a GDT populated with these entries we'd do something like the following:
 
 ```c

@@ -72,10 +72,10 @@ process_t* create_process(char* name, void(*function)(void*), void* arg) {
     strncpy(process->name, name, NAME_MAX_LEN);
     process->pid = next_free_pid++;
     process->process_status = READY;
-    process->context.iret_ss = KERNEL_SS;
+    process->context.iret_ss = KERNEL_DS; // from the GDT chapter
     process->context.iret_rsp = alloc_stack();
     process->context.iret_flags = 0x202;
-    process->context.iret_cs = KERNEL_CS;
+    process->context.iret_cs = KERNEL_CS; // from the GDT chapter
     process->context.iret_rip = (uint64_t)function;
     process->context.rdi = (uint64_t)arg;
     process->context.rbp = 0;
@@ -237,10 +237,10 @@ thread_t* add_thread(process_t* proc, char* name, void(*function)(void*), void* 
     thread->tid = next_thread_id++;
     thread->status = READY;
     thread->next = NULL:
-    thread->context.iret_ss = KERNEL_SS;
+    thread->context.iret_ss = KERNEL_DS; // from the GDT chapter
     thread->context.iret_rsp = alloc_stack();
     thread->context.iret_flags = 0x202;
-    thread->context.iret_cs = KERNEL_CS;
+    thread->context.iret_cs = KERNEL_CS; // from the GDT chapter
     thread->context.iret_rip = (uint64_t)function;
     thread->context.rdi = (uint64_t)arg;
     thread->context.rbp = 0;
