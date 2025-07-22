@@ -85,7 +85,7 @@ There are 3 possible scenarios:
 * 2Mib Pages: in this case we only need 3 page levels.
 * 1Gib Pages: Only 2 levels are needed.
 
-To implement paging, is strongly recommended to have already implemented interrupts too, specifically handling #PF (vector 0xd).
+To implement paging, is strongly recommended to have already implemented interrupts too, specifically handling #PF (vector 0xE).
 
 The 4 levels of page directories/tables are:
 
