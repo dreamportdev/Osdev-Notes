@@ -124,8 +124,8 @@ The RSDT is an SDT header followed by an array of `uint32_t`s, representing the 
 The XSDT is the same, except the array is of `uint64_t`s.
 
 ```c
-struct RSDP {
-    ACPISDTHeader sdtHeader; //signature "RSDP"
+struct RSDT {
+    ACPISDTHeader sdtHeader; //signature "RSDT"
     uint32_t sdtAddresses[];
 };
 
