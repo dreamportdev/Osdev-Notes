@@ -38,11 +38,11 @@ In addition, we might want to store some flags in the *vm object*, they are like
 Here's what our example virtual memory object looks like:
 
 ```c
-typedef struct {
+typedef struct vm_object {
     uintptr_t base;
     size_t length;
     size_t flags;
-    vm_object* next;
+    struct vm_object* next;
 } vm_object;
 
 #define VM_FLAG_NONE 0
