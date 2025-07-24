@@ -143,7 +143,7 @@ Each register is accessed by adding an offset to the base address we obtained be
 - General configuration: offset `0x10`.
 - Main counter value: `0xF0`.
 
-We can read the main counter at any time, which is measured in timer ticks. We can convert these ticks into realtime by multiplying them with the timer period in the general capabilities register. Bits 63:32 of the general capabilities register contain the number of femtoseconds for each tick. A nanosecond is 1000 femtoseconds, and 1 second is 1'000'000'000 femtoseconds.
+We can read the main counter at any time, which is measured in timer ticks. We can convert these ticks into realtime by multiplying them with the timer period in the general capabilities register. Bits 63:32 of the general capabilities register contain the number of femtoseconds for each tick. A nanosecond is 1'000'000 femtoseconds, and 1 second is $10^{15}$ femtoseconds.
 
 We can also write to the main counter, usually we would write a 0 here when initializing the HPET in order to be able to determine uptime, but this is not really necessary.
 
