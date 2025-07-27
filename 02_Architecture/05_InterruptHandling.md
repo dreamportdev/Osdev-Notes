@@ -173,7 +173,7 @@ call interrupt_dispatch
 
 pop %r15
 pop %r14
-//push other registers here
+//pop other registers here
 pop %rbx
 pop %rax
 
