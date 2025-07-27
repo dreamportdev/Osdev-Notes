@@ -19,7 +19,7 @@ There will be situations where we don't want to be interrupted, usually in some 
 
 When the interrupt flag is cleared, most interrupts will be *masked*, meaning they will not be served. There is a special case where an interrupt will still be served by the cpu: the *non-maskable interrupt* or NMI. These are extremely rare, and often a result of a critical hardware failure, therefore it's perfectly acceptable to simply have the operating system panic in this case.
 
-*Authors note: Don't let NMIs scare you, we've never run actually run into one on real hardware. You do need to be aware that they exist and can happen at any time, regardless of the interrupt flag.*
+*Authors note: Don't let NMIs scare you, we've never actually run into one on real hardware. You do need to be aware that they exist and can happen at any time, regardless of the interrupt flag.*
 
 ## Setting Up For Handling Interrupts
 
