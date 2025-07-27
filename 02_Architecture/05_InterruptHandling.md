@@ -169,7 +169,7 @@ push %rbx
 push %r14
 push %r15
 
-call interrupt_disaptch
+call interrupt_dispatch
 
 pop %r15
 pop %r14
