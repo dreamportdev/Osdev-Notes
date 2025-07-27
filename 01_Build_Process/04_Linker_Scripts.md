@@ -21,14 +21,14 @@ Since the memory section doesn't see too much use on x86, it's not explained her
 
 ### LMA (Load Memory Address) vs VMA (Virtual Memory Address)
 
-Within the sections area of the linker script, sections are described using two address. They're defined as:
+Within the sections area of the linker script, sections are described using two addresses. They're defined as:
 
 - Load Memory Address: This is where the section is to be loaded.
 - Virtual Memory Address: This is where the code is expected to be when run. Any jumps or branches in our code, any variable references are linked using this address.
 
 Most of the time these are the same, however this is not always true. One use case of setting these to separate values would be creating a higher half kernel that uses the multiboot boot protocol. Since mb leaves us in protected mode with paging disabled, we can't load a higher half kernel, as no one would have enough physical memory to have physical addresses in the range high enough.
 
-So instead, we load the kernel at a lower physical memory address (by setting LMA), run a self-contained assembly stub that is linked in its own section at a lower VMA. This stub sets up paging, and jumps to the higher half region of code once paging and long mode are setup. Now the code is at the address it expects to be in, and will run correctly, all done within the same kernel file.
+So instead, we load the kernel at a lower physical memory address (by setting LMA), run a self-contained assembly stub that is linked in its own section at a lower VMA. This stub sets up paging, and jumps to the higher half region of code once paging and long mode are set up. Now the code is at the address it expects to be in, and will run correctly, all done within the same kernel file.
 
 ### Adding Symbols
 
@@ -79,7 +79,7 @@ PHDRS
 
 This example is actually missing the flags field that sets the permissions, but modern linkers will see these common names like `text` and `rodata` and give them default permissions.
 
-Of course, they can (and in best practice, should) be set them manually using the keyword `FLAGS`:
+Of course, they can (and in best practice, should) be set manually using the keyword `FLAGS`:
 
 ```
 PHDRS
@@ -91,7 +91,7 @@ PHDRS
 }
 ```
 
-The flags sets  `p_flags` field of the program header, for more detail on it refer to to the [Executable Linker Format](../09_Loading_Elf/01_Elf_Theory.md) chapter.
+The flags set `p_flags` field of the program header, for more detail on it refer to the [Executable Linker Format](../09_Loading_Elf/01_Elf_Theory.md) chapter.
 
 ## Sections
 
@@ -149,7 +149,7 @@ Next up we have a number of lines describing the input sections, with the format
 
 After the closing brace is where we tell the linker what program header this section should be in, in this case its the `text` phdr. The program header name is prefixed with a colon in this case.
 
-Similarly to the program headers we should specify the following sections in in our script:
+Similarly to the program headers we should specify the following sections in our script:
 
 * _.text_
 * _.rodata_
