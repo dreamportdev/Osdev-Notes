@@ -26,3 +26,4 @@ In no particular order:
 - @vasilisalmpanis ([https://github.com/vasilisalmpanis](https://github.com/vasilisalmpanis))
 - @AntoninRuan ([https://github.com/AntoninRuan](https://github.com/AntoninRuan))
 - @sudw1n ([https://github.com/sudw1n](https://github.com/sudw1n))
+- @alexdev404 ([https://github.com/AlexDev404](https://github.com/AlexDev404))
