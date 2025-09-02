@@ -1,0 +1,24 @@
+# Resource Management
+Intro Paragrapgh
+
+## Per Process Resource Table
+- Each processs has a table mapping int -> rec
+- Handles 0,1,2 reserved for stdio
+- kernel uses this to clean up on exit
+
+## Resource Lifecycle
+- Aquire with open rec syscall
+- Use: generic read wrte
+- Release with close resource
+
+## Resource Abstractation
+- here is resource_t
+- dispatch on type
+
+## Generic API
+- the 3 funcs
+- blokcing
+- extended: resource specific syscalls / flags passed
+
+## Data Copying
+- Explain speed of direct buffer use vs copy into a kernel buffer
