@@ -4,7 +4,7 @@ The kernel manages various things on behalf of the userspace process, including 
 To do this, we implement an API where every resource can be opened, read from, written to, and closed using the same syscalls. Through this design, the kernel is kept small, whilst also letting new resources be added in the future with minimal change to both kernel and user code.
 
 ## Resource Abstractation
-First, we can begin by defining a list of resource types:
+When talking about _resources_, we need a way to distinguish between the different types that the kernel may expect to provide to userspace. Each resource behaves differently internally, but from the view of the userspace process everyting should be acessable from the same set of syscalls. In order to achive this, we define an enum of resource types to allow the kernel to tag each resource with it's category. This way when a system call is made, the kernel knows how to dispatch the request.
 ```
 typedef enum {
     FILE,
@@ -13,15 +13,16 @@ typedef enum {
     // can extend later
 } resource_type_t;
 ```
+In this example `FILE` represents a file on the disk, `MESSAGE_ENDPOINT` is used for an IPC message queue and `SHARED_MEM` for a shared memory region between prcesses. As the kernel grows this struct can be extened to support more resource types. 
 
-And then internally each resource is represented as a `resource_t` struct:
+Next, we need a generic representation of a resource inside the kernel. This can be defined by the `resource_t` struct:
 ```
 typedef struct {
     resource_type_t type;
     void* impl;
 } resource_t;
 ```
-_NOTE: The `impl` pointer is where resource-specific structs can be stored, such as file descriptor states, IPC queues, shared memory regions, etc._
+The `type` field tells the kernel what kind of resource it is and the `impl` pointer allows the kernel to attach the resource specific implmentation of that resource. For example, a file's `impl` could point to a struct holding the file's offset and indoe or for shared memory it could point to the physical address of that region. 
 
 ## Per Process Resource Table
 With an abstract resource now defined, we can extend our previous definition of a process to include a **resource table**:
@@ -35,7 +36,7 @@ status_t process_status;
 resource_t* resource_table[MAX_RESOURCES];
 } process_t;
 ```
-Now each process has a resource table that is a map of integers, called handles, to the kernel resource objects. A handle is simply an identifier returned by the kernel when opening a resource that is later used by the user to inform what resource the operation should be performed upon. This way, the resource structure is not exposed to userspace. Because of this, the same handle number in different processes can refer to different resources. For example, in Unix, handles `0`, `1`, and `2` refer to stdio for each process. 
+Now each process has a resource table that is a map of integers, called _handles_, to the kernel resource objects. A handle is simply an identifier returned by the kernel when opening a resource that is later used by the user to inform what resource the operation should be performed upon. This way, the resource structure is not exposed to userspace. Because of this, the same handle number in different processes can refer to different resources. For example, in Unix, handles `0`, `1`, and `2` refer to stdio for each process. 
 
 With this, we can also define a supporting function allowing the kernel to fetch a resource by handle:
 ```
@@ -56,73 +57,44 @@ A resource follows a rather straightforward lifecycle, regardless of its type:
 2. While the handle is valid, the process can perform operations such as `read_resource` or `write_resource`.
 3. Finally, when the process has finished using the resource, it calls `close_resource`, allowing the kernel to free any associated state.
 
-Typically, a process should `close()` a resource once it is done using it. However, that is not always the case, as processes may exit without cleaning up properly, and thus it is up to the kernel to ensure resources aren't leaked.
-```
-for (int handle = 0; handle < MAX_RESOURCES; ++handle) {
-
-  // Already closed or not used
-  if(process->resource_table[handle] == 0)
-    continue;
-
-  close_resource(process, handle);
-}
-```
+Typically, a process should `close()` a resource once it is done using it. However, that is not always the case, as processes may exit without cleaning up properly, and thus it is up to the kernel to ensure resources aren't leaked. This could look like a loop through the process's resource table, calling `close_resource(process, handle);` for each open resource and letting the resource-specific `close()` function handle the work.  
 
 
 ## Generic API
-The generic interface for a resource consists of four primary functions: `open`, `read`, `write`, and `close`. These functions form the minimum required API that every resource type must support. To begin the implementation of this, our `resource_t` needs extending to support these operations:
+Now that we have a way of representing resource, we need define how a process can interact with them. Generally, having a different syscall for each resource type can ___. Instead the kernel can expose a minmal and uniform API that every resource supports. The generic interface for a resource consists of four primary functions: `open`, `read`, `write`, and `close` and by restricting all resources to this same interface we can reduce the complexity of both the kernel and userspace. To begin the implementation of this, our `resource_t` needs extending with a table of function pointers to support these operations. Each resource can then provide it's own implementation of thse four functions whilst the generic interface remains the same.
 ```
 typedef struct resource {
-    // ...
-    struct resource_ops* ops;
+    resource_type_t type;
+    void* impl;
+    struct resource_functions_t* funcs;
 } resource_t;
 
-typedef struct resource_ops {
+typedef struct resource_functions {
     size_t (*read)(resource_t* res, void* buf, size_t len);
     size_t (*write)(resource_t* res, const void* buf, size_t len);
     void (*open)(resource_t* res);
     void (*close)(resource_t* res);
-} resource_ops_t;
+} resource_functions_t;
 ```
+Here, `funcs` is the dispatch table that tells the kernel how to perform each operation for each resource. With this, each function pointer can be set differently dependin on wether the resource is a file, IPC endpoint or something else.
+
 Operations are defined to be blocking by default, meaning that if a resource is not ready (for example, no data to read), the process is suspended until the operation can complete. Each resource type can override these generic operations to provide behavior specific to that resource. For example, a file resource can replace the write function with one that writes data to disk, while an IPC message resource could implement write to enqueue a message, allowing the same API call to behave differently depending on the resource.
 
-It has been left as an exercise to the user to decide on how they want to handle extending this design for extra resource-specific functionality (ie, renaming a file). There are two (of many) ways to do this, each with its own trade-off. Firstly, a simpler design would be to just add more syscalls to handle this; however, this means the ABI grows as your kernel manages more resources. Another approach would be to pass an additional `size_t flags` parameter and let the resource-specific operation handle it, which would keep the original four operations but with added complexity. 
+It has been left as an exercise to the reader to decide on how they want to handle extending this design for extra resource-specific functionality (ie, renaming a file). There are two (of many) ways to do this, each with its own trade-off. Firstly, a simpler design would be to just add more syscalls to handle this; however, this means the ABI grows as your kernel manages more resources. Another approach would be to pass an additional `size_t flags` parameter and let the resource-specific operation handle it, which would keep the original four operations but with added complexity. 
 
-The dispatch code would be as follows:
+On the kernel side of things, these syscalls can just act as dispatchers. For example, a `read_resource(...)` syscall would look up the process's resource table using the handle, retrieve the `resource_t`, and then forward the call to the correct, resource-specific, function:
 ```
 size_t read_resource(process_t* proc, int handle, void* buf, size_t len) {
     resource_t* res = get_resource(proc, handle);
-    if (!res || !res->ops->read)
-      return -1;
-    return res->ops->read(res, buf, len);
-}
 
-size_t write_resource(process_t* proc, int handle, const void* buf, size_t len) {
-    resource_t* res = get_resource(proc, handle);
-    if (!res || !res->ops->write)
-      return -1;
-    return res->ops->write(res, buf, len);
-}
+    // Invalid handle or unsupported operation
+    if (!res || !res->funcs->read)
+        return -1;
 
-int open_resource(process_t* proc, resource_t* res) {
-    for (int i = 0; i < MAX_HANDLES; i++) {
-        if (proc->table[i] == NULL) {
-            proc->table[i] = res;
-            return i; // return handle
-        }
-    }
-    return -1; // no free slot
-}
-
-void close_resource(process_t* proc, int handle) {
-    resource_t* res = get_resource(proc, handle);
-    if (!res)
-      return;
-
-    if (res->ops->close) res->ops->close(res); // call resource-specific close
-    proc->table[handle] = NULL;
+    return res->funcs->read(res, buf, len);
 }
 ```
+The other operations (`write`, `open`, `close`) would follow the same pattern above: get the resource from the handle and then call the appropriate function from the `funcs` table if supported. With this indirect approach, the kernel's syscall layer is kept minimal whilst allowing for each resource type to have its own specialised behavior.
 
 ## Data Copying
 Another thing left as an exercise to the user is to decide their method of copying data between userspace and the kernel.
