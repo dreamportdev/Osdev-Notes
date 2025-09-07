@@ -61,7 +61,7 @@ Typically, a process should `close()` a resource once it is done using it. Howev
 
 
 ## Generic API
-Now that we have a way of representing resource, we need define how a process can interact with them. Generally, having a different syscall for each resource type can ___. Instead the kernel can expose a minmal and uniform API that every resource supports. The generic interface for a resource consists of four primary functions: `open`, `read`, `write`, and `close` and by restricting all resources to this same interface we can reduce the complexity of both the kernel and userspace. To begin the implementation of this, our `resource_t` needs extending with a table of function pointers to support these operations. Each resource can then provide it's own implementation of thse four functions whilst the generic interface remains the same.
+Now that we have a way of representing resource, we to need define how a process can interact with them. Generally, having a different syscall for each resource type can lead to lots of repeated code segments and make the kernel interface harder to maintain and extend. Instead the kernel can expose a minmal and uniform API that every resource supports. The generic interface for a resource consists of four primary functions: `open`, `read`, `write`, and `close` and by restricting all resources to this same interface we can reduce the complexity of both the kernel and userspace. To begin the implementation of this, our `resource_t` needs extending with a table of function pointers to support these operations. Each resource can then provide it's own implementation of thse four functions whilst the generic interface remains the same.
 ```
 typedef struct resource {
     resource_type_t type;
