@@ -1,10 +1,10 @@
 # Resource Management
-The kernel manages various things on behalf of the userspace process, including files, sockets, IPC, devices, and more, which we call 'resources'. It is a good idea to have a unified way to handle such a range of resources to reduce complexity. Rather than exposing a separate set of syscalls for each resource, a generic abstractation can be introduced to simplify everything whilst also keeping it all centralised in one place. 
+The kernel manages various things on behalf of the userspace process, including files, sockets, IPC, devices, and more, which we call _resources_. It is a good idea to have a unified way to handle such a range of resources to reduce complexity. Rather than exposing a separate set of syscalls for each resource, a generic abstractation can be introduced to simplify everything while also keeping it all centralized in one place. 
 
 To do this, we implement an API where every resource can be opened, read from, written to, and closed using the same syscalls. Through this design, the kernel is kept small, whilst also letting new resources be added in the future with minimal change to both kernel and user code.
 
 ## Resource Abstractation
-When talking about _resources_, we need a way to distinguish between the different types that the kernel may expect to provide to userspace. Each resource behaves differently internally, but from the view of the userspace process everyting should be acessable from the same set of syscalls. In order to achive this, we define an enum of resource types to allow the kernel to tag each resource with it's category. This way when a system call is made, the kernel knows how to dispatch the request.
+When talking about _resources_, we need a way to distinguish between the different types that the kernel may expect to provide to userspace. Each resource behaves differently internally, but from the view of the userspace process, everything should be accessible from the same set of syscalls. In order to achieve this, we define an enum of resource types to allow the kernel to tag each resource with its category. This way, when a system call is made, the kernel knows how to dispatch the request.
 ```
 typedef enum {
     FILE,
@@ -13,7 +13,7 @@ typedef enum {
     // can extend later
 } resource_type_t;
 ```
-In this example `FILE` represents a file on the disk, `MESSAGE_ENDPOINT` is used for an IPC message queue and `SHARED_MEM` for a shared memory region between prcesses. As the kernel grows this struct can be extened to support more resource types. 
+In this example, `FILE` represents a file on the disk, `MESSAGE_ENDPOINT` is used for an IPC message queue, and `SHARED_MEM` for a shared memory region between processes. As the kernel grows this struct can be extended to support more resource types. 
 
 Next, we need a generic representation of a resource inside the kernel. This can be defined by the `resource_t` struct:
 ```
@@ -22,7 +22,7 @@ typedef struct {
     void* impl;
 } resource_t;
 ```
-The `type` field tells the kernel what kind of resource it is and the `impl` pointer allows the kernel to attach the resource specific implmentation of that resource. For example, a file's `impl` could point to a struct holding the file's offset and indoe or for shared memory it could point to the physical address of that region. 
+The `type` field tells the kernel what kind of resource it is, and the `impl` pointer allows the kernel to attach the resource-specific implementation of that resource. For example, a file's `impl` could point to a struct holding the file's offset and inode, or for shared memory, it could point to the physical address of that region. 
 
 ## Per Process Resource Table
 With an abstract resource now defined, we can extend our previous definition of a process to include a **resource table**:
@@ -61,7 +61,7 @@ Typically, a process should `close()` a resource once it is done using it. Howev
 
 
 ## Generic API
-Now that we have a way of representing resource, we to need define how a process can interact with them. Generally, having a different syscall for each resource type can lead to lots of repeated code segments and make the kernel interface harder to maintain and extend. Instead the kernel can expose a minmal and uniform API that every resource supports. The generic interface for a resource consists of four primary functions: `open`, `read`, `write`, and `close` and by restricting all resources to this same interface we can reduce the complexity of both the kernel and userspace. To begin the implementation of this, our `resource_t` needs extending with a table of function pointers to support these operations. Each resource can then provide it's own implementation of thse four functions whilst the generic interface remains the same.
+Now that we have a way of representing resources, we need to define how a process can interact with them. Generally, having a different syscall for each resource type can lead to lots of repeated code segments and make the kernel interface harder to maintain and extend. Instead, the kernel can expose a minimal and uniform API that every resource supports. The generic interface for a resource consists of four primary functions: `open`, `read`, `write`, and `close`, and by restricting all resources to this same interface, we can reduce the complexity of both the kernel and userspace. To begin the implementation of this, our `resource_t` needs extending with a table of function pointers to support these operations. Each resource can then provide its own implementation of these four functions whilst the generic interface remains the same.
 ```
 typedef struct resource {
     resource_type_t type;
@@ -98,4 +98,4 @@ The other operations (`write`, `open`, `close`) would follow the same pattern ab
 
 ## Data Copying
 Another thing left as an exercise to the user is to decide their method of copying data between userspace and the kernel.
-One option is to use the userspace provided buffersm, which is efficient due to a single copy but does require sanitization of pointers and lengths to ensure safety. Some things to consider are other threads in the same address space modifying memory at the same address  Another option is to copy into a kernel buffer first, which simplifies the sanitization but has the added overhead and loss of performance. 
+One option is to use the userspace provided buffersm, which is efficient due to a single copy but does require sanitization of pointers and lengths to ensure safety. Some things to consider are other threads in the same address space modifying memory at the same address.  Another option is to copy into a kernel buffer first, which simplifies the sanitization but has the added overhead and loss of performance. 
