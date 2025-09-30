@@ -83,7 +83,7 @@ This appendix is a collection of links we found useful developing our own kernel
 
 ## C Language Infos
 
-* [IBM inline assembly guide](https://www.ibm.com/docs/en/xl-c-and-cpp-linux/13.1.4?topic=compatibility-inline-assembly-statements) This is not gcc related, but the syntax is identical, and it contains useful and concise info on the constraintsa
+* [GCC Inline assembly manual](https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html)
 * [Fedora Inline assembly list of constraints](https://dmalcolm.fedorapeople.org/gcc/2015-08-31/rst-experiment/how-to-use-inline-assembly-language-in-c-code.html#simple-constraints)
 
 ## Nasm
