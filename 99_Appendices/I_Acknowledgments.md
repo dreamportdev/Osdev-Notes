@@ -27,3 +27,4 @@ In no particular order:
 - @AntoninRuan ([https://github.com/AntoninRuan](https://github.com/AntoninRuan))
 - @sudw1n ([https://github.com/sudw1n](https://github.com/sudw1n))
 - @alexdev404 ([https://github.com/AlexDev404](https://github.com/AlexDev404))
+- @frischerZucker ([https://github.com/frischerZucker](https://github.com/frischerZucker))
