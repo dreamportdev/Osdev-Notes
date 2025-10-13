@@ -283,7 +283,7 @@ typedef struct {
 We need to declare a variable that contains the opened file descriptors, as usual we are using a naive approach, and just use an array for simplicity, this means that we will have a limited number of files that can be opened:
 
 ```c
-struct file_descriptors_t vfs_opened_files[MAX_OPENED_FILES];
+file_descriptors_t vfs_opened_files[MAX_OPENED_FILES];
 ```
 
 Where the `mountpoint_id` fields is the id of the mounted file system that is containing the requested file. The `fs_file_id` is the fs specific id of the fs opened by the file descriptor, `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations and `file_size` is the size of the opened file.
@@ -399,7 +399,7 @@ ssize_t read(int fildes, void *buf, size_t nbytes) {
         int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
         mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id);
         int fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        int bytes_read = mountpoints.read(fs_file_id, buf, nbytes)
+        int bytes_read = mountpoints->operations.read(fs_file_id, buf, nbytes);
         if (opened_files[fildes].buf_read_pos + nbytes < opened_files[fildes].file_size) {
             opened_files[fildes].buf_read_pos += nbytes;
         } else {
