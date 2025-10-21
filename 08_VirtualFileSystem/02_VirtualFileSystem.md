@@ -83,7 +83,7 @@ typedef struct {
     char device[VFS_PATH_LENGTH];
     char mountpoint[VFS_PATH_LENGTH];
 
-    fs_operations_t operations;
+    fs_operations_t *operations;
 
 } mountpoint_t;
 ```
@@ -314,7 +314,7 @@ int open(const char *path, int flags){
 
     if (mountpoint != NULL) {
         char *rel_path = get_rel_path(mountpoint, path);
-        int fs_specific_id = mountpoint->operations.open(rel_path, flags);
+        int fs_specific_id = mountpoint->operations->open(rel_path, flags);
         if (fs_specific_id != ERROR) {
             /* IMPLEMENTATION LEFT AS EXERCISE */
             // Get a new vfs descriptor id vfs_id
@@ -344,13 +344,13 @@ int close(int fildes) {
         mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
         mountpoint_t *mountpoint  = get_mountpoint_by_id(mountpoint_id);
         fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        fs_close_result = mountpoint->operations.close(fs_file_id);
+        fs_close_result = mountpoint->operations->close(fs_file_id);
         if(fs_close_result == 0) {
             vfs_opened_files[fildes].fs_file_id = -1;
             return 0;
         }
-        return -1;
     }
+    return -1;
 }
 ```
 
@@ -399,7 +399,7 @@ ssize_t read(int fildes, void *buf, size_t nbytes) {
         int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
         mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id);
         int fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        int bytes_read = mountpoints->operations.read(fs_file_id, buf, nbytes);
+        int bytes_read = mountpoints->operations->read(fs_file_id, buf, nbytes);
         if (opened_files[fildes].buf_read_pos + nbytes < opened_files[fildes].file_size) {
             opened_files[fildes].buf_read_pos += nbytes;
         } else {
