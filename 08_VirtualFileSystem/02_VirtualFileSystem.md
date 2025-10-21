@@ -349,8 +349,8 @@ int close(int fildes) {
             vfs_opened_files[fildes].fs_file_id = -1;
             return 0;
         }
-        return -1;
     }
+    return -1;
 }
 ```
 
