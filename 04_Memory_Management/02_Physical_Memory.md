@@ -14,9 +14,9 @@ In this chapter we will explain the bitmap method, because is probably the simpl
 
 ## The Bitmap
 
-Now let's start with a simple example, imagine that we have a very tiny amount of ram like 256kb of ram, and we want to use 4kb pages, and assume that we have the kernel that takes the first 3 pages. As said above using the bitmap method assign 1 bit to every page, this means that every bytes can keep track of $8*4k=32kb$ of memory, if the page is taken the bit is set to 1, if is free the bit is clear (=0)
+Now let's start with a simple example, imagine that we have a very tiny amount of memory like `256kb` of ram, and we want to use `4kb` pages, and assume that we have the kernel that takes the first 3 pages. As said above using the bitmap method it assign 1 bit to every page, this means that every bytes can keep track of $8*4k=32kb$ of memory. If the page is taken the bit is set to 1, if is free the bit is clear (=0)
 
-This means that a single *unsigned char* variable can hold the status of 32kb of ram, to keep track of 256kb of ram we then need 8bytes (They can stay in a single `uint64_t` variable, but for this example let's stick with the char type), this means that with an array of 8 elements of *unsigned char* we can represent the whole amount of memory, so we are going to have something like this:
+This means that a single *unsigned char* variable can hold the status of `32kb` of memory, to keep track of `256kb` of ram we then need 8bytes (They can stay in a single `uint64_t` variable, but for this example let's stick with the char type), this means that with an array of 8 elements of *unsigned char* we can represent the whole amount of memory, so we are going to have something like this:
 
 
 |           | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |

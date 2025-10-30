@@ -196,7 +196,9 @@ For future reference, we should define macros for these selectors. So let's assu
 To create a GDT populated with these entries we'd do something like the following:
 
 ```c
-uint64_t gdt_entries[];
+#define NUM_GDT_ENTRIES 5
+
+uint64_t gdt_entries[NUM_GDT_ENTRIES];
 
 //null descriptor, required to be here.
 gdt_entries[0] = 0;
@@ -251,8 +253,8 @@ To load a new GDT, use the `lgdt` instruction. It takes the address of a GDTR st
 
 ```c
 //populate these as you will.
-uint64_t num_gdt_entries;
-uint64_t gdt_entries[];
+#define NUM_GDT_ENTRIES 7
+uint64_t gdt_entries[NUM_GDT_ENTRIES];
 
 struct GDTR
 {
@@ -262,7 +264,7 @@ struct GDTR
 
 GDTR example_gdtr =
 {
-    .limit = num_gdt_entries * sizeof(uint64_t) - 1;
+    .limit = NUM_GDT_ENTRIES * sizeof(uint64_t) - 1;
     .address = (uint64_t)gdt_entries;
 };
 

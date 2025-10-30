@@ -61,7 +61,7 @@ As we anticipated earlier in this chapter we are going to use a linked list to k
 So we assume that functions to handle list of mountpoints are present (their implementation is left as exercise), from now on we assume the following functions are present:
 
 ```c
-mountpoint_t *create_mountpoint(...)
+mountpoint_t *create_mountpoint(...);
 mountpoint_t *add_mountpoint(mountpoint_t* mountpoint);
 void remove_mountpoint(mountpoint_t* mountpoint);
 ```
@@ -77,16 +77,15 @@ Let's call this new structure `mountpoint_t` and start to fill in some fields:
 ```c
 #define VFS_TYPE_LENGTH 32
 #define VFS_PATH_LENGTH 64
-struct {
+typedef struct {
 
     char type[VFS_TYPE_LENGTH];
-    char mountpoint[VFS_TYPE_LENGTH];
+    char device[VFS_PATH_LENGTH];
+    char mountpoint[VFS_PATH_LENGTH];
 
-    fs_operations_t operations;
+    fs_operations_t *operations;
 
 } mountpoint_t;
-
-typedef struct mountpoint_t mountpoint_t;
 ```
 
 The next thing is to have a variable to store those mountpoints, since we are using a linked list it is going to be just a pointer to its root, this will be the first place where we will look whenever we want to access a folder or a file:
@@ -114,7 +113,7 @@ There can be others of course configuration parameters like access permission, d
 int ustar_open(char *path, int flags);
 int ustar_close(int ustar_fd);
 void ustar_read(int ustar_fd, void *buffer, size_t count);
-int ustar_close(int ustar_fd)
+int ustar_close(int ustar_fd);
 ```
 
 For the mount and umount operation we will need two functions:
@@ -129,10 +128,12 @@ int vfs_mount(char *device, char *target, char *fs_type);
 Once called it will simply create and add a new item to the mountpoints list, and will populate the data structure with the information provided, for example inside the function to create a  mountpoint (in our example `create_mountpoint`) we are going to  have something like the following code:
 ```c
 mountpoint_t *new_mountpoint = malloc(sizeof(mountpoint_t)); // We assume a kind of malloc is present
-new_mountpoint.device = device;
-new_mountpoint.type = type;
-new_mountpoint.mountpoint = target;
-new_mountpoint.operations = NULL
+if(new_mountpoint == NULL)
+    return -1;
+strcpy(new_mountpoint->device, device);
+strcpy(new_mountpoint->type, type);
+strcpy(new_mountpoint->mountpoint, target);
+new_mountpoint->operations = NULL;
 ```
 
 the last line will be populated soon, for now let's leave it to `NULL`.
@@ -198,7 +199,7 @@ Implementing the function is left as exercise, below we just declare the header 
 mountpoint_t get_mountpoint(char *path);
 ```
 
-If the above function fail it should return  NULL to let the caller know that something didn't work (even if it should always return at least the root "/" item in a single root implementation).
+If the above function fail it should return  `NULL` to let the caller know that something didn't work (even if it should always return at least the root `/` item in a single root implementation).
 
 #### Absolute vs Relative Path
 
@@ -219,13 +220,16 @@ After having implemented all the functions to load file systems and identify giv
 Let's quickly recap on how we usually read a file in C:
 
 ```C
-int fd;
-char *buffer = (char *) calloc(11, sizeof(char));
+int file_descriptor;
+char *buffer = calloc(11, sizeof(char));
+if (buffer == NULL) {
+    return -1;
+}
 int file_descriptor = open("/path/to/file/to_open", O_RDONLY);
-int sz = read(file_descriptor, buffer, 10)
+int sz = read(file_descriptor, buffer, 10);
 buffer[sz] = '\0';
 printf("%s", buffer);
-close(file_pointer);
+close(file_descriptor);
 ```
 
 The code snippet above is using the C stdlib file handling libraries, what the it does is:
@@ -234,7 +238,7 @@ The code snippet above is using the C stdlib file handling libraries, what the i
 * If the file is found and the fd value is not -1, than we can read it
 * It now reads 10 bytes from the opened file (the `read` function will access it via the fd field), and store the output in the buffer. The read function returns the number of bytes read.
 * If we want to print the string read we need to append the EndOfLine symbol after the last byte read.
-* Now we can close the file_pointer (destroying the file descriptor associated with the id if it is possible, otherwise -1 will be returned).
+* Now we can close the file_descriptor (destroying the file descriptor associated with the id if it is possible, otherwise -1 will be returned).
 
 As we can see there are no instructions where we specify the file system type, or the driver to use this is all managed by the vfs layer. The above functions will avail of kernel system calls open/read/close, they usually sits somewhere above the kernel VFS layer, in our _naive_ implementation they we are not going to create new system calls, and let them to be our VFS layer, and where needed  make a simpler version of them.
 
@@ -265,7 +269,7 @@ The flags value is a bitwise operator, and there are other possible values to be
 The return value of the function is the file descriptor id. We have already seen how to parse a path and get the mountpoint id if it is available. But what about the file descriptor and its id? What is it? File descriptors represents a file that has been opened by the VFS, and contain information on how to access it (i.e. mountpoint_id), the filename, the various pointers to keep track of current read/write positions, eventual locks, etc. So before proceed let's outline a very simple file descriptor struct:
 
 ```c
-struct {
+typedef struct {
     uint64_t fs_file_id;
     int mountpoint_id;
     char *filename;
@@ -273,13 +277,13 @@ struct {
     int buf_write_pos;
     int file_size;
     char *file_buffer;
-} file_descriptor_t
+} file_descriptor_t;
 ```
 
 We need to declare a variable that contains the opened file descriptors, as usual we are using a naive approach, and just use an array for simplicity, this means that we will have a limited number of files that can be opened:
 
 ```c
-struct file_descriptors_t vfs_opened_files[MAX_OPENED_FILES]
+file_descriptors_t vfs_opened_files[MAX_OPENED_FILES];
 ```
 
 Where the `mountpoint_id` fields is the id of the mounted file system that is containing the requested file. The `fs_file_id` is the fs specific id of the fs opened by the file descriptor, `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations and `file_size` is the size of the opened file.
@@ -301,23 +305,23 @@ struct fs_operations_t {
 typedef struct fs_operations_t fs_operations_t;
 ```
 
-The basic idea is that once mountpoint_id has been found, the vfs will use the mountpoint item to call the fs driver implementation of the open function, remember that when calling the driver function, it cares only about the relative path with mountpoint folder stripped, if the whole path is passed, we will most likely get an error. Since the fs root will start from within the mountpoint folder we need to get the relative path, we will use the `get_rel_path` function defined earlier in this chapter, and the pseudocode for the open function should look similar to the following:
+The basic idea is that once `mountpoint_id` has been found, the vfs will use the mountpoint item to call the fs driver implementation of the open function, remember that when calling the driver function, it cares only about the relative path with mountpoint folder stripped, if the whole path is passed, we will most likely get an error. Since the fs root will start from within the mountpoint folder we need to get the relative path, we will use the `get_rel_path` function defined earlier in this chapter, and the pseudocode for the open function should look similar to the following:
 
 
 ```c
 int open(const char *path, int flags){
     mountpoint_t *mountpoint = get_mountpoint(pathname);
 
-    if (mountpoint != NULL`) {
+    if (mountpoint != NULL) {
         char *rel_path = get_rel_path(mountpoint, path);
-        int fs_specific_id = mountpoint.operations.open(rel_path, flags);
+        int fs_specific_id = mountpoint->operations->open(rel_path, flags);
         if (fs_specific_id != ERROR) {
             /* IMPLEMENTATION LEFT AS EXERCISE */
             // Get a new vfs descriptor id vfs_id
             vfs_opened_files[vfs_id] = //fill the file descriptor entry at position
         }
     }
-    return vfs_id
+    return vfs_id;
 }
 ```
 
@@ -340,13 +344,13 @@ int close(int fildes) {
         mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
         mountpoint_t *mountpoint  = get_mountpoint_by_id(mountpoint_id);
         fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        fs_close_result = mountpoint.close(fs_file_id);
+        fs_close_result = mountpoint->operations->close(fs_file_id);
         if(fs_close_result == 0) {
             vfs_opened_files[fildes].fs_file_id = -1;
             return 0;
         }
-        return -1;
     }
+    return -1;
 }
 ```
 
@@ -381,9 +385,9 @@ Text example of a file...
 And we have the following code:
 
 ```c
-char *buffer[5]
-int sz = read(file_descriptor, buffer, 5)
-sz = read(file_descriptor, buffer, 5)
+char *buffer[5];
+int sz = read(file_descriptor, buffer, 5);
+sz = read(file_descriptor, buffer, 5);
 ```
 
 The `buffer` content of the first read will be: `Text `, and the second one `examp`. This is the purpose  `buf_read_pos` variable in the file descriptor, so it basically needs to be incremented of nbytes, of course only if `buf_read_pos + nbytes < file_size` .
@@ -393,9 +397,9 @@ The pseudocode for this function is going to be similar to the open/close:
 ssize_t read(int fildes, void *buf, size_t nbytes) {
     if (vfs_opened_files[fildes].fs_fildes_id != -1) {
         int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
-        mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id)
+        mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id);
         int fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        int bytes_read = mountpoints.read(fs_file_id, buf, nbytes)
+        int bytes_read = mountpoints->operations->read(fs_file_id, buf, nbytes);
         if (opened_files[fildes].buf_read_pos + nbytes < opened_files[fildes].file_size) {
             opened_files[fildes].buf_read_pos += nbytes;
         } else {

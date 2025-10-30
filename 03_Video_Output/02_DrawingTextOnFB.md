@@ -126,7 +126,7 @@ Let's assume from now on that we have a data structure called `PSF_font` with al
 // We have linked _binary_font_psf_start from another .o file so we must
 // specify that we are dealing with an external variable.
 extern char _binary_font_psf_start;
-PSF_font *default_font = (PSF_font *)&_binary_font_psf_start
+PSF_font *default_font = (PSF_font *)&_binary_font_psf_start;
 ```
 
 ## Glyph
@@ -159,7 +159,7 @@ The glyphs start right after the psf header, the address of the first character 
 
 ```C
 uint8_t* first_glyph = (uint8_t*) &_binary_font_psf_start +
-    default_font->headersize
+    default_font->headersize;
 ```
 
 Since we know that every glyph has the same size, and this is available in the `PSF_Header`, if we want to access the *i-th* character, we just need to do the following:
@@ -185,7 +185,7 @@ Before proceeding let's talk about the position parameters. Now what they are de
 So our function header will be something like that:
 
 ```C
-void fb_putchar( char symbol, uint16_t x, uint16_t y, uint32_t fg, uint32_t bg)
+void fb_putchar( char symbol, uint16_t x, uint16_t y, uint32_t fg, uint32_t bg);
 ```
 
 Clearly what it should do is read the glyph stored in the position given by symbol, and draw it at row x and column y (don't forget they are "character" coordinates) using colors fg for foreground color and bg for background (we draw the foreground color when the bit in the bitmap is 1, and the bg color when is 0).
