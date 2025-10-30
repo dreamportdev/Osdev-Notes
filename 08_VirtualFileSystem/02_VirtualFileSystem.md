@@ -8,6 +8,8 @@ To keep our design simple, the features of our VFS driver will be:
 * No extra features like permissions, uid and gid (although we are going to add those fields, they will not be used).
 * The path length will be limited.
 
+This VFS is built on top of the previously defined resource API (see Resource Management). The VFS creates a file specific `resource_t` for each open file and returns a handle that is then used with the generic `read`, `write`, and `close` functions.
+
 ## How The VFS Works
 
 The basic concept of a VFS layer is pretty simple, we can see it like a common way to access files/directories across different file systems, it is a layer that sits between the higher level interface to the FS and the low level implementation of the FS driver, as shown in the picture:
@@ -83,10 +85,13 @@ typedef struct {
     char device[VFS_PATH_LENGTH];
     char mountpoint[VFS_PATH_LENGTH];
 
+	// Driver provided file system operations (open/read/write/close)
     fs_operations_t *operations;
 
 } mountpoint_t;
 ```
+
+Note: When the VFS uses a mount to open a file, it will wrap the result of the driver call into a `resource_t` and return the resulting handle to userspace.
 
 The next thing is to have a variable to store those mountpoints, since we are using a linked list it is going to be just a pointer to its root, this will be the first place where we will look whenever we want to access a folder or a file:
 
@@ -266,7 +271,7 @@ The `flags` parameter will tell how the file will be opened, there are many flag
 
 The flags value is a bitwise operator, and there are other possible values to be used, but for our purpose we will focus only on the three mentioned above.
 
-The return value of the function is the file descriptor id. We have already seen how to parse a path and get the mountpoint id if it is available. But what about the file descriptor and its id? What is it? File descriptors represents a file that has been opened by the VFS, and contain information on how to access it (i.e. mountpoint_id), the filename, the various pointers to keep track of current read/write positions, eventual locks, etc. So before proceed let's outline a very simple file descriptor struct:
+The return value of the function is the file descriptor id (a resource handle). We have already seen how to parse a path and get the mountpoint id if it is available. But what about the file descriptor and its id? What is it? File descriptors represents a file resource that has been opened by the VFS, and contain information on how to access it (i.e. mountpoint_id), the filename, the various pointers to keep track of current read/write positions, eventual locks, etc. So before proceed let's outline a very simple file descriptor struct:
 
 ```c
 typedef struct {
@@ -280,15 +285,9 @@ typedef struct {
 } file_descriptor_t;
 ```
 
-We need to declare a variable that contains the opened file descriptors, as usual we are using a naive approach, and just use an array for simplicity, this means that we will have a limited number of files that can be opened:
-
-```c
-file_descriptors_t vfs_opened_files[MAX_OPENED_FILES];
-```
-
 Where the `mountpoint_id` fields is the id of the mounted file system that is containing the requested file. The `fs_file_id` is the fs specific id of the fs opened by the file descriptor, `buf_read_pos` and `buf_write_pos` are the current positions of the buffer pointer for the read and write operations and `file_size` is the size of the opened file.
 
-So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an id value returned. This id is different from the one in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
+So once our open function has found the mountpoint for the requested file, eventually a new file descriptor item will be created and filled, and an resource handle returned. This id is different from the one in the data structure, since it represent the internal fs descriptor id, while this one represent the vfs descriptor id. In our case the descriptor list is implemented again using an array, so the id returned will be the array position where the descriptor is being filled.
 
 Why "eventually"? Having found the mountpoint id for the file doesn't mean that the file exists on that fs, the only thing that exist so far is the mountpoint, but after that the VFS can't really know if the file exists or not, it has to defer this task to the fs driver, hence it will call the implementation of a function that open a file on that FS that will do the search and return an error if the file doesn't exists.
 
@@ -319,38 +318,49 @@ int open(const char *path, int flags){
             /* IMPLEMENTATION LEFT AS EXERCISE */
             // Get a new vfs descriptor id vfs_id
             vfs_opened_files[vfs_id] = //fill the file descriptor entry at position
+
+			resource_t *res = // left as an exercise, see below
+
+			// Open the resource and return its id to the calling process
+			int handle = register_resource(current_process, res);
+    		return handle;
         }
     }
-    return vfs_id;
+    return ERROR;
 }
 ```
 
+NOTE: When creating the `resource_t` for the file, the `impl` field should store the `file_descriptor_t` for this file and the `funcs` could be some global/static table pointing to the series of functions that delegate the operation to the resource's mountpoint, defined below. This should *NOT* be `fs_operations_t` as those are for the driver not the VFS resource. As the `open(...)` is handled by the VFS there is no need to define a resource function for that.
+
 The pseudo code above should give us an idea of what is the workflow of opening a file from a VFS point of view, as we can see the process is pretty simple in principle: getting the mountpoint_id from the vfs, if one has been found get strip out the mountpoint path from the path name, and call the fs driver open function, if this function call is successful is time to initialize a new vfs file descriptor item.
 
-Let's now have a look at the `close` function, as suggested by name this will do the opposite of the open function: given a file descriptor id it will free all the resources related to it and remove the file descriptor from the list of opened files. The function signature is the following:
+Let's now have a look at the `close` function, as suggested by the name, this will do the opposite of the open function: when called on a handle, it will free all the resources related to it. The function signature is the following:
 
 
 ```c
-int close(int fildes);
+int close(resource_t* res);
 ```
 
-The fildes argument is the VFS file descriptor id, it will be searched in the opened files list (using an array it will be found at `vfs_opened_files[fildes]`) and if found it should first call the fs driver function to close a file (if present), emptying all data structures associated to that file descriptor (i.e. if there are data on pipes or FIFO they should be discarded) and then doing the same with all the vfs resources, finally it will mark this position as available again. We have only one problem how to mark a file descriptor available using an array? One idea can be to use -1 as `fs_file_id` to identify a position that is marked as available (so we will need to set them to -1 when the vfs is initialized).
+The `res` argument is the file resource to be closed, it will be called from the `close_resource(...)` of the kernel's resource manager. It should first call the fs driver function to close a file (if present), emptying all data structures associated to that file descriptor (i.e. if there are data on pipes or FIFO they should be discarded) and then doing the same with all the vfs resources, finally it will mark this handle as available again. 
+
+We have only one problem how to mark a file descriptor available using an array? One idea can be to use -1 as `fs_file_id` to identify a position that is marked as available (so we will need to set them to -1 when the vfs is initialized).
 
 In our case where we have no FIFO or data-pipes, we can outline our close function as the following:
 
 ```c
-int close(int fildes) {
-    if (vfs_opened_files[fildes].fs_file_id != -1) {
-        mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
-        mountpoint_t *mountpoint  = get_mountpoint_by_id(mountpoint_id);
-        fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        fs_close_result = mountpoint->operations->close(fs_file_id);
-        if(fs_close_result == 0) {
-            vfs_opened_files[fildes].fs_file_id = -1;
-            return 0;
-        }
-    }
-    return -1;
+int close(resource_t* res) {
+
+	// Your code should check that these actually exist
+	file_descriptor_t* file = res->impl;
+    mountpoint_t* mountpoint  = get_mountpoint_by_id(file.mountpoint_id);
+
+    if (mountpoint->operations->close)
+        mountpoint->operations->close(file->fs_file_id);
+
+    free(f);
+    remove_resource(current_process, res);
+
+	return 0;
 }
 ```
 
@@ -362,19 +372,20 @@ mountpoint_t *get_mountpoint_by_id(size_t mountpoint_id);
 
 This function will be used in the following paragraphs too.
 
+
 #### Reading From A File
 
 So now we have managed to access a file stored somewhere on a file system using our VFS, and now we need to read its contents. The function used in the file read example at the beginning of this chapter is the C read include in unistd, with the following signature:
 
 ```c
-ssize_t read(int fildes, void *buf, size_t nbyte);
+ssize_t read(resource_t* res, void *buf, size_t nbyte);
 ```
 
-Where the parameters are the opened file descriptor (`fildes) the buffer we want to read into (`buf`), and the number of bytes (`nbytes`) we want to read.
+Where the parameters are the opened file resource (`res`) the buffer we want to read into (`buf`), and the number of bytes (`nbytes`) we want to read.
 
-The read function will return the number of bytes read, and in case of failure -1. Like all other vfs functions, what the read will do is search for the file descriptor with id `fildes`, and if it exists call the fs driver function to read data from an opened file and fill the `buf` buffer.
+The read function will return the number of bytes read, and in case of failure -1. Like all other vfs functions, what the read will acutally do is verify the resource and then call the fs driver function to read data from an opened file and fill the `buf` buffer.
 
-Internally the file descriptor keeps track of a 'read head' which points to the last byte that was read. The next read() call will start reading from this byte, before updating the pointer itself.
+Internally the file `impl` keeps track of a 'read head' which points to the last byte that was read. The next read() call will start reading from this byte, before updating the pointer itself.
 
 For example let's imagine we have opened a text file with the following content:
 
@@ -386,28 +397,29 @@ And we have the following code:
 
 ```c
 char *buffer[5];
-int sz = read(file_descriptor, buffer, 5);
-sz = read(file_descriptor, buffer, 5);
+int sz = read_resource(proc, file_handle, buffer, 5);
+sz = read_resource(proc, file_descriptor, file_handle, 5);
 ```
 
 The `buffer` content of the first read will be: `Text `, and the second one `examp`. This is the purpose  `buf_read_pos` variable in the file descriptor, so it basically needs to be incremented of nbytes, of course only if `buf_read_pos + nbytes < file_size` .
 The pseudocode for this function is going to be similar to the open/close:
 
 ```c
-ssize_t read(int fildes, void *buf, size_t nbytes) {
-    if (vfs_opened_files[fildes].fs_fildes_id != -1) {
-        int mountpoint_id = vfs_opened_files[fildes].mountpoint_id;
-        mountpoint_t *mountpoint = get_mountpoint_by_id(mountpoint_id);
-        int fs_file_id = vfs_opened_files[fildes].fs_file_id;
-        int bytes_read = mountpoints->operations->read(fs_file_id, buf, nbytes);
-        if (opened_files[fildes].buf_read_pos + nbytes < opened_files[fildes].file_size) {
-            opened_files[fildes].buf_read_pos += nbytes;
-        } else {
-            opened_files[fildes].buf_read_pos = opened_files[fildes].file_size;
-        }
-        return bytes_read;
-    }
-    return -1;
+ssize_t read(resource_t* res, void *buf, size_t nbytes) {
+
+	// Your code should check these actually exist
+	file_descriptor_t* file = res->impl;
+    mountpoint_t* mountpoint  = get_mountpoint_by_id(file.mountpoint_id);
+	
+    int fs_file_id = file.fs_file_id;
+	int bytes_read = mountpoint->operations->read(fs_file_id, buf, nbytes);
+
+	if (file.buf_read_pos + nbytes < file.file_size) {
+        file.buf_read_pos += nbytes;
+	} else {
+		file.buf_read_pos = file.file_size;
+	}
+	return bytes_read;
 }
 ```
 
