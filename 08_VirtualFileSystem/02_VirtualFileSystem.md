@@ -8,7 +8,7 @@ To keep our design simple, the features of our VFS driver will be:
 * No extra features like permissions, uid and gid (although we are going to add those fields, they will not be used).
 * The path length will be limited.
 
-This VFS is built on top of the previously defined resource API (see Resource Management). The VFS creates a file specific `resource_t` for each open file and returns a handle that is then used with the generic `read`, `write`, and `close` functions.
+This VFS is built on top of the previously defined resource API (see Resource Management). The VFS creates a file-specific `resource_t` for each open file and returns a handle that is then used with the resource manager's generic `read`, `write`, and `close` functions that will perform the proper handle-to-resource lookup and call our VFS functions.
 
 ## How The VFS Works
 
@@ -106,13 +106,13 @@ This is all that we need to keep track of the mountpoints.
 
 Now that we have a representation of a mountpoint, is time to see how to mount a file system. By mounting we mean making a device/image/network storage able to be accessed by the operating system on a target folder (the `mountpoint`) loading the driver and the target device.
 
-Usually a mount operation requires a set of minimum three parameters:
+Usually, a mount operation requires a set of minimum three parameters:
 
 * A File System type, it is needed to load the correct driver for accessing the file system on the target device.
 * A target folder (that is the folder where the file system will be accessible by the OS)
-* The target device (in our simple scenario this parameter is going to be mostly ignored since the os will not support any i/o device)
+* The target device (in our simple scenario, this parameter is going to be mostly ignored since the os will not support any i/o device)
 
-There can be others of course configuration parameters like access permission, driver configuration attributes, etc. For now we haven't implemented a file system yet (we will do soon), but let's assume that our os has a driver for the `USTAR` fs (the one we will implement later), and that the following functions are already implemented:
+There can be others of course, configuration parameters like access permission, driver configuration attributes, etc. For now we haven't implemented a file system yet (we will do soon), but let's assume that our os has a driver for the `USTAR` fs (the one we will implement later), and that the following functions are already implemented:
 
 ```c
 int ustar_open(char *path, int flags);
@@ -121,7 +121,7 @@ void ustar_read(int ustar_fd, void *buffer, size_t count);
 int ustar_close(int ustar_fd);
 ```
 
-For the mount and umount operation we will need two functions:
+For the mount and umount operations, we will need two functions:
 
 The first one for mounting, let's call it for example `vfs_mount`, to work it will need at least the parameters explained above:
 
