@@ -59,6 +59,9 @@ resource_t* get_resource(process_t* proc, int handle) {
 }
 ```
 
+You would also want to implement two other functions: `int register_resource(process_t* proc, resource_t* rec)` that finds a free handle and stores the resource in the array and also `int remove_resource(process_t* proc, resource_t* rec)` that then marks that handle usable and frees the memory of that resource on clean up.
+
+
 ## Resource Lifecycle
 
 A resource follows a rather straightforward lifecycle, regardless of its type: 
