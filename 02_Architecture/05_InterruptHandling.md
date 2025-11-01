@@ -224,7 +224,7 @@ Because of the 16-byte alignment, we know that handler number `xyz` is offset by
 extern char vector_0_handler[];
 
 for (size_t i = 0; i < 256; i++)
-    set_idt_entry(i, (uint64_t)vector_0_handler + (i * 16), 0);
+    set_idt_entry(i, vector_0_handler + (i * 16), 0);
 ```
 
 The type of vector_0_handler isn't important, we only care about the address it occupies. This address gets resolved by the linker, and we could just as easily use a pointer type instead of an array here.
