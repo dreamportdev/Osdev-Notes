@@ -8,7 +8,7 @@ To keep our design simple, the features of our VFS driver will be:
 * No extra features like permissions, uid and gid (although we are going to add those fields, they will not be used).
 * The path length will be limited.
 
-This VFS is built on top of the previously defined resource API (see Resource Management). The VFS creates a file-specific `resource_t` for each open file and returns a handle that is then used with the resource manager's generic `read`, `write`, and `close` functions that will perform the proper handle-to-resource lookup and call our VFS functions.
+This VFS is built on top of the previously defined resource API (see Resource Management). The VFS creates a file-specific `resource_t` for each open file and returns a handle that is then used with the resource manager's generic `read`, `write`, and `close` functions that will perform the proper _handle-to-resource_ lookup and call our VFS functions.
 
 ## How The VFS Works
 
@@ -38,13 +38,13 @@ Every mountpoint will contain the information on how to access the target file s
 * It call the open function for that FS passing the path to the filename (in this case the path should be relative).
 * From this point everything is handled by the File System Driver and once the file is accessed is returned back to the vfs layer.
 
-The multi-root approach, even if it is different, it share the same behaviour, the biggest difference is that instead of having to parse the path searching for a mountpoint it has only to check the first item in the it to figure out which FS is attached to.
+The multi-root approach, even if it is different, it share the same behaviour, the biggest difference is that instead of having to parse the path searching for a mountpoint, it has only to check the first item in the it to figure out which FS is attached to.
 
-This is in a nutshell a very high level overview of how the virtual filesystem works, in the next paragraphs we will go in more in details and explain all the steps involved and see how to add mountpoints, how to open/close files, read them.
+This is in a nutshell a very high level overview of how the virtual filesystem works, in the next paragraphs, we will go in more in details and explain all the steps involved and see how to add mountpoints, how to open/close files, read them.
 
 ## The VFS in Detail
 
-Finally we are going to write our implementation of the virtual file system, followed by an example driver (**spoiler alert**: the tar archive format), in this section we will see how to:
+Finally, we are going to write our implementation of the virtual file system, followed by an example driver (**spoiler alert**: the tar archive format). In this section, we will see how to:
 
 * Load and unload a file system (mount/umount).
 * Open and close a file.
@@ -141,9 +141,9 @@ strcpy(new_mountpoint->mountpoint, target);
 new_mountpoint->operations = NULL;
 ```
 
-the last line will be populated soon, for now let's leave it to `NULL`.
+The last line will be populated soon, for now let's leave it to `NULL`.
 
-The second instruction is for umounting, in this case since we are just unloading the file device from the system, we don't need to know what type is it, so technically we need either the target device or the target folder, the function can actually accept both parameters, but use only one of them, let's call it `vfs_umount`:
+The second instruction is for unmounting. In this case, since we are just unloading the file device from the system, we don't need to know what type is it, so technically we need either the target device or the target folder, the function can actually accept both parameters, but use only one of them, let's call it `vfs_umount`:
 
 ```c
 int vfs_umount(char *device, char *target);
@@ -161,7 +161,7 @@ In our case since we are using an array we need just to clean all the items in i
 But where should be the first file system mounted? That again is depending on the project decisions:
 
 * Using a single root approach, the first file system will be mounted on the "/" folder, and this is what we are going to do, this means that all other file systems will be going to stay into subfolders of the root folder.
-* Using a multi root approach, like windows os, we will have every fs that will have its own root folder and it will be identified with a letter (A, B, C...)
+* Using a multi-root approach, like windows os, we will have every fs that will have its own root folder and it will be identified with a letter (A, B, C...)
 * Nothing prevent us to use different approaches, or a mix of them, we can have some file system to share the same root, while some other to have different root, this totally depends on design decision.
 
 #### Finding The Correct Mountpoint
@@ -173,7 +173,7 @@ Now that we know how to handle the mountpoints, we need to understand how given 
 
 We will cover the single root approach, but eventually changing to a multi-root approach should be pretty easy. One last thing to keep in mind is that the path separator is another design decision, mostly every operating system use either "/" or "\" (the latter is mostly on windows os and derivatives), but in theory everything can be used as a path separator, we will stick with the unix-friendly "/", just keep in mind if going for the "windows" way, the separator is the same as the escape character, so it can interfere with the escape sequences.
 
-For example let's assume that we have the following list of mountpoints :
+For example, let's assume that we have the following list of mountpoints :
 
 * "/"
 * "/home/mount"
@@ -304,7 +304,7 @@ struct fs_operations_t {
 typedef struct fs_operations_t fs_operations_t;
 ```
 
-The basic idea is that once `mountpoint_id` has been found, the vfs will use the mountpoint item to call the fs driver implementation of the open function, remember that when calling the driver function, it cares only about the relative path with mountpoint folder stripped, if the whole path is passed, we will most likely get an error. Since the fs root will start from within the mountpoint folder we need to get the relative path, we will use the `get_rel_path` function defined earlier in this chapter, and the pseudocode for the open function should look similar to the following:
+The basic idea is that once `mountpoint_id` has been found, the vfs will use the mountpoint item to call the fs driver implementation of the open function, remember that when calling the driver function, it cares only about the relative path with the mountpoint folder stripped, if the whole path is passed, we will most likely get an error. Since the fs root will start from within the mountpoint folder we need to get the relative path, we will use the `get_rel_path` function defined earlier in this chapter, and the pseudocode for the open function should look similar to the following:
 
 
 ```c
@@ -383,7 +383,7 @@ ssize_t read(resource_t* res, void *buf, size_t nbyte);
 
 Where the parameters are the opened file resource (`res`) the buffer we want to read into (`buf`), and the number of bytes (`nbytes`) we want to read.
 
-The read function will return the number of bytes read, and in case of failure -1. Like all other vfs functions, what the read will acutally do is verify the resource and then call the fs driver function to read data from an opened file and fill the `buf` buffer.
+The read function will return the number of bytes read, and in case of failure -1. Like all other vfs functions, what the read will actually do is verify the resource and then call the fs driver function to read data from an opened file and fill the `buf` buffer.
 
 Internally the file `impl` keeps track of a 'read head' which points to the last byte that was read. The next read() call will start reading from this byte, before updating the pointer itself.
 
