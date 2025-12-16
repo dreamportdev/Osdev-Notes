@@ -335,7 +335,7 @@ What the heap will look like after the code above?
 |  6 | F  | X  |  ..  |  X  | 6  | F  |  X | .. | X  | 6  | F  | .. | X  |    |    |
 
 
-Now, all of the memory in the heap is available to allocate (except for the overhead used to store the status of each chunk), and everything looks perfectly fine. But now the code keeps executing, and it will arrive at the following instruction:
+Now, all of the memory in the heap is available to allocate (except for the overhead used to store the status of each chunk), and everything looks perfectly fine. But the code keeps executing, and it will arrive at the following instruction:
 
 ```c
 alloc(7);
@@ -416,7 +416,7 @@ This means that the allocator (before marking this location as free and returnin
 
 ![The heap status after the merge](/Images/heap_example_after_merge.png)
 
-The fields in bold are the fields that are changed. The exact implementation of this code is left to the reader.
+The fields in bold are the fields that are changed. The exact implementation of this code is left to the reader. Please note that some books refers to this technique, calling it _coalescing_, but is the same concepts.
 
 ### Part 6: Splitting
 
