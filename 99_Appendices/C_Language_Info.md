@@ -96,6 +96,38 @@ It is worth mentioning that inline assembly syntax is the At&t syntax, so the us
 asm("movl $5, %rcx;");
 ```
 
+## Dealing With Literals and Bitwise Operation
+
+This is one of the most misleading and subtle issue we can face while osdeving. And most of the time we face it the hard way. 
+
+So what is the problem? let's imagine we have a 64 bit variable, and we need some to do a bitwise operation like `setting` the bit at the position `x`, this is easily achieved using the _left shift_ (`|=`) operator combined with a _xor_ (`|=`), like in the following pseudocode: 
+
+```
+variable example_var |= (1 << x)
+```
+
+And that is correct, and it probably could work in many languages (of course changing the syntax), but let's see what happens with C and C++ languages. 
+In _C_, the statement above become:
+
+```c
+uint64_t example_var |= (1 << x);
+```
+
+And we do few test, for `x=1, 2, 10, 20, 31`, everything works fine, so what is the issue? The issue is when the shift is above 31, because of the C _Integer promotion rule_.
+
+In the above example, `1` is a literal, and by default C converts it to `int`,  and this type in C is 32 bits, the bitwise operation is executed using the type of the left operand, so we are trying to shift left a bit of a number of position that is higher, than the size of the variable, causing an undefined behavior. 
+
+Then what are the solutions? Below few example of how to potentially fix it: 
+
+```c
+#define ONE 1ULL
+const uint64_t one = 1;
+
+uint64_t example_one |= one << 42;
+uint64_t example_two |= ONE << 42;
+uint64_t example_three |= 1ULL << 42;
+```
+
 ## C +(+) assembly together - Calling Conventions
 
 Different C compilers feature a number of [calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions),
