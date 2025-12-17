@@ -97,7 +97,7 @@ The picture below show how data is stored into a tar archive.
 
 To move from the first header to the next we simply need to use the following formula:
 
-$$ next\_header = header\_ptr + header\_size + file\_size $$
+$$ next\_{header} = header\_{ptr} + header\_{size} + file\_{size} $$
 
 The lookup function then will be in the form of a loop. The first thing we'll need to know is when we've reached the end of the archive. As mentioned above, if there are two or more zero-filled records, it indicated the end. So while searching, we need to make sure that we keep track of the number of zeroed records. The main lookup loop should be similar to the following pseudo-code:
 
