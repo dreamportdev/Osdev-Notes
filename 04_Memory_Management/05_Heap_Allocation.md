@@ -87,7 +87,6 @@ So now we have the following situation:
 Now the third `alloc()` call will work similarly to the others, and we can imagine the results. `
 
 What we have so far is already an allocation algorithm, that's easy to implement and very fast!
-Its implementation is very simple:
 
 ```c
 uint8_t *cur_heap_position = 0; //Just an example, in the real world you would use
@@ -308,7 +307,7 @@ struct {
 
 That's it! That's what we need to clean up the code and replace the pointers in the latest with the new struct reference. Since it is just matter of replacing few variables, implementing this part is left to the reader.
 
-### Part 5: Merging
+### Part 5: Coalescing (Merging)
 
 So now we have a basic memory allocator (woo hoo), and we are nearing the end of our memory journey.
 

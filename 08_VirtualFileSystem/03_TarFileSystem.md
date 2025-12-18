@@ -33,7 +33,7 @@ As anticipated above, the header structure is a fixed size struct of 512 bytes. 
 | 148 | 8 	| Checksum for header record |
 | 156 | 1 	| Type flag |
 | 157 | 100 | Name of linked file |
-| 57  | 6 	| UStar indicator, "ustar", then NULL |
+| 257  | 6 	| UStar indicator, "ustar", then NULL |
 | 263 | 2 	| UStar version, "00" (it is a string) |
 | 265 |	32 	| Owner user name |
 | 297 |	32 	| Owner group name |
