@@ -59,7 +59,7 @@ The USTar indictator (containing the string `ustar` followed by NULL), and the v
 
 The `filename prefix` field, present only in the `ustar`, this format allows for longer file names, but it is splitted into two parts the `file name` field ( 100 bytes) and the `filename prefix` field (155 bytes)
 
-The other fields are either self-explanatory (like uid/gid) or can be left as 0 (TO BE CHECKED) the only one that needs more explanation is the `file size` field because it is expressed  as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer. Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it, similar to how binary (base 2) only have 0 and 1, and hexadecimal (base 16) has 0 to F. So for example:
+The other fields are either self-explanatory (like uid/gid) or can be left as 0 the only one that needs more explanation is the `file size` field because it is expressed  as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer. Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it, similar to how binary (base 2) only have 0 and 1, and hexadecimal (base 16) has 0 to F. So for example:
 
 ```
 octal 12 = hex A = bin 1010
@@ -69,7 +69,7 @@ In C an octal number is represented adding a `0` in front of the number, so for 
 
 But that's not all, we also have that the number is represented as an `ascii` characters, so to get the decimal number we need to:
 
-1. Convert each ascii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `´0'` ), to get the digit we need just to subtract the `ascii` code for the 0 to the char supplied
+1. Convert each ascii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `'0'` ), to get the digit we need just to subtract the `ascii` code for the 0 to the char supplied
 2.  To obtain the decimal number from an octal we need to multiply each digit per `8^i` where i is the digit position (rightmost digit is 0) and sum their results. For example 37 in octal is:
 
 ```c
