@@ -41,6 +41,7 @@ As anticipated above, the header structure is a fixed size struct of 512 bytes. 
 | 337 |	8 	| Device minor number |
 | 345 |	155 | Filename prefix |
 
+The sum of all sizes, anyway is not 512 bytes, but 500, so the extra space is filled with zerosextra space is filled with _0s_.
 To ensure portability all the information on the header are encoded in `ASCII`, so we can use the `char` type to store the information into those fields. Every record has a `type` flag, that says what kind of resource it represent, the possible values depends on the type of tar we are supporting, for the `ustar` format the possible values are:
 
 | Value | Meaning |
@@ -57,9 +58,9 @@ The _name of linked file_ field refers to symbolic links in the unix world, when
 
 The USTar indictator (containing the string `ustar` followed by NULL), and the version field are used to identify the format being used, and the version field value is "00".
 
-The `filename prefix` field, present only in the `ustar`, this format allows for longer file names, but it is splitted into two parts the `file name` field ( 100 bytes) and the `filename prefix` field (155 bytes)
+The `filename prefix` field is present only in the `ustar`, this format allows for longer file names, but it is splitted into two parts the `file name` field ( 100 bytes) and the `filename prefix` field (155 bytes)
 
-The other fields are either self-explanatory (like uid/gid) or can be left as 0 the only one that needs more explanation is the `file size` field because it is expressed  as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer. Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it, similar to how binary (base 2) only have 0 and 1, and hexadecimal (base 16) has 0 to F. So for example:
+The other fields are either self-explanatory (like uid/gid) or can be left as 0 the only one that needs more explanation is the `file size` field because it is expressed as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer, with the exception of the last byte (12th) because this is historically left as `NULL` (0). Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it, similar to how binary (base 2) only have 0 and 1, and hexadecimal (base 16) has 0 to F. So for example:
 
 ```
 octal 12 = hex A = bin 1010
@@ -99,7 +100,7 @@ To move from the first header to the next we simply need to use the following fo
 
 $$ next\_{header} = header\_{ptr} + header\_{size} + file\_{size} $$
 
-The lookup function then will be in the form of a loop. The first thing we'll need to know is when we've reached the end of the archive. As mentioned above, if there are two or more zero-filled records, it indicated the end. So while searching, we need to make sure that we keep track of the number of zeroed records. The main lookup loop should be similar to the following pseudo-code:
+The lookup function then will be in the form of a loop. The first thing we'll need to know is when we've reached the end of the archive. As mentioned above, if there are two or more zero-filled records, it indicates the end. So while searching, we need to make sure that we keep track of the number of zeroed records. The main lookup loop should be similar to the following pseudo-code:
 
 ```c
 int zero_counter = 0;
