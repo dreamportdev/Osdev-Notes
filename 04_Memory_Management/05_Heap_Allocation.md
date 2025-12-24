@@ -312,6 +312,9 @@ That's it! That's what we need to clean up the code and replace the pointers in 
 So now we have a basic memory allocator (woo hoo), and we are nearing the end of our memory journey.
 
 In this part we'll see how to help mitigate the *fragmentation* problem. It is not a definitive solution, but this lets us reuse memory in a more efficient way. Before proceeding let's recap what we've done so far.
+
+This solution is known with the name _Coalescing_, and it simply is an algorithm that merge contiguous smaller block of free memory into a bigger one. 
+
 We started from a simple pointer to the latest allocated location, and added information in order to keep track of what was previously allocated and how big it was, needed to reuse the freed memory.
 
 We've basically created a list of memory regions that we can traverse to find the next/prev region.
