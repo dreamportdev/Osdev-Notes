@@ -190,13 +190,13 @@ In our scenario there is no really need to close a file from a fs driver point o
 
 ## And Now from A VFS Point Of View
 
-Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do we need to do two things: load the filesystem into memory and populate at least one `mountpoint_t` item. Since technically there are no fs loaded yet we can add it as the first item in our list/array. We have seen the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure:
+Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do it we need to do two things: load the filesystem into memory and populate at least one `mountpoint_t` item. Since technically there are no fs loaded yet we can add it as the first item in our list/array. We have seen the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure:
 
 * The file system name (it can be whatever we want).
 * The mountpoint (is the folder where we want to mount the filesystem), in our case since we have not mountpoints loaded, a good idea will be to mount it at "/".
 * The `file_operations` field, that will contain the pointer to the fs functions to open/read/close/write files, in this field we are going to place the fs driver function we just created..
 
-The file_operation field will be loaded as follows (this is according to our current implementation):
+The `file_operations` field will be loaded as follows (this is according to our current implementation):
 
 * The `open` function will be the `ustar_open` function.
 * The `read` function will be the `ustar_read` function.
@@ -259,7 +259,7 @@ struct tar_list_item {
 
 And using the new datatype initialize the list accordingly.
 
-Now when the file system is accessed for the first time we can initialize this list, and use it to search for the files, saving a lot of time and resources, and it can makes things easier to for the lookup and read function.
+Now when the file system is accessed for the first time we can initialize this list, and use it to search for the files, saving a lot of time and resources, and it can makes things easier for the lookup and read function.
 
 Another limitation of our driver is that it expects for the tar to be fully loaded into memory, while we know that probably file system will be stored into an external device, so a good idea is to make the driver aware of all possible scenarios.
 
