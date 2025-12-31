@@ -418,7 +418,7 @@ This means that the allocator (before marking this location as free and returnin
 
 ![The heap status after the merge](/Images/heap_example_after_merge.png)
 
-The fields in bold are the fields that are changed. The exact implementation of this code is left to the reader. Please note that some books refers to this technique, calling it _coalescing_, but is the same concepts.
+The fields in bold are the fields that are changed. The exact implementation of this code is left to the reader.
 
 ### Part 6: Splitting
 
