@@ -33,7 +33,7 @@ As anticipated above, the header structure is a fixed size struct of 512 bytes. 
 | 148 | 8 	| Checksum for header record |
 | 156 | 1 	| Type flag |
 | 157 | 100 | Name of linked file |
-| 57  | 6 	| UStar indicator, "ustar", then NULL |
+| 257  | 6 	| UStar indicator, "ustar", then NULL |
 | 263 | 2 	| UStar version, "00" (it is a string) |
 | 265 |	32 	| Owner user name |
 | 297 |	32 	| Owner group name |
@@ -41,6 +41,7 @@ As anticipated above, the header structure is a fixed size struct of 512 bytes. 
 | 337 |	8 	| Device minor number |
 | 345 |	155 | Filename prefix |
 
+The sum of all sizes, anyway is not 512 bytes, but 500, so the extra space is filled with zerosextra space is filled with _0s_.
 To ensure portability all the information on the header are encoded in `ASCII`, so we can use the `char` type to store the information into those fields. Every record has a `type` flag, that says what kind of resource it represent, the possible values depends on the type of tar we are supporting, for the `ustar` format the possible values are:
 
 | Value | Meaning |
@@ -57,9 +58,9 @@ The _name of linked file_ field refers to symbolic links in the unix world, when
 
 The USTar indictator (containing the string `ustar` followed by NULL), and the version field are used to identify the format being used, and the version field value is "00".
 
-The `filename prefix` field, present only in the `ustar`, this format allows for longer file names, but it is splitted into two parts the `file name` field ( 100 bytes) and the `filename prefix` field (155 bytes)
+The `filename prefix` field is present only in the `ustar`, this format allows for longer file names, but it is splitted into two parts the `file name` field ( 100 bytes) and the `filename prefix` field (155 bytes)
 
-The other fields are either self-explanatory (like uid/gid) or can be left as 0 (TO BE CHECKED) the only one that needs more explanation is the `file size` field because it is expressed  as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer. Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it, similar to how binary (base 2) only have 0 and 1, and hexadecimal (base 16) has 0 to F. So for example:
+The other fields are either self-explanatory (like uid/gid) or can be left as 0 the only one that needs more explanation is the `file size` field because it is expressed as an octal number encoded in ASCII. This means we need to convert an ascii octal into a decimal integer, with the exception of the last byte (12th) because this is historically left as `NULL` (0). Just to remind, an `octal` number is a number represetend in base 8, we can use digits from 0 to 7 to represent it, similar to how binary (base 2) only have 0 and 1, and hexadecimal (base 16) has 0 to F. So for example:
 
 ```
 octal 12 = hex A = bin 1010
@@ -69,7 +70,7 @@ In C an octal number is represented adding a `0` in front of the number, so for 
 
 But that's not all, we also have that the number is represented as an `ascii` characters, so to get the decimal number we need to:
 
-1. Convert each ascii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `´0'` ), to get the digit we need just to subtract the `ascii` code for the 0 to the char supplied
+1. Convert each ascii digit into decimal, this should be pretty easy to do, since in the ascii table the digits are placed in ascending order starting from 0x30 ( `'0'` ), to get the digit we need just to subtract the `ascii` code for the 0 to the char supplied
 2.  To obtain the decimal number from an octal we need to multiply each digit per `8^i` where i is the digit position (rightmost digit is 0) and sum their results. For example 37 in octal is:
 
 ```c
@@ -97,9 +98,9 @@ The picture below show how data is stored into a tar archive.
 
 To move from the first header to the next we simply need to use the following formula:
 
-$$ next\_header = header\_ptr + header\_size + file\_size $$
+$$ next\_{header} = header\_{ptr} + header\_{size} + file\_{size} $$
 
-The lookup function then will be in the form of a loop. The first thing we'll need to know is when we've reached the end of the archive. As mentioned above, if there are two or more zero-filled records, it indicated the end. So while searching, we need to make sure that we keep track of the number of zeroed records. The main lookup loop should be similar to the following pseudo-code:
+The lookup function then will be in the form of a loop. The first thing we'll need to know is when we've reached the end of the archive. As mentioned above, if there are two or more zero-filled records, it indicates the end. So while searching, we need to make sure that we keep track of the number of zeroed records. The main lookup loop should be similar to the following pseudo-code:
 
 ```c
 int zero_counter = 0;
@@ -189,18 +190,18 @@ In our scenario there is no really need to close a file from a fs driver point o
 
 ## And Now from A VFS Point Of View
 
-Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do we need to do two things: load the filesystem into memory and populate at least one mountpoint_t item. Since technically there are no fs loaded yet we can add it as the first item in our list/array. We have seent the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure:
+Now that we have a basic implementation of the tar file system we need to make it accessible to the VFS layer. To do it we need to do two things: load the filesystem into memory and populate at least one `mountpoint_t` item. Since technically there are no fs loaded yet we can add it as the first item in our list/array. We have seen the `mountpoint_t` type already in the previous chapter, but let's review what are the fields available in this data structure:
 
 * The file system name (it can be whatever we want).
 * The mountpoint (is the folder where we want to mount the filesystem), in our case since we have not mountpoints loaded, a good idea will be to mount it at "/".
-* The file_operations field, that will contain the pointer to the fs functions to open/read/close/write files, in this field we are going to place the fs driver function we just created..
+* The `file_operations` field, that will contain the pointer to the fs functions to open/read/close/write files, in this field we are going to place the fs driver function we just created..
 
-The file_operation field will be loaded as follows (this is according to our current implementation):
+The `file_operations` field will be loaded as follows (this is according to our current implementation):
 
-* The open function will be the ustar_open function.
-* The read function will be the ustar_read function.
-* We don't need a close function since we can handle it directly in the VFS, so we will set it to NULL.
-* As well as we don't need a write function since our fs will be read only, so it can be set to NULL.
+* The `open` function will be the `ustar_open` function.
+* The `read` function will be the `ustar_read` function.
+* We don't need a `close` function since we can handle it directly in the VFS, so we will set it to NULL.
+* As well as we don't need a `write` function since our fs will be read only, so it can be set to NULL.
 
 Loading the fs in memory instead will depend on the booting method we have chosen, since every boot manager/loader has its different approach this will be left to the boot manager used documentation.
 
@@ -258,7 +259,7 @@ struct tar_list_item {
 
 And using the new datatype initialize the list accordingly.
 
-Now when the file system is accessed for the first time we can initialize this list, and use it to search for the files, saving a lot of time and resources, and it can makes things easier to for the lookup and read function.
+Now when the file system is accessed for the first time we can initialize this list, and use it to search for the files, saving a lot of time and resources, and it can makes things easier for the lookup and read function.
 
 Another limitation of our driver is that it expects for the tar to be fully loaded into memory, while we know that probably file system will be stored into an external device, so a good idea is to make the driver aware of all possible scenarios.
 
