@@ -143,9 +143,6 @@ vm_object* prev = NULL;
 uintptr_t found = 0;
 
 while (current != NULL) {
-    if (current == NULL)
-        break;
-
     uintptr_t base = (prev == NULL ? 0 : prev->base);
     if (base + length < current->base) {
         found = base;
