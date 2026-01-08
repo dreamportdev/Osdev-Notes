@@ -45,9 +45,9 @@ The old x86 architecture had two PIC processor, and they were called "master" an
 
 The ICW values are initialization commands (ICW stands for Initialization Command Words), every command word is one byte, and their meaning is:
 
-* ICW_1 (value `0x11`) is a word that indicates a start of initialization sequence, it is the same for both the master and slave pic.
+* ICW_1 (value `0x11`) is a word that indicates a start of initialization sequence, it is the same for both the master and slave PIC. (Bit 0 selects x86 mode, and bit 7 identifies the ICW_1.)
 * ICW_2 (value `0x20` for master, and `0x28` for slave) are just the interrupt vector address value (IDT entries), since the first 31 interrupts are used by the exceptions/reserved, we need to use entries above this value (remember that each pic has 8 different irqs that can handle.
-* ICW_3 (value `0x2` for master, `0x4` for slave) is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be its id. On x86 architectures the master irq pin connected to the slave is the second, this is why the value of ICW_M is 2
+* ICW_3 (value `0x4` for master, `0x2` for slave) is used to indicate if the pin has a slave or not (since the slave pic will be connected to one of the interrupt pins of the master we need to indicate which one is), or in case of a slave device the value will be its id. On x86 architectures the master IRQ pin connected to the slave is the second, this is why the value of ICW_3_M is 1<<2, and ICW_3_S is 2.
 * ICW_4 contains some configuration bits for the mode of operation, in our case we just tell that we are going to use the 8086 mode.
 * Finally `0xFF` is used to mask all interrupts for the pic.
 
