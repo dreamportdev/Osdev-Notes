@@ -29,3 +29,4 @@ In no particular order:
 - @alexdev404 ([https://github.com/AlexDev404](https://github.com/AlexDev404))
 - @frischerZucker ([https://github.com/frischerZucker](https://github.com/frischerZucker))
 - @oito8bits ([https://github.com/oito8bits](https://github.com/oito8bits))
+- @realstealthninja ([https://github.com/realstealthninja](https://github.com/realstealthninja))

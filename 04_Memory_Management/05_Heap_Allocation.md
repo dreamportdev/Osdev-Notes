@@ -87,7 +87,6 @@ So now we have the following situation:
 Now the third `alloc()` call will work similarly to the others, and we can imagine the results. `
 
 What we have so far is already an allocation algorithm, that's easy to implement and very fast!
-Its implementation is very simple:
 
 ```c
 uint8_t *cur_heap_position = 0; //Just an example, in the real world you would use
@@ -308,11 +307,14 @@ struct {
 
 That's it! That's what we need to clean up the code and replace the pointers in the latest with the new struct reference. Since it is just matter of replacing few variables, implementing this part is left to the reader.
 
-### Part 5: Merging
+### Part 5: Coalescing (Merging)
 
 So now we have a basic memory allocator (woo hoo), and we are nearing the end of our memory journey.
 
 In this part we'll see how to help mitigate the *fragmentation* problem. It is not a definitive solution, but this lets us reuse memory in a more efficient way. Before proceeding let's recap what we've done so far.
+
+This solution is known with the name _Coalescing_, and it simply is an algorithm that merge contiguous smaller block of free memory into a bigger one. 
+
 We started from a simple pointer to the latest allocated location, and added information in order to keep track of what was previously allocated and how big it was, needed to reuse the freed memory.
 
 We've basically created a list of memory regions that we can traverse to find the next/prev region.
@@ -335,7 +337,7 @@ What the heap will look like after the code above?
 |  6 | F  | X  |  ..  |  X  | 6  | F  |  X | .. | X  | 6  | F  | .. | X  |    |    |
 
 
-Now, all of the memory in the heap is available to allocate (except for the overhead used to store the status of each chunk), and everything looks perfectly fine. But now the code keeps executing, and it will arrive at the following instruction:
+Now, all of the memory in the heap is available to allocate (except for the overhead used to store the status of each chunk), and everything looks perfectly fine. But the code keeps executing, and it will arrive at the following instruction:
 
 ```c
 alloc(7);

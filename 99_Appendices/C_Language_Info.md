@@ -96,6 +96,31 @@ It is worth mentioning that inline assembly syntax is the At&t syntax, so the us
 asm("movl $5, %rcx;");
 ```
 
+## Dealing With Literals and Bitwise Operation
+
+There are some subtle bugs that can be encountered when when using immediate values in C, due to operator precedence and integer promotion rules.
+
+Let's imagine we have a 64 bit variable, and we need to do a bitwise operation like `setting` the bit at the position `x`, this is easily achieved using the _left shift_ (`<<`) operator combined with a _or_ (`|=`), like in the following example: 
+
+```
+uint64_t example_var |= (1 << x);
+```
+
+We make few tests, for `x=1, 2, 10, 20, 31`, everything works fine, so what is the issue? The issue is when the shift is above 31, because of the C _Integer promotion rule_.
+
+In the above example, `1` is a literal, and by default C converts it to `int`, the bitwise operation is executed using the type of the left operand, so we are trying to shift left a bit of a lower size type by a number of positions that is higher than than the size of the variable, causing an undefined behavior.
+
+Then what are the solutions? Below few example of how to potentially fix it: 
+
+```c
+#define ONE 1ULL
+const uint64_t one = 1;
+
+uint64_t example_one |= one << 42;
+uint64_t example_two |= ONE << 42;
+uint64_t example_three |= 1ULL << 42;
+```
+
 ## C +(+) assembly together - Calling Conventions
 
 Different C compilers feature a number of [calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions),

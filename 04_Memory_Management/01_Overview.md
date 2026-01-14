@@ -2,9 +2,9 @@
 
 Welcome to the first challenge of our osdev adventure! Memory management in a kernel is a big area, and it can easily get very complex. This chapter aims to breakdown the various layers you might use in your kernel, and explain how each of them is useful.
 
-The design and complexity of a memory manger can vary greatly, a lot depends on what the operating system is designed, and its specific goals. For example if only want mono-tasking os, with paging disabled and no memory protection, it will probably be fairly simple to implement.
+The design and complexity of a memory manger can vary greatly, a lot depends on how the operating system is designed, and its specific goals. For example if only want mono-tasking os, with paging disabled and no memory protection, it will probably be fairly simple to implement.
 
-In this part we will try to cover a more common use case that is probably what nearly all modern operating system uses, that is a 32/64 operating system with paging enabled, and various forms of memory allocators for the kernel and one for user space.
+In this part we will try to cover a more common use case that is probably what nearly all modern operating system uses, that is a 32/64i bits operating system with paging enabled, and various forms of memory allocators for the kernel and one for user space.
 
 In the appendices there is also an additional section on memory protection features available in some CPUs.
 
