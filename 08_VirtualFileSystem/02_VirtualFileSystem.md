@@ -301,7 +301,7 @@ struct fs_operations_t {
 	ssize_t (*write)(int file_descriptor, const void* write_buffer, size_t nbyte);
 };
 
-typedef struct fs_operations_t fs_operations_t;
+typedef struct fs_operations_t;
 ```
 
 The basic idea is that once `mountpoint_id` has been found, the vfs will use the mountpoint item to call the fs driver implementation of the open function, remember that when calling the driver function, it cares only about the relative path with the mountpoint folder stripped, if the whole path is passed, we will most likely get an error. Since the fs root will start from within the mountpoint folder we need to get the relative path, we will use the `get_rel_path` function defined earlier in this chapter, and the pseudocode for the open function should look similar to the following:
