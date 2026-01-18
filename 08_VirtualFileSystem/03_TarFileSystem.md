@@ -41,7 +41,7 @@ As anticipated above, the header structure is a fixed size struct of 512 bytes. 
 | 337 |	8 	| Device minor number |
 | 345 |	155 | Filename prefix |
 
-The sum of all sizes, anyway is not 512 bytes, but 500, so the extra space is filled with zerosextra space is filled with _0s_.
+While a tar file header occupies 512 bytes, currently only 500 bytes are defined. The extra space is filled with zeroes.
 To ensure portability all the information on the header are encoded in `ASCII`, so we can use the `char` type to store the information into those fields. Every record has a `type` flag, that says what kind of resource it represent, the possible values depends on the type of tar we are supporting, for the `ustar` format the possible values are:
 
 | Value | Meaning |

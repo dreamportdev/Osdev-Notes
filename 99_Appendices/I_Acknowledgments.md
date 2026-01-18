@@ -6,6 +6,7 @@ And then a special thanks to all the contributors who helped by fixing errors, s
 
 In no particular order:
 
+- @maxtyson123 ([https://github.com/maxtyson123](https://github.com/maxtyson123)) - Special thanks for their work on the [Resource Management](https://github.com/dreamportdev/Osdev-Notes/blob/master/06_Userspace/06_Resource_Management.md) Chapter
 - @xyve7 ([https://github.com/xyve7](https://github.com/xyve7))
 - @Pigmy-penguin ([https://github.com/Pigmy-penguin](https://github.com/Pigmy-penguin))
 - @Zenails ([https://github.com/zenails](https://github.com/zenails))
@@ -15,7 +16,6 @@ In no particular order:
 - @Flukas88 ([https://github.com/Flukas88](https://github.com/Flukas88))
 - @Rubo3 ([https://github.com/Rubo3](https://github.com/Rubo3))
 - @ajccosta([https://github.com/ajccosta](https://github.com/ajccosta))
-- @maxtyson123 ([https://github.com/maxtyson123](https://github.com/maxtyson123))
 - @Moldytzu ([https://github.com/Moldytzu](https://github.com/Moldytzu))
 - @AnErrupTion ([https://github.com/AnErrupTion](https://github.com/AnErrupTion))
 - @MRRcode979 ([https://github.com/MRRcode979](https://github.com/MRRcode979))

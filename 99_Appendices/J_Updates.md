@@ -67,3 +67,14 @@ Sixth Book Release
 * Add a complete exammple of how to create an ELF executable for our kernel
 * Typo and error fixes
 * New short paragraph to explain the behaviour of literals with bitwise operators.
+
+### Revision 6
+
+Release date: Jan 2026
+Seventh Book Release
+
+* Typo Fixes
+* Fix errors in C code examples
+* New paragraph in Appendix F about literals and shitfting in C
+* Update the kheap chapter, to use the term "coalescing" instead of merging
+* New section: Resource Management) (thanks to @Maxtyson123
