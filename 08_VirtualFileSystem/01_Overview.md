@@ -37,3 +37,5 @@ How the VFS presents itself is another design decision, but the two common ways 
 * Each mounted filesystem is a distinct filesystem, with a separate root. Typically each root is given a single letter to identify it. This is the MS-DOS/Windows approach and is called the *multi-root* approach.
 * Each mounted filesystem exists within a single global tree, under a single root. This is the usual unix approach, where a directory can actually be a window into another filesystem.
 
+Finally, the design presented here is over simplified, trying to make it as simple as possible, leaving out many details, that probably a kernel should have, as an example this design doesn't include any lock, or that the `file_operations` doesn't have the same prototype as the libc functions, they usually involve passing one or two structre (`vnodes`, or `inodes` or similar) and probably more informations like flags, ownership, etc. depending mostly on the design. Most of the details of the VFS depends on the design decisions, so there is no correct implementation, the one presented here was kept very simple for sake of clarity. 
+
