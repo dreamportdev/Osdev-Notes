@@ -28,3 +28,5 @@ Below the list of parts that compose the book:
 * *Going Beyond* - The final part (for now). We have implemented all the core components of a kernel, and we are free to go from here. This final chapter contains some ideas for new components that we might want to add, or at least begin thinking about.
 
 In the appendices we cover various topic, from debugging tips, language specific information, troubleshooting, etc.
+
+The main purpose of this book is to explain the whole process, and we decided to keep things as simple as possible. So for more experienced users, some design decision could look over simplified, or not optimal, but this is intentional, the focus is on the how more than on the whole design. 
