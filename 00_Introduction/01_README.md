@@ -2,6 +2,8 @@
 
 Whether you're reading this online, or in a book, welcome to our collection of notes about operating systems development! We've written these while writing (and re-writing) our own kernels, with the intent of guiding a reader through the various stages of building an operating system from scratch. We've tried to focus more on the concepts and theory behind the various components, with the code only provided to help solidify some concepts.
 
+The main purpose of this book is to explore the whole process from a beginners point of view: we decided to keep things as simple as possible for this reason. Readers with more experience will notice that some design decisions and comments are not the optimal way to implement some things, or that some descriptions are over simplified - this is on purpose. The intent here is to provide a jumping-off point for the readers to continue on from.
+
 We hope you enjoy, and find something interesting here!
 
 ## Structure Of The Book
@@ -29,4 +31,3 @@ Below the list of parts that compose the book:
 
 In the appendices we cover various topic, from debugging tips, language specific information, troubleshooting, etc.
 
-The main purpose of this book is to explain the whole process, and we decided to keep things as simple as possible. So for more experienced users, some design decision could look over simplified, or not optimal, but this is intentional, the focus is on the how more than on the whole design. 
