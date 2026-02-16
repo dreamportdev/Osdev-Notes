@@ -233,10 +233,10 @@ Most of this descriptor is unchanged, except for the type field. Bit 4 is cleare
 
 ```c
 uint64_t user_code = kernel_code | (3 << 13);
-gdt_entries[3] = user_code;
+gdt_entries[3] = user_code << 32;
 
 uint64_t user_data = kernel_data | (3 << 13);
-gdt_entries[4] = user_data;
+gdt_entries[4] = user_data << 32;
 ```
 
 A more complex example of a GDT is the one used by the stivale2 boot protocol:
