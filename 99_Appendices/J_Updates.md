@@ -70,11 +70,11 @@ Sixth Book Release
 
 ### Revision 6
 
-Release date: Jan 2026
+Release date: Feb 2026
 Seventh Book Release
 
 * Typo Fixes
 * Fix errors in C code examples
 * New paragraph in Appendix F about literals and shitfting in C
 * Update the kheap chapter, to use the term "coalescing" instead of merging
-* New section: Resource Management) (thanks to @Maxtyson123
+* New section: Resource Management (thanks to @Maxtyson123)
