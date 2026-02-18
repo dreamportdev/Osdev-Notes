@@ -150,7 +150,7 @@ These are further distinguished with the `type` field, as outlined below.
 | Start (in bits) | Length (in bits) | Description                                           |
 |:----------------|:-----------------|-------------------------------------------------------|
 | 0               | 16               | Limit bits 15:0                                       |
-| 15              | 16               | Base address bits 15:0                                |
+| 16              | 16               | Base address bits 15:0                                |
 | 32              | 8                | Base address bits 23:16                               |
 | 40              | 4                | Selector type                                         |
 | 44              | 1                | Is system-type selector                               |
