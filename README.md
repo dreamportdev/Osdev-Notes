@@ -61,6 +61,7 @@ You can reach us on Discord: [https://discord.gg/NGasazGkqr](https://discord.gg/
     * [Updated Interrupt Handling](06_Userspace/03_Handling_Interrupts.md)
     * [System Calls](06_Userspace/04_System_Calls.md)
     * [Example Syscall ABI](06_Userspace/05_Example_ABI.md)
+    * [Resource Management](06_Resource_Management.md)
 * [Part 7: Inter-Process Communication](07_IPC/README.md)
     * [Overview](07_IPC/01_Overview.md)
     * [Shared Memory](07_IPC/02_Shared_Memory.md)
