@@ -9,3 +9,4 @@ The below the list of chapters:
 * [Handling Interrupts](03_Handling_Interrupts.md) Handling interrupts while in User Mode
 * [System Calls](04_System_Calls.md) Introduction to the system calls
 * [An Example Syscall ABI](05_Example_ABI.md) Implementing an example system call.
+* [Resource Management](06_Resource_Management.md) Resource Management.
