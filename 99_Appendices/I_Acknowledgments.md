@@ -22,7 +22,7 @@ In no particular order:
 - @Hqnnqh ([https://github.com/Hqnnqh](https://github.com/Hqnnqh))
 - @malletgaetan ([https://github.com/malletgaetan](https://github.com/malletgaetan))
 - @mrjbom ([https://github.com/mrjbom](https://github.com/mrjbom))
-- @IAmTheNerdNextDoor ([https://github.com/IAmTheNerdNextDoor](https://github.com/IAmTheNerdNextDoor))
+- @NerdNextDoor ([https://codeberg.org/NerdNextDoor](https://codeberg.org/NerdNextDoor))
 - @vasilisalmpanis ([https://github.com/vasilisalmpanis](https://github.com/vasilisalmpanis))
 - @AntoninRuan ([https://github.com/AntoninRuan](https://github.com/AntoninRuan))
 - @sudw1n ([https://github.com/sudw1n](https://github.com/sudw1n))
