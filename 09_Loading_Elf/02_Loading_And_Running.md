@@ -18,9 +18,9 @@ In the previous chapter we looked at the details of loading program headers, but
 - Create a new address space for the program to live in. This usually involves creating a new process with a new VMM instance, but the specifics will vary depending on your design. Don't forget to keep the kernel mappings in the higher half!
 - Copy the loadable program headers into this new address space. Take care when writing this code, as the program headers may not be page-aligned:. Don't forget to zero the extra bytes between `memsz` and `filesz`.
 - Once loaded, set the appropriate permission on the memory each program header lives in: the write, execute (or no-execute) and user flags.
-- Now we'll need to create a new thread to act as the main thread for this program, and set its entry point to the `e_entry` field in the ELF header. This field is the start function of the program. You'll also need to create a stack in the memory space of this program for the thread to use, if this wasnt already done as part of our thread creation.
+- Now we'll need to create a new thread to act as the main thread for this program, and set its entry point to the `e_entry` field in the ELF header. This field is the start function of the program. You'll also need to create a stack in the memory space of this program for the thread to use, if this wasn't already done as part of our thread creation.
 
-If all of the above are done,  then the program is ready to run! We now should be able to enqueue the main thread in the scheduler and let it run.
+If all of the above are done, then the program is ready to run! We now should be able to enqueue the main thread in the scheduler and let it run.
 
 ### Verifying an ELF file
 
@@ -35,8 +35,8 @@ When verifying an ELF file there are few things we need to check in order to dec
 | `L`   | 2 |
 | `F`   | 3 |
 
-* We need to check that the file class match with the one we are supporting. There are two possible classes: 64 and 32. This is byte 4
-* The data field indicates the _endiannes_, again this depends on the architecture used. It can be three values: None (0), LSB (1) and MSB (2). For example `x86_64` architecture endiannes is LSB, then the value is expected to be 1. This field is in the byte 5.
+* We need to check that the file class match with the one we are supporting. There are two possible classes: _64_ and _32_. This is byte 4
+* The data field indicates the _endiannes_, again this depends on the architecture used. It can be three values: **None (0)**, **LSB (1)** and **MSB (2)**. For example `x86_64` architecture endiannes is _LSB_, then the value is expected to be 1. This field is in the byte 5.
 * The version field, byte 6,  to be a valid elf it has to be set to 1 (EVCURRENT).
 * The OS ABI and ABI version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
 
@@ -74,7 +74,7 @@ loop:
 
 ```
 
-The code, as we can expect is pretty simple, and self-explanatory, it declares a `loop` function, and  mark it as global using the `extern` keyword..
+The code, as we can expect is pretty simple, and self-explanatory, it declares a `loop` function, and  mark it as global using the `extern` keyword.
 
 The above code now can be compiled with nasm:
 
