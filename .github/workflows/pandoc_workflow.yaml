@@ -15,7 +15,7 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # It will run on ubuntu-latest image
-    runs-on: ubuntu-24.04
+    runs-on: codeberg-medium
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
