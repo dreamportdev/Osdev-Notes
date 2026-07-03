@@ -17,7 +17,7 @@ jobs:
     # It will run on ubuntu-latest image
     runs-on: codeberg-medium
     steps:
-      - uses: actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/checkout@v7
       - name: Install dependencies
       # WE need to manually install pandoc, because the version carried with ubuntu 22.04 is affected by a bug that cause the build to fail
         run: |
