@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+OUTPUT_FOLDER = ""
+
 get_entries() {
     echo $(find $1 -maxdepth 1 -regextype egrep -regex '.*\/[0-9A-Z]{1,2}_[A-Za-z_.]*' | sort)
 }
@@ -38,6 +40,9 @@ cmd_body+="LICENSE.md"
 if [ -v ADD_COMMIT ]; then
     awk -v HASH=`git rev-parse HEAD`  '!found && /header-includes/ { print "   |\n   | based on commit: " HASH ; found=1 } 1' .pandoc/pandoc.yaml | tee .pandoc/pandoc_1.yaml
     mv .pandoc/pandoc_1.yaml .pandoc/pandoc.yaml
+    mkdir output
+    OUTPUT_FOLDER="output"
 fi
 
-$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $pandoc_filename)
+echo $OUTPUT_FOLDER
+$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $OUTPUT_FOLDER/$pandoc_filename)
