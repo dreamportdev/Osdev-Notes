@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v7
       - name: Install dependencies
-      # WE need to manually install pandoc, because the version carried with ubuntu 22.04 is affected by a bug that cause the build to fail
+      # We need to manually install pandoc, because the version carried with ubuntu 22.04 is affected by a bug that cause the build to fail
         run: |
           sudo apt-get -y update
           sudo apt-get -y upgrade
