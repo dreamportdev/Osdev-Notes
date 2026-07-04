@@ -31,7 +31,7 @@ jobs:
           chmod +x build.sh
           echo "Bulding"
           ADD_COMMIT=1 ./build.sh
-          echo "Next step: creating release"
+          echo "Next step: creating release!"
       - uses:  https://code.forgejo.org/actions/forgejo-release@v2.13.1
         with:
           token: ${{ forge.token }}
