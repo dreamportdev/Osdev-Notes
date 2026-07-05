@@ -11,7 +11,6 @@ on:
 
  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  env: ON_CODEBERG=1
 jobs:
   # This workflow contains a single job called "build"
   build:
@@ -31,7 +30,7 @@ jobs:
           echo "Updating permissions on build script"
           chmod +x build.sh
           echo "Bulding"
-          ADD_COMMIT=1 ./build.sh
+          ON_CODEBERG=1 ADD_COMMIT=1 ./build.sh
           echo "Next step: creating release!"
       - uses:  https://code.forgejo.org/actions/forgejo-release@v2.13.1
         with:
