@@ -7,19 +7,20 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     paths-ignore: [ '**/README.md',  '**/FUNDING.yml', '**/sync-gh-pages.yaml' ]
-    branches: [ master ]
+    branches: [ dreamos82-patch-1 ]
 
  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  env: ON_CODEBERG=1
 jobs:
   # This workflow contains a single job called "build"
   build:
     # It will run on ubuntu-latest image
-    runs-on: ubuntu-24.04
+    runs-on: codeberg-medium
     steps:
-      - uses: actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/checkout@v7
       - name: Install dependencies
-      # WE need to manually install pandoc, because the version carried with ubuntu 22.04 is affected by a bug that cause the build to fail
+      # We need to manually install pandoc, because the version carried with ubuntu 22.04 is affected by a bug that cause the build to fail
         run: |
           sudo apt-get -y update
           sudo apt-get -y upgrade
@@ -31,11 +32,11 @@ jobs:
           chmod +x build.sh
           echo "Bulding"
           ADD_COMMIT=1 ./build.sh
-          echo "Next step: creating release"
-      - uses: pyTooling/Actions/releaser@r0
+          echo "Next step: creating release!"
+      - uses:  https://code.forgejo.org/actions/forgejo-release@v2.13.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ forge.token }}
           tag: latest-master
-          rm: true
-          files: |
-            *.pdf
+          direction: upload
+          release-dir: output
+          override: true

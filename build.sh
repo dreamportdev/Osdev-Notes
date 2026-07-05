@@ -40,9 +40,13 @@ cmd_body+="LICENSE.md"
 if [ -v ADD_COMMIT ]; then
     awk -v HASH=`git rev-parse HEAD`  '!found && /header-includes/ { print "   |\n   | based on commit: " HASH ; found=1 } 1' .pandoc/pandoc.yaml | tee .pandoc/pandoc_1.yaml
     mv .pandoc/pandoc_1.yaml .pandoc/pandoc.yaml
-    mkdir output
-    OUTPUT_FOLDER="output"
 fi
 
-echo $OUTPUT_FOLDER
-$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $OUTPUT_FOLDER/$pandoc_filename)
+if [ -v ON_CODEBERG ]; then
+    echo "CODEBERG env identified, creating output directory"
+    mkdir output
+    OUTPUT_FOLDER="output/" 
+    echo $OUTPUT_FOLDER
+fi
+
+$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $OUTPUT_FOLDER$pandoc_filename)
