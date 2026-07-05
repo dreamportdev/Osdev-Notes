@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+OUTPUT_FOLDER = ""
+
 get_entries() {
     echo $(find $1 -maxdepth 1 -regextype egrep -regex '.*\/[0-9A-Z]{1,2}_[A-Za-z_.]*' | sort)
 }
@@ -40,4 +42,11 @@ if [ -v ADD_COMMIT ]; then
     mv .pandoc/pandoc_1.yaml .pandoc/pandoc.yaml
 fi
 
-$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $pandoc_filename)
+if [ -v ON_CODEBERG ]; then
+    echo "CODEBERG env identified, creating output directory"
+    mkdir output
+    OUTPUT_FOLDER="output/" 
+    echo $OUTPUT_FOLDER
+fi
+
+$(pandoc $pandoc_flags $cmd_body .pandoc/pandoc.yaml -o $OUTPUT_FOLDER$pandoc_filename)
