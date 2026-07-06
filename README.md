@@ -89,7 +89,7 @@ You can reach us on
 
 ## Our Projects
 
-* [DreamOs64](https://github.com/dreamos82/Dreamos64): 64-bit OS written from scratch by [Ivan G](https://github.com/dreamos82).
+* [DreamOs64](https://codeberg.org/dreamos82/Dreamos64): 64-bit OS written from scratch by [Ivan G](https://codeberg.org/dreamos82).
 * [Northport](https://github.com/DeanoBurrito/northport): Another 64-bit OS with SMP, and riscv support! by [Dean T](https://github.com/DeanoBurrito/).
 * [DreamOs](https://github.com/dreamos82/Dreamos): 32-bit OS written from scratch. This project is discontinued, but it still worth mentioning. Also by [Ivan G](https://github.com/dreamos82).
 
