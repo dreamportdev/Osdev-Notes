@@ -96,7 +96,7 @@ You can reach us on
 ## Authors
 
 * [Ivan G](https://codeberg.org/dreamos82) (dreamos82) - Author and creator of these notes.
-* [Dean T](https://github.com/DeanoBurrito/) (DeanoBurrito) - Author.
+* [Dean T](https://codeberg.org/r4) (DeanoBurrito) - Author.
 
 ## License
 
