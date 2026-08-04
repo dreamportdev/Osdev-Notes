@@ -259,6 +259,15 @@ On the other way a packet received from the network will observe the opposite pa
 
 Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivial, since networking is composed by many different components, but the biggest difference is that most of what we need to implement is very well standardized, and we just need to follow the documentation and the implementation part should be less difficult.
 
+## Porting Doom
+
+Yes, porting a whole game to the kernel. It sounds a huge task right? But that's not the case for `Doom` that game has been ported to so many kernel, devices, there are videos of Doom runing on nearly everything. 
+
+How hard can it be to port doom to our platform? Not much. The list of requirements is pretty small, but of course there are some prerequisite for our kernel, we need at least:
+
+* Basic framebuffer handling: drawing windows (or rectangular area)
+* Input handling: the kernel needs to be able to read keyboard input at least
+
 ## Few final words
 
 Now we're really at the end of our kernel development notes. We tried to cover all the topics so that you can have a bare but complete-enough kernel. We had an overview on all the core components of an operating system explaining how they should be implemented, and what are the key concepts to be understood. We tried to stay focused on the implementation part of the development, using theory only when it was strictly necessary. We provided lot of code examples to help explain some of the trickier parts of the kernel. At the same time the purpose was not to provide some ready-to-use code, our intention was to give the readers enough knowledge to get started implementing it themselves.
