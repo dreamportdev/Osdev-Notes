@@ -65,7 +65,8 @@ At this point we should be ready to go off and implement our own system call int
 Now the question is what syscalls should we start to implement? As per usual this depends on the design of your kernel, and what interface we want to export userland. If unsure, take a look at POSIX (and the linux extensions), but we can also go the custom route. We should also keep in mind whether we want to port an existing libc later on, as this will require standard syscalls. For now we'll want to start with the following:
 
 * A way to pass log messages to the kernel, so it can print them for us.
-* A way to map, unmap, and modify protections of virtual memory.
+* A way to `map`, `unmap`, and modify protections of virtual memory.
 * A way to terminate the current thread, since the wrapper function used in the scheduler chapter only works for kernel threads.
+* _File descriptor_ operations: `open`, `read`, `write`, `close`
 
 The list above acts just as a starting point, but the idea is that we want to expose most of the kernel can do, for example we probably want syscalls to create/terminate tasks and thread, syscalls to access files on different filesystems, accessing devices.
