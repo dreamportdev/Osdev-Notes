@@ -38,7 +38,7 @@ When verifying an ELF file there are few things we need to check in order to dec
 * We need to check that the file class match with the one we are supporting. There are two possible classes: _64_ and _32_. This is byte 4
 * The data field indicates the _endiannes_, again this depends on the architecture used. It can be three values: **None (0)**, **LSB (1)** and **MSB (2)**. For example `x86_64` architecture endiannes is _LSB_, then the value is expected to be 1. This field is in the byte 5.
 * The version field, byte 6,  to be a valid elf it has to be set to 1 (EVCURRENT).
-* The OS ABI and ABI version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, the should be 0.
+* The OS ABI and ABI version they  identify the operating system together with the ABI to which the object is targeted and the version of the ABI to which the object is targeted, for now we can ignore them, they should be 0.
 
 Then from the other fields that need validation (that area not in the `e_ident` field) are:
 
