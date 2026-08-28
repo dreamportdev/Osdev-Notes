@@ -267,6 +267,19 @@ How hard can it be to port doom to our platform? Not much. The list of requireme
 
 * Basic framebuffer handling: drawing windows (or rectangular area)
 * Input handling: the kernel needs to be able to read keyboard input at least
+* Sleep/Time functions
+
+To port doom should be enough be able to implement just 5 functions: 
+
+* `DG_Init`: used to initialize our platform to run doom
+* `DG_DrawFrame`: this is a function that just need to copy the frame prepared by the game, into the screen buffer
+* `DG_SleepMs`: a sleep in milliseconds
+* `DG_GetTicksMs`: get the ticks passed in milliseconds since launch
+* `DG_GetKey`: Provide keyboard events 
+* `DG_SetWindowTitle`: To set the window title, not necessary to implement.
+
+These functions must be placed in a c file name `doom_yourplatform.c`. And that should be it. 
+*
 
 ## Few final words
 
