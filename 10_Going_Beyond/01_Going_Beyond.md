@@ -278,8 +278,12 @@ To port doom should be enough be able to implement just 5 functions:
 * `DG_GetKey`: Provide keyboard events 
 * `DG_SetWindowTitle`: To set the window title, not necessary to implement.
 
-These functions must be placed in a c file name `doom_yourplatform.c`. And that should be it. 
-*
+These functions must be placed in a c file name `doom_yourplatform.c`. 
+
+The next step is to customize the `Makefile` for our platform what most likely needs to be updated are the C and Linker flags, to be adapted to the target platform.
+
+And that should be it. 
+
 
 ## Few final words
 
