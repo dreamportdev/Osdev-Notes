@@ -263,24 +263,24 @@ Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivia
 
 Yes, porting a whole game to the kernel. It sounds a huge task right? But that's not the case for `Doom` that game has been ported to so many kernel, devices, there are videos of Doom runing on nearly everything. 
 
-How hard can it be to port doom to our platform? Not much. The list of requirements is pretty small, but of course there are some prerequisite for our kernel, we need at least:
+How hard can it be to port doom to our platform? Not much. The list of requirements is pretty small, thanks to the the [ozkl/doomgeneric](https://github.com/ozkl/doomgeneric). There are of course some prerequisite for our kernel, and to run it we need at least:
 
-* Basic framebuffer handling: drawing windows (or rectangular area)
-* Input handling: the kernel needs to be able to read keyboard input at least
-* Sleep/Time functions
+* Basic framebuffer handling: drawing windows (or rectangular area), and drawing pixels.
+* Input handling: the kernel needs to be able to read keyboard input at least.
+* Sleep/Time functions/
 
-To port doom should be enough be able to implement just 5 functions: 
+To port doom we have to implement just 5 functions: 
 
-* `DG_Init`: used to initialize our platform to run doom
+* `DG_Init`: this function is used to initialize our platform to run doom
 * `DG_DrawFrame`: this is a function that just need to copy the frame prepared by the game, into the screen buffer
 * `DG_SleepMs`: a sleep in milliseconds
 * `DG_GetTicksMs`: get the ticks passed in milliseconds since launch
 * `DG_GetKey`: Provide keyboard events 
 * `DG_SetWindowTitle`: To set the window title, not necessary to implement.
 
-These functions must be placed in a c file name `doom_yourplatform.c`. 
+These functions must be placed in a c file name `doom_ourplatform.c`. 
 
-The next step is to customize the `Makefile` for our platform what most likely needs to be updated are the C and Linker flags, to be adapted to the target platform.
+The next step is to customize the `Makefile` for our platform, what needs  to be updated are the C and Linker flags, that must be adapted to the target platform.
 
 And that should be it. 
 
