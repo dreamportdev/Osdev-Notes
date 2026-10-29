@@ -39,7 +39,7 @@ Sometime in the kernel, a virtual address will map to the same physical address,
 
 A virtual address is usually a composition of entry numbers for each level of tables. The picture below shows, with an example, how address translation works:
 
-![Address Translation](/Images/addrtranslation.png)
+![Address Translation](../Images/addrtranslation.png)
 
 The _memory page_ in the picture refers to a physical memory page (the picture above doesn't refer to any existing hardware paging, it is just an example scenario). Using logical addresses and paging, we can introduce a whole new address space that can be much bigger than the available physical memory.
 

@@ -255,7 +255,7 @@ When we want to send data, we start from the topmost layer (the application) and
 
 On the other way a packet received from the network will observe the opposite path, so it will start as a big packet containing headers/footers for each layer, and while it is traversing the stack upwards, at every layer it will have the layer's header stripped, so when it will reach the Application Layer it will be the information we are looking for (you can just look  at the picture from bottom to top):
 
-![TCP/IP Layers](/Images/tcpip.png)
+![TCP/IP Layers](../Images/tcpip.png)
 
 Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivial, since networking is composed by many different components, but the biggest difference is that most of what we need to implement is very well standardized, and we just need to follow the documentation and the implementation part should be less difficult.
 
