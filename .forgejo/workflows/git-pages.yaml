@@ -35,6 +35,6 @@ jobs:
       - uses: actions/git-pages@v2
         with:
             site: https://dreamportdev.codeberg.page/osdev-notes
-            token: ${{ forgejo.token }}
+            token: ${{ forge.token }}
             source: _site/
             pretty-urls: true
