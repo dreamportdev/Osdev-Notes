@@ -1,0 +1,40 @@
+# This workflow is triggered every time a push is made on master.
+# It will trigger an HTML build and publish it to username.codeberg.page/osdev-notes
+name: Sync Codeberg page
+
+# It will run on every push on master
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    paths-ignore: [ '**/README.md',  '**/FUNDING.yml', '**/sync-gh-pages.yaml' ]
+    branch: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: codeberg-tiny
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install dependencies
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y upgrade
+          sudo apt-get -y install pandoc pandoc-data
+      - name: Build html page
+        run: |
+          pandoc -v
+          pandoc --verbose --standalone --toc -f markdown -t html .pandoc/pandoc.yaml --lua-filter=.pandoc/makerelative.lua -o index.html **/*.md -V toc-title="Table Of Contents"
+      - name: Copy built files into _site
+        run: |
+          mkdir _site
+          cp index.html _site/
+          cp -r Images _site/Images
+
+      - uses: actions/git-pages@v2
+        with:
+            site: https://${{ forgejo.repository_owner }}.codeberg.page/osdev-notes
+            token: ${{ forgejo.token }}
+            source: _site/
+            pretty-urls: true

@@ -37,4 +37,5 @@ geometry:
  - columnsep=1.5cm
  - headheight=1.5cm
 book: true
+lang: en
 ---
