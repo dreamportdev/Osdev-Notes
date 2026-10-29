@@ -32,7 +32,7 @@ jobs:
           cp index.html _site/
           cp -r Images _site/Images
 
-      - uses: actions/git-pages@v2
+      - uses: https://codeberg.org/git-pages/action@v2
         with:
             site: https://${{ forge.repository_owner }}.codeberg.page/osdev-notes
             token: ${{ forge.token }}
