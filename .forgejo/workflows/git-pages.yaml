@@ -34,7 +34,7 @@ jobs:
 
       - uses: https://codeberg.org/git-pages/action@v2
         with:
-            site: https://${{ forge.repository_owner }}.codeberg.page/osdev-notes
+            site: https://${{ forge.repository_owner }}.codeberg.page/Osdev-Notes
             token: ${{ forge.token }}
             source: _site/
             pretty-urls: true
