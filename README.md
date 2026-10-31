@@ -17,6 +17,7 @@ The content of this repository is also available as a _**printed book**_, it can
 * **Hardcover**: [Click Here](https://www.lulu.com/shop/dean-tuckey-and-ivan-gualandri/osdev-notes/hardcover/product-je5drpr.html?page=1&pageSize=4)
 
 The [latest-master](https://codeberg.org/dreamportdev/Osdev-Notes/releases/tag/latest-master) release contains the PDF built from master.
+There is also web version of the repository hosted in a [codeberg page](https://dreamportdev.codeberg.page/Osdev-Notes)
 
 You can reach us on 
 * Discord: [https://discord.gg/NGasazGkqr](https://discord.gg/NGasazGkqr)

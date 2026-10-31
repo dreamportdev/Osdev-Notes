@@ -6,7 +6,7 @@ name: Sync Codeberg page
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    paths-ignore: [ '**/README.md',  '**/FUNDING.yml', '**/sync-gh-pages.yaml' ]
+    paths-ignore: [ '**/FUNDING.yml', '**/sync-gh-pages.yaml' ]
     branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -22,17 +22,12 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y upgrade
           sudo apt-get -y install pandoc pandoc-data
-      - name: Build html page
+      - name: Build html site
         run: |
           pandoc -v
-          pandoc --verbose --standalone --toc -f markdown -t html .pandoc/pandoc.yaml --lua-filter=.pandoc/makerelative.lua -o index.html **/*.md -V toc-title="Table Of Contents"
-      - name: Copy built files into _site
-        run: |
-          mkdir _site
-          cp index.html _site/
-          cp -r Images _site/Images
-
-      - uses: https://codeberg.org/git-pages/action@v2
+          pandoc --verbose --standalone --toc -f markdown -t chunkedhtml .pandoc/pandoc.yaml --lua-filter=.pandoc/makerelative.lua -o _site **/*.md -V toc-title="Table Of Contents"
+      - name: Upload html site to page
+        uses: https://codeberg.org/git-pages/action@v2
         with:
             site: https://${{ forge.repository_owner }}.codeberg.page/Osdev-Notes
             token: ${{ forge.token }}
