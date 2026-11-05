@@ -6,7 +6,7 @@
 </span>
 ![](https://tokei.rs/b1/github/dreamos82/osdev-notes)
 
-**IMPORTANT**: _The developmen has moved to codeberg: [https://codeberg.org/dreamportdev/Osdev-Notes](https://codeberg.org/dreamportdev/Osdev-Notes), github repository will be left as a mirror, although we will still keep an eye there, we appreciate if future PR will be done on Codeberg._
+**IMPORTANT**: _The development has moved to codeberg: [https://codeberg.org/dreamportdev/Osdev-Notes](https://codeberg.org/dreamportdev/Osdev-Notes), github repository will be left as a mirror, although we will still keep an eye there, we appreciate if future PR will be done on Codeberg._
 
 A book, originated as a collection of notes, intended to guide a reader through the steps of building an operating system kernel from scratch. Written while writing (and re-writing) our own kernels, each chapter covers a step of the process from selecting a bootloader to running a loaded ELF in userspace.
 

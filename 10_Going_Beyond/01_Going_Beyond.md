@@ -259,6 +259,48 @@ On the other way a packet received from the network will observe the opposite pa
 
 Like for the GUI implementing a TCP/IP stack is not a quick task, neither trivial, since networking is composed by many different components, but the biggest difference is that most of what we need to implement is very well standardized, and we just need to follow the documentation and the implementation part should be less difficult.
 
+## Porting Doom
+
+Yes, porting a whole game to the kernel. It sounds a huge task right? But that's not the case for `Doom` that game has been ported to so many kernel, devices, there are videos of Doom runing on nearly everything. 
+
+How hard can it be to port doom to our platform? Not much. The list of requirements is pretty small, thanks to the the [ozkl/doomgeneric](https://github.com/ozkl/doomgeneric). There are of course some prerequisite for our kernel, and to run it we need at least:
+
+* Basic framebuffer handling: drawing windows (or rectangular area), and drawing pixels.
+* Input handling: the kernel needs to be able to read keyboard input at least.
+* Sleep/Time functions
+
+To port doom we have to implement just 5 functions: 
+
+* `DG_Init`: this function is used to initialize our platform to run doom, for example this function will initialize the framebuffer code, creates windows if needed, initialize any structure that could be required by the kernel.
+* `DG_DrawFrame`: this is a function that just need to copy the frame prepared by the game, into the screen buffer
+* `DG_SleepMs`: a sleep in milliseconds, usually it directly calls a function in the kernel that does the same.
+* `DG_GetTicksMs`: get the ticks passed in milliseconds since launch, works in a similar way as above.
+* `DG_GetKey`: Provide and consume keyboard events.
+* `DG_SetWindowTitle`: To set the window title, not necessary to implement.
+
+What goes into any of the above functions depends on the design decisions of the kernel, but the main difference will be mostly naming conventions, and API, or how we want to run doom (from a file, or loaded directly into memory, etc.). 
+
+These functions must be placed in a C file called `doom_ourplatform.c`, we don't need to call them anywhere, since this is already done by the `doomgeneric` code. The last requirement for the C file is that we need to add the following `main` function: 
+
+```c
+int main(int argc, char **argv)
+{
+    doomgeneric_Create(argc, argv);
+
+    while (1)
+    {
+        doomgeneric_Tick();
+    }
+    
+    return 0;
+}
+```
+
+
+The next step is to customize the `Makefile` for our platform, and create a `Makefile.ourplatform`, what needs to be updated probably are the C and the Linker flags, that must be adapted to the target platform. Best way to start is to copy an existing one and update it. 
+
+And that should be it. 
+
 ## Few final words
 
 Now we're really at the end of our kernel development notes. We tried to cover all the topics so that you can have a bare but complete-enough kernel. We had an overview on all the core components of an operating system explaining how they should be implemented, and what are the key concepts to be understood. We tried to stay focused on the implementation part of the development, using theory only when it was strictly necessary. We provided lot of code examples to help explain some of the trickier parts of the kernel. At the same time the purpose was not to provide some ready-to-use code, our intention was to give the readers enough knowledge to get started implementing it themselves.
